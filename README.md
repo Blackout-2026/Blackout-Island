@@ -2,18 +2,24 @@
 
 A Unity first-person stealth/combat game built for **SE3032 (Graphics & Visualization)** and **SE3062 (Intelligent Systems)**. The player lands on the island by boat, infiltrates the forest and bunker, disables the generator, takes the cure from the laboratory and escapes while four AI agents hunt them.
 
-`
-
 ## Unity setup
 
 | Setting | Value |
 | --- | --- |
-| Unity version | **TBD — pick one LTS version and write it here before anyone opens the project.** All four installs must match exactly. |
-| Render pipeline | URP (set before any art is made) |
+| Unity version | **6000.3.25f1** (Unity 6.3 LTS). All four installs must match exactly. |
+| Render pipeline | URP 17.3.0 |
 | Asset Serialization | Force Text |
 | Version Control Mode | Visible Meta Files |
 
-Set the last two in Unity under Edit → Project Settings → Editor.
+The Editor and version control settings are saved in `ProjectSettings/`.
+
+### Open the project
+
+The repository contains the required `Assets`, `Packages`, and `ProjectSettings` folders. The project was initialized from a 3D URP template and validated with Unity Editor 6000.3.25f1.
+
+Clone the repository, then in Unity Hub choose **Add → Add project from disk** and select the repository folder. Use the Editor version above.
+
+Empty asset folders contain `.gitkeep` files so Git retains the folders alongside their `.meta` files.
 
 ## Repository structure
 
