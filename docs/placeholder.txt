@@ -1,0 +1,2 @@
+Project documentation goes in this folder (development guide, design notes, optimization justifications).
+This file only exists so git keeps the folder tracked while it is empty.
