@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blackout Island: The Cure</title>
+  <link rel="stylesheet" href="src/ui/style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui"></div>
+
+  <!-- three.js r128 + post-processing (vendored, no CDN at runtime) -->
+  <script src="lib/three.min.js"></script>
+  <script src="lib/CopyShader.js"></script>
+  <script src="lib/LuminosityHighPassShader.js"></script>
+  <script src="lib/FXAAShader.js"></script>
+  <script src="lib/EffectComposer.js"></script>
+  <script src="lib/RenderPass.js"></script>
+  <script src="lib/ShaderPass.js"></script>
+  <script src="lib/UnrealBloomPass.js"></script>
+
+  <!-- core -->
+  <script src="src/core/namespace.js"></script>
+  <script src="src/core/eventbus.js"></script>
+  <script src="src/core/input.js"></script>
+  <script src="src/core/engine.js"></script>
+  <script src="src/core/geometry.js"></script>
+  <!-- materials -->
+  <script src="src/materials/textures.js"></script>
+  <script src="src/materials/materials.js"></script>
+  <!-- world -->
+  <script src="src/world/level.js"></script>
+  <script src="src/world/terrain.js"></script>
+  <script src="src/world/sky.js"></script>
+  <script src="src/world/ocean.js"></script>
+  <script src="src/world/lighting.js"></script>
+  <script src="src/world/effects.js"></script>
+  <script src="src/world/forest.js"></script>
+  <script src="src/world/beach.js"></script>
+  <script src="src/world/bunker_exterior.js"></script>
+  <script src="src/world/bunker_interior.js"></script>
+  <script src="src/world/world.js"></script>
+  <!-- models -->
+  <script src="src/models/generator.js"></script>
+  <script src="src/models/humanoid.js"></script>
+  <script src="src/models/robot.js"></script>
+  <script src="src/models/weapons.js"></script>
+  <!-- physics -->
+  <script src="src/physics/collision.js"></script>
+  <script src="src/physics/doors.js"></script>
+  <script src="src/physics/crate.js"></script>
+  <script src="src/physics/interactables.js"></script>
+  <!-- nav -->
+  <script src="src/nav/navgrid.js"></script>
+  <script src="src/nav/astar.js"></script>
+  <!-- agents -->
+  <script src="src/agents/blackboard.js"></script>
+  <script src="src/agents/perception.js"></script>
+  <script src="src/agents/movement.js"></script>
+  <script src="src/agents/agent_base.js"></script>
+  <script src="src/agents/security_patrol_fsm.js"></script>
+  <script src="src/agents/hunter_bt.js"></script>
+  <script src="src/agents/tactical_guard_utility.js"></script>
+  <script src="src/agents/commander_goap.js"></script>
+  <script src="src/agents/agent_manager.js"></script>
+  <!-- player -->
+  <script src="src/player/player.js"></script>
+  <!-- weapons -->
+  <script src="src/weapons/weapon_system.js"></script>
+  <!-- audio -->
+  <script src="src/audio/audio.js"></script>
+  <!-- ui -->
+  <script src="src/ui/hud.js"></script>
+  <script src="src/ui/menus.js"></script>
+  <script src="src/ui/debug_overlay.js"></script>
+  <!-- game -->
+  <script src="src/game/mission.js"></script>
+  <!-- main -->
+  <script src="src/main.js"></script>
+</body>
+</html>

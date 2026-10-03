@@ -1,0 +1,18 @@
+{
+  "name": "blackout-island-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser prototype of Blackout Island: The Cure. The game itself needs no build step; Playwright is only used for automated testing.",
+  "scripts": {
+    "test": "node tests/smoke.js",
+    "ai": "node tests/ai.js",
+    "perf": "node tests/perf.js medium",
+    "soak": "node tests/soak.js",
+    "shots": "node tests/screenshots.js",
+    "walk": "node tests/walk.js",
+    "loadtime": "node tests/loadtime.js low medium high"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.2"
+  }
+}
