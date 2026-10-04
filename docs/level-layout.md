@@ -71,6 +71,32 @@ Position is the centre of the opening, in the middle of the wall's thickness, at
 Escape checkpoints (from the prototype): escapeEntrance (0, 10, 40) facing 180°, and escapeForest
 (0, 10.04, 24) facing 180°.
 
+## Terrain, beach and boundary (W2)
+
+Built by **Blackout/World/Build Terrain** (`Assets/Editor/WorldBuilder/TerrainBuilder.cs`). The outdoor
+numbers are in `IslandLayout.cs`. The ground height comes from `IslandHeightField.cs`, a port of the
+prototype's height function that is checked by EditMode tests in `Assets/Editor/WorldBuilder/Tests`.
+Re-running the tool gives byte-identical output. It overwrites any hand sculpting, and asks first in the Editor.
+
+| Item | Value |
+| --- | --- |
+| Terrain | `Terrain/IslandTerrain`: 400 × 400 m (x −200 … 200, z −180 … 220), y −8 … 24, heightmap 513² (0.78 m). TerrainData `Assets/Environment/Terrain/IslandTerrainData.asset` (binary). URP Terrain Lit, no layers yet (W6) |
+| Ground range | −5.93 … 21.52 m, the same as the prototype |
+| Compound pad | Exactly y 10.0 over x −22 … 22, z 28 … 62, blending out over 16 m. Near the trail end (z 28 … 40) it varies by up to ±0.13 m |
+| Forest route | Rises from y 2.0 at z −92 to y 10.0 at the gate (z 30). The trail is smoothed to that profile; the forest either side has rolling relief |
+| Hill | North of the cliff line (z 62 for \|x\| ≤ 24): 14.6 m at the cliff top, up to 21.5 m. At least 1 m of ground over every underground room (tested) |
+| Beach | Plane sloping 0.115 m per m (6.6°), y 2.0 at 17 m inland of the shoreline. Shoreline z −105 at x 0 and z −101.2 at x 30 |
+| Berth (Unity addition) | Sea bed kept at ≤ −1.5 m over x 1.6 … 6.2, z −129 … −116 (3 m blend). The hull bottom is at −0.85, so it clears the bed by at least 0.65 m |
+| Dock landing (Unity addition) | Sand raised to y 1.25 under x −2.4 … 2.4, z −101 … −97 (3 m blend). Stepping off the deck is now ≤ 0.1 m, down from 0.33 m |
+| Ramp hole | Terrain hole over x −1.5 … 1.5, z 52.4 … 60.2: the part of the ramp whose roof (floor + 3.0 + 0.4) is above the plateau. Computed from `BunkerLayout.asset`. The 0.78 m grid cuts 44 cells (x ±1.56, z 52.03 … 60.63); the overrun is inside the ramp and lobby walls |
+| Boundary | `Terrain/IslandBoundary`: 180 invisible BoxColliders, 1 m thick, y −8 … 30, 841 m around. They sit on the 0.6 m water-depth line, traced every 2° from (0, 28). They go round x −10 … 12, z −132 … −92, so the dock, boat and boat zone stay inside |
+| Water | `Beach/Water`: 520 × 520 m plane at y 0 centred on (0, 20). Transparent placeholder material, no collider, no shadows |
+| Dock | `Beach/Dock`: deck x ±1.4, z −128 … −97, top 1.3, 0.35 thick. Posts Ø 0.3 m every 3 m at x ±1.5 (z −98 … −128), from y −4. Rails at deck + 0.8 … 0.9. The east rail is open from z −119 to −128 beside the boat, with short bollards (deck + 0.25) at z −122 and −125 |
+| Boat | `Beach/Boat` at (3.7, 0.15, −122.5), yaw −2.9°, bow to the south, motor toward the shore. Hull 2.9 m wide, deck y 0.7. Fenders on the dock (west) side. Lantern at about (2.6, 2.6, −124.3). Its light (W7) goes just above it; the reference's (2.5, 2.75, −124.2) ignores the boat's yaw. Colliders on the hull, sides, cabin and roof only. Keep it dynamic (it will bob) |
+
+Placeholder materials are in `Assets/Materials/Environment/Greybox`: Water, DockWood, DockWoodDark,
+BoatHull, BoatTrim and BoatDark. The W5 material library replaces them. Static flags are set in W7.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -82,5 +108,10 @@ Escape checkpoints (from the prototype): escapeEntrance (0, 10, 40) facing 180°
 | Lab ceiling 4.0 → 3.0 | The containment chamber must be under 2.9 m including its base (it was 3.25 m) | World Builder (later step) |
 | Lobby redesigned as 11.2 × 3.6 m | The prototype's lobby desk and lockers were hidden behind the back wall; they move into the lobby | World Builder (later step) |
 | Ramp 20 m at 20.6° → 17.2 m at 23.6° | Still under the default 45° CharacterController and NavMesh slope limits | — |
+| Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
+| Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
+| Terrain hole over the ramp top (W2) | The ramp is open from above at z 52.4 … 60.2 until the entrance building (later W step) covers it | World Builder (later step) |
+| Invisible boundary walls (W2) | On the Default layer, so they also stop raycasts, but they are all offshore | Systems Engineer (layers), only if a separate layer is wanted |
 
-Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions unchanged.
+Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
+berth, the dock landing and the ramp hole (see "Terrain, beach and boundary").
