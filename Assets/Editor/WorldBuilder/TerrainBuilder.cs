@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Blackout.World;
 using UnityEditor;
@@ -16,9 +17,9 @@ namespace Blackout.Editor
     ///   TerrainData is saved as Assets/Environment/Terrain/IslandTerrainData.asset.
     /// - A terrain hole over the top of the bunker ramp, where the ramp's roof would stick out of the plateau.
     /// - Terrain/IslandBoundary: invisible walls just offshore, so the player cannot leave the island.
-    /// Re-runnable and deterministic: every run writes the same heights, hole and walls, and only generated
-    /// objects are replaced (see <see cref="GeneratedObjects"/>). Hand-sculpted heights are overwritten, so in the
-    /// Editor it asks first.
+    /// Re-runnable and deterministic: every run writes the same heights, hole and walls, reusing the objects it
+    /// generated before, so a re-run leaves the scene file unchanged (see <see cref="GeneratedObjects"/>).
+    /// Hand-sculpted heights are overwritten, so in the Editor it asks first.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.TerrainBuilder.BuildTerrain
     /// </summary>
     public static class TerrainBuilder
@@ -223,8 +224,8 @@ namespace Blackout.Editor
             Transform container = GeneratedObjects.FindOrCreateChild(root, BoundaryName, UndoLabel);
             container.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             container.localScale = Vector3.one;
-            GeneratedObjects.RemoveGenerated(container);
 
+            var built = new HashSet<string>();
             float height = WallTopY - WallBottomY;
             float perimeter = 0f;
             for (int i = 0; i < coast.Length; i++)
@@ -235,17 +236,19 @@ namespace Blackout.Editor
                 Vector2 middle = (a + b) * 0.5f;
                 perimeter += edge.magnitude;
 
-                var wall = new GameObject(GeneratedObjects.Name(container, i.ToString("000")));
-                wall.transform.SetParent(container, false);
+                GameObject wall = GeneratedObjects.GetOrCreate(container, i.ToString("000"), built, UndoLabel);
                 wall.transform.SetPositionAndRotation(
                     new Vector3(middle.x, (WallBottomY + WallTopY) * 0.5f, middle.y),
                     Quaternion.LookRotation(new Vector3(edge.x, 0f, edge.y)));
+                wall.transform.localScale = Vector3.one;
 
                 // One wall thickness longer than its edge, so neighbouring walls overlap at the corners.
-                wall.AddComponent<BoxCollider>().size = new Vector3(WallThickness, height, edge.magnitude + WallThickness);
-                Undo.RegisterCreatedObjectUndo(wall, UndoLabel);
+                var box = GeneratedObjects.GetOrAddComponent<BoxCollider>(wall);
+                box.center = Vector3.zero;
+                box.size = new Vector3(WallThickness, height, edge.magnitude + WallThickness);
             }
 
+            GeneratedObjects.RemoveStale(container, built);
             return perimeter;
         }
     }
