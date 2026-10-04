@@ -17,6 +17,7 @@ namespace Blackout.Editor
     ///   TerrainData is saved as Assets/Environment/Terrain/IslandTerrainData.asset.
     /// - A terrain hole over the top of the bunker ramp, where the ramp's roof would stick out of the plateau.
     /// - Terrain/IslandBoundary: invisible walls just offshore, so the player cannot leave the island.
+    /// - Beach/Water, Beach/Dock and Beach/Boat: the greybox beach (see <see cref="BeachGreyboxBuilder"/>).
     /// Re-runnable and deterministic: every run writes the same heights, hole and walls, reusing the objects it
     /// generated before, so a re-run leaves the scene file unchanged (see <see cref="GeneratedObjects"/>).
     /// Hand-sculpted heights are overwritten, so in the Editor it asks first.
@@ -31,6 +32,7 @@ namespace Blackout.Editor
         public const int BoundaryRays = 180;
 
         private const string TerrainRootName = "Terrain";
+        private const string BeachRootName = "Beach";
         private const string TerrainObjectName = "IslandTerrain";
         private const string BoundaryName = "IslandBoundary";
         private const string RampRoomName = "BunkerEntranceRamp";
@@ -76,6 +78,7 @@ namespace Blackout.Editor
             Terrain terrain = EnsureTerrain(root, data);
             Vector2[] coast = IslandBoundary.TraceCoast(BoundaryRays);
             float perimeter = BuildBoundary(root, coast);
+            string beach = BeachGreyboxBuilder.Build(WorldSceneSkeleton.FindRoot(scene, BeachRootName).transform);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -85,7 +88,7 @@ namespace Blackout.Editor
             Debug.Log($"[World] Terrain built in {timer.ElapsedMilliseconds} ms: {data.size.x} x {data.size.z} m, "
                 + $"heightmap {data.heightmapResolution}, ground y {minY:0.00} .. {maxY:0.00}, material {material}; "
                 + $"ramp hole {holeCells} cells over x {hole.xMin:0.0} .. {hole.xMax:0.0}, z {hole.yMin:0.0} .. {hole.yMax:0.0}; "
-                + $"boundary {coast.Length} walls, {perimeter:0} m.");
+                + $"boundary {coast.Length} walls, {perimeter:0} m; beach: {beach}.");
         }
 
         /// <summary>
