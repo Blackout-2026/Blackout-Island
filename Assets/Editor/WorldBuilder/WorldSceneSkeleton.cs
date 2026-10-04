@@ -90,7 +90,7 @@ namespace Blackout.Editor
             return scene;
         }
 
-        private static GameObject FindRoot(Scene scene, string rootName)
+        internal static GameObject FindRoot(Scene scene, string rootName)
         {
             foreach (GameObject root in scene.GetRootGameObjects())
             {
