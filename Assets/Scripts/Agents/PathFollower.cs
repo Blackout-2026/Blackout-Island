@@ -12,7 +12,7 @@ namespace Blackout.Agents
     /// barricade). Unchanged destinations are ignored, so AgentRoot may call SetDestination every think tick.
     /// Ports the prototype's AgentController (agents/movement.js) steps 1, 2, 4, 5 and 7.
     /// </summary>
-    public class PathFollower : MonoBehaviour, IAgentMover
+    public class PathFollower : MonoBehaviour, IAgentMover, IAgentFacing
     {
         [SerializeField] private MovementSettings settings = new MovementSettings();
 
@@ -29,6 +29,9 @@ namespace Blackout.Agents
         private float blockedTimer;
         private Vector2 velocity; // x = world X, y = world Z
         private float yaw;
+        private bool hasLookTarget;
+        private Vector3 lookTarget;
+        private bool aiming;
 
         public MovementSettings Settings => settings;
 
@@ -82,6 +85,13 @@ namespace Blackout.Agents
                 hasDestination = true;
                 needsPlan = true;
             }
+        }
+
+        public void SetFacing(bool hasLook, Vector3 look, bool isAiming)
+        {
+            hasLookTarget = hasLook;
+            lookTarget = look;
+            aiming = isAiming;
         }
 
         public void Stop()
@@ -186,9 +196,25 @@ namespace Blackout.Agents
                 }
             }
 
-            if (speed > settings.minTurnSpeed)
+            // Face the look target if there is one (even when standing still), otherwise the direction of travel.
+            bool turn = false;
+            float targetYaw = yaw;
+            Vector2 toLook = new Vector2(lookTarget.x - position.x, lookTarget.z - position.z);
+            if (hasLookTarget && toLook.sqrMagnitude > 1e-4f)
             {
-                yaw = MotionMath.TurnToward(yaw, MotionMath.YawOf(velocity), settings.turnRateDegrees, dt);
+                targetYaw = MotionMath.YawOf(toLook);
+                turn = true;
+            }
+            else if (speed > settings.minTurnSpeed)
+            {
+                targetYaw = MotionMath.YawOf(velocity);
+                turn = true;
+            }
+
+            if (turn)
+            {
+                float rate = settings.turnRateDegrees * (aiming ? settings.aimTurnMultiplier : 1f);
+                yaw = MotionMath.TurnToward(yaw, targetYaw, rate, dt);
                 transform.rotation = Quaternion.Euler(0f, yaw, 0f);
             }
         }

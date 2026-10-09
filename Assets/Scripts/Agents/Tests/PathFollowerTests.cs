@@ -357,5 +357,72 @@ namespace Blackout.Agents.Tests
             Assert.Greater(yaw, 0f, "it started turning");
             Assert.Less(yaw, 90f, "but not instantly");
         }
+
+        [Test]
+        public void SetFacing_TurnsAStandingAgentTowardTheLookTarget()
+        {
+            follower.SetFacing(true, new Vector3(10f, 0f, 0f), false); // +X is yaw 90
+
+            Run(1f);
+
+            Assert.AreEqual(90f, gameObject.transform.eulerAngles.y, 0.5f);
+        }
+
+        [Test]
+        public void SetFacing_TurnsAtALimitedRate()
+        {
+            follower.SetFacing(true, new Vector3(10f, 0f, 0f), false);
+
+            Run(0.1f); // 286.5 deg/s * 0.1 s = 28.65 degrees
+
+            Assert.AreEqual(28.65f, gameObject.transform.eulerAngles.y, 0.5f);
+        }
+
+        [Test]
+        public void SetFacing_Aiming_TurnsFaster()
+        {
+            follower.SetFacing(true, new Vector3(10f, 0f, 0f), true);
+
+            Run(0.1f); // 286.5 * 1.4 * 0.1 = 40.1 degrees
+
+            Assert.AreEqual(40.1f, gameObject.transform.eulerAngles.y, 0.5f);
+        }
+
+        [Test]
+        public void LookTarget_WinsOverTheDirectionOfTravel()
+        {
+            follower.SetFacing(true, new Vector3(500f, 0f, 0f), true); // look (far away) along +X ...
+            follower.SetDestination(new Vector3(0f, 0f, 20f), MoveSpeed.Walk); // ... while walking along +Z
+
+            Run(2f);
+
+            Assert.AreEqual(90f, gameObject.transform.eulerAngles.y, 1f);
+            Assert.Greater(gameObject.transform.position.z, 1f, "it still walked");
+        }
+
+        [Test]
+        public void SetFacing_WithoutALookTarget_FacesTheDirectionOfTravelAgain()
+        {
+            follower.SetFacing(true, new Vector3(50f, 0f, 0f), false);
+            Run(1f);
+
+            follower.SetFacing(false, Vector3.zero, false);
+            follower.SetDestination(new Vector3(0f, 0f, 20f), MoveSpeed.Walk); // +Z is yaw 0
+            Run(2f);
+
+            float yaw = Mathf.DeltaAngle(0f, gameObject.transform.eulerAngles.y);
+            Assert.AreEqual(0f, yaw, 1f);
+        }
+
+        [Test]
+        public void AStandingAgentWithNoLookTarget_KeepsItsFacing()
+        {
+            gameObject.transform.rotation = Quaternion.Euler(0f, 40f, 0f);
+            follower.Configure(provider); // picks up the starting yaw, as Awake does in play mode
+
+            Run(1f);
+
+            Assert.AreEqual(40f, gameObject.transform.eulerAngles.y, 0.01f);
+        }
     }
 }

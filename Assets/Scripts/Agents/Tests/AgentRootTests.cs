@@ -26,6 +26,28 @@ namespace Blackout.Agents.Tests
             public Vector3[] CurrentPath => null;
         }
 
+        private sealed class FakeFacingMover : IAgentMover, IAgentFacing
+        {
+            public int facingCalls;
+            public bool hasLook;
+            public Vector3 look;
+            public bool aiming;
+
+            public void SetDestination(Vector3 destination, MoveSpeed speed) { }
+            public void Stop() { }
+            public bool HasArrived => false;
+            public float RemainingDistance => 0f;
+            public Vector3[] CurrentPath => null;
+
+            public void SetFacing(bool hasLookTarget, Vector3 lookTarget, bool isAiming)
+            {
+                facingCalls++;
+                hasLook = hasLookTarget;
+                look = lookTarget;
+                aiming = isAiming;
+            }
+        }
+
         private sealed class FakeAnimator : IAgentAnimator
         {
             public int applyCalls;
@@ -264,6 +286,27 @@ namespace Blackout.Agents.Tests
             {
                 Object.DestroyImmediate(registryObject);
             }
+        }
+
+        [Test]
+        public void ApplyIntent_PassesTheLookTargetAndAimToAMoverThatCanFace()
+        {
+            var facingMover = new FakeFacingMover();
+            root.Configure(brain, facingMover, animator, shooter);
+            var intent = new AgentIntent { hasLookTarget = true, lookTarget = new Vector3(5f, 0f, 6f), aim = true };
+
+            root.ApplyIntent(intent);
+
+            Assert.AreEqual(1, facingMover.facingCalls);
+            Assert.IsTrue(facingMover.hasLook);
+            Assert.AreEqual(new Vector3(5f, 0f, 6f), facingMover.look);
+            Assert.IsTrue(facingMover.aiming);
+        }
+
+        [Test]
+        public void ApplyIntent_WithAMoverThatCannotFace_StillWorks()
+        {
+            Assert.DoesNotThrow(() => root.ApplyIntent(new AgentIntent { hasLookTarget = true, lookTarget = Vector3.one }));
         }
     }
 }
