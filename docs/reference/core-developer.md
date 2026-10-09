@@ -7,9 +7,11 @@ disagree (see section 9). Files read: `README.md`, `screenshots/` (06, 07, 08, 0
 `bunker_exterior.js` and `beach.js` (outdoor props), `src/physics/interactables.js` (cure case,
 medkit), `crate.js`, `doors.js` (door visuals), `src/world/level.js` (agent counts).
 
-Dimensions in sections 2 to 6 were **measured** by running the prototype's own model builders in Node
-(three.js r128, materials stubbed, script kept outside the repo) and taking bounding boxes and
-triangle counts of the resulting geometry. Anything marked **(guess)** is my judgement, not code.
+Dimensions and triangle counts for the generator, robot, humanoids and weapon viewmodels (sections 1 to 5)
+were **measured** by running the prototype's own model builders in Node (three.js r128, materials stubbed,
+script kept outside the repo) and taking bounding boxes and triangle counts of the resulting geometry. Sizes in
+sections 6 and 7 (cure case, chamber, medkit, props) are read from the code, not measured. Anything marked
+**(guess)** is my judgement, not code.
 
 ## 0. Units and coordinate conversion
 
@@ -99,8 +101,8 @@ Key sub-dimensions:
 | Flywheel | radius 0.62, 0.14 thick, at x -3.45, y 1.0 |
 | Beacon | radius 0.10, 0.18 tall, at (-0.6, 2.55, -0.5) |
 
-The room code puts a box collider of 6.4 x 3.6 x 3.2 m around the generator (x +/-3.2, z +/-1.6). Use the
-same as the collider proxy.
+The room code puts a box collider of 6.4 x 3.6 x 3.2 m around the generator (x +/-3.2, z +/-1.6, from the
+floor up to 3.6, which is 3.3 above the model origin). Use the same as the collider proxy.
 
 ### 2.3 Parts list
 
@@ -167,10 +169,10 @@ Unity URP/Lit: smoothness = 1 - roughness; use the same metalness.
 | --- | --- | --- | --- |
 | Energy core | cyan-white shader: colour blends (0.05, 0.35, 0.55) to (0.5, 1.4, 1.8), bright rim, vertical bands scrolling; intensity = level x 2.2 | level 0.92 +/- 0.08, a fast flicker | flickers 1.6 s (random 0.15 or 1.1 level, fading) then 0 (dark) |
 | Indicator LEDs | green (0.3, 3.0, 0.5) | on | near off (0.02, 0.05, 0.02) |
-| Warning LED (4th) | amber (3.0, 1.6, 0.2) | slow blink (4 Hz square) | fast blink (10 Hz), stays on as a fault |
+| Warning LED (4th) | amber (3.0, 1.6, 0.2) | slow blink (about 0.6 blinks per second) | fast blink (about 1.6 per second), stays on as a fault |
 | Beacon | amber #ffa020, intensity 2.5 | rotates 5 rad/s about Y | intensity 0.05, stops |
-| Gauges | none | needles hover at 0.35 / 0.47 / 0.59 of the dial with jitter | needles fall to zero (about 2.5 s) |
-| Flywheel | none | spins 9 rad/s about X | slows to 0 (about 5 s) |
+| Gauges | none | needles hover at 0.35 / 0.47 / 0.59 of the dial with jitter | needles fall to zero (nearly there after about 1.5 s) |
+| Flywheel | none | spins 9 rad/s about X | slows to a stop (nearly stopped after about 6 s) |
 
 Other effects on disable: 60 + 50 sparks at the control face and the stack, a smoke plume, then
 intermittent spark bursts every 0.4 to 2.0 s at (2.9, 0.6, -1.2) and a steady smoke emitter at
@@ -324,7 +326,8 @@ weapon. Counts in the level: Security Patrol x3, Hunter x2, Commander x1.
 
 ### 4.1 Shared body and proportions
 
-Standing, feet on the floor, facing +Z. Total height 1.87 m to the top of the head or helmet. Each
+Standing, feet on the floor, facing +Z. Total height 1.87 m above the floor to the top of the head or helmet
+(the overview table says 1.89 because the boots dip 0.03 m below the origin). Each
 character is one mesh with vertex colours (about 2.6k to 3.1k triangles including the weapon).
 
 | Joint | Height (m) | Offset from parent |
@@ -499,7 +502,7 @@ and sleeve. It has no muzzle.
 | --- | --- | --- |
 | Grip | cylinder r 0.016 / 0.018, 0.12 long + 4 thin rings r 0.019 x 0.006 | polymer |
 | Guard | box 0.07 x 0.012 x 0.014 | metal |
-| Blade | extruded tapered profile 0.205 long, 0.032 tall at the base, 0.004 thick with a small bevel; the tip drops to the lower edge | polished steel #b8bec2 (metal 1.0, rough 0.18) |
+| Blade | extruded tapered profile 0.205 long, 0.032 tall at the base, 0.004 thick with a small bevel; it ends in an angled point | polished steel #b8bec2 (metal 1.0, rough 0.18) |
 | Spine ridge | box 0.005 x 0.006 x 0.17 along the top of the blade | metal |
 | Hand | glove and sleeve cylinder r 0.042 / 0.05, 0.42 long | glove, sleeve |
 
@@ -526,7 +529,7 @@ the pedestal).
 ### 6.1 Cure case (the objective)
 
 A small **floating glass case with three glowing cyan vials**, above the chamber pedestal. It hovers
-1.45 m above the lab floor (about 0.06 m over the pedestal plate), slowly turns and bobs. It disappears
+1.45 m above the lab floor (the case's base plate sits about 0.02 m over the pedestal plate), slowly turns and bobs. It disappears
 when the player walks into it.
 
 | Part | Size (m) | Material |
@@ -598,7 +601,7 @@ column is only a hint **(guess)**: "model" = needs a custom low-poly mesh, "kit"
 | Desk monitor | 4 | screen 0.62 x 0.42, bezel 0.70 x 0.50 x 0.12, stand 0.06 x 0.25 x 0.06 | 2 show a live camera feed | model |
 | Counter monitor | 1 | screen 0.45 x 0.30 | on the checkpoint counter | model (same as above, smaller) |
 | Wall monitor | 1 | screen 1.10 x 0.62, at 2.25 high | wall mounted | model |
-| Wall locker | 12 | 0.55 wide x 2.0 x 0.55 deep (steel-blue #51606b) with a vent plate 0.3 x 0.15 | along the west wall | model one, instance |
+| Wall locker | 12 | 0.52 wide x 2.0 x 0.55 deep (steel-blue #51606b) with a vent plate 0.3 x 0.15 | along the west wall | model one, instance |
 | Checkpoint counter | 1 | 2.4 x 1.1 x 0.7 | desk top + steel strip on top | model |
 | Metal detector arch | 1 | 2.34 wide x 2.55 tall x 0.4 deep (two 0.24-wide posts and a lintel) | light grey plastic | model |
 | Glass partition | 1 | 6.0 long x 2.36 tall | dark base 0.95 tall, glass above, steel frame and 3 mullions | model |
@@ -633,9 +636,9 @@ column is only a hint **(guess)**: "model" = needs a custom low-poly mesh, "kit"
 | **Generator G-1** | 1 | see section 2 | hero model | model (hero) |
 | Control console | 1 | body 0.75 x 1.05 x 1.8 (olive) + sloped top panel 0.6 x 0.06 x 1.8, tilted 0.35 rad | the interaction point (hold E) | model |
 | Fuel tank | 2 | cylinder r 1.0, 4.2 long, lying along Z, centre 1.35 high, on 2 cradles each (1.8 x 0.6 x 0.24) | olive, with a "DIESEL FLAMMABLE" sign | model |
-| Electrical cabinet | 6 | 1.2 x 2.2 x 0.7 with an inset panel 0.9 x 0.6 and 3 LEDs each (18 LEDs) | along the north wall | model one, instance |
+| Electrical cabinet | 6 | 1.2 x 2.2 x 0.7 with an inset panel 0.9 x 0.6 and 3 LEDs each (18 LEDs) | along the wall at z = -96 (the side nearest the corridor start) | model one, instance |
 | Wall fan | 1 | ring torus R 1.0 (tube 0.08); 5 blades 0.22 x 0.9 x 0.03, twisted 0.4 rad; hub r 0.15 x 0.2; black back disc r 1.0 | on the west wall at 5.0 high; **spins 6 rad/s until the blackout** | model |
-| Catwalk | 1 | deck 13.6 x 0.15 x 2.4 at 3.0 high; 5 support posts 0.12 square; handrail 1.0 high with 9 balusters | along the south wall | model |
+| Catwalk | 1 | deck 13.6 x 0.15 x 2.4 at 3.0 high; 5 support posts 0.12 square; handrail 1.0 high with 9 balusters | along the wall at z = -116 (the far side) | model |
 | Stairs | 1 | 10 steps, each 0.31 run x 0.30 rise x 1.4 wide (3.1 long, 3.0 high), diamond plate; handrail | up to the catwalk | model |
 | Pipes | 3 + 2 | exhaust r 0.22 up to the ceiling; r 0.16 across the room at 5.0 high; red r 0.10; 2 yellow fuel lines r 0.08 | | kit |
 | Medkit | 1 | see 6.3 | on the catwalk | model |
@@ -654,9 +657,9 @@ column is only a hint **(guess)**: "model" = needs a custom low-poly mesh, "kit"
 | Shelf with jars | 3 shelves | 0.45 x 0.03 x 5.0 each, 0.6 apart (0.9, 1.5, 2.1 high) | west wall; 9 glowing jars each | model |
 | Jar | 27 | cylinder r 0.07, 0.22 tall | **emissive** cyan, amber and green in rotation | kit |
 | Fume hood | 1 | base 1.0 x 0.9 x 3.0 + top 1.0 x 0.6 x 3.0 (at 2.0 to 2.6 high) + glass front 0.05 x 1.1 x 3.0 | west wall | model |
-| Commander's desk | 1 | 4.4 x 0.85 x 1.0 | south wall | model (reuse the desk) |
+| Commander's desk | 1 | 4.4 x 0.85 x 1.0 | far wall (z = -142) | model (reuse the desk) |
 | Desk monitor | 3 | as 7.1 | on the commander's desk | model (reuse) |
-| Outbreak wall screen | 1 | 3.4 x 1.9 flat, emissive world map texture, at 2.6 high | south wall | decal-like quad |
+| Outbreak wall screen | 1 | 3.4 x 1.9 flat, emissive world map texture, at 2.6 high | far wall (z = -142) | decal-like quad |
 
 ### 7.6 Outdoor set dressing (compound, dock, beach)
 
