@@ -8,9 +8,10 @@ using UnityEngine;
 namespace Blackout.Editor
 {
     /// <summary>
-    /// Creates Assets/Prefabs/Agents/AgentBase.prefab: the capsule, Health and AgentRoot every agent shares, with an
-    /// empty Visual child where each agent type nests its model (Core Developer's prefabs or a free humanoid).
-    /// Re-runnable: if the prefab already exists it is left alone, so hand edits are never overwritten.
+    /// Creates Assets/Prefabs/Agents/AgentBase.prefab: the capsule, Health, AgentRoot and PathFollower every agent
+    /// shares, with an empty Visual child where each agent type nests its model (Core Developer's prefabs or a free
+    /// humanoid). Re-runnable: an existing prefab is only topped up with components it is missing, so hand edits
+    /// (speeds, collider tweaks) are never overwritten.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.AgentBasePrefabBuilder.Build
     /// </summary>
     public static class AgentBasePrefabBuilder
@@ -28,7 +29,7 @@ namespace Blackout.Editor
         {
             if (File.Exists(PrefabPath))
             {
-                Debug.Log($"AgentBasePrefabBuilder: {PrefabPath} already exists, leaving it unchanged.");
+                AddMissingComponents();
                 return;
             }
 
@@ -53,6 +54,7 @@ namespace Blackout.Editor
 
                 root.AddComponent<Health>();
                 root.AddComponent<AgentRoot>();
+                root.AddComponent<PathFollower>();
 
                 var visual = new GameObject(VisualChildName);
                 visual.layer = enemyLayer;
@@ -64,6 +66,35 @@ namespace Blackout.Editor
             finally
             {
                 Object.DestroyImmediate(root);
+            }
+        }
+
+        // Adds anything the prefab lacks (older versions had no mover) and saves only if something was added.
+        private static void AddMissingComponents()
+        {
+            GameObject contents = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
+            {
+                bool changed = false;
+                if (contents.GetComponent<PathFollower>() == null)
+                {
+                    contents.AddComponent<PathFollower>();
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(contents, PrefabPath);
+                    Debug.Log($"AgentBasePrefabBuilder: added the missing components to {PrefabPath}.");
+                }
+                else
+                {
+                    Debug.Log($"AgentBasePrefabBuilder: {PrefabPath} is up to date, leaving it unchanged.");
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(contents);
             }
         }
     }
