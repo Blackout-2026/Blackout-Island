@@ -1,0 +1,19 @@
+{
+    "name": "Blackout.Agents.Editor",
+    "rootNamespace": "Blackout.Editor",
+    "references": [
+        "Blackout.Shared",
+        "Blackout.Agents"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
