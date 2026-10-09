@@ -575,3 +575,244 @@ soft green point light (#60ff90).
 | --- | --- | --- |
 | Case | rounded box 0.42 x 0.26 x 0.28, radius 0.05 | off-white #e8e8e2 with a red cross #c41e1e decal (rough 0.5) |
 | Handle | half torus R 0.07, tube 0.015, on top at y +0.13 | plasticDark #23272b |
+
+## 7. Props needed, with counts
+
+Counts and sizes come from the room-building code (`bunker_interior.js`, `bunker_exterior.js`, `beach.js`,
+`crate.js`, `interactables.js`). Sizes are width (X) x height (Y) x depth (Z) in metres, as built in the
+prototype. In the prototype most props are plain boxes merged into the room, so "detail level" is **low**
+(boxes, cylinders, one or two bevels) unless noted. Triangle counts were not measured for props.
+
+Which items count as a prop for the Core Developer, and which belong to the World Builder (structure,
+vegetation, lights) or the Systems Engineer (doors), is for step C4 and the playbook to decide. The last
+column is only a hint **(guess)**: "model" = needs a custom low-poly mesh, "kit" = could come from a CC0 pack,
+"decal" = a textured quad.
+
+### 7.1 Security office (B1-S, 16 x 12 m)
+
+| Prop | Count | Size (m) | Notes | Hint |
+| --- | --- | --- | --- | --- |
+| Desk with drawer pedestal | 2 | 3.0 x 0.78 x 1.0 | top 0.04 thick, 4 legs r 0.03, steel-blue drawer unit; along the east wall | model |
+| Office chair (swivel) | 4 | seat 0.46 x 0.08 x 0.46 at 0.47 high, back 0.44 x 0.5 x 0.06 (top at 1.03) | post r 0.03, round base r 0.25 | model |
+| Meeting table | 1 | 2.0 x 0.76 x 1.0 | 4 steel legs; a mug r 0.04, 0.1 tall on it | model |
+| Desk monitor | 4 | screen 0.62 x 0.42, bezel 0.70 x 0.50 x 0.12, stand 0.06 x 0.25 x 0.06 | 2 show a live camera feed | model |
+| Counter monitor | 1 | screen 0.45 x 0.30 | on the checkpoint counter | model (same as above, smaller) |
+| Wall monitor | 1 | screen 1.10 x 0.62, at 2.25 high | wall mounted | model |
+| Wall locker | 12 | 0.55 wide x 2.0 x 0.55 deep (steel-blue #51606b) with a vent plate 0.3 x 0.15 | along the west wall | model one, instance |
+| Checkpoint counter | 1 | 2.4 x 1.1 x 0.7 | desk top + steel strip on top | model |
+| Metal detector arch | 1 | 2.34 wide x 2.55 tall x 0.4 deep (two 0.24-wide posts and a lintel) | light grey plastic | model |
+| Glass partition | 1 | 6.0 long x 2.36 tall | dark base 0.95 tall, glass above, steel frame and 3 mullions | model |
+| Weapon rack | 1 | wooden board 2.0 x 1.2, 3 rifle silhouettes 0.06 x 1.0 x 0.10 | on the west wall | model |
+| CCTV camera | 1 | 0.30 x 0.18 x 0.40, tilted | ceiling corner | model |
+| Cable tray + vent | 1 + 1 | tray 14 long x 0.3 wide with 4 cables r 0.025; vent 1.2 x 0.05 x 0.6 | ceiling | kit |
+
+### 7.2 Entrance lobby
+
+| Prop | Count | Size (m) | Notes | Hint |
+| --- | --- | --- | --- | --- |
+| Guard desk | 1 | 1.9 x 1.0 x 1.0 | with a small screen 0.5 x 0.35 on top | model (reuse the desk) |
+| Wall locker | 4 | 0.48 x 1.9 x 0.5 | | model (reuse) |
+| Fire extinguisher | 1 | r 0.09, 0.5 tall, red | | kit |
+
+### 7.3 Corridor (B1-C, 4 x 41 m)
+
+| Prop | Count | Size (m) | Notes | Hint |
+| --- | --- | --- | --- | --- |
+| **Pushable crate** ("MED-SUPPLY 04-117") | 1 | **1.5 x 1.5 x 1.5** | wooden crate, 2 dark metal straps, stencil on 2 faces; the player pushes it, so it must be a clean cube with a centred pivot | model |
+| Fire-hose cabinet | 1 | 0.15 x 0.9 x 1.0, red | with a "FIRE HOSE" sign | model |
+| Fuse box | 2 | 0.15 x 0.8 x 0.7, olive | wall mounted | model |
+| Vent grille | 2 | 0.03 x 0.5 x 1.0 with 5 slats | low on the east wall | kit |
+| Ceiling pipes | 3 runs | r 0.10 (grey-green, 41 long), r 0.07 (red, with a jog around the generator door), r 0.06 (yellow, 22 long) | 14 hanging brackets along the run | kit |
+| Cable tray | 1 | 0.7 wide x 41 long, 5 cables r 0.022 | ceiling | kit |
+| Pillars | 10 | 0.38 x 3.4 x 0.64, with a 0.5 m hazard base | structural (5 pairs); likely World Builder | (structure) |
+
+### 7.4 Generator room (17.6 x 20 x 6.5 m)
+
+| Prop | Count | Size (m) | Notes | Hint |
+| --- | --- | --- | --- | --- |
+| **Generator G-1** | 1 | see section 2 | hero model | model (hero) |
+| Control console | 1 | body 0.75 x 1.05 x 1.8 (olive) + sloped top panel 0.6 x 0.06 x 1.8, tilted 0.35 rad | the interaction point (hold E) | model |
+| Fuel tank | 2 | cylinder r 1.0, 4.2 long, lying along Z, centre 1.35 high, on 2 cradles each (1.8 x 0.6 x 0.24) | olive, with a "DIESEL FLAMMABLE" sign | model |
+| Electrical cabinet | 6 | 1.2 x 2.2 x 0.7 with an inset panel 0.9 x 0.6 and 3 LEDs each (18 LEDs) | along the north wall | model one, instance |
+| Wall fan | 1 | ring torus R 1.0 (tube 0.08); 5 blades 0.22 x 0.9 x 0.03, twisted 0.4 rad; hub r 0.15 x 0.2; black back disc r 1.0 | on the west wall at 5.0 high; **spins 6 rad/s until the blackout** | model |
+| Catwalk | 1 | deck 13.6 x 0.15 x 2.4 at 3.0 high; 5 support posts 0.12 square; handrail 1.0 high with 9 balusters | along the south wall | model |
+| Stairs | 1 | 10 steps, each 0.31 run x 0.30 rise x 1.4 wide (3.1 long, 3.0 high), diamond plate; handrail | up to the catwalk | model |
+| Pipes | 3 + 2 | exhaust r 0.22 up to the ceiling; r 0.16 across the room at 5.0 high; red r 0.10; 2 yellow fuel lines r 0.08 | | kit |
+| Medkit | 1 | see 6.3 | on the catwalk | model |
+
+### 7.5 Laboratory (20 x 18 x 4 m)
+
+| Prop | Count | Size (m) | Notes | Hint |
+| --- | --- | --- | --- | --- |
+| **Containment chamber** | 1 | see 6.2 | centrepiece | model |
+| **Cure case** | 1 | see 6.1 | objective | model |
+| Lab bench | 4 | base 3.4 x 0.88 x 0.9 (white) + top 3.5 x 0.05 x 1.0 (dark) | each carries the items below; also used as cover | model |
+| Flask / beaker on a bench | 8 | cylinder r 0.05, 0.22 tall; conical r 0.07 to 0.04, 0.18 tall (2 per bench) | glass | kit |
+| Analyser on a bench | 4 | box 0.4 x 0.3 x 0.4 + drum r 0.12 / 0.14, 0.12 tall | white | model |
+| Microscope on a bench | 4 | base 0.18 x 0.04 x 0.24, arm 0.05 x 0.30 x 0.05, tube r 0.03, 0.2 long tilted 0.6 rad | dark plastic and steel | model |
+| Specimen fridge | 3 | 0.8 x 2.1 x 1.3, with a cyan glowing door panel 0.02 x 1.8 x 1.1 | east wall | model |
+| Shelf with jars | 3 shelves | 0.45 x 0.03 x 5.0 each, 0.6 apart (0.9, 1.5, 2.1 high) | west wall; 9 glowing jars each | model |
+| Jar | 27 | cylinder r 0.07, 0.22 tall | **emissive** cyan, amber and green in rotation | kit |
+| Fume hood | 1 | base 1.0 x 0.9 x 3.0 + top 1.0 x 0.6 x 3.0 (at 2.0 to 2.6 high) + glass front 0.05 x 1.1 x 3.0 | west wall | model |
+| Commander's desk | 1 | 4.4 x 0.85 x 1.0 | south wall | model (reuse the desk) |
+| Desk monitor | 3 | as 7.1 | on the commander's desk | model (reuse) |
+| Outbreak wall screen | 1 | 3.4 x 1.9 flat, emissive world map texture, at 2.6 high | south wall | decal-like quad |
+
+### 7.6 Outdoor set dressing (compound, dock, beach)
+
+Mostly World Builder dressing. Listed because the prototype builds them as props and `Props` will probably be
+asked to supply the movable ones (crate, barrel, sandbag).
+
+| Prop | Count | Size (m) | Notes |
+| --- | --- | --- | --- |
+| Wooden crate | 6 in the compound + 2 at the dock | 1.0 to 1.3 cube (compound, one stacked); 0.6 and 0.45 cubes (dock) | crate texture, slightly rotated |
+| Barrel | 5 in the compound + 1 at the dock | cylinder r 0.30, 0.9 tall, 12 sides | olive (4 + dock), rust (1) |
+| Sandbag | 59 | rounded box 0.62 x 0.2 x 0.36 | three walls: 6 x 4 rows, 5 x 4, 5 x 3 (staggered) |
+| Military truck | 1 | 2.6 wide x about 2.6 tall (the canvas cover may rise higher) x 6.6 long: chassis, cab 2.4 x 1.5 x 2.0, open bed with canvas half-cylinder cover r 1.3 x 4.2, 6 wheels r 0.48 x 0.35 | olive and dark |
+| Guard booth | 1 | 3.2 x 3.2 footprint, 2.95 tall, flat roof 3.6 x 3.6; window (glass 1.7 x 1.0) and an amber lamp | concrete |
+| Floodlight | 3 | pole r 0.10 / 0.14, 7 to 8 tall; head 0.7 x 0.5 x 0.45 with a bright lens 0.58 x 0.38 | head aims at the entrance |
+| Steam vent | 2 | cylinder r 0.55 / 0.65, 1.6 tall + cap r 0.9 / 0.7, 0.3 tall | steam particles |
+| Transformer box | 1 | 2.5 x 2.1 x 1.6 + 7 cooling slats | olive |
+| Antenna mast | 1 | 16 tall lattice, 4 legs, 10 cross braces, blinking red beacon (sphere r 0.16) | on the hill |
+| Satellite dish | 1 | spherical cap r 1.0 on a post r 0.08 / 0.10, 1.2 tall | on the roof |
+| Boat (with lantern) | 1 | 6.8 long x 2.7 beam; lofted hull, cabin 2.0 x 1.6 x 2.4, radar mast 1.4 tall, outboard motor 0.55 x 0.8 x 0.5, 3 fenders r 0.13 x 0.55, 2 jerry cans 0.35 x 0.45 x 0.18; lantern cylinder r 0.10 x 0.24 (amber, flickering emissive) | the exit; bobs on the waves |
+| Dock | 1 | 31 long x 2.8 wide planked deck, posts r 0.14 / 0.16, 2 cleats, 4 rope rings | World Builder |
+
+Not props: trees (pines, palms), bushes, grass, 170 rocks, 12 fallen logs, fence and gate, terrain. Those are
+World Builder vegetation and structure.
+
+### 7.7 Doors (visual reference only)
+
+Doors are built by the Systems Engineer (`physics/doors.js`); listed so the Core Developer knows the sizes.
+
+| Door | Opening W x H (m) | Type | Visual |
+| --- | --- | --- | --- |
+| Bunker blast door | 3.0 x 3.4 | slide, two leaves | olive-painted leaves 1.5 wide x 0.16 thick, each with a hazard stripe 0.35 tall and 4 dark ribs; one red valve wheel (torus R 0.28, tube 0.04) at 1.6 high |
+| Security door | 2.4 x 2.8 | slide, one panel | steel-blue panel 0.16 thick, window 0.5 x 0.35 at 1.65 high, hazard stripe 0.12 tall near the bottom |
+| Generator room door | 2.4 x 2.8 | hinged | steel-blue panel 0.08 thick, handle 0.22 x 0.04 x 0.06 at 1.05 high, "GENERATOR ROOM" sign 0.8 x 0.3 at 1.75 high; no window |
+| Laboratory door | 2.6 x 2.8 | slide, maglock | white panel, window and stripe as the security door; red maglock lamp 0.16 x 0.08 x 0.05 (emissive red (4, 0.2, 0.1)) on a box 0.3 x 0.2 x 0.08, above and beside the frame |
+
+### 7.8 Signs and decals
+
+All signs are flat quads with a generated texture; text is baked in. A decal list for step C4:
+
+| Text | Size (m) | Colours | Where |
+| --- | --- | --- | --- |
+| DANGER 11 kV / G-1 // 3.2 MW / MAIN CONTROL | see 2.3 | yellow, navy, black | generator model |
+| SECURITY CHECKPOINT B1-S | 4.6 x 0.72 | light grey stencil | security office wall |
+| ALL PERSONNEL PRESENT ID | 0.9 x 0.45 | navy #1d2633, off-white text | security office |
+| B1 FACILITY PLAN (map) | 1.6 x 1.2 | cream #cfd3cc, navy lines | security office, drawn from the layout |
+| LEVEL B1 | 1.6 x 0.5 | #e2e0d8, dark text | lobby |
+| FIRE HOSE | 0.6 x 0.3 | red #b3241b, white text | corridor |
+| GENERATOR (arrow), LABORATORY (arrow) | 1.1 x 0.28 / 1.2 x 0.3 | yellow #d9a521 / cream #e6e2d6 | corridor walls |
+| B1-C, GEN | 1.4 x 0.7 / 1.0 x 0.5 | worn stencil, grey / yellow | corridor walls |
+| BIOHAZARD (LAB-01 CONTAINMENT, MAGNETIC LOCK) | 0.95 x 0.6 | cream, header bar #d9a521, bio icon | corridor, lab door |
+| DANGER HIGH VOLTAGE | 1.0 x 0.62 | yellow #e8b52a, black header, bolt icon | generator room, entrance |
+| GENERATOR G-1 | 5.0 x 1.0 | stencil, gold | generator room wall |
+| DIESEL FLAMMABLE | 1.6 x 0.5 | yellow #d9a521 | fuel tanks |
+| AUTHORISED ENGINEERS ONLY | 0.9 x 0.45 | navy, off-white text | generator room |
+| KEEP CLEAR | 3.2 x 0.8 | worn yellow stencil | floor in front of the generator |
+| LAB-01 // PROJECT LAZARUS | 5.0 x 1.0 | dark teal stencil | lab wall |
+| BIOHAZARD LEVEL 4 CONTAINMENT | 0.95 x 0.6 | cream, header bar | lab, entrance |
+| RESTRICTED: AUTHORISED PERSONNEL ONLY | 1.1 to 1.3 x 0.7 to 0.8 (6) | cream, red header #b3241b | gate and fence |
+| CHECKPOINT 1 / B-1 | 1.4 x 0.35 / 2.4 x 1.2 | navy / stencil | guard booth, bunker door |
+| PRIVATE ISLAND NO LANDING | 1.4 x 0.88 | cream, black header | dock root |
+| MED-SUPPLY 04-117 | 0.9 x 0.45 | worn light stencil | crate (2 faces) |
+| Medkit cross | on the case sides | #e8e8e2 with red cross #c41e1e | medkits |
+
+Also floor hazard stripes (yellow/black) at the ramp mouth (4.0 x 0.4) and lab door (3.2 x 0.8).
+
+## 8. Shared materials and glow values
+
+The prototype has one shared material library (`materials.js`); every model above uses it, which is why the
+game reads as one colour language. Colours are the exact hex values from the code. Unity URP/Lit
+smoothness = 1 - roughness.
+
+### 8.1 Metals, plastics and paints
+
+| Name | Colour | Metal | Rough | Used on |
+| --- | --- | --- | --- | --- |
+| metalDark | #2b2e31 | 0.7 | 0.45 | frames, panel boxes, rails |
+| steel | #9aa0a4 | 0.9 | 0.30 | shafts, plates, rods |
+| chrome | #d9dde0 | 1.0 | 0.12 | caps, bezels, posts |
+| copper | #b06a3c | 0.9 | 0.35 | exhaust stubs |
+| rust | rust texture | 0.3 | 1.0 | exhaust, old barrels |
+| olivePaint | #6a7350 + metal-plate texture | 0.4 | 1.0 | engine, cabinets, tanks, barrels, truck |
+| pipe / pipeRed / pipeYellow | #5d6a62 / #7a2a20 / #a27b1d | 0.6 / 0.4 / 0.4 | 0.5 / 0.55 / 0.5 | pipes |
+| locker | #51606b + metal-plate texture | 0.5 | 1.0 | lockers |
+| labWhite | #dfe5e6 | 0.05 | 0.35 | lab furniture |
+| plasticDark | #23272b | 0 | 0.55 | monitors, chairs |
+| plasticLight | #c9ccc8 | 0 | 0.50 | detector, camera |
+| deskTop | #3c4146 | 0.1 | 0.60 | desk tops |
+| cable | #121212 | 0.1 | 0.60 | cables |
+| rubber | #1a1a1a | 0 | 0.90 | wheels |
+| gunMetal / gunPolymer | #2c2f33 / #1d1f21 | 0.8 / 0 | 0.40 / 0.65 | guns |
+| robotPaint | texture #3a3f44 to #4f565c, chips #8e9396 | 0.55 | 1.0 (texture-driven 0.35 to 0.65) | robot body |
+| robotAccent / robotJoint | #c4921d / #1a1c1e | 0.4 / 0.85 | 0.45 / 0.35 | (robot parts use vertex colours instead, see 3.4) |
+| woodDark / wood | #7a6a5a / wood texture | 0 | 1.0 | dock, crates |
+| sandbag / rope | #7d7158 / #8a7652 + fabric | 0 | 1.0 | sandbags, rope |
+| glass | #9fc9d0, opacity 0.12 | 0.2 | 0.06 | housing, chamber, partition |
+
+### 8.2 Emissive values (these feed the bloom, values above 1 are intentional)
+
+| Name | Colour | Intensity | Used on |
+| --- | --- | --- | --- |
+| cyanGlow | #47d1d6 | 2.5 | chamber ring, fridge doors, jars |
+| amberGlow | #ffa040 | 2.5 | jars, booth light, headlights |
+| greenLed | #40ff60 | 2.0 | jars |
+| redLamp | #ff1a0a | 3.0 | alarm and antenna beacon |
+| tube | #e6f0ff | 3.0 | ceiling fluorescent tubes (lighting, World Builder) |
+| lanternGlass | #ffb050 | 4.0 (flickers) | boat lantern |
+| floodLens | #fff2d8 | 6.0 | floodlight lenses |
+| Generator core | cyan-white shader | up to about 2 | see 2.5 |
+| Robot eye bar / antenna tip | (5.0, 0.35, 0.15) | | see 3.4 |
+| Robot back cells | (0.4, 2.6, 3.0) | | see 3.4 |
+| Cure vials | (0.4, 2.6, 2.8) | | see 6.1 |
+| SMG red dot | (8, 0.4, 0.2) | | see 5.1 |
+
+### 8.3 Textures the prototype generates (for the Unity texture list)
+
+All procedural in the prototype (no image files). Models need these looks: **metal plate** (brushed grey,
+panel seams), **hazard** (yellow/black diagonal stripes), **rust** (orange-brown blotches), **diamond plate**
+(raised diamonds), **grate** (floor grating), **wood crate**, **fabric** (fine weave for
+clothing), **camo** (4-colour woodland blotches, see 4.3), **robot paint** (grey-blue with chips and grime, see
+3.4), **gauge dial** (cream with green, amber and red arcs, see 2.4), **skin** (warm tone with fine noise),
+**flash** (soft star for the muzzle flash) and the sign decals in 7.8.
+
+## 9. Discrepancies, guesses and open points
+
+### 9.1 Numbers that differ from the README or code comments
+
+| Item | README / code comment says | Measured from the code |
+| --- | --- | --- |
+| Generator size | "about 6.4 m long, 3 m wide, 3.9 m tall" | 6.96 x 2.90 x 4.10 m including the flywheel (to x -3.53), valve wheel (to x +3.43) and the full stack (top y 4.10). The skid itself is 6.4 x 2.9 |
+| Robot height | "about 2.1 m" | 2.13 m to the helmet's top plate, 2.38 m with the antenna |
+| Humanoid height | "about 1.79 m" | 1.87 m to the top of the head or helmet in the rest pose |
+| Robot eye colour | the file header says eye colour reports state (amber idle, red combat) | only the small **scanner dot** changes colour; the eye bar is always red |
+| Generator cables | cable paths run up to 9 m | the code removes every point with |z| >= 5, so only the short first part (about 3 to 5 m) exists on the floor |
+
+### 9.2 Ownership differences
+
+The prototype README assigns `models/generator.js` to the World Builder, `models/robot.js` and
+`models/humanoid.js` to the Agent Controller and `models/weapons.js` to the Core Developer. The Unity playbook
+(steps C2, C3, C4) gives **both hero models, the props and the weapon viewmodel prefabs to the Core Developer**
+and the animation hooks to the Agent Controller. This document follows the playbook.
+
+### 9.3 Guesses (not from the code)
+
+- The coordinate rules in section 0 for models (the mirror choice per model type).
+- Every "Hint" in section 7 (model / kit / decal) and every "could be dropped" suggestion.
+- Triangle estimates for the cure case, medkit and chamber, and all "detail level" wording.
+- The assumption that shapes drawn with `roundedBox` are chamfered boxes with about 2 bevel segments.
+
+### 9.4 Open points for the owner of the step that follows
+
+- **C1 (art pipeline):** the triangle budgets are not decided here. The measured prototype counts (generator
+  8,840, robot 3,216, humanoids about 2.6k to 3.1k, viewmodels 0.5k to 1.7k) are a starting point only.
+- **C2 / C3:** the generator brief assumes control face at +X and the plinth at y 0; the robot brief assumes
+  feet at y 0 and the weapon pod on the character's right arm. Both need a quick confirmation in Blender
+  before modelling.
+- **Left/right on the robot:** in the prototype code the claw is on the `L` arm (+X) and the weapon pod on `R`
+  (-X). With the mirror rule in section 0 the pod ends up at +X in Unity; check against `08_hero_robot.png`.
+- **Hunter camouflage** is cosmetic in the prototype (it does not change detection), so the 54 leaf strips
+  are optional if the budget is tight.
