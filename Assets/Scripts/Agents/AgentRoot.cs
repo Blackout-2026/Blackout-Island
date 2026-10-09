@@ -26,6 +26,7 @@ namespace Blackout.Agents
         private Health health;
         private IAgentBrain brain;
         private IAgentMover mover;
+        private IAgentFacing facing;
         private IAgentAnimator animator;
         private IAgentShooter shooter;
         private AgentRegistry registry;
@@ -71,6 +72,7 @@ namespace Blackout.Agents
             health = GetComponent<Health>();
             brain = newBrain;
             mover = newMover;
+            facing = newMover as IAgentFacing;
             animator = newAnimator;
             shooter = newShooter;
             health.OnDamaged += HandleDamaged;
@@ -144,6 +146,7 @@ namespace Blackout.Agents
                 }
             }
 
+            facing?.SetFacing(intent.hasLookTarget, intent.lookTarget, intent.aim);
             animator?.Apply(intent);
             shooter?.Apply(intent);
         }

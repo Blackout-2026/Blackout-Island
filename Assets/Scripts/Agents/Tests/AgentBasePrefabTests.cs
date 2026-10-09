@@ -43,6 +43,17 @@ namespace Blackout.Agents.Tests
         }
 
         [Test]
+        public void HasAPathFollowerWithTheReferenceSpeeds()
+        {
+            var follower = prefab.GetComponent<PathFollower>();
+
+            Assert.IsNotNull(follower);
+            Assert.IsInstanceOf<Blackout.Shared.IAgentMover>(follower);
+            Assert.AreEqual(1.5f, follower.Settings.walkSpeed, 0.0001f);
+            Assert.AreEqual(4f, follower.Settings.runSpeed, 0.0001f);
+        }
+
+        [Test]
         public void HasAnEmptyVisualChildForTheModelToNestIn()
         {
             Transform visual = prefab.transform.Find("Visual");
