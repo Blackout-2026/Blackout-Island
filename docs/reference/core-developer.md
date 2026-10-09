@@ -315,3 +315,263 @@ Medium-high: 3,216 triangles, 16 bones, the most complex character in the game. 
 the screenshot at 5 to 10 m: the **bulky chest and shoulders**, the **reverse-knee legs**, the **glowing
 red eye bar**, the **yellow accents** and the **back pack**. The small items (finger claws, antenna,
 vent slats, pistons) read only up close and are the first to simplify.
+
+## 4. Humanoid characters (Security Patrol, Hunter, Commander)
+
+Screenshots: `04_security_office` (patrol, far right), `09_enemy_fight` (patrol at the door), `13_lab`
+(commander silhouette). All three share one skeleton and one body; they differ in clothing, head gear and
+weapon. Counts in the level: Security Patrol x3, Hunter x2, Commander x1.
+
+### 4.1 Shared body and proportions
+
+Standing, feet on the floor, facing +Z. Total height 1.87 m to the top of the head or helmet. Each
+character is one mesh with vertex colours (about 2.6k to 3.1k triangles including the weapon).
+
+| Joint | Height (m) | Offset from parent |
+| --- | --- | --- |
+| Hips (root) | 0.98 | |
+| Spine | 1.08 | 0.10 above hips |
+| Chest | 1.28 | 0.20 above spine |
+| Neck | 1.55 | 0.27 above chest |
+| Head | 1.65 | 0.10 above neck |
+| Shoulder (upperArm L/R) | 1.48 | x = +/-0.20, 0.20 above chest |
+| Elbow (foreArm) | 1.19 | 0.29 below the shoulder |
+| Wrist (hand) | 0.93 | 0.26 below the elbow |
+| Hip joint (thigh L/R) | 0.92 | x = +/-0.10 |
+| Knee (shin) | 0.48 | 0.44 below the hip |
+| Ankle (foot) | 0.06 | 0.42 below the knee |
+| Weapon socket (gun) | 1.40 | on the chest, at x -0.04, z +0.20 (in front of the chest) |
+
+Body shapes (the same on every human):
+
+| Part | Shape and size (m) |
+| --- | --- |
+| Hips | rounded box 0.34 x 0.20 x 0.22 |
+| Lower torso | rounded box 0.31 x 0.24 x 0.20, centred 1.18 |
+| Chest | rounded box 0.38 x 0.32 x 0.24, centred 1.40; 2 shoulder spheres r 0.075 at x +/-0.19 |
+| Neck | cylinder r 0.05 / 0.055, 0.12 tall |
+| Head | sphere r 0.105 squashed to 0.92 wide x 1.12 tall, centred 1.72; jaw box 0.13 x 0.07 x 0.12; nose box 0.03 x 0.04 x 0.04; 2 ear boxes 0.02 x 0.045 x 0.03 |
+| Arm | upper arm tapered limb r 0.058 to 0.048, 0.30 long; elbow sphere r 0.05; forearm tapered limb r 0.048 to 0.036, 0.26 long |
+| Hand | box 0.075 x 0.10 x 0.04 plus a thumb box 0.03 x 0.06 x 0.03 |
+| Leg | thigh tapered limb r 0.088 to 0.066, 0.45 long; knee sphere r 0.065; shin tapered limb r 0.064 to 0.048, 0.42 long |
+| Foot | boot box 0.11 x 0.09 x 0.27 (toe forward) with a shaft cylinder r 0.058 / 0.062, 0.14 tall |
+
+The character is 0.53 to 0.57 m wide. The weapon adds about 0.7 m in front (1.10 to 1.15 m total depth with
+a rifle, 0.66 m for the commander's pistol).
+
+Moving parts (pivots at the joints above; the Agent Controller drives them):
+`hips`, `spine`, `chest`, `neck`, `head`, `upperArmL/R`, `foreArmL/R`, `handL/R`, `thighL/R`, `shinL/R`,
+`footL/R`, `gun`. That is 16 bones. Ranges seen in the prototype animation: thigh swing about +/-0.42 rad
+walking, knee bend up to 0.55 to 0.75 rad, crouch lowers the hips 0.28 m, neck yaw +/-0.9 rad, the weapon
+bone moves from low-ready to shouldered, and the death fall rotates the hips -1.35 rad (drops 0.82 m).
+
+Material for all three: vertex colours multiplied by a fine fabric detail texture, roughness 0.85,
+metalness 0.05. For Blender, use one material per clothing colour or one atlas.
+
+### 4.2 Security Patrol
+
+Silhouette: a guard in a **dark navy uniform with a tactical vest and a rounded helmet with a dark visor**,
+carrying an **assault rifle**. This is the standard enemy in the compound and the security office.
+
+| Part | Shape and size (m) | Colour |
+| --- | --- | --- |
+| Uniform (torso, sleeves, legs) | the shared body | navy #2b3546 |
+| Vest | rounded box 0.41 x 0.30 x 0.27 over the chest | #2a2d28 |
+| Pouches | 3 rounded boxes 0.09 x 0.11 x 0.06 across the front | #1a1b1d |
+| Radio | box 0.06 x 0.10 x 0.04, on the shoulder side (x +0.16) | #1a1b1d |
+| Belt | cylinder r 0.18, 0.06 tall, at the hips | #1a1b1d |
+| Helmet | sphere r 0.128 squashed to 0.9 tall, plus a brim cylinder r 0.135 / 0.14, 0.03 tall | #262b31 |
+| Visor | rounded box 0.19 x 0.06 x 0.06, front of the helmet | #0b0d10 |
+| Knee pads | 2 rounded boxes 0.10 x 0.10 x 0.05 | #1a1b1d |
+| Gloves / boots / skin | | #1c1d1e / #141210 / #b08368 |
+| Rifle | see 4.5 | #2a2c2f and #161718 |
+
+No emissive parts. The top of the helmet is at 1.87 m.
+
+### 4.3 Hunter
+
+Silhouette: a hooded **camouflaged sniper in a ghillie suit**, shaggy outline with hanging leaf strips, carrying a
+**scoped rifle**. It lives in the forest, so the outline must break up against trees.
+
+| Part | Shape and size (m) | Colour |
+| --- | --- | --- |
+| Suit (torso, sleeves, legs) | the shared body, white vertex colour so the camo texture shows | camo texture: base #3d4127, patches #5c5a37, #2a2a1c, #6b5a3d |
+| Hood | sphere r 0.13 (1.05 tall), set slightly back | #d9d9c8 (tints the camo light) |
+| Face wrap | rounded box 0.15 x 0.08 x 0.12 | #4c5536 |
+| Ghillie strips | **54** thin boxes (6 groups of 9): 0.05 to 0.09 wide, 0.12 to 0.32 long, 0.008 thick, hanging from the head, chest, spine, both upper arms and hips, tilted randomly | leaf greens #55643a, #6b6644, #3b4a2a (cycling) |
+| Gloves / boots | | #4c5536 / #2a2620 |
+| Skin | | #6e5040 (darker, face painted) |
+| Rifle | see 4.5, with a scope tube r 0.024, 0.2 long above the receiver | receiver, handguard and stock #4c5536; barrel, magazine, grip and scope #161718 |
+
+No emissive parts. The strips use a fixed random seed in the prototype, so the pattern is the same every run;
+do the same (hand-placed or a fixed seed).
+
+### 4.4 Commander
+
+Silhouette: an **unarmoured scientist-administrator**: a long white lab coat, dark trousers, glasses,
+a headset and a **small pistol**. Easy to tell apart from the soldiers: no helmet, no vest, light colours.
+
+| Part | Shape and size (m) | Colour |
+| --- | --- | --- |
+| Coat (torso, sleeves) | the shared body | white #e9ebe7 |
+| Coat tails | open cylinder r 0.20 / 0.25, 0.5 tall, covering 317 degrees (open at the front), hanging from the hips | #e9ebe7 |
+| Shirt | box 0.10 x 0.22 x 0.02 on the chest front | #3c4b5c |
+| Tie | box 0.035 x 0.18 x 0.01 | #7a1d1d |
+| Badge | box 0.06 x 0.07 x 0.01, left chest | #1d2633 |
+| Trousers | the shared legs | #24272c |
+| Hair | sphere r 0.11, 0.75 tall, on top of the head | #2a2018 |
+| Glasses | bar 0.13 x 0.025 x 0.01 across the eyes; a half torus r 0.115 as the temples | #111111 / #1a1b1d |
+| Headset | 2 ear cylinders r 0.035, 0.03 thick; boom cylinder r 0.005, 0.12 long | #1a1b1d |
+| Hands / boots / skin | | skin #b08368 (bare hands) / #1a1b1d / #b08368 |
+| Pistol | slide box 0.035 x 0.05 x 0.17; grip box 0.032 x 0.09 x 0.045, tilted | #1a1b1d |
+
+The pistol muzzle is 0.22 m ahead of the gun socket. The commander holds the pistol low and points it forward
+when aiming (right arm raised about 1.45 rad).
+
+### 4.5 Rifle (Security Patrol and Hunter)
+
+About 1.03 m long from the stock to the muzzle, attached to the `gun` bone, forward = +Z:
+receiver box 0.06 x 0.09 x 0.42; barrel cylinder r 0.016, 0.40 long (muzzle at z +0.74 from the socket);
+handguard box 0.05 x 0.05 x 0.22; magazine box 0.045 x 0.16 x 0.07 tilted 0.25 rad; pistol grip box
+0.045 x 0.10 x 0.05 tilted -0.3 rad; stock box 0.05 x 0.08 x 0.22; a small front sight box 0.02 x 0.03 x 0.05
+(replaced by the scope on the Hunter's). A **MuzzlePoint** empty at the barrel tip is needed.
+
+### 4.6 Detail level
+
+Low to medium. Boxes, spheres and cylinders with 8 to 14 sides, about 2.6k to 3.1k triangles with the
+weapon. No fingers (one block hand), no face detail beyond jaw, nose and ears. The characters are small on
+screen (10 to 30 m away in most fights), so silhouette and colour matter more than detail.
+
+## 5. First-person weapon viewmodels
+
+Screenshots: the SMG is in the lower right of every screenshot; `07_hero_generator` shows it closest.
+In-game names: **MP-9 SMG**, **R-700 RIFLE** (the sniper), **COMBAT KNIFE**. Each model includes the player's
+**gloved hands and dark sleeves** (they are part of the model). Weapon stats are in
+`docs/reference/systems-engineer.md`.
+
+Camera space in the prototype: +X right, +Y up, **-Z forward** (see section 0 for the Unity flip). The weapon
+holder is scaled by 0.85 in game, so the sizes below are before that scale. Positions are where the weapon
+sits relative to the camera when held.
+
+### 5.1 SMG (MP-9)
+
+Held position (0.13, -0.125, -0.45), turned -0.04 rad. Total 0.65 x 0.53 x 0.77 m with the hands
+(the gun alone is about 0.56 m long). Muzzle at z -0.33 in the gun's own frame.
+
+| Part | Size (m) | Material |
+| --- | --- | --- |
+| Receiver | rounded box 0.05 x 0.068 x 0.27 | metal #2e3135 (metal 0.85, rough 0.38) |
+| Barrel shroud / barrel / muzzle tip | cylinders r 0.02 x 0.13, r 0.012 x 0.06, r 0.016 x 0.03, in line | polymer, metal, metal |
+| Magazine | box 0.032 x 0.16 x 0.048, tilted 0.12 rad forward | polymer #1b1d1f (rough 0.6) |
+| Pistol grip | box 0.034 x 0.095 x 0.044, tilted -0.3 rad | polymer |
+| Foregrip | box 0.028 x 0.05 x 0.03 | polymer |
+| Top rail | box 0.03 x 0.012 x 0.22 | metal |
+| Red-dot sight | body 0.04 x 0.035 x 0.05; lens plane 0.032 x 0.028; dot sphere r 0.0035 | metal; dark blue-green lens (0.05, 0.12, 0.16); **emissive red dot** (8, 0.4, 0.2) |
+| Charging handle | box 0.012 x 0.012 x 0.03 | steel #b8bec2 (metal 1.0, rough 0.18) |
+| Folded stock | 2 wire rods 0.008 x 0.008 x 0.18 along the right side + a small plate | metal, polymer |
+| Hands | two gloves (rounded box 0.055 x 0.035 x 0.10, finger box, wrist cylinder r 0.032 / 0.036, 0.12 long) on the grip and foregrip, each with a sleeve cylinder r 0.042 / 0.05, 0.35 to 0.40 long reaching down and back | glove #2b2c2a, sleeve #3a4030 (rough 0.9 to 1.0, fabric texture) |
+
+### 5.2 Sniper rifle (R-700)
+
+Held position (0.12, -0.12, -0.46), turned -0.04 rad. Total 0.65 x 0.55 x 1.29 m with the hands; about
+1.23 m from butt to muzzle. Muzzle at z -0.81 in the gun's frame.
+
+| Part | Size (m) | Material |
+| --- | --- | --- |
+| Receiver | rounded box 0.05 x 0.06 x 0.30 | metal |
+| Barrel | tapered cylinder r 0.013 to 0.016, 0.62 long, at z -0.45; muzzle brake cylinder r 0.02 x 0.06 at z -0.77 | metal |
+| Stock | body rounded box 0.055 x 0.075 x 0.48; butt rounded box 0.05 x 0.11 x 0.18 at z +0.33; cheek rest box 0.04 x 0.03 x 0.12 | tan #6b604a (rough 0.7), polymer |
+| Magazine | box 0.03 x 0.08 x 0.06 | polymer |
+| Scope | tube cylinder r 0.024 x 0.24 at y +0.075; objective bell r 0.034 / 0.024 x 0.06 at z -0.17; eyepiece r 0.024 / 0.03 x 0.05 at z +0.12; front lens disc r 0.031; 2 mounting rings 0.03 x 0.035 x 0.02; turret cylinder r 0.012 x 0.04 | metal, lens (0.05, 0.12, 0.16) |
+| **Bolt handle** (moves) | shaft cylinder r 0.006 x 0.06 + ball r 0.012, at (0.03, 0.01, 0.08) | steel |
+| Folded bipod | 2 rods 0.008 x 0.008 x 0.2 under the barrel | metal |
+| Hands | same construction as the SMG, positioned on the grip and under the stock | glove, sleeve |
+
+Moving part: the **bolt handle** (own object, pivot at its root) cycles back and forth after each shot.
+The scope view in the prototype is a screen overlay, not a 3D lens model.
+
+### 5.3 Combat knife
+
+Held position (0.17, -0.18, -0.33), rotated (0.25, 0.25, -0.40) rad. Total 0.32 x 0.58 x 0.66 m with the hand
+and sleeve. It has no muzzle.
+
+| Part | Size (m) | Material |
+| --- | --- | --- |
+| Grip | cylinder r 0.016 / 0.018, 0.12 long + 4 thin rings r 0.019 x 0.006 | polymer |
+| Guard | box 0.07 x 0.012 x 0.014 | metal |
+| Blade | extruded tapered profile 0.205 long, 0.032 tall at the base, 0.004 thick with a small bevel; the tip drops to the lower edge | polished steel #b8bec2 (metal 1.0, rough 0.18) |
+| Spine ridge | box 0.005 x 0.006 x 0.17 along the top of the blade | metal |
+| Hand | glove and sleeve cylinder r 0.042 / 0.05, 0.42 long | glove, sleeve |
+
+Moving part: the whole **hand** (hand + blade) swings in a slash, 0.34 s per swing.
+
+### 5.4 Muzzle flash
+
+Three crossed additive quads, each 0.22 x 0.22 m (the third at 0.7 scale, in the horizontal plane), a flash
+texture tinted bright warm white (3.5, 2.6, 1.6), double sided, no depth write, hidden until a shot. It is
+placed at each gun's muzzle. A short point light is added in the viewmodel scene by the weapon system.
+This is an effect, not a mesh to model; it is listed here so the prefab has a `MuzzleFlash` child.
+
+### 5.5 Detail level
+
+Low-poly: 23 / 26 / 12 parts and about 1,050 / 1,700 / 530 triangles. The weapon fills the lower right of the
+screen all the time, so **edge quality and silhouette** matter here more than anywhere else. The hands are
+simple blocks; they only need to read as gloved hands holding the gun.
+
+## 6. Cure case, containment chamber and medkit
+
+Screenshots: `13_lab` (chamber with its glowing ring), `08_hero_robot` (chamber at the far left, cure case on
+the pedestal).
+
+### 6.1 Cure case (the objective)
+
+A small **floating glass case with three glowing cyan vials**, above the chamber pedestal. It hovers
+1.45 m above the lab floor (about 0.06 m over the pedestal plate), slowly turns and bobs. It disappears
+when the player walks into it.
+
+| Part | Size (m) | Material |
+| --- | --- | --- |
+| Base plate | rounded box 0.42 x 0.08 x 0.24 | steel |
+| Lid plate | rounded box 0.42 x 0.04 x 0.24, at y +0.26 | steel |
+| Posts | 2 cylinders r 0.012, 0.22 tall, at x +/-0.19 | chrome |
+| Vials | 3 cylinders r 0.03, 0.17 tall, at x -0.10, 0, +0.10 | **emissive cyan** (0.4, 2.6, 2.8) |
+| Vial caps | 3 cylinders r 0.034, 0.03 tall, at y +0.235 | plasticDark #23272b |
+| Glass | box 0.40 x 0.20 x 0.22, at y +0.14 | glass |
+
+Overall about 0.42 wide x 0.28 tall x 0.24 deep. Moving: the whole group **rotates about 0.6 rad/s (Y)** and bobs
++/-0.02 m at 1.6 rad/s; the vial glow pulses between about (0.4, 1.7, 2.2) and (0.4, 2.7, 3.0). A cyan point
+light (#47d1d6) sits 1.7 m above the floor.
+
+### 6.2 Containment chamber
+
+The centrepiece of the lab, 3.8 x 3.8 m on the floor, centred at the cure position (prototype (0, -135),
+Unity (0, 135) with the level flip). It is open toward the door (+Z in the prototype), so the player walks in
+from the corridor side.
+
+| Part | Size (m) | Notes / material |
+| --- | --- | --- |
+| Floor plate | box 3.8 x 0.35 x 3.8 | steel, a low raised platform |
+| Glass wall | open cylinder R 1.7, 2.9 tall (y 0.35 ... 3.25), with a **1.25 rad (about 72 degree) opening** facing the door | glass (12 % opacity), a real gap, no door |
+| Top collar | cylinder r 1.85, 0.30 tall, at y 3.4 | steel |
+| Support column | cylinder r 0.12, 0.5 tall, from the collar to the ceiling (y 3.55 ... 4.0) | steel |
+| Glow ring | torus R 1.65, tube 0.04, at y 3.22, flat | **emissive cyan** #47d1d6, intensity 2.5 |
+| Pedestal | tapered cylinder r 0.36 (bottom) to 0.28 (top), 1.0 tall (y 0.35 ... 1.35) | labWhite #dfe5e6 (metal 0.05, rough 0.35) |
+| Pedestal plate | cylinder r 0.34, 0.05 tall, at y 1.37 | steel |
+
+Effects around it (not modelled): a cyan spotlight from the collar (angle about 0.55 rad), a soft cyan light
+cone r 1.4 x 2.9 m from the collar to the floor (additive), and the cyan point light above. The glass wall has
+16 small cylinder colliders around the arc except the opening.
+
+Detail level: low-medium, simple primitives with one strong emissive element (the ring) and the light cone doing
+the visual work. Triangle estimate 600 to 800 **(guess)**.
+
+### 6.3 Medkit (health pickup)
+
+Three in the bunker (security office, corridor end, generator catwalk). A white box with a **red cross** on its
+sides and a carry handle on top. It floats 0.35 m above the floor, turns 1.2 rad/s, bobs +/-0.05 m, and has a
+soft green point light (#60ff90).
+
+| Part | Size (m) | Material |
+| --- | --- | --- |
+| Case | rounded box 0.42 x 0.26 x 0.28, radius 0.05 | off-white #e8e8e2 with a red cross #c41e1e decal (rough 0.5) |
+| Handle | half torus R 0.07, tube 0.015, on top at y +0.13 | plasticDark #23272b |
