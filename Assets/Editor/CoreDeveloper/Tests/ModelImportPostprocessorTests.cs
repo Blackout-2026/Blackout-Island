@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Blackout.Editor.Tests
 {
@@ -122,6 +124,16 @@ Connections:  {
             Assert.That(importer.isReadable, Is.False);
             Assert.That(importer.materialLocation, Is.EqualTo(ModelImporterMaterialLocation.InPrefab));
             Assert.That(importer.materialName, Is.EqualTo(ModelImporterMaterialName.BasedOnMaterialName));
+        }
+
+        [Test]
+        public void Reimporter_FindsTheModelAndReimportsIt()
+        {
+            Assert.That(ModelReimporter.FindModelPaths(), Does.Contain(AssetPath));
+
+            LogAssert.Expect(LogType.Log, new Regex(@"^\[ModelImport\] SM_Prop_ImportTest\.fbx: 1 mesh, 12 triangles"));
+            LogAssert.Expect(LogType.Log, new Regex(@"^\[ModelImport\] Reimported \d+ model\(s\)"));
+            ModelReimporter.ReimportAll();
         }
 
         [Test]

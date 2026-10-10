@@ -243,7 +243,10 @@ Warnings (yellow in the Console) appear for: triangles over the hard max, more m
 a mesh without UV0, a file name without `SM_`, a size that looks like a unit mistake (largest side over 50 m
 or under 5 cm), and a `.blend` file placed in `Assets/Models`.
 
-To change a rule, edit the code, not the Inspector: a manual change is reset on the next import.
+To change a rule, edit the code, not the Inspector: a manual change is reset on the next import. After changing
+a rule, run **Blackout > Art > Reimport Custom Models** to apply it to every model and print the reports again.
+In batch mode: `Unity.exe -batchmode -nographics -quit -projectPath "<repo>" -executeMethod
+Blackout.Editor.ModelReimporter.ReimportAll -logFile -`.
 
 ## 10. Hand-off to other roles
 
