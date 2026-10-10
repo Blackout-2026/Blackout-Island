@@ -38,7 +38,7 @@ Rules for names inside Blender:
 
 - The `.blend` has the same base name as the FBX.
 - **A Blender material name must equal the Unity material asset name** (`M_Generator_Body`). The importer
-  looks the material up by name (section 9), so a typo gives the default grey material.
+  matches slots to materials by name when the prefab is built (section 9), so a typo leaves a slot unassigned.
 - No spaces, no Blender defaults (`Cube`, `Cylinder.003`) and no `.001` duplicates in the exported
   hierarchy. The Agent Controller finds moving parts by name; a renamed part breaks the animation.
 - Part and joint names that the Agent Controller drives are listed in section 11 (written in step C3).
@@ -221,24 +221,27 @@ Tick everything. Step 0 is done once for the whole project.
 | Scale Factor / Convert Units | 1, Convert Units on | With the export in section 4 the file is already in metres. |
 | Bake Axis Conversion | on | Root transform stays (0, 0, 0) rotation, scale 1. |
 | Import Cameras / Lights | off | Models never bring a camera or light into a scene. |
-| Import Blend Shapes, Visibility | off | Not used. |
+| Import Blend Shapes, Visibility, Animation | off | Not used. Parts are rotated by script, there are no clips. |
 | Normals | Import (Blender's normals) | The shading I modelled. |
 | Tangents | Calculate Mikktspace | Matches the Blender normal map bake. |
 | Mesh Compression | Off | Small meshes, no visible artefacts to risk. |
 | Read/Write | off | Saves memory; nothing reads the mesh at run time. |
 | Optimise Mesh | on | Better vertex cache use. |
 | Generate Lightmap UVs | off | Not needed (section 7). |
-| Materials | External (legacy), name = **Blender material name**, search = whole project | A mesh picks up `Assets/Materials/Models/M_*` automatically; nothing is generated next to the FBX. |
+| Materials | Kept inside the FBX (In Prefab), named after the **Blender material** | No files appear next to the FBX. The prefab step (C2, C3) assigns the real `Assets/Materials/Models/M_*` assets by matching these names. |
 
-After the import it prints one line per mesh and one total, for example:
+After the import it prints one Console entry with the total and one line per mesh, for example:
 
 ```
-[ModelImport] SM_Generator.fbx: 3 meshes, 9,874 triangles (target 10,000, max 15,000), 6 materials, size 6.96 x 4.10 x 2.90 m
+[ModelImport] SM_Generator.fbx: 3 meshes, 9,874 triangles (target 10,000, max 15,000), 5 materials, size 6.96 x 4.10 x 2.90 m
+  Engine: 4,210 triangles
+  Housing: 3,664 triangles
+  Flywheel: 2,000 triangles
 ```
 
-Warnings (yellow in the Console) appear for: triangles over the hard max, more material slots than allowed,
-a mesh without UV0, a file name without `SM_`, a size that looks like a unit mistake (taller than 50 m or
-smaller than 5 cm), and a `.blend` file placed in `Assets/Models`.
+Warnings (yellow in the Console) appear for: triangles over the hard max, more materials than allowed,
+a mesh without UV0, a file name without `SM_`, a size that looks like a unit mistake (largest side over 50 m
+or under 5 cm), and a `.blend` file placed in `Assets/Models`.
 
 To change a rule, edit the code, not the Inspector: a manual change is reset on the next import.
 
