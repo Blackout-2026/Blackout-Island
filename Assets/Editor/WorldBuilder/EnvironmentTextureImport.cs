@@ -69,13 +69,16 @@ namespace Blackout.Editor
             return TextureMap.Unknown;
         }
 
+        public static bool IsHero(string assetPath)
+        {
+            return System.IO.Path.GetFileNameWithoutExtension(assetPath).EndsWith(HeroSuffix, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static TextureImportRule RuleFor(string assetPath)
         {
             TextureMap map = MapOf(assetPath);
-            bool hero = System.IO.Path.GetFileNameWithoutExtension(assetPath)
-                .EndsWith(HeroSuffix, StringComparison.OrdinalIgnoreCase);
             bool colour = map == TextureMap.BaseColor || map == TextureMap.Unknown;
-            return new TextureImportRule(map, hero ? HeroMaxSize : MaxSize, colour, map == TextureMap.Normal);
+            return new TextureImportRule(map, IsHero(assetPath) ? HeroMaxSize : MaxSize, colour, map == TextureMap.Normal);
         }
 
         public static void Apply(TextureImporter importer, TextureImportRule rule)
