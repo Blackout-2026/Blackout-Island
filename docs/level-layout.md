@@ -3,7 +3,8 @@
 This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built from
 `docs/reference/world-builder.md`. The bunker rooms in the tables below are also stored in
 `Assets/ScriptableObjects/Layout/BunkerLayout.asset`, filled by
-`Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. If you change a number here, change it there too.
+`Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
+`Assets/Editor/WorldBuilder/MarkerLayout.cs`. If you change a number here, change it there too.
 
 ## Conventions
 
@@ -97,6 +98,100 @@ Re-running the tool gives byte-identical output. It overwrites any hand sculptin
 Placeholder materials are in `Assets/Materials/Environment/Greybox`: Water, DockWood, DockWoodDark,
 BoatHull, BoatTrim and BoatDark. The W5 material library replaces them. Static flags are set in W7.
 
+## Bunker blockout (W3)
+
+Built by **Blackout/World/Build Bunker Blockout** (`Assets/Editor/WorldBuilder/BunkerBlockoutBuilder.cs`) from
+`BunkerLayout.asset`. The geometry rules are in `BunkerShell.cs` and are checked by EditMode tests in
+`Tests/BunkerShellTests.cs`. The same menu item also builds the markers (next section). A re-run leaves the scene
+byte-identical. It rebuilds only the parts it generated (named `<Room>_...`); anything else under a room is kept.
+
+| Item | Value |
+| --- | --- |
+| Parts | 51 cubes under `Bunker/<Room>`: lobby 12, ramp 4, SecurityArea 12, Corridor 5, GeneratorRoom 9, Laboratory 9 |
+| Floor and ceiling | 0.4 m slabs over the clear interior only |
+| Walls | 0.4 m bands just outside the interior, from the bottom of the floor slab (floor − 0.4) to the top of the ceiling slab (floor + height + 0.4). North and south walls include the corners |
+| Openings | A gap from the floor up to the opening height, with a lintel above it and a sill (floor − 0.4 … floor) below it, so the floor runs straight through. No door geometry: doors go at the DoorSocket markers |
+| Shared walls | Built once: by the taller wall, else the longer wall, else the room listed first. SecurityArea and Laboratory build the corridor's end walls; the lobby and SecurityArea build the ramp's. The corridor's west wall stops at z 95.6 and 116.4, where the GeneratorRoom's east wall and its corners take over |
+| Ramp | Floor and ceiling are cubes tilted 23.56° (18.76 m long). The ceiling is 3.0 m above the floor, measured vertically. The side walls are upright from y 2.1 to 13.4, as in the prototype. The square-cut slab ends tuck up to 0.16 m into the neighbouring sill and lintel, out of sight |
+| Colliders and static flags | Every part keeps its BoxCollider. Static flags: Contribute GI, Occluder, Occludee, Batching and Reflection Probe. The NavMesh comes from a NavMeshSurface in W4, so the old Navigation Static flag is not used |
+| Materials | One per room, in `Assets/Materials/Environment/Greybox`, using palette colours: `Greybox_Bunker_BunkerEntranceLobby` #86857D, `..._BunkerEntranceRamp` #A27B1D, `..._SecurityArea` #AEB9C4, `..._Corridor` #6C6E6A, `..._GeneratorRoom` #6A7350, `..._Laboratory` #E9EEEF. The W5 library replaces them |
+| Barricade crate space | Corridor, 1.5 m cube at (0.7, 2.5, 95). Nothing is built there, and no marker is within 0.4 m of it |
+
+**Known issues** (fixed in the entrance-building step):
+- The lobby floor and the D-Bunker sill are at y 10.0, exactly the plateau's height, so they can flicker against
+  the terrain.
+- The ramp's side walls and roof stick out of the plateau between z 52.4 and 62.
+
+## Gameplay markers (W3)
+
+Built by the same menu item (`MarkerBuilder.cs`). The table of markers is `MarkerLayout.cs`, checked by
+`Tests/MarkerLayoutTests.cs`.
+- **Marker component:** each marker is an empty GameObject with a `Blackout.Shared.Marker`.
+- **id and owner:** its id is its GameObject name. Its owner is the agent's name on AgentSpawn and Waypoint
+  markers, and empty on all others.
+- **Hierarchy:** PlayerStart, GeneratorSocket, CureSocket and BoatExit sit directly under `Markers`. The others are
+  in one group per type, for example `Markers/Checkpoint/Checkpoint_Beach`.
+- **Height:** y is the walking surface: the dock deck (1.3), a room's floor, or the terrain.
+- **Yaw:** 0 is north (+Z) and 90 is east. A marker's forward (+Z) is its facing.
+- **Labels:** each marker has a Scene-view label, coloured by type.
+
+Code finds markers at runtime with `FindObjectsByType<Marker>`. That order is not route order, so sort an agent's
+waypoints by id.
+
+| Marker | Position (x, y, z) | Yaw | Notes |
+| --- | --- | --- | --- |
+| PlayerStart | (0, 1.3, −121) | 0 | On the dock |
+| Checkpoint_Beach | (0, 1.3, −121) | 0 | Same place as the start |
+| Checkpoint_Forest | (0, 1.77, −90) | 0 | |
+| Checkpoint_BunkerEntrance | (0, 10.04, 33) | 0 | Compound, inside the gate |
+| Checkpoint_GeneratorRoom | (−4.5, 2.5, 106) | 270 | Facing the generator |
+| Checkpoint_EscapeEntrance | (0, 10, 40) | 180 | Escape: so a death near the boat does not send the player back underground |
+| Checkpoint_EscapeForest | (0, 10.04, 24) | 180 | Escape |
+| GeneratorSocket | (−11, 2.5, 106) | 0 | Floor level, long side along X. The reference's 0.3 m plinth is not built yet |
+| CureSocket | (0, 2.5, 135) | 180 | Floor level, at the centre of the containment chamber; the opening faces D-Lab |
+| HealthPickup_Security | (6.5, 2.5, 80.5) | 0 | |
+| HealthPickup_Corridor | (0.9, 2.5, 119) | 0 | x 1.2 → 0.9 (corridor pillars) |
+| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | Catwalk deck height. Out of reach until the catwalk is built (W10) |
+| BoatExit | (0, 1.3, −124) | 0 | Centre of the 6 m exit zone |
+| DoorSocket_D-Bunker | (0, 10, 48.2) | 0 | Gap 1.4 × 2.3 m. Sliding, unlocked |
+| DoorSocket_D-Security | (0, 2.5, 82.2) | 0 | Sliding, unlocked |
+| DoorSocket_D-Generator | (−1.7, 2.5, 106) | 270 | Hinged, unlocked |
+| DoorSocket_D-Lab | (0, 2.5, 123.8) | 0 | Sliding, maglocked until `GeneratorDisabled` |
+
+DoorSockets are at floor level in the middle of the wall. They face into the room you enter on the way in. Only
+door gaps get one; the open ramp passages (O-RampTop, O-RampBottom) have no door.
+
+**Agents.** Agent names follow the prototype and the Agent Controller's `AgentRoot` (for example `Patrol-1`). An
+agent's AgentSpawn is `AgentSpawn_<agent>`. Its waypoints are `Waypoint_<agent>_01`, `_02` …, in route order, and
+every route is a loop.
+- **Spawn facing:** an agent with a route faces its second waypoint. Guards on a post face their room's door. The
+  Commander faces south.
+- **Patrol-3:** its route is a ping-pong in the reference, so it is stored as 4 points.
+- **Heights:** outdoor heights come from the terrain, for example Hunter-1's spawn is at y 4.59. Patrol-1's
+  compound points are at y 10.0.
+
+| Agent | Spawn (x, z), yaw | Waypoints (x, z) in order |
+| --- | --- | --- |
+| Hunter-1 | (−24, −54), 346 | (−24, −54) (−30, −30) (−18, −12) (−26, 8) (−14, −70) (−36, −44) |
+| Hunter-2 | (26, −20), 171 | (26, −20) (30, −44) (20, −64) (32, −2) (18, 14) (36, −30) |
+| Patrol-1 | (−14, 36), 90 | (−14, 36) (14, 36) (16, 46) (10, 55) (−10, 55) (−16, 46) |
+| Patrol-2 | (3, 74), 270 | (3, 74) (−4, 74) (−4, 79.5) (3, 79.5) |
+| Patrol-3 | (0, 88), 0 | (0, 88) (0, 102) (−0.5, 120) (0, 102) |
+| TG-01 | (−8, 100), 45 | post (−8, 100) |
+| TG-02 | (3, 129), 210 | post (2.5, 129) |
+| Commander | (6, 138), 180 | post (6, 138) |
+
+**Cover points** (CoverPoint_01 … 19, y 2.5, from the reference):
+
+| Ids | Where | Points (x, z) |
+| --- | --- | --- |
+| 01–04 | Generator corners | (−14.8, 101.2) (−7.2, 101.2) (−14.8, 110.8) (−7.2, 110.8) |
+| 05–12 | Generator room | (−17.5, 99) (−4.5, 113.5) (−18, 110) (−11, 109.4) (−15.5, 108.6) (−16.8, 106) (−9, 97.5) (−13, 97.5) |
+| 13–16 | Lab benches | (−6.5, 130.5) (6.5, 130.5) (−6.5, 137) (6.5, 137) |
+| 17–19 | Corridor pillars | (−0.9, 92.5) (0.9, 110) (−0.9, 117) |
+
+Every marker inside the bunker, apart from the door sockets, is at least 0.4 m (the agent radius) from the walls.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -112,6 +207,9 @@ BoatHull, BoatTrim and BoatDark. The W5 material library replaces them. Static f
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
 | Terrain hole over the ramp top (W2) | The ramp is open from above at z 52.4 … 60.2 until the entrance building (later W step) covers it | World Builder (later step) |
 | Invisible boundary walls (W2) | On the Default layer, so they also stop raycasts, but they are all offshore | Systems Engineer (layers), only if a separate layer is wanted |
+| Corridor points at x ±1.2 move to ±0.9 (W3) | Applied to CoverPoint_17 … 19 and HealthPickup_Corridor, clear of the pillars | Agent Controller and Systems Engineer, for information |
+| Patrol-3's ping-pong route stored as a 4-point loop (W3) | Every route is a loop: walk the waypoints in id order and wrap | Agent Controller |
+| Generator plinth not built yet (W3) | GeneratorSocket is at floor level (y 2.5); the reference's generator origin sits on a 0.3 m plinth at y 2.8 | Systems Engineer and Core Developer (generator prefab) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary").
