@@ -4,7 +4,8 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `docs/reference/world-builder.md`. The bunker rooms in the tables below are also stored in
 `Assets/ScriptableObjects/Layout/BunkerLayout.asset`, filled by
 `Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
-`Assets/Editor/WorldBuilder/MarkerLayout.cs`. If you change a number here, change it there too.
+`Assets/Editor/WorldBuilder/MarkerLayout.cs`, and the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`.
+If you change a number here, change it there too.
 
 ## Conventions
 
@@ -20,6 +21,7 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 | Rule | Value | Prototype had | Why |
 | --- | --- | --- | --- |
 | Player (design target) | 1.8 m tall, eye 1.65 m, radius 0.35 m | 1.75 m, eye 1.63 m | brief |
+| Agent (NavMesh) | radius 0.4 m, height 1.8 m, step 0.4 m, max slope 40° | 1 m nav grid | agreed with the Agent Controller's mover; the robots' 0.38 × 1.8 m capsule fits inside it |
 | Corridor width | 3.0 m | 4.0 m | brief; two agents (2 × 0.8 m) can still pass |
 | Ceiling (clear) | 3.0 m | 3.4–4.0 m | brief; 1.2 m headroom over the player |
 | Door opening | 1.4 × 2.3 m (every door) | 2.4–3.0 × 2.8–3.4 m | brief; 0.35 m clearance each side of the player |
@@ -192,6 +194,48 @@ every route is a loop.
 
 Every marker inside the bunker, apart from the door sockets, is at least 0.4 m (the agent radius) from the walls.
 
+## NavMesh and layout validation (W4): Layout freeze v1
+
+**Blackout/World/Bake NavMesh** (`Assets/Editor/WorldBuilder/NavMeshBaker.cs`) bakes the NavMesh.
+**Blackout/World/Validate Layout** (`LayoutValidator.cs`, with the table in `LayoutReport.cs`) checks it.
+The tests are `Tests/NavMeshBakerTests.cs` and `Tests/LayoutValidatorTests.cs`.
+
+**Layout freeze v1:** from now on, tell the group chat before changing geometry or markers. Then run Bake NavMesh
+and Validate Layout, and commit only when the table passes.
+
+| Item | Value |
+| --- | --- |
+| Agent | Agent type 0 (Humanoid): radius 0.4 m, height 1.8 m, step 0.4 m, max slope 40°. The bake tool sets these in code, because Project Settings > Navigation (Systems Engineer) still has Humanoid at 0.5 / 2 / 0.75 / 45. NavMesh queries that name no agent type use type 0, so they get this mesh |
+| Other settings | Unity's defaults: 0.133 m voxels (radius / 3), 256-voxel tiles, regions under 2 m² removed, no height mesh |
+| Geometry | The physics colliders under every root of `Environment.unity`: terrain, dock and bunker blockout, 93 colliders. Left out: `Terrain/IslandBoundary` (offshore walls), `Beach/Boat` (it bobs) and trigger colliders |
+| Bounds | The terrain's footprint: x −200 … 200, z −180 … 220, y −10 … 26 |
+| Data | `Assets/Environment/NavMesh/EnvironmentNavMesh.asset`: binary, 416 KB, 2030 triangles, about 155 000 m² walkable. The bake takes about 1.7 s. A re-bake overwrites the asset in place (same GUID) and is byte-identical |
+| In the scene | The root `NavMesh` sits at the origin. Its NavMeshSurface loads the data whenever the scene loads, additively too. **Do not press Bake on that component**: it would rebake with the Project Settings agent size and save the data somewhere else. Validate Layout fails if that happens |
+| Doors | There are no doors in this scene, so the NavMesh runs through every door gap. Closed and locked doors must block agents at runtime (see the changes table below) |
+
+**Checks.** Validate Layout prints one row per check. It logs an error if any row fails and, in batch mode, exits
+with code 1.
+- The NavMesh is loaded and comes from Bake NavMesh.
+- Every PlayerStart, AgentSpawn, Waypoint, CoverPoint and BoatExit marker is within 1 m of the NavMesh
+  (`NavMesh.SamplePosition`).
+- Complete paths exist from PlayerStart to CureSocket and from CureSocket to BoatExit (`NavMesh.CalculatePath`).
+- Every door gap (DoorSocket) is at least 1.2 m wide: the 0.8 m agent plus 0.2 m each side. The width is the
+  narrowest of rays to the jambs at 0.2, 0.9 and 1.7 m above the floor. Only colliders in this scene count.
+
+**Result for this freeze:** PASS, 65 of 65 checks.
+
+| Check | Rows | Measured |
+| --- | --- | --- |
+| NavMesh from Bake NavMesh | 1 | `EnvironmentNavMesh.asset`, 2030 triangles |
+| Marker within 1 m of the NavMesh | 58 (PlayerStart 1, AgentSpawn 8, Waypoint 29, CoverPoint 19, BoatExit 1) | 0.02 … 0.16 m (the largest is Waypoint_Hunter-2_03) |
+| Path PlayerStart → CureSocket | 1 | complete, 256.0 m, 2 corners |
+| Path CureSocket → BoatExit | 1 | complete, 259.0 m, 2 corners |
+| Door gap at least 1.2 m | 4 | 1.40 m at D-Bunker, D-Security, D-Generator and D-Lab |
+
+Each path has only 2 corners because every door on the route is at x = 0, so seen from above it is one straight
+line. Unity's path corners ignore height, so these lengths are straight lines from above. The real walk is longer:
+it climbs to the plateau at y 10 and goes down the ramp.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -210,6 +254,9 @@ Every marker inside the bunker, apart from the door sockets, is at least 0.4 m (
 | Corridor points at x ±1.2 move to ±0.9 (W3) | Applied to CoverPoint_17 … 19 and HealthPickup_Corridor, clear of the pillars | Agent Controller and Systems Engineer, for information |
 | Patrol-3's ping-pong route stored as a 4-point loop (W3) | Every route is a loop: walk the waypoints in id order and wrap | Agent Controller |
 | Generator plinth not built yet (W3) | GeneratorSocket is at floor level (y 2.5); the reference's generator origin sits on a 0.3 m plinth at y 2.8 | Systems Engineer and Core Developer (generator prefab) |
+| Agent size set by the bake tool, not Project Settings (W4) | The baked data uses 0.4 / 1.8 / 0.4 / 40 on agent type 0, while Humanoid in Project Settings > Navigation still shows 0.5 / 2 / 0.75 / 45 | Systems Engineer (optional: set Humanoid to match, so the NavMeshSurface Inspector shows the same size); Agent Controller, for information |
+| NavMesh runs through the door gaps (W4) | Doors are in another scene, so agents would path through a closed or locked door, for example D-Lab before the blackout | Systems Engineer (doors): block agents while a door is shut, for example with a carving NavMeshObstacle |
+| Step height 0.4 m (W4) | The catwalk stairs' 0.3 m risers would be climbable by agents, but the reference says agents cannot climb them | World Builder (W10: mark the stairs not walkable when the catwalk is built) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary").
