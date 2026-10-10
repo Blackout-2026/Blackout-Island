@@ -12,13 +12,11 @@ namespace Blackout.Editor
     ///   0.8 - 0.9 m above the deck, with a gap on the east side where the boat is moored.
     /// - Boat: primitives at the prototype's sizes, at (3.7, 0.15, -122.5) with yaw -2.9 degrees. Bow to the
     ///   south (local -Z), stern toward the shore, fenders on the dock side (local -X). The deck is at y 0.7.
-    /// Placeholder materials (URP Lit, palette colours) go in Assets/Materials/Environment/Greybox and are created
-    /// only if missing; the W5 material library replaces them. Dock and boat parts are reused by name
+    /// Placeholder materials come from <see cref="GreyboxMaterials"/>. Dock and boat parts are reused by name
     /// (<see cref="GeneratedObjects"/>), so a re-run leaves the scene unchanged.
     /// </summary>
     public static class BeachGreyboxBuilder
     {
-        public const string MaterialFolder = "Assets/Materials/Environment/Greybox";
         private const string UndoLabel = "Build Terrain";
 
         // Ocean plane (Unity's Plane primitive is 10 x 10 m).
@@ -36,12 +34,12 @@ namespace Blackout.Editor
 
         public static string Build(Transform beachRoot)
         {
-            Material water = GetOrCreateMaterial("Greybox_Water", "#1A2840", 0.95f, alpha: 0.85f);
-            Material deck = GetOrCreateMaterial("Greybox_DockWood", "#6A5038", 0.1f);
-            Material wood = GetOrCreateMaterial("Greybox_DockWoodDark", "#3B2D20", 0.1f);
-            Material hull = GetOrCreateMaterial("Greybox_BoatHull", "#3B4A52", 0.2f, metallic: 0.35f);
-            Material trim = GetOrCreateMaterial("Greybox_BoatTrim", "#8A867C", 0.4f);
-            Material dark = GetOrCreateMaterial("Greybox_BoatDark", "#2A3A40", 0.8f);
+            Material water = GreyboxMaterials.GetOrCreate("Greybox_Water", "#1A2840", 0.95f, alpha: 0.85f);
+            Material deck = GreyboxMaterials.GetOrCreate("Greybox_DockWood", "#6A5038", 0.1f);
+            Material wood = GreyboxMaterials.GetOrCreate("Greybox_DockWoodDark", "#3B2D20", 0.1f);
+            Material hull = GreyboxMaterials.GetOrCreate("Greybox_BoatHull", "#3B4A52", 0.2f, metallic: 0.35f);
+            Material trim = GreyboxMaterials.GetOrCreate("Greybox_BoatTrim", "#8A867C", 0.4f);
+            Material dark = GreyboxMaterials.GetOrCreate("Greybox_BoatDark", "#2A3A40", 0.8f);
 
             BuildWater(beachRoot, water);
             int dockParts = BuildDock(beachRoot, deck, wood);
@@ -205,44 +203,6 @@ namespace Blackout.Editor
             {
                 Object.DestroyImmediate(existing);
             }
-        }
-
-        // Created once with a palette colour; an existing material is left as it is (W5 replaces these).
-        private static Material GetOrCreateMaterial(string materialName, string hex, float smoothness, float metallic = 0f, float alpha = 1f)
-        {
-            string path = $"{MaterialFolder}/{materialName}.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null)
-            {
-                return material;
-            }
-
-            if (!AssetDatabase.IsValidFolder("Assets/Materials/Environment"))
-            {
-                AssetDatabase.CreateFolder("Assets/Materials", "Environment");
-            }
-
-            if (!AssetDatabase.IsValidFolder(MaterialFolder))
-            {
-                AssetDatabase.CreateFolder("Assets/Materials/Environment", "Greybox");
-            }
-
-            ColorUtility.TryParseHtmlString(hex, out Color colour);
-            colour.a = alpha;
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            material.SetColor("_BaseColor", colour);
-            material.SetFloat("_Smoothness", smoothness);
-            material.SetFloat("_Metallic", metallic);
-            if (alpha < 1f)
-            {
-                material.SetFloat("_Surface", 1f); // Transparent
-                material.SetFloat("_Blend", 0f); // Alpha
-            }
-
-            // URP's own material setup: keywords, blend modes, ZWrite and render queue to match the properties above.
-            BaseShaderGUI.SetMaterialKeywords(material);
-            AssetDatabase.CreateAsset(material, path);
-            return material;
         }
     }
 }
