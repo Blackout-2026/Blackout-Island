@@ -12,7 +12,7 @@ namespace Blackout.Agents
     /// barricade). Unchanged destinations are ignored, so AgentRoot may call SetDestination every think tick.
     /// Ports the prototype's AgentController (agents/movement.js) steps 1, 2, 4, 5 and 7.
     /// </summary>
-    public class PathFollower : MonoBehaviour, IAgentMover, IAgentFacing
+    public class PathFollower : MonoBehaviour, IAgentMover, IAgentFacing, IAgentVelocitySource
     {
         [SerializeField] private MovementSettings settings = new MovementSettings();
 
