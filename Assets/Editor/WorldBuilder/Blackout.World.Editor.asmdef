@@ -4,6 +4,7 @@
     "references": [
         "Blackout.Shared",
         "Blackout.World.Layout",
+        "Unity.AI.Navigation",
         "Unity.RenderPipelines.Universal.Editor"
     ],
     "includePlatforms": [
