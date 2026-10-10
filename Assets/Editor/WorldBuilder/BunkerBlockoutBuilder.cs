@@ -16,6 +16,7 @@ namespace Blackout.Editor
     /// <see cref="BunkerShell"/>). Every part keeps its BoxCollider, is marked static (lightmaps, occlusion, static
     /// batching, reflection probes) and uses one placeholder material per room, so the rooms are easy to tell apart.
     /// There is no door geometry: the Systems Engineer's doors go in the gaps, at the DoorSocket markers.
+    /// It then builds every gameplay marker under Markers, door sockets included (see <see cref="MarkerBuilder"/>).
     /// Re-runnable and deterministic: parts named "&lt;Room&gt;_..." are reused by name and stale ones removed; anything
     /// else under a room is left alone (see <see cref="GeneratedObjects"/>).
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.BunkerBlockoutBuilder.BuildBunkerBlockout
@@ -23,6 +24,7 @@ namespace Blackout.Editor
     public static class BunkerBlockoutBuilder
     {
         private const string BunkerRootName = "Bunker";
+        private const string MarkersRootName = "Markers";
         private const string UndoLabel = "Build Bunker Blockout";
         private const float Smoothness = 0.1f; // matt, like the reference's concrete and wall panels (roughness 1.0)
 
@@ -69,11 +71,13 @@ namespace Blackout.Editor
                 rooms.Append(rooms.Length > 0 ? ", " : string.Empty).Append($"{room.name} {parts}");
             }
 
+            string markers = MarkerBuilder.Build(WorldSceneSkeleton.FindRoot(scene, MarkersRootName).transform, layout);
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
             Debug.Log($"[World] Bunker blockout built in {timer.ElapsedMilliseconds} ms: {total} parts in "
-                + $"{layout.rooms.Count} rooms ({rooms}); {removed} stale part(s) removed.");
+                + $"{layout.rooms.Count} rooms ({rooms}); {removed} stale part(s) removed; {markers}.");
         }
 
         private static int BuildRoom(Transform bunker, BunkerLayout layout, Room room, out int removed)

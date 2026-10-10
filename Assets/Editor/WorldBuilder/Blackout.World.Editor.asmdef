@@ -2,6 +2,7 @@
     "name": "Blackout.World.Editor",
     "rootNamespace": "Blackout.Editor",
     "references": [
+        "Blackout.Shared",
         "Blackout.World.Layout",
         "Unity.RenderPipelines.Universal.Editor"
     ],
