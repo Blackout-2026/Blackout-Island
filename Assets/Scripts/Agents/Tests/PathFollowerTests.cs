@@ -103,6 +103,21 @@ namespace Blackout.Agents.Tests
         }
 
         [Test]
+        public void IsAnAgentVelocitySource_ForTheAnimatorLayer()
+        {
+            // A3: AnimatorDriver and ProceduralRobotAnimator find the mover via GetComponentInParent<IAgentVelocitySource>.
+            Assert.IsInstanceOf<IAgentVelocitySource>(follower);
+
+            follower.SetDestination(new Vector3(10f, 0f, 0f), MoveSpeed.Walk);
+            RunUntilArrived(30f, out float maxSpeed);
+
+            IAgentVelocitySource velocitySource = follower;
+            Assert.Greater(maxSpeed, 0f);
+            Assert.AreEqual(follower.Speed, velocitySource.Speed, 0.0001f);
+            Assert.AreEqual(follower.Velocity, velocitySource.Velocity);
+        }
+
+        [Test]
         public void NeverExceedsTheWalkSpeed_AndReachesIt()
         {
             follower.SetDestination(new Vector3(20f, 0f, 0f), MoveSpeed.Walk);
