@@ -18,6 +18,8 @@ namespace Blackout.Art
         [SerializeField] private Renderer coreRenderer;
         [Tooltip("Index of the core material on the renderer (0 when the core is its own object).")]
         [SerializeField] private int coreMaterialSlot;
+        [Tooltip("The running look. Saved in the prefab (the builder fills it) so Restore Power works after a reopen.")]
+        [SerializeField] private Material coreOnMaterial;
         [SerializeField] private Material coreOffMaterial;
 
         [Header("Sockets")]
@@ -25,7 +27,6 @@ namespace Blackout.Art
         [SerializeField] private ParticleSystem sparks;
 
         private VoidEventChannel boundChannel;
-        private Material coreOnMaterial;
 
         public bool IsPoweredDown { get; private set; }
 
@@ -71,10 +72,15 @@ namespace Blackout.Art
 
             IsPoweredDown = true;
 
-            // Remember the running material the first time, so RestorePower can put it back.
+            // Normally the builder has filled the running material. If not, remember what the core shows now, but
+            // never the off material itself (that would make Restore Power a no-op).
             if (coreOnMaterial == null)
             {
-                coreOnMaterial = GetCoreMaterial();
+                Material current = GetCoreMaterial();
+                if (current != coreOffMaterial)
+                {
+                    coreOnMaterial = current;
+                }
             }
 
             SetCoreMaterial(coreOffMaterial);
@@ -94,11 +100,8 @@ namespace Blackout.Art
         [ContextMenu("Test: Restore Power")]
         public void RestorePower()
         {
-            if (!IsPoweredDown)
-            {
-                return;
-            }
-
+            // No "already running" early exit: after a recompile or a reopen IsPoweredDown is false while the saved
+            // core can still be showing the off material, and Restore Power must fix that.
             IsPoweredDown = false;
             SetCoreMaterial(coreOnMaterial);
 

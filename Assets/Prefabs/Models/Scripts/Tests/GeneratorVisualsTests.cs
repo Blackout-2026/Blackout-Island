@@ -133,6 +133,31 @@ namespace Blackout.Art.Tests
         }
 
         [Test]
+        public void RestorePower_FixesACoreThatWasSavedSwitchedOffOnAFreshComponent()
+        {
+            var serialized = new SerializedObject(visuals);
+            serialized.FindProperty("coreOnMaterial").objectReferenceValue = onMaterial;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            core.sharedMaterials = new[] { otherMaterial, offMaterial }; // as if Auto Save kept a Power Down test
+
+            visuals.RestorePower(); // IsPoweredDown is false here, as after a reopen or a recompile
+
+            Assert.AreEqual(onMaterial, core.sharedMaterials[1]);
+        }
+
+        [Test]
+        public void PowerDown_NeverRemembersTheOffMaterialAsTheRunningOne()
+        {
+            core.sharedMaterials = new[] { otherMaterial, offMaterial };
+
+            visuals.PowerDown();
+
+            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("no core renderer or core material"));
+            visuals.RestorePower(); // Nothing known to restore: warns and leaves the slot alone.
+            Assert.AreEqual(offMaterial, core.sharedMaterials[1]);
+        }
+
+        [Test]
         public void RestorePower_StopsTheSparks()
         {
             visuals.PowerDown();

@@ -5617,6 +5617,7 @@ MonoBehaviour:
   generatorDisabled: {fileID: 11400000, guid: 576b9297d96eb4af18c28643cd32a396, type: 2}
   coreRenderer: {fileID: 5967160259798439059}
   coreMaterialSlot: 0
+  coreOnMaterial: {fileID: 2100000, guid: f2c32556e0802ba4bb4879dcfbca8aea, type: 2}
   coreOffMaterial: {fileID: 2100000, guid: 5e89c4981f64e5b468a8158152676812, type: 2}
   humSource: {fileID: 5690119087821264600}
   sparks: {fileID: 749285631437994054}
@@ -5956,7 +5957,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5e89c4981f64e5b468a8158152676812, type: 2}
+  - {fileID: 2100000, guid: f2c32556e0802ba4bb4879dcfbca8aea, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

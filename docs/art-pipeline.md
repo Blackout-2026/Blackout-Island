@@ -285,7 +285,9 @@ To force a socket back to its default position, delete it in the prefab and run 
 The root has a `BoxCollider` of 6.4 x 3.6 x 3.2 m centred at y 1.8 (the prototype's room collider) and the
 `GeneratorVisuals` script, already wired to the `GeneratorDisabled` channel. When the event fires it switches the
 core to `M_Generator_CoreOff`, stops the hum and plays the sparks. To test without the event, use the component's
-context menu: **Test: Power Down** and **Test: Restore Power**.
+context menu: **Test: Power Down** and **Test: Restore Power**. In Prefab Mode these are real edits of the prefab and
+the Scene view's **Auto Save** keeps them, so untick Auto Save first (or run Restore Power) and check
+`git status` before committing. Running **Build Generator Visual Prefab** again also puts the core back.
 
 ### 12.2 What the Blender model must contain
 

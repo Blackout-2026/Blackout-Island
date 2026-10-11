@@ -152,6 +152,19 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
+        public void Populate_RepairsACoreLeftSwitchedOffAndSavesTheRunningMaterial()
+        {
+            var visuals = root.GetComponent<GeneratorVisuals>();
+            var core = (Renderer)new SerializedObject(visuals).FindProperty("coreRenderer").objectReferenceValue;
+            core.sharedMaterial = materials.CoreOff; // what a Power Down test with Auto Save leaves behind
+
+            GeneratorPrefabBuilder.Populate(root, null, materials, channel);
+
+            Assert.AreEqual(materials.Core, core.sharedMaterial);
+            Assert.AreEqual(materials.Core, new SerializedObject(visuals).FindProperty("coreOnMaterial").objectReferenceValue);
+        }
+
+        [Test]
         public void Populate_KeepsASocketMovedByHand()
         {
             Transform point = root.transform.Find(GeneratorPrefabBuilder.InteractPointName);

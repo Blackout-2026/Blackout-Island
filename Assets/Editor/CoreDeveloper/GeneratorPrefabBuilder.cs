@@ -79,6 +79,7 @@ namespace Blackout.Editor
         public static void Populate(GameObject root, GameObject fbx, GeneratorMaterialSet materials, VoidEventChannel channel)
         {
             Transform model = ReplaceModel(root.transform, fbx, materials);
+            RepairCore(model.gameObject, materials);
 
             EnsureSocket(root.transform, InteractPointName, InteractPointPosition, Quaternion.identity, out _);
 
@@ -136,6 +137,32 @@ namespace Blackout.Editor
                 }
 
                 renderer.sharedMaterials = slots;
+            }
+        }
+
+        /// <summary>
+        /// Puts the running core material back on any slot that shows the off material. Only the Power Down test on
+        /// the component can do that to a saved prefab (the Editor's Auto Save keeps the change).
+        /// </summary>
+        public static void RepairCore(GameObject model, GeneratorMaterialSet materials)
+        {
+            foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] slots = renderer.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    if (slots[i] == materials.CoreOff)
+                    {
+                        slots[i] = materials.Core;
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    renderer.sharedMaterials = slots;
+                }
             }
         }
 
@@ -294,7 +321,7 @@ namespace Blackout.Editor
             hum.maxDistance = 30f;
         }
 
-        // The core always follows the current model; the other references are only filled when empty.
+        // The core and its running material always follow the current model; the other references are only filled when empty.
         private static void Wire(GeneratorVisuals visuals, Transform model, GeneratorMaterialSet materials,
             VoidEventChannel channel, AudioSource hum, ParticleSystem sparks)
         {
@@ -311,6 +338,7 @@ namespace Blackout.Editor
                 Debug.LogWarning($"[GeneratorPrefab] No material slot uses {GeneratorMaterialBuilder.CoreName}: the energy core will not switch off.");
             }
 
+            serialized.FindProperty("coreOnMaterial").objectReferenceValue = materials.Core;
             SetIfEmpty(serialized, "generatorDisabled", channel);
             SetIfEmpty(serialized, "coreOffMaterial", materials.CoreOff);
             SetIfEmpty(serialized, "humSource", hum);
