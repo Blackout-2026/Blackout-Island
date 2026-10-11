@@ -1,0 +1,16 @@
+{
+    "name": "Blackout.Art",
+    "rootNamespace": "Blackout.Art",
+    "references": [
+        "Blackout.Shared"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
