@@ -5,7 +5,8 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `Assets/ScriptableObjects/Layout/BunkerLayout.asset`, filled by
 `Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
 `Assets/Editor/WorldBuilder/MarkerLayout.cs`, the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`, and the
-materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`.
+materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`, and the vegetation in
+`VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`.
 If you change a number here, change it there too.
 
 ## Conventions
@@ -84,7 +85,7 @@ Re-running the tool gives byte-identical output. It overwrites any hand sculptin
 
 | Item | Value |
 | --- | --- |
-| Terrain | `Terrain/IslandTerrain`: 400 × 400 m (x −200 … 200, z −180 … 220), y −8 … 24, heightmap 513² (0.78 m). TerrainData `Assets/Environment/Terrain/IslandTerrainData.asset` (binary). URP Terrain Lit, no layers yet (W6) |
+| Terrain | `Terrain/IslandTerrain`: 400 × 400 m (x −200 … 200, z −180 … 220), y −8 … 24, heightmap 513² (0.78 m). TerrainData `Assets/Environment/Terrain/IslandTerrainData.asset` (binary). URP Terrain Lit. Painted with 4 terrain layers, trees and details in W6 (see "Terrain painting and vegetation") |
 | Ground range | −5.93 … 21.52 m, the same as the prototype |
 | Compound pad | Exactly y 10.0 over x −22 … 22, z 28 … 62, blending out over 16 m. Near the trail end (z 28 … 40) it varies by up to ±0.13 m |
 | Forest route | Rises from y 2.0 at z −92 to y 10.0 at the gate (z 30). The trail is smoothed to that profile; the forest either side has rolling relief |
@@ -209,9 +210,9 @@ and Validate Layout, and commit only when the table passes.
 | --- | --- |
 | Agent | Agent type 0 (Humanoid): radius 0.4 m, height 1.8 m, step 0.4 m, max slope 40°. The bake tool sets these in code, because Project Settings > Navigation (Systems Engineer) still has Humanoid at 0.5 / 2 / 0.75 / 45. NavMesh queries that name no agent type use type 0, so they get this mesh |
 | Other settings | Unity's defaults: 0.133 m voxels (radius / 3), 256-voxel tiles, regions under 2 m² removed, no height mesh |
-| Geometry | The physics colliders under every root of `Environment.unity`: terrain, dock and bunker blockout, 93 colliders. Left out: `Terrain/IslandBoundary` (offshore walls), `Beach/Boat` (it bobs) and trigger colliders |
+| Geometry | The physics colliders under every root of `Environment.unity`: terrain, dock and bunker blockout, 93 colliders. Added (W6): every terrain tree or boulder whose prefab has a CapsuleCollider, as a Not Walkable capsule (604), because Unity's collection ignores terrain tree colliders. Left out: `Terrain/IslandBoundary` (offshore walls), `Beach/Boat` (it bobs) and trigger colliders |
 | Bounds | The terrain's footprint: x −200 … 200, z −180 … 220, y −10 … 26 |
-| Data | `Assets/Environment/NavMesh/EnvironmentNavMesh.asset`: binary, 416 KB, 2030 triangles, about 155 000 m² walkable. The bake takes about 1.7 s. A re-bake overwrites the asset in place (same GUID) and is byte-identical |
+| Data | `Assets/Environment/NavMesh/EnvironmentNavMesh.asset`: binary. At the freeze: 416 KB, 2030 triangles, about 155 000 m² walkable. Since W6: 983 KB, 8144 triangles, 154 215 m² walkable. The bake takes about 1.2 to 1.7 s. A re-bake overwrites the asset in place (same GUID) and is byte-identical |
 | In the scene | The root `NavMesh` sits at the origin. Its NavMeshSurface loads the data whenever the scene loads, additively too. **Do not press Bake on that component**: it would rebake with the Project Settings agent size and save the data somewhere else. Validate Layout fails if that happens |
 | Doors | There are no doors in this scene, so the NavMesh runs through every door gap. Closed and locked doors must block agents at runtime (see the changes table below) |
 
@@ -221,10 +222,11 @@ with code 1.
 - Every PlayerStart, AgentSpawn, Waypoint, CoverPoint and BoatExit marker is within 1 m of the NavMesh
   (`NavMesh.SamplePosition`).
 - Complete paths exist from PlayerStart to CureSocket and from CureSocket to BoatExit (`NavMesh.CalculatePath`).
+- Every pine and palm trunk on the terrain is cut out of the NavMesh: no NavMesh within 0.3 m of a trunk's foot (W6, one row).
 - Every door gap (DoorSocket) is at least 1.2 m wide: the 0.8 m agent plus 0.2 m each side. The width is the
   narrowest of rays to the jambs at 0.2, 0.9 and 1.7 m above the floor. Only colliders in this scene count.
 
-**Result for this freeze:** PASS, 65 of 65 checks.
+**Result for this freeze:** PASS, 65 of 65 checks. After W6 (forest painted, NavMesh rebaked): PASS, 66 of 66, with every marker within 0.17 m of the NavMesh and both paths unchanged.
 
 | Check | Rows | Measured |
 | --- | --- | --- |
@@ -264,10 +266,10 @@ base colour becomes the tint, which is white except for Rock (#B8B8B4) and Tile 
 
 | Surface | From the reference | Flat colour | Smoothness / metallic | Repeats per metre | Applied to |
 | --- | --- | --- | --- | --- | --- |
-| Sand | sand (terrain) | #847860 | 0.08 / 0 | 0.22 | — (terrain, W6) |
-| Grass | grass (terrain) | #2C3A1D | 0.08 / 0 | 0.30 | — (terrain, W6) |
-| ForestFloor | forest litter (terrain) | #32281A | 0.08 / 0 | 0.28 | — (terrain, W6) |
-| Rock | rock, tint #B8B8B4 | #43423D | 0.20 / 0 | 0.12 | — (terrain and boulders, W6) |
+| Sand | sand (terrain) | #847860 | 0.08 / 0 | 0.22 | terrain layer TL_Sand (W6) |
+| Grass | grass (terrain) | #2C3A1D | 0.08 / 0 | 0.30 | terrain layer TL_Grass (W6) |
+| ForestFloor | forest litter (terrain) | #32281A | 0.08 / 0 | 0.28 | terrain layer TL_ForestFloor (W6) |
+| Rock | rock, tint #B8B8B4 | #43423D | 0.20 / 0 | 0.12 | terrain layer TL_Rock and the rock prefabs (W6) |
 | Concrete | concrete, wallPanel | #72726B | 0 / 0 | 0.3 | ceilings, walls and lintels (27 parts) |
 | ConcreteStained | floorConcrete (oil stains) | #5C5E5A | 0 / 0 | 0.25 | floors of the lobby, SecurityArea, Corridor and GeneratorRoom (4) |
 | MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor, GeneratorRoom walls and lintel (7) |
@@ -323,12 +325,136 @@ add about 290 KB to `Environment.unity`. A re-run leaves the scene byte-identica
 65 of 65.
 
 **Not covered yet:** the dock, boat and water keep their greybox materials. The terrain uses Sand, Grass,
-ForestFloor and Rock through terrain layers in W6, and Rust, Glass and Fabric are for props in W10.
+ForestFloor and Rock through terrain layers (W6, next section), and Rust, Glass and Fabric are for props in W10.
 
 **Known issues**
 - A roughness map larger than 1024 (or 2048 for `_Hero`) is shrunk by bilinear sampling, which can alias. Download
   the 1K or 2K version.
 - `.gitattributes` sends `*.png` through Git LFS but not `*.jpg`, so JPG textures are stored in plain Git.
+
+## Terrain painting and vegetation (W6)
+
+Two tools, both re-runnable and deterministic (fixed seeds). A re-run with no code change leaves every file
+byte-identical. The tests are in `Tests/VegetationScatterTests.cs`, `TerrainSplatTests.cs`, `VegetationMeshesTests.cs`,
+`TerrainPainterTests.cs`, `VegetationBudgetTests.cs` and `NavMeshBakerTests.cs`.
+- **Blackout/World/Build Vegetation Placeholders** (`VegetationPlaceholderBuilder.cs`, meshes from
+  `VegetationMeshes.cs`) writes stand-in prefabs to `Assets/Environment/Vegetation/Placeholder`.
+- **Blackout/World/Paint Terrain And Forest** (`TerrainPainter.cs`) paints the terrain layers (rules in
+  `TerrainSplat.cs`). It plants trees and details where `VegetationScatter.cs` puts them (numbers in
+  `VegetationLayout.cs`), sets the draw distances, and prints the triangle report (`VegetationBudget.cs`).
+
+**Order.** Build Terrain, then Paint Terrain And Forest, then Bake NavMesh, then Validate Layout. Re-run Paint after any
+change to the heights, because tree heights are stored when they are planted. Paint overwrites hand painting on the
+terrain and asks first in the Editor.
+
+### Terrain layers
+
+URP Terrain Lit draws 4 layers in one pass, so the prototype's 6 ground colours use 4 layers. The trail and the compound
+gravel are fixed mixes of them. The rules port the prototype's terrain shader (`terrain.js`). Each step blends toward
+its colour, in this order.
+
+| Step | Layer or mix | Where | Tiling (m per repeat) |
+| --- | --- | --- | --- |
+| 1 | Grass, ForestFloor | Grass everywhere. Forest floor under every tree (3.2 m × scale) and bush (1.6 m × scale), 55 %, fading over 2 m; a slow noise moves the edge | 3.33, 3.57 |
+| 2 | Sand | Below 1.9 … 2.8 m on the beach (south of z −60), and below 0.4 … 1.4 m on every shore | 4.55 |
+| 3 | Trail: Sand 0.5 + ForestFloor 0.5 | The 3.4 m trail, fading 0.9 … 2.5 m from its centre line; 70 % weaker on sand | — |
+| 4 | Gravel: Rock 0.7 + Sand 0.3 | Compound x −21 … 21, z 29 … 62, and a strip through the gate (x −3 … 3, z 24 … 32), 1.5 m blend | — |
+| 5 | Rock | Slope (1 − normal y) from 0.30 to 0.48, about 46° to 59°: cliffs and steep banks | 8.33 |
+
+- The prototype's dirt is about 35 % sand. The trail uses 50 % so it is about 50 % brighter than the grass and easy to
+  follow at night. The gravel mix matches the prototype's darkened concrete (#56544B).
+- Layers are `Assets/Environment/Terrain/Layers/TL_<Surface>.terrainlayer`. A layer uses its surface's W5 BaseColor and
+  Normal textures when they exist. Until then it is a white texture times the flat colour (#847860, #2C3A1D, #32281A,
+  #43423D), stored in linear space because URP Terrain Lit multiplies by it as it is. Smoothness and metallic are the
+  surface's constants; no mask maps.
+- The splat map is 512² (0.78 m per texel, like the heightmap). Share of the land above water: Sand 6.3 %, Grass 61.1 %,
+  ForestFloor 23.1 %, Rock 9.4 %.
+
+### Vegetation
+
+The scatter ports the prototype's `Forest.place()` step by step, with the same seeds and random generator (mulberry32).
+The prototype measures ground height and trail distance on a 2 m grid, while Unity uses the exact height field. That
+moves 4 pines and 4 palms: on exact values the prototype's own code also gives 461 and 69.
+
+| Kind | Drawn as | Prototype → before clearings → planted | Rules (Unity coordinates) | Scale | Collider |
+| --- | --- | --- | --- | --- | --- |
+| Pine | terrain tree | 465 → 461 → **431** | jittered 4.6 m grid, x −118 … 118, z −100 … 175; ground ≥ 1 m, ≥ 3.4 m from the trail, slope ≤ 37°; denser near the trail, half on the hill, 30 % in noise clearings | 0.78 … 1.28 | capsule r 0.3 × 10 m |
+| Palm | terrain tree | 65 → 69 → **63** | low ground by the beach (below 3.2 m, z < −60, 45 % kept), or 18 % of trees below 5.5 m with z < −35 | 0.78 … 1.28 | capsule r 0.25 × 8 m |
+| Rock | terrain tree (Rock or RockSmall) | 170 → 170 → **163** (110 Rock, 53 RockSmall) | boulders 1.6 … 4.2 within 6 m of the cliff line, small rocks 0.3 … 1.5 elsewhere (45 % kept); ≥ 3 m from the trail, not in the compound | 0.3 … 4.2 | capsule r 0.8 × 1.6 m if scale > 0.7 |
+| Bush | terrain detail | 420 → 420 → **376** | 3.8 … 45 m from the trail, ground ≥ 1.6 m | 0.6 … 1.4 | none (soft, as in the prototype) |
+| Grass tuft | terrain detail | 6000 → 6000 → **6000** | 1.4 … 38 m from the trail, ground ≥ 1.3 m, in noise clumps or within 4 m of the trail | 0.6 … 1.25 | none |
+
+- **Hunter clearings (Unity addition):** no tree, rock or bush within 6 m of the 12 Hunter route points (each Hunter's
+  spawn is its first waypoint). This removed 30 pines, 6 palms, 7 rocks and 44 bushes; grass stays. A pine reaches
+  2.7 m from its trunk (3.5 m at scale 1.28), so at least 2.5 m of open ground is left round each point.
+- **Readable route:** nothing grows on the trail (trees 3.4 m, bushes 3.8 m, rocks 3 m from its centre line). It is
+  painted as the bright dirt mix and continues as gravel through the gate. The compound plus 5 m, the cliff face behind
+  it and the dock approach (|x| < 4, z < −88) stay clear.
+- **Trees by area** (pines / palms; the reference's numbers in brackets): beach 34 / 54 (39 / 53), forest 267 / 9
+  (297 / 12; most of the clearings are here), compound band and cliff 79 / 0 (77 / 0), hill 51 / 0 (52 / 0).
+- **Details** are stored as a count per 0.78 m cell (instance-count mode, 512² cells, 32-cell patches of 25 m), and
+  Unity scatters them inside their cell. They are drawn with GPU instancing and the prefab's own material.
+- **Terrain settings:** trees are drawn to 150 m and details to 60 m. The outdoor fog leaves 1.7 % of a tree visible at
+  150 m and 52 % of a grass tuft at 60 m, where a 0.75 m tuft is under 10 pixels tall at 1080p. Detail density 1, scaled
+  by the quality level.
+- **Not placed:** the prototype's 12 fallen logs (props, W10).
+
+**Prefabs.** `VegetationLibrary` uses `Assets/Environment/Vegetation/<Name>.prefab` (Pine, Palm, Rock, RockSmall,
+Bush, Grass) if it exists, else the generated `Placeholder/<Name>_Placeholder.prefab`. The placeholders port the
+prototype's own models and add 2 lower LODs:
+
+| Placeholder | Triangles LOD0 / LOD1 / LOD2 | LOD heights (screen) | Size | Material |
+| --- | --- | --- | --- | --- |
+| Pine | 108 / 46 / 23 | 0.25 / 0.10 / 0.02 | 9.8 m tall, 2.7 m reach | Veg_PineBark, Veg_PineNeedles (double-sided) |
+| Palm | 712 / 230 / 96 | 0.25 / 0.10 / 0.02 | 7.9 m, 5.2 m reach | Veg_PalmBark, Veg_PalmLeaf (double-sided) |
+| Rock, RockSmall | 180 / 80 / 20 | 0.15 / 0.05 / 0.015 | 2.3 m | Env_Rock |
+| Bush | 160 | — | about 1 m tall | Veg_Bush |
+| Grass | 6 (3 crossed cards) | — | 1.0 × 0.75 m | Veg_Grass (alpha cut-out, 128 px blade texture) |
+
+The colours are the middle of the reference's albedo range, times its tint and the prototype's average per-tree HSL
+tint. The PC quality level has LOD bias 2, so every LOD switch happens twice as far away as these screen heights give
+at the 72° FOV (the pine's LOD1 at about 59 m instead of 29 m). To use real models, see `docs/credits/world-builder.md`.
+
+### Visible-triangle budget
+
+**Budget: 250,000 vegetation triangles in the main camera's view**, from any player viewpoint, shadow passes not
+counted. That leaves room in a frame of about 1.5 million triangles for the shadow passes (the moon shadow draws the
+nearby trees again), the terrain, the compound, the agents and the weapons.
+
+Paint Terrain And Forest measures it with Unity's own rules on the painted data. A tree counts if its bounds are in the
+view and it is within 150 m, at the LOD that its LOD group size × scale, the 72° FOV and the quality level's LOD bias
+select. Details count by whole 25 m patches in view and within 60 m, from Unity's own instance positions. The camera
+is 16:9 with the eye 1.65 m above the ground. Result with the placeholders, at PC LOD bias 2:
+
+| Viewpoint | Trees LOD0 / LOD1 / LOD2 | Tree triangles | Bushes + grass | Detail triangles | Total | Share of budget |
+| --- | --- | --- | --- | --- | --- | --- |
+| Dock (start), north | 25 / 294 / 78 | 36,310 | 2,185 | 27,278 | 63,588 | 25.4 % |
+| Forest checkpoint, north | 52 / 268 / 67 | 31,057 | 3,306 | 43,552 | 74,609 | 29.8 % |
+| Trail middle (4, −44), along the trail | 75 / 160 / 51 | 18,899 | 2,901 | 41,430 | 60,329 | 24.1 % |
+| Gate (0, 24), looking back south | 78 / 182 / 57 | 27,208 | 3,657 | 53,666 | **80,874** | **32.3 %** (worst) |
+| Hunter-1 spawn | 76 / 171 / 53 | 21,466 | 2,689 | 37,386 | 58,852 | 23.5 % |
+
+**For real models:** keep a tree's LOD0 at most 1,200 triangles, LOD1 at most 400 and LOD2 at most 120. At the worst
+viewpoint that gives 78 × 1,200 + 182 × 400 + 57 × 120 = 173,240 tree triangles, plus 53,666 for details: about
+227,000, within the budget. Re-run Paint Terrain And Forest after adding models to get the new numbers.
+
+### NavMesh after W6
+
+Bake NavMesh now adds the 604 tree and boulder capsules (431 pines, 63 palms, 110 rocks) as Not Walkable volumes.
+Unity's own collection ignores terrain tree colliders: with the forest painted and the old baker, the bake did not
+change and all 494 trunks stood on the NavMesh. The new bake has 8144 triangles and 154,215 m² walkable (923 m² less),
+in 983 KB. Validate Layout passes 66 of 66, with a new row "Trunks cut out: 0 of 494 on the NavMesh".
+
+### Known issues
+
+- The look was not checked in batch mode: open the scene and check the colours, trees and details once.
+- No wind yet. The prototype sways foliage with a vertex shader, which needs a foliage Shader Graph (later).
+- The prototype's wet sand at the waterline is not a separate layer.
+- Detail positions are random inside their 0.78 m cell. `useLegacyDetailDistribution` is on in the quality settings
+  (Systems Engineer), so the prototypes' position-jitter setting has no effect.
+- `IslandTerrainData.asset` (2.3 MB) and `EnvironmentNavMesh.asset` (983 KB) are binary and cannot be merged: only
+  the World Builder regenerates them.
+- The budget is computed, not measured on the GPU, and leaves out shadow passes.
 
 ## Changes from the prototype, and who they affect
 
@@ -353,6 +479,12 @@ ForestFloor and Rock through terrain layers in W6, and Rust, Glass and Fabric ar
 | Step height 0.4 m (W4) | The catwalk stairs' 0.3 m risers would be climbable by agents, but the reference says agents cannot climb them | World Builder (W10: mark the stairs not walkable when the catwalk is built) |
 | One material per surface, not a tint per room (W5) | The reference tints the same wall panel per room (security #AEB9C4, generator #9A968A). The library has one material per surface, so rooms differ by surface instead: Concrete walls in most rooms, MetalPlate in the GeneratorRoom, Tile in the Laboratory | — |
 | Door sills are HazardStripe (W5) | A yellow 0.4 m strip runs across the floor under every door and ramp passage, where the door leaf will stand | Systems Engineer (doors), for information |
+| Trees and boulders cut out of the NavMesh (W6) | 494 pines and palms and 110 boulders are Not Walkable capsules, so agents path round them. Hunters' routes keep 6 m clearings at every waypoint | Agent Controller, for information |
+| Tree trunks and boulders are solid (W6) | Their capsule colliders (through the TerrainCollider) stop the player and block raycasts: bullets and the Hunter's line of sight. Bushes and grass have no collider, as in the prototype | Systems Engineer (player, weapons, Hunter sight) |
+| Trail and gravel are mixes of 4 layers (W6) | The prototype's dirt and gravel colours are blends of Sand, ForestFloor and Rock, which keeps URP Terrain Lit at one pass | — |
+| 461 pines and 69 palms before clearings, not 465 and 65 (W6) | Exact heights instead of the prototype's 2 m grid; the same seeded rules | — |
+| No fallen logs, wet sand or wind sway yet (W6) | Logs come with the props (W10). Wet sand would be a fifth layer. Wind needs a foliage shader | World Builder (later steps) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
-berth, the dock landing and the ramp hole (see "Terrain, beach and boundary").
+berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
+clearings (see "Terrain painting and vegetation").

@@ -44,3 +44,32 @@ from that surface's Roughness and Metallic maps, so it has the same source and l
 3. Run **Blackout/World/Build Material Library** and check that the Console lists the surface as "textured".
 4. Fill in the surface's row: the file names, the asset's name or ID, its page URL, "CC0 1.0", and the author
    shown on the page.
+
+## Vegetation models (W6)
+
+No third-party models have been added yet. The terrain is painted with generated placeholders
+(`Assets/Environment/Vegetation/Placeholder`, made by **Blackout/World/Build Vegetation Placeholders** from the
+prototype's own geometry), which need no credit. Fill in a row when you add a real model.
+
+| Prefab (in `Assets/Environment/Vegetation/`) | Used now | Source asset | URL | Licence | Author |
+| --- | --- | --- | --- | --- | --- |
+| Pine.prefab | Pine_Placeholder (108 / 46 / 23 triangles) | — | — | — | — |
+| Palm.prefab | Palm_Placeholder (712 / 230 / 96) | — | — | — | — |
+| Rock.prefab, RockSmall.prefab | Rock_Placeholder, RockSmall_Placeholder (180 / 80 / 20) | — | — | — | — |
+| Bush.prefab | Bush_Placeholder (160) | — | — | — | — |
+| Grass.prefab | Grass_Placeholder (6) | — | — | — | — |
+
+## How to add a vegetation model
+
+1. Use a CC0 low-poly pack (for example Kenney or Quaternius, both CC0 1.0). Put its files in
+   `Assets/Environment/Vegetation/<Pack>/`. FBX files go through Git LFS.
+2. In `Assets/Environment/Vegetation/`, make a prefab (or prefab variant) named exactly as in the table above, for
+   example `Pine.prefab`. Its pivot is at the foot of the trunk, 1 unit = 1 m, about 10 m tall for a pine and 8 m for a
+   palm at scale 1, with URP materials.
+   - Trees and rocks: a LOD Group on the root with 3 levels of at most 1,200 / 400 / 120 triangles (the budget in
+     `docs/level-layout.md`), and a CapsuleCollider round the trunk (pine radius 0.3, height 10, centre y 4; palm
+     radius 0.25, height 8, centre y 3; RockSmall has no collider). Terrain trees only use capsule colliders.
+   - Bush and Grass: one MeshFilter and MeshRenderer on the root, no collider, a material with GPU instancing on.
+3. Run **Paint Terrain And Forest**, then **Bake NavMesh** and **Validate Layout**. The Console lists the prefab
+   without "(placeholder)" and prints the new triangle numbers.
+4. Fill in the row: the asset's name, its page URL, "CC0 1.0", and the author.
