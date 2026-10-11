@@ -17,7 +17,8 @@ namespace Blackout.Editor
     /// - the NavMesh is loaded and is the one from Blackout/World/Bake NavMesh;
     /// - every PlayerStart, AgentSpawn, Waypoint, CoverPoint and BoatExit marker is within 1 m of the NavMesh;
     /// - complete NavMesh paths exist PlayerStart -> CureSocket -> BoatExit (the mission, there and back);
-    /// - every door gap (DoorSocket) is at least 1.2 m wide, measured with rays from the socket to the jambs.
+    /// - every door gap (DoorSocket) is at least 1.2 m wide, measured with rays from the socket to the jambs;
+    /// - every pine and palm trunk on the terrain is cut out of the NavMesh, so agents walk round the trees (W6).
     /// Read-only: it never changes the scene. Doors live in another scene, so paths go through the open gaps.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.LayoutValidator.ValidateLayout
     /// (exit code 1 when a check fails).
@@ -26,6 +27,12 @@ namespace Blackout.Editor
     {
         public const float MaxMarkerDistance = 1f;
         public const float MinDoorWidth = 1.2f;
+
+        /// <summary>
+        /// How far from a trunk's foot to look for the NavMesh. Uncut, the NavMesh runs under the trunk (within about
+        /// 0.2 m of the ground); cut out, it starts at the trunk's radius (0.23 m or more) plus the agent radius (0.4 m).
+        /// </summary>
+        public const float TrunkSampleRadius = 0.3f;
 
         /// <summary>How far to look for a jamb on each side of a door socket.</summary>
         public const float JambReach = 3f;
@@ -99,7 +106,49 @@ namespace Blackout.Editor
                 }
             }
 
+            checks.Add(CheckTrunksCutOut(scene, filter));
             return checks;
+        }
+
+        // One row for all the terrain's pines and palms: how many trunks still have NavMesh at their foot.
+        private static LayoutCheck CheckTrunksCutOut(Scene scene, NavMeshQueryFilter filter)
+        {
+            const string check = "Trunks cut out";
+            const string limit = "0 on the NavMesh";
+            var trunks = new HashSet<GameObject>
+            {
+                VegetationLibrary.Resolve(VegetationPrototype.Pine, out _),
+                VegetationLibrary.Resolve(VegetationPrototype.Palm, out _),
+            };
+
+            int trees = 0;
+            int onNavMesh = 0;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (Terrain terrain in root.GetComponentsInChildren<Terrain>(true))
+                {
+                    TerrainData data = terrain.terrainData;
+                    TreePrototype[] prototypes = data.treePrototypes;
+                    foreach (TreeInstance tree in data.treeInstances)
+                    {
+                        GameObject prefab = prototypes[tree.prototypeIndex].prefab;
+                        if (!trunks.Contains(prefab) || prefab.GetComponent<CapsuleCollider>() == null)
+                        {
+                            continue;
+                        }
+
+                        trees++;
+                        Vector3 foot = terrain.GetPosition() + Vector3.Scale(tree.position, data.size);
+                        foot.y = terrain.SampleHeight(foot) + terrain.GetPosition().y;
+                        if (NavMesh.SamplePosition(foot, out NavMeshHit _, TrunkSampleRadius, filter))
+                        {
+                            onNavMesh++;
+                        }
+                    }
+                }
+            }
+
+            return new LayoutCheck(check, $"{trees} pines and palms", $"{onNavMesh} on the NavMesh", limit, onNavMesh == 0);
         }
 
         /// <summary>

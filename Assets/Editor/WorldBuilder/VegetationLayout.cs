@@ -67,8 +67,9 @@ namespace Blackout.Editor
         public const float RockColliderMinScale = 0.7f; // smaller rocks have no collider (prototype)
 
         // Unity addition: no tree, rock or bush within this distance of a Hunter's waypoints and spawn. A pine's
-        // lowest branches reach 2.4 m x 1.28 = 3.1 m from its trunk, so 6 m leaves about 3 m of open ground around the
-        // point: room for the Hunter to turn and for the player to see it there. Grass is kept.
+        // branches reach 2.7 m from its trunk (the placeholder), 3.5 m at the largest scale (1.28), so 6 m leaves at
+        // least 2.5 m of open ground around the point: room for the Hunter to turn and for the player to see it there.
+        // Grass is kept.
         public const float ClearingRadius = 6f;
     }
 }

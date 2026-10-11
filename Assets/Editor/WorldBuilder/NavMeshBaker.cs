@@ -21,7 +21,8 @@ namespace Blackout.Editor
     /// with these four numbers on agent type 0 (Humanoid), the type that NavMesh queries use by default. Do not press
     /// Bake on the NavMeshSurface: it would rebake with the Project Settings sizes.
     /// Left out of the bake: the invisible island boundary (its tops would become walkable strips), the boat (it bobs)
-    /// and trigger colliders (zone volumes are not floors or walls).
+    /// and trigger colliders (zone volumes are not floors or walls). Added to it: the terrain's trees and boulders as
+    /// Not Walkable capsules (W6, <see cref="AddTreeSources"/>), which Unity's collection leaves out.
     /// Re-runnable and deterministic: the same scene gives the same data, written into the same asset.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.NavMeshBaker.BakeNavMesh
     /// </summary>
@@ -75,6 +76,7 @@ namespace Blackout.Editor
             }
 
             List<NavMeshBuildSource> sources = CollectSources(scene, out int triggers);
+            int trees = AddTreeSources(SceneTerrains(scene), sources);
             NavMeshData built = NavMeshBuilder.BuildNavMeshData(settings, sources, bounds, Vector3.zero, Quaternion.identity);
             if (built == null)
             {
@@ -93,8 +95,8 @@ namespace Blackout.Editor
             AssetDatabase.SaveAssets();
 
             NavMeshTriangulation mesh = NavMesh.CalculateTriangulation();
-            Debug.Log($"[World] NavMesh baked in {timer.ElapsedMilliseconds} ms: {sources.Count} colliders "
-                + $"({triggers} triggers skipped); radius {settings.agentRadius}, height {settings.agentHeight}, "
+            Debug.Log($"[World] NavMesh baked in {timer.ElapsedMilliseconds} ms: {sources.Count - trees} colliders "
+                + $"({triggers} triggers skipped) and {trees} tree and rock capsules; radius {settings.agentRadius}, height {settings.agentHeight}, "
                 + $"step {settings.agentClimb}, slope {settings.agentSlope}; {mesh.indices.Length / 3} triangles, "
                 + $"{SurfaceArea(mesh):0} m2 walkable; saved to {NavMeshDataPath}.");
         }
@@ -143,6 +145,58 @@ namespace Blackout.Editor
 
             triggers = sources.RemoveAll(source => source.component is Collider collider && collider.isTrigger);
             return sources;
+        }
+
+        /// <summary>
+        /// Adds a Not Walkable capsule for every terrain tree whose prefab has a CapsuleCollider (pines, palms, boulders),
+        /// so agents walk round them. Unity's own collection takes the terrain's heights but not its trees' colliders
+        /// (checked in W6: with the forest painted, the bake was unchanged and every trunk stood on the NavMesh).
+        /// The capsule is the one the player bumps into: radius x width scale, height x height scale.
+        /// </summary>
+        public static int AddTreeSources(IEnumerable<Terrain> terrains, List<NavMeshBuildSource> sources)
+        {
+            int notWalkable = NavMesh.GetAreaFromName("Not Walkable");
+            int added = 0;
+            foreach (Terrain terrain in terrains)
+            {
+                TerrainData data = terrain.terrainData;
+                TreePrototype[] prototypes = data.treePrototypes;
+                foreach (TreeInstance tree in data.treeInstances)
+                {
+                    GameObject prefab = prototypes[tree.prototypeIndex].prefab;
+                    var capsule = prefab != null ? prefab.GetComponent<CapsuleCollider>() : null;
+                    if (capsule == null)
+                    {
+                        continue;
+                    }
+
+                    float width = tree.widthScale;
+                    float height = tree.heightScale;
+                    Vector3 foot = terrain.GetPosition() + Vector3.Scale(tree.position, data.size);
+                    Vector3 centre = foot + Vector3.Scale(capsule.center, new Vector3(width, height, width));
+                    sources.Add(new NavMeshBuildSource
+                    {
+                        shape = NavMeshBuildSourceShape.Capsule,
+                        size = new Vector3(capsule.radius * 2f * width, capsule.height * height, capsule.radius * 2f * width),
+                        transform = Matrix4x4.Translate(centre),
+                        area = notWalkable,
+                    });
+                    added++;
+                }
+            }
+
+            return added;
+        }
+
+        private static List<Terrain> SceneTerrains(Scene scene)
+        {
+            var terrains = new List<Terrain>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                terrains.AddRange(root.GetComponentsInChildren<Terrain>(true));
+            }
+
+            return terrains;
         }
 
         private static NavMeshSurface EnsureSurface(Scene scene)
