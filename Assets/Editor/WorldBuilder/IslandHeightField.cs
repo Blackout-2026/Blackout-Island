@@ -213,7 +213,8 @@ namespace Blackout.Editor
             }
         }
 
-        private static double Noise(double x, double y, int seed)
+        /// <summary>The prototype's value noise (noise2), 0 .. 1. Public so the vegetation scatter samples the same noise.</summary>
+        public static double Noise(double x, double y, int seed)
         {
             int x0 = (int)Math.Floor(x);
             int y0 = (int)Math.Floor(y);
@@ -225,8 +226,8 @@ namespace Blackout.Editor
             return Lerp(bottom, top, fy);
         }
 
-        // Fractal noise: octaves at double the frequency and half the amplitude, roughly 0 .. 1.
-        private static double Fbm(double x, double y, int octaves, int seed)
+        /// <summary>The prototype's fractal noise (fbm2): octaves at double the frequency and half the amplitude, roughly 0 .. 1.</summary>
+        public static double Fbm(double x, double y, int octaves, int seed)
         {
             double amplitude = 0.5;
             double frequency = 1;
@@ -248,8 +249,8 @@ namespace Blackout.Editor
             return t * t * t * (t * (t * 6 - 15) + 10);
         }
 
-        // GLSL-style smoothstep (Mathf.SmoothStep is an interpolation, not this). Works with edge0 > edge1.
-        private static double SmoothStep(double edge0, double edge1, double x)
+        /// <summary>GLSL-style smoothstep (Mathf.SmoothStep is an interpolation, not this). Works with edge0 &gt; edge1.</summary>
+        public static double SmoothStep(double edge0, double edge1, double x)
         {
             double t = Math.Max(0, Math.Min(1, (x - edge0) / (edge1 - edge0)));
             return t * t * (3 - 2 * t);
