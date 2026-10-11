@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce01079b29f3e415eaf3f05ebce94137, type: 3}
+  m_Name: PlayerMovementSettings
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Player.PlayerMovementSettings
+  walkSpeed: 4.3
+  sprintSpeed: 7
+  groundAcceleration: 38
+  groundDeceleration: 30
+  airAcceleration: 7
+  jumpSpeed: 5.6
+  gravity: 17
+  groundSnapDistance: 0.35
+  height: 1.75
+  radius: 0.35
+  eyeBelowTop: 0.12
+  stepOffset: 0.45
+  slopeLimit: 49
+  lookSensitivity: 0.12
+  pitchLimit: 87
+  fieldOfView: 72
+  minFootstepSpeed: 0.6
+  walkStride: 0.78
+  sprintStride: 1.05
+  walkNoise: 4.5
+  sprintNoise: 13
+  jumpNoise: 7
+  loudLandingSpeed: 6
+  landingNoise: 9
+  bobHeight: 0.05
+  bobSway: 0.025
+  bobMaxAmplitude: 1.6
+  bobAmplitudeDamping: 8
+  landingMinSpeed: 2.5
+  landingKickPerSpeed: 0.32
+  landingMaxKick: 2.8
+  landingStiffness: 120
+  landingDamping: 14
+  landingCameraDrop: 0.12
+  landingCameraPitch: 1.15
+  stepSmoothing: 18
+  strafeRoll: 0.7
+  strafeRollDamping: 6

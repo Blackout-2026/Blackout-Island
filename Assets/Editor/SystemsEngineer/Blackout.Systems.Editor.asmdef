@@ -2,7 +2,8 @@
     "name": "Blackout.Systems.Editor",
     "rootNamespace": "Blackout.Editor",
     "references": [
-        "Blackout.Shared"
+        "Blackout.Shared",
+        "Blackout.PlayerAndInteraction"
     ],
     "includePlatforms": [
         "Editor"
