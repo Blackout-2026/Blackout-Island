@@ -1,7 +1,11 @@
 {
     "name": "Blackout.Art.Editor",
     "rootNamespace": "Blackout.Editor",
-    "references": [],
+    "references": [
+        "Blackout.Shared",
+        "Blackout.Art",
+        "Unity.RenderPipelines.Universal.Editor"
+    ],
     "includePlatforms": [
         "Editor"
     ],
