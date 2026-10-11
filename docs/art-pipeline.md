@@ -17,7 +17,7 @@ Items marked **(guess)** are my judgement, not measured or taken from the protot
 | Exported mesh | `Assets/Models/Custom/SM_<Name>.fbx` | The only place the import rules apply. One FBX per model. |
 | Textures | `Assets/Textures/Models/T_<Name>_<Map>.png` | Never inside `Models/Custom`. |
 | Materials | `Assets/Materials/Models/M_<Name>_<Part>.mat` | URP/Lit, created in Unity. |
-| Visual prefabs | `Assets/Prefabs/Models/<Name>_Visual.prefab` | Visuals and empty sockets only (no colliders, no Health). Other roles nest them. |
+| Visual prefabs | `Assets/Prefabs/Models/<Name>_Visual.prefab` | Visuals, empty sockets and at most one simple collider proxy on the root (no Health, no Rigidbody, no interaction scripts). Other roles nest them. |
 | Prop prefabs | `Assets/Prefabs/Props/Prop_<Name>.prefab` | With collider and correct pivot. |
 
 Re-exporting: overwrite the FBX in place so its `.meta` and GUID stay the same and prefabs keep working.
@@ -261,3 +261,58 @@ Blackout.Editor.ModelReimporter.ReimportAll -logFile -`.
 Written in step C3, once the robot's part hierarchy exists. Until then the working names are the prototype's
 (`pelvis`, `chest`, `head`, `upperArm`, `foreArm`, `hand`, `thigh`, `shin`, `foot`; see `core-developer.md`
 section 3.5), written in PascalCase with the side suffix: `Thigh_L`, `Shin_R`.
+
+## 12. Generator prefab (step C2)
+
+`Assets/Prefabs/Models/Generator_Visual.prefab` is built by **Blackout > Art > Build Generator Visual Prefab**
+(`GeneratorPrefabBuilder`). Until `SM_Generator.fbx` exists the tool builds a primitive placeholder with the real
+envelope (4.10 m tall, 2.90 m deep, control face at +X), so the Systems Engineer can nest the prefab already.
+When the FBX is imported, run the menu command again: only the `Model` child is replaced.
+
+**Re-running is safe.** Sockets, the collider and references that already exist are kept, so a socket you moved by
+hand stays where it is. Materials keep every hand edit and only get a texture into a slot that is still empty.
+To force a socket back to its default position, delete it in the prefab and run the command again.
+
+### 12.1 Hierarchy
+
+| Child of `Generator_Visual` | Content | Local position (m) |
+| --- | --- | --- |
+| `Model` | the FBX (or the placeholder), materials replaced by name | origin |
+| `InteractPoint` | empty; where the Systems Engineer measures the hold-E distance from | (3.5, 1.3, 0): in front of the gauges and valve wheel |
+| `SparkVFX` | a `ParticleSystem`, off until the event, bursts of 40 orange streaks every 0.9 s | (3.3, 1.9, 0): top of the control panel, pointing out and up |
+| `HumAudioSource` | looping 3D `AudioSource`, 3 to 30 m, **no clip yet** | (1.6, 1.25, 0): the energy core |
+
+The root has a `BoxCollider` of 6.4 x 3.6 x 3.2 m centred at y 1.8 (the prototype's room collider) and the
+`GeneratorVisuals` script, already wired to the `GeneratorDisabled` channel. When the event fires it switches the
+core to `M_Generator_CoreOff`, stops the hum and plays the sparks. To test without the event, use the component's
+context menu: **Test: Power Down** and **Test: Restore Power**.
+
+### 12.2 What the Blender model must contain
+
+- **Material names, exactly:** `M_Generator_Body` (olive painted metal), `M_Generator_Metal` (frame, steel, chrome,
+  pipes), `M_Generator_Details` (gauges, LEDs, labels, valve wheel), `M_Generator_Glass` (the ribbed tube) and
+  `M_Generator_Core` (the energy core). That is 5 slots, one under the limit of 6. `M_Generator_CoreOff` exists
+  only in Unity and is swapped in at run time; do not make it in Blender.
+- **The energy core is its own material slot** (`M_Generator_Core`), on any object. The prefab finds the object and the
+  slot by material, so the object name does not matter. A name that matches none of the five stays as imported and
+  the Console prints a warning.
+- Origin on the floor under the skid, so the skid's underside is at y 0 (section 5).
+
+### 12.3 Textures
+
+One set shared by `Body`, `Metal` and `Details`, 2048 x 2048, in `Assets/Textures/Models`: `T_Generator_BaseColor`,
+`T_Generator_Normal`, `T_Generator_MetalSmooth` and `T_Generator_Emission` (`.png`). Unity fixes the import
+settings from the name (`ModelTextureRules`): Normal becomes a normal map, MetalSmooth is linear with smoothness in
+alpha. Then run **Blackout > Art > Build Generator Materials** (or the prefab command, which includes it) to fill the
+empty slots. `Glass`, `Core` and `CoreOff` stay flat on purpose: they are a tint and an HDR emission colour.
+
+Until the textures exist the materials use the prototype's flat colours (`core-developer.md` 2.4). The core's cyan
+emission peaks at about 2 and is my reading of section 8.2, so tune it by eye.
+
+### 12.4 Still to supply
+
+| What | Where | Status |
+| --- | --- | --- |
+| `SM_Generator.fbx` (+ `Art/Blender/SM_Generator.blend`) | `Assets/Models/Custom` | not made yet, placeholder in use |
+| `T_Generator_*` textures (4 maps) | `Assets/Textures/Models` | not made yet, flat colours in use |
+| Looping generator hum (CC0 or recorded), 5 to 10 s | the `Clip` of `HumAudioSource` | none; credit it in `docs/credits/core-developer.md` |

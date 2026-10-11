@@ -160,6 +160,17 @@ namespace Blackout.Editor
         private static Transform ReplaceModel(Transform root, GameObject fbx, GeneratorMaterialSet materials)
         {
             Transform old = root.Find(ModelName);
+            if (old != null && IsCurrentModel(old.gameObject, fbx))
+            {
+                // Nothing to replace: keep it, so a re-run leaves the prefab file unchanged.
+                if (fbx != null)
+                {
+                    AssignMaterials(old.gameObject, materials);
+                }
+
+                return old;
+            }
+
             if (old != null)
             {
                 Object.DestroyImmediate(old.gameObject);
@@ -179,6 +190,18 @@ namespace Blackout.Editor
             placeholder.SetParent(root, false);
             BuildPlaceholder(placeholder, materials);
             return placeholder;
+        }
+
+        // True when the existing Model child is already what this run would build: the placeholder while there is
+        // no FBX, or an instance of this very FBX once there is one (a placeholder is replaced by the FBX).
+        private static bool IsCurrentModel(GameObject model, GameObject fbx)
+        {
+            if (fbx == null)
+            {
+                return !PrefabUtility.IsPartOfPrefabInstance(model);
+            }
+
+            return PrefabUtility.GetCorrespondingObjectFromSource(model) == fbx;
         }
 
         // A primitive stand-in at the real sizes (docs/reference/core-developer.md 2.2), so the prefab can be nested

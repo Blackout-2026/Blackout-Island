@@ -141,6 +141,17 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
+        public void Populate_KeepsTheExistingPlaceholderWhenThereIsStillNoFbx()
+        {
+            Transform before = root.transform.Find(GeneratorPrefabBuilder.ModelName);
+            int id = before.gameObject.GetInstanceID();
+
+            GeneratorPrefabBuilder.Populate(root, null, materials, channel);
+
+            Assert.AreEqual(id, root.transform.Find(GeneratorPrefabBuilder.ModelName).gameObject.GetInstanceID());
+        }
+
+        [Test]
         public void Populate_KeepsASocketMovedByHand()
         {
             Transform point = root.transform.Find(GeneratorPrefabBuilder.InteractPointName);
