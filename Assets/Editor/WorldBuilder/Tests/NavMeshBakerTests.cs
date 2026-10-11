@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -89,6 +90,51 @@ namespace Blackout.Editor.Tests
             Bake(sources);
 
             Assert.That(PathIsComplete(new Vector3(0f, 0f, -4f), new Vector3(0f, step, 4f)), Is.EqualTo(climbable));
+        }
+
+        [Test]
+        public void TreeCapsule_IsCutOutOfTheNavMesh()
+        {
+            // A placeholder pine (capsule r 0.3, height 10, centre 4) at scale 1.2 on the floor's centre, and a bush
+            // (no collider) beside it, on a small terrain.
+            var pine = AssetDatabase.LoadAssetAtPath<GameObject>(VegetationLibrary.PlaceholderPath(VegetationPrototype.Pine));
+            var bush = AssetDatabase.LoadAssetAtPath<GameObject>(VegetationLibrary.PlaceholderPath(VegetationPrototype.Bush));
+            var terrainData = new TerrainData { heightmapResolution = 33, size = new Vector3(100f, 10f, 100f) };
+            GameObject terrain = null;
+            try
+            {
+                terrainData.treePrototypes = new[] { new TreePrototype { prefab = pine }, new TreePrototype { prefab = bush } };
+                terrainData.SetTreeInstances(new[]
+                {
+                    new TreeInstance { position = new Vector3(0.5f, 0f, 0.5f), widthScale = 1.2f, heightScale = 1.2f, prototypeIndex = 0, color = Color.white, lightmapColor = Color.white },
+                    new TreeInstance { position = new Vector3(0.45f, 0f, 0.45f), widthScale = 1f, heightScale = 1f, prototypeIndex = 1, color = Color.white, lightmapColor = Color.white },
+                }, false);
+                terrain = Terrain.CreateTerrainGameObject(terrainData);
+                terrain.transform.position = Origin - new Vector3(50f, 0f, 50f);
+
+                var sources = new List<NavMeshBuildSource>();
+                Assert.That(NavMeshBaker.AddTreeSources(new[] { terrain.GetComponent<Terrain>() }, sources), Is.EqualTo(1),
+                    "the bush has no collider");
+                NavMeshBuildSource trunk = sources[0];
+                Assert.That(trunk.shape, Is.EqualTo(NavMeshBuildSourceShape.Capsule));
+                Assert.That(trunk.size.x, Is.EqualTo(0.72f).Within(1e-4f), "diameter 2 x 0.3 x 1.2");
+                Assert.That(trunk.size.y, Is.EqualTo(12f).Within(1e-4f), "height 10 x 1.2");
+                Assert.That(Vector3.Distance(trunk.transform.GetColumn(3), Origin + new Vector3(0f, 4.8f, 0f)), Is.LessThan(1e-3f));
+                Assert.That(trunk.area, Is.EqualTo(NavMesh.GetAreaFromName("Not Walkable")));
+
+                sources.Add(Floor());
+                Bake(sources);
+                var filter = new NavMeshQueryFilter { agentTypeID = NavMeshBaker.AgentTypeId, areaMask = NavMesh.AllAreas };
+                Assert.That(NavMesh.SamplePosition(Origin, out NavMeshHit _, LayoutValidator.TrunkSampleRadius, filter), Is.False,
+                    "no NavMesh at the trunk's foot");
+                Assert.That(NavMesh.SamplePosition(Origin + new Vector3(1.2f, 0f, 0f), out NavMeshHit _, LayoutValidator.TrunkSampleRadius, filter),
+                    Is.True, "walkable 1.2 m from the trunk (0.36 m trunk + 0.4 m agent radius)");
+            }
+            finally
+            {
+                Object.DestroyImmediate(terrain);
+                Object.DestroyImmediate(terrainData);
+            }
         }
 
         private void Bake(List<NavMeshBuildSource> sources)
