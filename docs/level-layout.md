@@ -4,7 +4,8 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `docs/reference/world-builder.md`. The bunker rooms in the tables below are also stored in
 `Assets/ScriptableObjects/Layout/BunkerLayout.asset`, filled by
 `Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
-`Assets/Editor/WorldBuilder/MarkerLayout.cs`, and the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`.
+`Assets/Editor/WorldBuilder/MarkerLayout.cs`, the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`, and the
+materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`.
 If you change a number here, change it there too.
 
 ## Conventions
@@ -98,7 +99,8 @@ Re-running the tool gives byte-identical output. It overwrites any hand sculptin
 | Boat | `Beach/Boat` at (3.7, 0.15, −122.5), yaw −2.9°, bow to the south, motor toward the shore. Hull 2.9 m wide, deck y 0.7. Fenders on the dock (west) side. Lantern at about (2.6, 2.6, −124.3). Its light (W7) goes just above it; the reference's (2.5, 2.75, −124.2) ignores the boat's yaw. Colliders on the hull, sides, cabin and roof only. Keep it dynamic (it will bob) |
 
 Placeholder materials are in `Assets/Materials/Environment/Greybox`: Water, DockWood, DockWoodDark,
-BoatHull, BoatTrim and BoatDark. The W5 material library replaces them. Static flags are set in W7.
+BoatHull, BoatTrim and BoatDark. They stay for now: the W5 library has no wood, water or boat-paint surface (see
+"Materials (W5)"). Static flags are set in W7.
 
 ## Bunker blockout (W3)
 
@@ -116,7 +118,7 @@ byte-identical. It rebuilds only the parts it generated (named `<Room>_...`); an
 | Shared walls | Built once: by the taller wall, else the longer wall, else the room listed first. SecurityArea and Laboratory build the corridor's end walls; the lobby and SecurityArea build the ramp's. The corridor's west wall stops at z 95.6 and 116.4, where the GeneratorRoom's east wall and its corners take over |
 | Ramp | Floor and ceiling are cubes tilted 23.56° (18.76 m long). The ceiling is 3.0 m above the floor, measured vertically. The side walls are upright from y 2.1 to 13.4, as in the prototype. The square-cut slab ends tuck up to 0.16 m into the neighbouring sill and lintel, out of sight |
 | Colliders and static flags | Every part keeps its BoxCollider. Static flags: Contribute GI, Occluder, Occludee, Batching and Reflection Probe. The NavMesh comes from a NavMeshSurface in W4, so the old Navigation Static flag is not used |
-| Materials | One per room, in `Assets/Materials/Environment/Greybox`, using palette colours: `Greybox_Bunker_BunkerEntranceLobby` #86857D, `..._BunkerEntranceRamp` #A27B1D, `..._SecurityArea` #AEB9C4, `..._Corridor` #6C6E6A, `..._GeneratorRoom` #6A7350, `..._Laboratory` #E9EEEF. The W5 library replaces them |
+| Materials | One per room, in `Assets/Materials/Environment/Greybox`, using palette colours: `Greybox_Bunker_BunkerEntranceLobby` #86857D, `..._BunkerEntranceRamp` #A27B1D, `..._SecurityArea` #AEB9C4, `..._Corridor` #6C6E6A, `..._GeneratorRoom` #6A7350, `..._Laboratory` #E9EEEF. Build Bunker Blockout still assigns them; Apply Materials (W5) then replaces them |
 | Barricade crate space | Corridor, 1.5 m cube at (0.7, 2.5, 95). Nothing is built there, and no marker is within 0.4 m of it |
 
 **Known issues** (fixed in the entrance-building step):
@@ -236,6 +238,98 @@ Each path has only 2 corners because every door on the route is at x = 0, so see
 line. Unity's path corners ignore height, so these lengths are straight lines from above. The real walk is longer:
 it climbs to the plateau at y 10 and goes down the ramp.
 
+## Materials (W5)
+
+Three tools, all re-runnable, with tests in `Tests/EnvironmentTextureImportTests.cs`, `Tests/MaterialLibraryTests.cs`
+and `Tests/MaterialApplierTests.cs`:
+- **Texture import rules** (`EnvironmentTextureImport.cs`) run automatically on every texture under
+  `Assets/Textures/Environment`.
+- **Blackout/World/Build Material Library** (`MaterialLibraryBuilder.cs`) makes `Env_<Surface>.mat` in
+  `Assets/Materials/Environment` from the table in `SurfaceLibrary.cs`.
+- **Blackout/World/Apply Materials** (`MaterialApplier.cs`) gives every bunker blockout part its material, using the
+  rules in `MaterialRules.cs` and a box mesh from `BoxUvMesh.cs`.
+
+**Order.** Run Build Material Library, then Apply Materials. Build Bunker Blockout puts the greybox materials back,
+so run Apply Materials again after it. After adding or changing textures, only Build Material Library is needed
+(the scene keeps pointing at the same material files). The materials are regenerated in full on every run: change
+`SurfaceLibrary.cs`, not the `.mat` files.
+
+### Surfaces
+
+Every value comes from the reference's palette (section 3). **Flat colour** is used while a surface has no
+BaseColor texture: the middle of the reference's dark → light albedo range, times its tint. Smoothness is
+1 − the reference's roughness. **Repeats per metre** is the material's tiling, taken from the prototype's world-UV
+scale (`worldUV` in `geometry.js`, and the terrain shader for the outdoor four). With a BaseColor texture the
+base colour becomes the tint, which is white except for Rock (#B8B8B4) and Tile (#D8DCDC).
+
+| Surface | From the reference | Flat colour | Smoothness / metallic | Repeats per metre | Applied to |
+| --- | --- | --- | --- | --- | --- |
+| Sand | sand (terrain) | #847860 | 0.08 / 0 | 0.22 | — (terrain, W6) |
+| Grass | grass (terrain) | #2C3A1D | 0.08 / 0 | 0.30 | — (terrain, W6) |
+| ForestFloor | forest litter (terrain) | #32281A | 0.08 / 0 | 0.28 | — (terrain, W6) |
+| Rock | rock, tint #B8B8B4 | #43423D | 0.20 / 0 | 0.12 | — (terrain and boulders, W6) |
+| Concrete | concrete, wallPanel | #72726B | 0 / 0 | 0.3 | ceilings, walls and lintels (27 parts) |
+| ConcreteStained | floorConcrete (oil stains) | #5C5E5A | 0 / 0 | 0.25 | floors of the lobby, SecurityArea, Corridor and GeneratorRoom (4) |
+| MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor, GeneratorRoom walls and lintel (7) |
+| Rust | rust | #64361C | 0 / 0.3 | 0.5 (chosen: only on cylinders in the prototype) | — (props, W10) |
+| Tile | tiles, tint #D8DCDC | #AAB3B4 | 0 / 0 | 0.25 | Laboratory floor, walls and lintel (7) |
+| HazardStripe | hazard | #D9A521 | 0.25 / 0 | 1.5 | the 6 sills: every door and ramp passage threshold |
+| Glass | glass: transparent, alpha 0.12, double-sided | #9FC9D0 | 0.94 / 0.2 | 1.0 (chosen) | — (W10) |
+| Fabric | sandbag / rope | #7D7158 | 0 / 0 | 1.0 (chosen) | — (W10) |
+
+If a texture covers a different real size than the prototype's, change its repeats per metre in `SurfaceLibrary.cs`.
+
+### Textures
+
+Put each set in `Assets/Textures/Environment/<Surface>/`, named `<Surface>_<Map>`, for example
+`Concrete_BaseColor.jpg`. The maps are `BaseColor`, `Normal` (OpenGL style), `Roughness`, `Metallic` and `AO`;
+any can be left out. Record every file in `docs/credits/world-builder.md`, which also lists how to rename
+ambientCG and Poly Haven files.
+
+| Import rule | Value |
+| --- | --- |
+| Max size | 1024; 2048 only when the name ends in `_Hero` |
+| Compression | on (Normal Quality), no crunch |
+| Mipmaps | on |
+| Normal maps | files named `_Normal` are imported as normal maps |
+| sRGB | on for BaseColor only; Roughness, Metallic, AO and MetallicSmoothness are data, so linear |
+
+URP Lit has no roughness slot: it reads metallic from red and smoothness from alpha of one texture. Build Material
+Library packs Roughness and Metallic (PNG or JPG) into a generated `<Surface>_MetallicSmoothness.png`. A missing map
+is filled with the surface's constant. The file is rewritten only when its pixels change, and it should not be edited
+by hand.
+
+### Apply Materials
+
+| Rule (first match wins) | Surface |
+| --- | --- |
+| Any room, `Sill_*` | HazardStripe |
+| Laboratory `Floor`, `Wall_*`, `Lintel_*` | Tile |
+| BunkerEntranceRamp `Floor` | MetalPlate |
+| GeneratorRoom `Wall_*`, `Lintel_*` | MetalPlate |
+| Any room, `Floor` | ConcreteStained |
+| Any room, `Ceiling`, `Wall_*`, `Lintel_*` | Concrete |
+
+**World-metre UVs.** The cube primitive has 0–1 UVs on every face, so one texture would stretch over the 41 m
+corridor wall and squash onto a 0.4 m sill. Apply Materials gives each part its own unit box mesh
+(`<part>_BoxUV`, stored in the scene) whose UVs are world positions in metres. Each face is projected along its
+main world axis, as the prototype's `applyWorldUV` does: top and bottom use (x, z), faces along X use (z, y) and faces
+along Z use (x, y). Tiling is then repeats per metre on every part, and textures line up across neighbouring parts.
+UV2 (for the W7 lightmaps) is unwrapped at each part's real size. The part's scale, rotation, BoxCollider and static
+flags are unchanged, so the NavMesh does not need a rebake.
+
+**Result:** 51 parts (Concrete 27, Tile 7, MetalPlate 7, HazardStripe 6, ConcreteStained 4) and 51 meshes, which
+add about 290 KB to `Environment.unity`. A re-run leaves the scene byte-identical, and Validate Layout still passes
+65 of 65.
+
+**Not covered yet:** the dock, boat and water keep their greybox materials. The terrain uses Sand, Grass,
+ForestFloor and Rock through terrain layers in W6, and Rust, Glass and Fabric are for props in W10.
+
+**Known issues**
+- A roughness map larger than 1024 (or 2048 for `_Hero`) is shrunk by bilinear sampling, which can alias. Download
+  the 1K or 2K version.
+- `.gitattributes` sends `*.png` through Git LFS but not `*.jpg`, so JPG textures are stored in plain Git.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -257,6 +351,8 @@ it climbs to the plateau at y 10 and goes down the ramp.
 | Agent size set by the bake tool, not Project Settings (W4) | The baked data uses 0.4 / 1.8 / 0.4 / 40 on agent type 0, while Humanoid in Project Settings > Navigation still shows 0.5 / 2 / 0.75 / 45 | Systems Engineer (optional: set Humanoid to match, so the NavMeshSurface Inspector shows the same size); Agent Controller, for information |
 | NavMesh runs through the door gaps (W4) | Doors are in another scene, so agents would path through a closed or locked door, for example D-Lab before the blackout | Systems Engineer (doors): block agents while a door is shut, for example with a carving NavMeshObstacle |
 | Step height 0.4 m (W4) | The catwalk stairs' 0.3 m risers would be climbable by agents, but the reference says agents cannot climb them | World Builder (W10: mark the stairs not walkable when the catwalk is built) |
+| One material per surface, not a tint per room (W5) | The reference tints the same wall panel per room (security #AEB9C4, generator #9A968A). The library has one material per surface, so rooms differ by surface instead: Concrete walls in most rooms, MetalPlate in the GeneratorRoom, Tile in the Laboratory | — |
+| Door sills are HazardStripe (W5) | A yellow 0.4 m strip runs across the floor under every door and ramp passage, where the door leaf will stand | Systems Engineer (doors), for information |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary").
