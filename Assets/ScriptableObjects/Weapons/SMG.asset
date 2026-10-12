@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d33acf6f3026448a97350533f0531ec, type: 3}
+  m_Name: SMG
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Weapons.WeaponData
+  displayName: MP-9 SMG
+  slot: 1
+  kind: 0
+  damage: 15
+  pellets: 1
+  range: 90
+  falloffStart: 10
+  falloffEnd: 32
+  falloffMinMultiplier: 0.45
+  cooldown: 0.083333336
+  automatic: 1
+  spread: 1.38
+  moveSpread: 1.15
+  bloomPerShot: 0.23
+  bloomMax: 1.26
+  recoilPitch: 0.49
+  recoilYaw: 0.29
+  kickBack: 0.035
+  kickRotate: 2.3
+  meleeConeAngle: 51.7
+  meleeHitDelay: 0.11
+  switchTime: 0.4
+  noiseRadius: 42
+  tracerEvery: 2
+  muzzleFlashScale: 0.75

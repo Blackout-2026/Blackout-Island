@@ -24,6 +24,10 @@ namespace Blackout.Player
         private InputAction sprint;
         private InputAction pause;
         private InputAction fire;
+        private InputAction weapon1;
+        private InputAction weapon2;
+        private InputAction weapon3;
+        private InputAction weaponScroll;
 
         /// <summary>x = strafe, y = forward, each -1..1.</summary>
         public Vector2 Move => move.ReadValue<Vector2>();
@@ -33,6 +37,28 @@ namespace Blackout.Player
         public bool SprintHeld => sprint.IsPressed();
         public bool PausePressed => pause.WasPressedThisFrame();
         public bool FirePressed => fire.WasPressedThisFrame();
+        public bool FireHeld => fire.IsPressed();
+        /// <summary>Mouse wheel this frame: positive = up. Only the sign matters (step size differs per OS).</summary>
+        public float WeaponScroll => weaponScroll.ReadValue<float>();
+
+        /// <summary>The weapon slot key (1, 2 or 3) pressed this frame, or 0 if none.</summary>
+        public int WeaponSlotPressed
+        {
+            get
+            {
+                if (weapon1.WasPressedThisFrame())
+                {
+                    return 1;
+                }
+
+                if (weapon2.WasPressedThisFrame())
+                {
+                    return 2;
+                }
+
+                return weapon3.WasPressedThisFrame() ? 3 : 0;
+            }
+        }
 
         private void Awake()
         {
@@ -50,6 +76,10 @@ namespace Blackout.Player
             sprint = map.FindAction("Sprint", true);
             pause = map.FindAction("Pause", true);
             fire = map.FindAction("Fire", true);
+            weapon1 = map.FindAction("Weapon1", true);
+            weapon2 = map.FindAction("Weapon2", true);
+            weapon3 = map.FindAction("Weapon3", true);
+            weaponScroll = map.FindAction("WeaponScroll", true);
         }
 
         private void OnEnable()
