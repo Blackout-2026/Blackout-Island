@@ -125,7 +125,7 @@ namespace Blackout.Editor
             return root;
         }
 
-        private static Transform CreateChild(string name, Transform parent, Vector3 localPosition)
+        internal static Transform CreateChild(string name, Transform parent, Vector3 localPosition)
         {
             var child = new GameObject(name).transform;
             child.SetParent(parent, false);
@@ -134,7 +134,7 @@ namespace Blackout.Editor
         }
 
         /// <summary>Sets a private [SerializeField] through the serialization system, as the Inspector does.</summary>
-        private static void Assign(Object component, string field, Object value)
+        internal static void Assign(Object component, string field, Object value)
         {
             var serialized = new SerializedObject(component);
             SerializedProperty property = serialized.FindProperty(field);
@@ -148,7 +148,7 @@ namespace Blackout.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetLayerRecursively(Transform target, int layer)
+        internal static void SetLayerRecursively(Transform target, int layer)
         {
             target.gameObject.layer = layer;
             foreach (Transform child in target)

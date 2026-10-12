@@ -169,6 +169,10 @@ radians at these sizes).
 - **Hits.** Unity raycasts against colliders and finds the target with `GetComponentInParent<IDamageable>()`,
   instead of the prototype's hand-written capsule tests. The ray ignores the Player layer and triggers.
 - **Melee target centre.** The prototype aims at agent position + 1.1 m; Unity uses the collider's bounds centre.
+- **Knife feedback.** The swing animation is not ported, so the knife's `kickRotate` is 12° (prototype 0): each
+  swing nods the knife viewmodel so a swing is visible. It does not move the camera.
+- **Viewmodels** are placeholder primitives at the prototype's positions, built by `Blackout/Systems/Build Player
+  Weapons` with materials in `Assets/Prefabs/Player/Weapons`.
 - **Not ported in Y3:** headshot and backstab multipliers (no head hitbox or "in combat" contract yet),
   sniper zoom (a "Could"), surface-specific impacts, decals, shell casings, the viewmodel camera, sway,
   sprint pose and the bolt and swing animations. Weapon audio is a "Should" for later.

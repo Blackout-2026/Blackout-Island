@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d33acf6f3026448a97350533f0531ec, type: 3}
+  m_Name: Knife
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Weapons.WeaponData
+  displayName: Combat Knife
+  slot: 3
+  kind: 1
+  damage: 40
+  pellets: 1
+  range: 2.3
+  falloffStart: 999
+  falloffEnd: 1000
+  falloffMinMultiplier: 1
+  cooldown: 0.48
+  automatic: 1
+  spread: 0
+  moveSpread: 0
+  bloomPerShot: 0
+  bloomMax: 0
+  recoilPitch: 0
+  recoilYaw: 0
+  kickBack: 0
+  kickRotate: 12
+  meleeConeAngle: 51.7
+  meleeHitDelay: 0.11
+  switchTime: 0.4
+  noiseRadius: 3
+  tracerEvery: 0
+  muzzleFlashScale: 0
