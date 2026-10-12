@@ -17,14 +17,12 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
-        public void Configure_TurnsAutoGenerateOffAndBakesOnlyTheBounce()
+        public void Configure_BakesOnlyTheBounceOfMixedLights()
         {
             var settings = new LightingSettings();
             try
             {
-                settings.autoGenerate = true;
                 LightingSetup.Configure(settings);
-                Assert.That(settings.autoGenerate, Is.False, "only the World Builder bakes, by hand");
                 Assert.That(settings.bakedGI, Is.True);
                 Assert.That(settings.realtimeGI, Is.False);
                 Assert.That(settings.mixedBakeMode, Is.EqualTo(MixedLightingMode.IndirectOnly));

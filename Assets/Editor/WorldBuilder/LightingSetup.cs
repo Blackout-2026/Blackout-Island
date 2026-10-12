@@ -24,8 +24,9 @@ namespace Blackout.Editor
     /// - Lighting/ReflectionProbes (one baked probe per room) and Lighting/LightProbes (the bunker, the compound yard,
     ///   the dock and the trail), placed by <see cref="ProbeLayout"/>.
     /// - Static flags on the environment's renderers, from <see cref="StaticFlagRules"/>.
-    /// - Assets/Environment/Lighting/EnvironmentLighting.lighting: the scene's Lighting Settings asset, with Auto
-    ///   Generate off (only the World Builder bakes, from Window > Rendering > Lighting).
+    /// - Assets/Environment/Lighting/EnvironmentLighting.lighting: the scene's Lighting Settings asset. Unity 6.3 has no
+    ///   Auto Generate any more, so lighting is only baked when the World Builder clicks Generate Lighting in
+    ///   Window > Rendering > Lighting.
     /// It never bakes. It does not edit the URP asset (Assets/Settings): it reports its shadow settings against the
     /// medium-preset values in <see cref="LightingLayout"/>.
     /// Re-runnable and deterministic: objects are reused by name and every value is set from the table.
@@ -103,8 +104,8 @@ namespace Blackout.Editor
 
             LightingSettings settings = SaveLightingSettings();
             Lightmapping.SetLightingSettingsForScene(scene, settings);
-            report.Append($"\n  lighting settings: {LightingSettingsPath}, auto generate {(settings.autoGenerate ? "ON" : "off")}, "
-                + $"{settings.lightmapper}, Baked Indirect, {settings.lightmapResolution} texels/m");
+            report.Append($"\n  lighting settings: {LightingSettingsPath}, {settings.lightmapper}, Baked Indirect, "
+                + $"{settings.lightmapResolution} texels/m; bakes only from Generate Lighting (Unity 6.3 has no Auto Generate)");
             report.Append(UrpShadowReport());
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -517,10 +518,12 @@ namespace Blackout.Editor
             return settings;
         }
 
-        /// <summary>Every value the Lighting window shows for this scene, for a medium-quality bake.</summary>
+        /// <summary>
+        /// Every value the Lighting window shows for this scene, for a medium-quality bake. There is no Auto Generate to
+        /// turn off: Unity 6.3 removed it (LightingSettings.autoGenerate is obsolete and ignored).
+        /// </summary>
         public static void Configure(LightingSettings settings)
         {
-            settings.autoGenerate = false;
             settings.bakedGI = true;
             settings.realtimeGI = false;
             settings.mixedBakeMode = MixedLightingMode.IndirectOnly;
