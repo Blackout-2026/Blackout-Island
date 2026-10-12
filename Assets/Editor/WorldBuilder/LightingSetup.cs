@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
+using Blackout.Environment;
+using Blackout.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -15,6 +17,10 @@ namespace Blackout.Editor
     /// - Sky, fog and ambient: the NightSky skybox (Assets/Environment/Lighting/NightSky.shader), exponential squared fog
     ///   and three-colour ambient, all at the prototype's outdoor values.
     /// - Lighting/Moon: one directional light, Mixed, with soft shadows. It is also the scene's sun.
+    /// - Lighting/PoweredLights/&lt;Room&gt;: the 31 bunker fixtures from <see cref="LightFixtureLayout"/>, Mixed point lights,
+    ///   each with an emissive lamp mesh (Assets/Materials/Environment/Lighting). The W8 blackout switches these off.
+    /// - Lighting/OutdoorLights: the compound floodlights, the wall pack over the bunker door and the boat lantern. The
+    ///   generator only powers the bunker, so these stay on.
     /// - Assets/Environment/Lighting/EnvironmentLighting.lighting: the scene's Lighting Settings asset, with Auto
     ///   Generate off (only the World Builder bakes, from Window > Rendering > Lighting).
     /// It never bakes. It does not edit the URP asset (Assets/Settings): it reports its shadow settings against the
@@ -30,6 +36,8 @@ namespace Blackout.Editor
         public const string LightingSettingsPath = LightingFolder + "/EnvironmentLighting.lighting";
         public const string LightingRootName = "Lighting";
         public const string MoonName = "Moon";
+        public const string PoweredLightsName = "PoweredLights";
+        public const string LampMaterialFolder = "Assets/Materials/Environment/Lighting";
 
         // ---- Lightmapping (see docs/level-layout.md, "Bake settings") ----------------------------------------------
         // Mixed lights in Baked Indirect mode: direct light and shadows stay real-time (so the blackout can switch the
@@ -71,6 +79,14 @@ namespace Blackout.Editor
                 + $"ambient sky #{Hex(LightingLayout.AmbientSky)} / equator #{Hex(LightingLayout.AmbientEquator)} / "
                 + $"ground #{Hex(LightingLayout.AmbientGround)}, skybox {SkyMaterialPath}");
             report.Append($"\n  moon: Mixed, soft shadows, #{Hex(moon.color)} x {moon.intensity}, rotation {Euler(moon.transform.rotation)}");
+
+            BunkerLayout layout = BunkerLayoutAssetBuilder.LoadOrCreate();
+            List<LightSpec> powered = LightFixtureLayout.Powered(layout);
+            List<LightSpec> outdoor = LightFixtureLayout.Outdoor(layout);
+            BuildLights(GeneratedObjects.FindOrCreateChild(lighting, PoweredLightsName, UndoLabel), powered, true);
+            BuildLights(GeneratedObjects.FindOrCreateChild(lighting, LightFixtureLayout.OutdoorGroup, UndoLabel), outdoor, false);
+            report.Append(DescribeLights("powered fixtures (Lighting/PoweredLights)", powered));
+            report.Append(DescribeLights("outdoor lights (Lighting/OutdoorLights)", outdoor));
 
             LightingSettings settings = SaveLightingSettings();
             Lightmapping.SetLightingSettingsForScene(scene, settings);
@@ -145,6 +161,207 @@ namespace Blackout.Editor
             RenderSettings.defaultReflectionResolution = LightingLayout.SkyReflectionResolution;
             RenderSettings.reflectionIntensity = 1f;
             RenderSettings.reflectionBounces = 1;
+        }
+
+        // ---- Powered fixtures and outdoor lights ------------------------------------------------------------------
+
+        // Builds every spec as "<group>_<name>". Bunker fixtures go one level down, in a container per room.
+        private static void BuildLights(Transform root, List<LightSpec> specs, bool perRoom)
+        {
+            ResetTransform(root);
+            var builtPerContainer = new Dictionary<Transform, HashSet<string>>();
+            foreach (LightSpec spec in specs)
+            {
+                Transform container = perRoom ? GeneratedObjects.FindOrCreateChild(root, spec.Group, UndoLabel) : root;
+                ResetTransform(container);
+                if (!builtPerContainer.TryGetValue(container, out HashSet<string> built))
+                {
+                    built = new HashSet<string>();
+                    builtPerContainer.Add(container, built);
+                }
+
+                BuildLight(container, spec, built);
+            }
+
+            foreach (KeyValuePair<Transform, HashSet<string>> pair in builtPerContainer)
+            {
+                GeneratedObjects.RemoveStale(pair.Key, pair.Value);
+            }
+        }
+
+        private static void BuildLight(Transform container, LightSpec spec, ISet<string> built)
+        {
+            GameObject go = GeneratedObjects.GetOrCreate(container, spec.Name, built, UndoLabel);
+            Quaternion rotation = spec.Type == LightType.Spot ? Quaternion.LookRotation(spec.Target - spec.Position) : Quaternion.identity;
+            go.transform.SetPositionAndRotation(spec.Position, rotation);
+            go.transform.localScale = Vector3.one;
+
+            Light light = GeneratedObjects.GetOrAddComponent<Light>(go);
+            light.type = spec.Type;
+            light.lightmapBakeType = LightmapBakeType.Mixed;
+            light.color = LightingLayout.FromLinearHex(spec.Hex);
+            light.intensity = spec.Intensity;
+            light.range = spec.Range;
+            if (spec.Type == LightType.Spot)
+            {
+                light.spotAngle = spec.SpotAngle;
+                light.innerSpotAngle = spec.InnerSpotAngle;
+            }
+
+            light.bounceIntensity = 1f;
+            light.shadows = spec.Shadows ? LightShadows.Soft : LightShadows.None;
+            light.shadowStrength = 1f;
+
+            // URP keeps the shadow resolution tier on its own component: Low (256 px per cube face) for point lights.
+            var urp = new SerializedObject(light.GetUniversalAdditionalLightData());
+            urp.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = spec.ShadowTier;
+            urp.ApplyModifiedPropertiesWithoutUndo();
+
+            Renderer lamp = BuildLamp(go.transform, spec);
+            var flicker = go.GetComponent<FlickerLight>();
+            if (spec.Flickers)
+            {
+                if (flicker == null)
+                {
+                    flicker = go.AddComponent<FlickerLight>();
+                }
+
+                flicker.Configure(spec.Flicker, spec.FlickerSeed, lamp);
+                EditorUtility.SetDirty(flicker);
+            }
+            else if (flicker != null)
+            {
+                Object.DestroyImmediate(flicker);
+            }
+        }
+
+        // The lamp mesh hangs 0.25 m over its light; a high-bay also gets a rod up to the ceiling.
+        private static Renderer BuildLamp(Transform fixture, LightSpec spec)
+        {
+            var built = new HashSet<string>();
+            Renderer lamp = null;
+            if (spec.Kind != FixtureKind.None)
+            {
+                Vector3 size = LightFixtureLayout.LampSize(spec);
+                bool dome = spec.Kind == FixtureKind.Sodium;
+                GameObject go = GeneratedObjects.GetOrCreate(fixture, "Lamp", built, UndoLabel,
+                    dome ? PrimitiveType.Cylinder : PrimitiveType.Cube);
+                go.transform.localPosition = new Vector3(0f, LightFixtureLayout.LightBelowLamp, 0f);
+                go.transform.localRotation = Quaternion.identity;
+                go.transform.localScale = dome ? new Vector3(size.x, size.y * 0.5f, size.z) : size; // a cylinder is 2 m tall
+                lamp = ConfigureLampPart(go, LampMaterial(spec.Kind));
+
+                if (dome)
+                {
+                    float top = LightFixtureLayout.LightBelowLamp + size.y * 0.5f;
+                    float rod = LightFixtureLayout.LampDrop(spec.Kind) - size.y * 0.5f;
+                    GameObject rodGo = GeneratedObjects.GetOrCreate(fixture, "Rod", built, UndoLabel, PrimitiveType.Cylinder);
+                    rodGo.transform.localPosition = new Vector3(0f, top + rod * 0.5f, 0f);
+                    rodGo.transform.localRotation = Quaternion.identity;
+                    rodGo.transform.localScale = new Vector3(0.05f, rod * 0.5f, 0.05f);
+                    ConfigureLampPart(rodGo, AssetDatabase.LoadAssetAtPath<Material>(MaterialLibraryBuilder.MaterialPath("MetalPlate")));
+                }
+            }
+
+            GeneratedObjects.RemoveStale(fixture, built);
+            return lamp;
+        }
+
+        // Lamps are small and not static: they take light from the light probes, cast no shadow, have no collider,
+        // and W8 changes their emission at run time.
+        private static Renderer ConfigureLampPart(GameObject go, Material material)
+        {
+            var collider = go.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Object.DestroyImmediate(collider);
+            }
+
+            var renderer = go.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            GameObjectUtility.SetStaticEditorFlags(go, 0);
+            return renderer;
+        }
+
+        /// <summary>
+        /// Emissive URP Lit material for a lamp, at the reference's emission (section 3: tube #E6F0FF x 4.2, lab panel
+        /// #E4F6FF x 3.2, sodium #FFA555 x 6), regenerated in full on every run. The emission is marked real-time, so it
+        /// is never baked (real-time GI is off): the Light components do the lighting and the lamp only glows.
+        /// </summary>
+        public static Material LampMaterial(FixtureKind kind)
+        {
+            string name = kind == FixtureKind.Panel ? "Lamp_Panel" : kind == FixtureKind.Sodium ? "Lamp_Sodium" : "Lamp_Tube";
+            Color emission = kind == FixtureKind.Panel ? LightingLayout.FromLinearHex("#E4F6FF", 3.2f)
+                : kind == FixtureKind.Sodium ? LightingLayout.FromLinearHex("#FFA555", 6f)
+                : LightingLayout.FromLinearHex("#E6F0FF", 4.2f);
+
+            if (!AssetDatabase.IsValidFolder(LampMaterialFolder))
+            {
+                AssetDatabase.CreateFolder("Assets/Materials/Environment", "Lighting");
+            }
+
+            string path = $"{LampMaterialFolder}/{name}.mat";
+            Shader lit = Shader.Find("Universal Render Pipeline/Lit");
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(lit) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+
+            material.shader = lit;
+            material.SetColor("_BaseColor", Color.white);
+            material.SetFloat("_Smoothness", 0.5f);
+            material.SetFloat("_Metallic", 0f);
+            material.SetColor("_EmissionColor", emission);
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            BaseShaderGUI.SetMaterialKeywords(material);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        // One line per room (its fixtures are alike), or per light outdoors: reference intensity -> Unity intensity.
+        private static string DescribeLights(string title, List<LightSpec> specs)
+        {
+            var lines = new StringBuilder();
+            int shadows = 0;
+            int flickers = 0;
+            string lastGroup = null;
+            foreach (LightSpec spec in specs)
+            {
+                shadows += spec.Shadows ? 1 : 0;
+                flickers += spec.Flickers ? 1 : 0;
+                if (spec.Group == LightFixtureLayout.OutdoorGroup)
+                {
+                    lines.Append($"\n    {spec.Name}: {spec.Type} at ({spec.Position.x:0.0}, {spec.Position.y:0.0}, {spec.Position.z:0.0}), "
+                        + $"{spec.Hex} {spec.PrototypeIntensity} -> {spec.Intensity:0.0}, range {spec.Range} m");
+                }
+                else if (spec.Group != lastGroup)
+                {
+                    int count = specs.FindAll(s => s.Group == spec.Group).Count;
+                    lines.Append($"\n    {spec.Group}: {count} x {spec.Kind}, {spec.Hex} {spec.PrototypeIntensity} -> "
+                        + $"{spec.Intensity:0.0}, range {spec.Range} m, light {spec.Position.y - BunkerFloor(spec):0.00} m over the floor");
+                }
+
+                lastGroup = spec.Group;
+            }
+
+            return $"\n  {title}: {specs.Count} lights, {shadows} with shadows, {flickers} flickering{lines}";
+        }
+
+        private static float BunkerFloor(LightSpec spec)
+        {
+            Room room = BunkerLayoutAssetBuilder.LoadOrCreate().FindRoom(spec.Group);
+            return BunkerShell.FloorY(room, spec.Position.z);
+        }
+
+        private static void ResetTransform(Transform transform)
+        {
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
         }
 
         // ---- Lighting Settings asset ------------------------------------------------------------------------------

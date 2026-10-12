@@ -64,12 +64,42 @@ namespace Blackout.Editor
         public static Quaternion MoonRotation => Quaternion.LookRotation(-TowardMoon);
 
         /// <summary>
+        /// The Unity intensity for a point or spot light that lights a surface <paramref name="unityDistance"/> away as
+        /// brightly as the prototype's light lit one <paramref name="prototypeDistance"/> away (same range).
+        /// The prototype (three.js r128) fades a light as (1 - d / range) ^ decay, so it stays bright almost to its
+        /// range. URP uses the physical inverse square, 1 / d^2, times a window (1 - (d / range)^4)^2 that reaches 0 at
+        /// the range. Both multiply the light by N.L and the albedo in the same way, so matching these two curves at
+        /// one distance gives the same brightness there. Close to the light Unity is brighter, far from it darker.
+        /// For example a generator high-bay (3.0, range 14 m) 5.55 m over the floor needs 43.3 in Unity.
+        /// </summary>
+        public static float MatchIntensity(float prototypeIntensity, float range, float decay, float prototypeDistance,
+            float unityDistance)
+        {
+            float prototype = prototypeIntensity * Mathf.Pow(Mathf.Clamp01(1f - prototypeDistance / range), decay);
+            float window = 1f - Mathf.Pow(unityDistance / range, 4f);
+            return prototype * unityDistance * unityDistance / (window * window);
+        }
+
+        /// <summary>URP's falloff for a point or spot light: what a surface at this distance receives per unit of intensity.</summary>
+        public static float UnityFalloff(float distance, float range)
+        {
+            float window = Mathf.Clamp01(1f - Mathf.Pow(distance / range, 4f));
+            return window * window / (distance * distance);
+        }
+
+        /// <summary>
         /// The sRGB colour for a Unity colour field whose linear value is the hex's numbers, as three.js r128 uses them.
         /// For example #0B1220 becomes #3B4B63: Unity converts it back to linear (0.043, 0.071, 0.125).
         /// </summary>
         public static Color FromLinearHex(string hex)
         {
             return FromLinear(Linear(hex));
+        }
+
+        /// <summary>The same, times an HDR intensity: an emission colour, for example a tube's #E6F0FF x 4.2.</summary>
+        public static Color FromLinearHex(string hex, float intensity)
+        {
+            return FromLinear(Linear(hex) * intensity);
         }
 
         /// <summary>The hex's numbers as a linear colour (0 - 1 per channel).</summary>
