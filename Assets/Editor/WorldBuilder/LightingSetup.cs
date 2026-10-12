@@ -21,6 +21,9 @@ namespace Blackout.Editor
     ///   each with an emissive lamp mesh (Assets/Materials/Environment/Lighting). The W8 blackout switches these off.
     /// - Lighting/OutdoorLights: the compound floodlights, the wall pack over the bunker door and the boat lantern. The
     ///   generator only powers the bunker, so these stay on.
+    /// - Lighting/ReflectionProbes (one baked probe per room) and Lighting/LightProbes (the bunker, the compound yard,
+    ///   the dock and the trail), placed by <see cref="ProbeLayout"/>.
+    /// - Static flags on the environment's renderers, from <see cref="StaticFlagRules"/>.
     /// - Assets/Environment/Lighting/EnvironmentLighting.lighting: the scene's Lighting Settings asset, with Auto
     ///   Generate off (only the World Builder bakes, from Window > Rendering > Lighting).
     /// It never bakes. It does not edit the URP asset (Assets/Settings): it reports its shadow settings against the
@@ -37,7 +40,13 @@ namespace Blackout.Editor
         public const string LightingRootName = "Lighting";
         public const string MoonName = "Moon";
         public const string PoweredLightsName = "PoweredLights";
+        public const string ReflectionProbesName = "ReflectionProbes";
+        public const string LightProbesName = "LightProbes";
         public const string LampMaterialFolder = "Assets/Materials/Environment/Lighting";
+
+        // Reflection probes: 128 px cubemaps are enough for rough concrete and metal at a medium preset.
+        public const int ReflectionProbeResolution = 128;
+        public const float ReflectionBlendDistance = 0.5f;
 
         // ---- Lightmapping (see docs/level-layout.md, "Bake settings") ----------------------------------------------
         // Mixed lights in Baked Indirect mode: direct light and shadows stay real-time (so the blackout can switch the
@@ -87,6 +96,10 @@ namespace Blackout.Editor
             BuildLights(GeneratedObjects.FindOrCreateChild(lighting, LightFixtureLayout.OutdoorGroup, UndoLabel), outdoor, false);
             report.Append(DescribeLights("powered fixtures (Lighting/PoweredLights)", powered));
             report.Append(DescribeLights("outdoor lights (Lighting/OutdoorLights)", outdoor));
+
+            report.Append(BuildReflectionProbes(lighting, ProbeLayout.ReflectionProbes(layout)));
+            report.Append(BuildLightProbes(lighting, layout, GroundHeight(scene)));
+            report.Append(ApplyStaticFlags(scene));
 
             LightingSettings settings = SaveLightingSettings();
             Lightmapping.SetLightingSettingsForScene(scene, settings);
@@ -355,6 +368,128 @@ namespace Blackout.Editor
         {
             Room room = BunkerLayoutAssetBuilder.LoadOrCreate().FindRoom(spec.Group);
             return BunkerShell.FloorY(room, spec.Position.z);
+        }
+
+        // ---- Probes -----------------------------------------------------------------------------------------------
+
+        private static string BuildReflectionProbes(Transform lighting, List<ReflectionProbeSpec> specs)
+        {
+            Transform container = GeneratedObjects.FindOrCreateChild(lighting, ReflectionProbesName, UndoLabel);
+            ResetTransform(container);
+            var built = new HashSet<string>();
+            foreach (ReflectionProbeSpec spec in specs)
+            {
+                GameObject go = GeneratedObjects.GetOrCreate(container, spec.Room, built, UndoLabel);
+                go.transform.SetPositionAndRotation(spec.Position, Quaternion.identity);
+                go.transform.localScale = Vector3.one;
+
+                ReflectionProbe probe = GeneratedObjects.GetOrAddComponent<ReflectionProbe>(go);
+                probe.mode = ReflectionProbeMode.Baked;
+                probe.resolution = ReflectionProbeResolution;
+                probe.hdr = true;
+                probe.boxProjection = true;
+                probe.center = spec.BoxCentre - spec.Position;
+                probe.size = spec.BoxSize;
+                probe.blendDistance = ReflectionBlendDistance;
+                probe.importance = 1;
+                probe.intensity = 1f;
+                probe.clearFlags = ReflectionProbeClearFlags.Skybox;
+                probe.nearClipPlane = 0.1f;
+                probe.farClipPlane = 60f; // longer than the 41 m corridor
+                probe.cullingMask = ~0;
+            }
+
+            GeneratedObjects.RemoveStale(container, built);
+            return $"\n  reflection probes (Lighting/ReflectionProbes): {specs.Count}, one per room, baked, "
+                + $"{ReflectionProbeResolution} px, box projection, blend {ReflectionBlendDistance} m";
+        }
+
+        private static string BuildLightProbes(Transform lighting, BunkerLayout layout, System.Func<float, float, float> ground)
+        {
+            Transform container = GeneratedObjects.FindOrCreateChild(lighting, LightProbesName, UndoLabel);
+            ResetTransform(container);
+            var built = new HashSet<string>();
+            int bunker = SetProbeGroup(container, "Bunker", ProbeLayout.BunkerProbes(layout), built);
+            int compound = SetProbeGroup(container, "Compound", ProbeLayout.CompoundProbes(layout, ground), built);
+            int trail = SetProbeGroup(container, "Trail", ProbeLayout.TrailProbes(ground), built);
+            GeneratedObjects.RemoveStale(container, built);
+            return $"\n  light probes (Lighting/LightProbes): {bunker + compound + trail} (bunker {bunker}, compound {compound}, "
+                + $"dock and trail {trail})";
+        }
+
+        // A Light Probe Group at the origin, so its local probe positions are world positions.
+        private static int SetProbeGroup(Transform container, string part, List<Vector3> positions, ISet<string> built)
+        {
+            GameObject go = GeneratedObjects.GetOrCreate(container, part, built, UndoLabel);
+            ResetTransform(go.transform);
+            LightProbeGroup group = GeneratedObjects.GetOrAddComponent<LightProbeGroup>(go);
+            group.probePositions = positions.ToArray();
+            group.dering = true; // no dark rings next to the bright high-bays
+            return positions.Count;
+        }
+
+        // Height of the painted terrain (what the player walks on), or the height field if there is no terrain.
+        private static System.Func<float, float, float> GroundHeight(Scene scene)
+        {
+            GameObject terrainRoot = WorldSceneSkeleton.FindRoot(scene, "Terrain");
+            Transform terrainObject = terrainRoot != null ? terrainRoot.transform.Find("IslandTerrain") : null;
+            Terrain terrain = terrainObject != null ? terrainObject.GetComponent<Terrain>() : null;
+            if (terrain == null)
+            {
+                return IslandHeightField.Sample;
+            }
+
+            return (x, z) => terrain.SampleHeight(new Vector3(x, 0f, z)) + terrain.transform.position.y;
+        }
+
+        // ---- Static flags -----------------------------------------------------------------------------------------
+
+        private static string ApplyStaticFlags(Scene scene)
+        {
+            var counts = new List<string>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                int changed = 0;
+                int total = 0;
+                foreach (Transform child in root.transform)
+                {
+                    StaticEditorFlags? flags = StaticFlagRules.For(root.name, child.name);
+                    if (!flags.HasValue)
+                    {
+                        continue;
+                    }
+
+                    foreach (Renderer renderer in child.GetComponentsInChildren<Renderer>(true))
+                    {
+                        changed += SetFlags(renderer.gameObject, flags.Value);
+                        total++;
+                    }
+
+                    foreach (Terrain terrain in child.GetComponentsInChildren<Terrain>(true))
+                    {
+                        changed += SetFlags(terrain.gameObject, flags.Value);
+                        total++;
+                    }
+                }
+
+                if (total > 0)
+                {
+                    counts.Add($"{root.name} {total} ({changed} changed)");
+                }
+            }
+
+            return $"\n  static flags: {string.Join(", ", counts)}; the water is see-through static, the boat dynamic";
+        }
+
+        private static int SetFlags(GameObject go, StaticEditorFlags flags)
+        {
+            if (GameObjectUtility.GetStaticEditorFlags(go) == flags)
+            {
+                return 0;
+            }
+
+            GameObjectUtility.SetStaticEditorFlags(go, flags);
+            return 1;
         }
 
         private static void ResetTransform(Transform transform)

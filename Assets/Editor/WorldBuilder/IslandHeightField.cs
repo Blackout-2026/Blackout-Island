@@ -66,6 +66,12 @@ namespace Blackout.Editor
             return IslandLayout.CompoundMaxZ - w * (Math.Sin(x * 0.09 + 1.3) * 5 + (Noise(x * 0.05, 3.3, 41) - 0.5) * 8 + 3);
         }
 
+        /// <summary>The trail's centre line as a polyline (a copy): Catmull-Rom through the control points, 10 samples per span.</summary>
+        public static Vector2[] TrailPolyline()
+        {
+            return (Vector2[])Trail.Clone();
+        }
+
         /// <summary>Horizontal distance from (x, z) to the trail's centre line.</summary>
         public static double TrailDistance(double x, double z)
         {
