@@ -54,6 +54,15 @@ namespace Blackout.Agents.Tests
         }
 
         [Test]
+        public void HasAnAgentShooterAndATracerPool()
+        {
+            // A4: every agent fires through the shared shooter, with an optional pooled tracer.
+            Assert.IsNotNull(prefab.GetComponent<AgentShooter>());
+            Assert.IsInstanceOf<IAgentShooter>(prefab.GetComponent<AgentShooter>());
+            Assert.IsNotNull(prefab.GetComponent<AgentTracerPool>());
+        }
+
+        [Test]
         public void HasAnEmptyVisualChildForTheModelToNestIn()
         {
             Transform visual = prefab.transform.Find("Visual");

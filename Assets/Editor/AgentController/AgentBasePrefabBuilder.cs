@@ -8,10 +8,11 @@ using UnityEngine;
 namespace Blackout.Editor
 {
     /// <summary>
-    /// Creates Assets/Prefabs/Agents/AgentBase.prefab: the capsule, Health, AgentRoot and PathFollower every agent
-    /// shares, with an empty Visual child where each agent type nests its model (Core Developer's prefabs or a free
-    /// humanoid). Re-runnable: an existing prefab is only topped up with components it is missing, so hand edits
-    /// (speeds, collider tweaks) are never overwritten.
+    /// Creates Assets/Prefabs/Agents/AgentBase.prefab: the capsule, Health, AgentRoot, PathFollower, AgentShooter
+    /// and AgentTracerPool every agent shares, with an empty Visual child where each agent type nests its model
+    /// (Core Developer's prefabs or a free humanoid). Re-runnable: an existing prefab is only topped up with
+    /// components it is missing, so hand edits (speeds, collider tweaks, weapon config, tracer prefab) are never
+    /// overwritten.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.AgentBasePrefabBuilder.Build
     /// </summary>
     public static class AgentBasePrefabBuilder
@@ -55,6 +56,8 @@ namespace Blackout.Editor
                 root.AddComponent<Health>();
                 root.AddComponent<AgentRoot>();
                 root.AddComponent<PathFollower>();
+                root.AddComponent<AgentShooter>();
+                root.AddComponent<AgentTracerPool>();
 
                 var visual = new GameObject(VisualChildName);
                 visual.layer = enemyLayer;
@@ -79,6 +82,18 @@ namespace Blackout.Editor
                 if (contents.GetComponent<PathFollower>() == null)
                 {
                     contents.AddComponent<PathFollower>();
+                    changed = true;
+                }
+
+                if (contents.GetComponent<AgentShooter>() == null)
+                {
+                    contents.AddComponent<AgentShooter>();
+                    changed = true;
+                }
+
+                if (contents.GetComponent<AgentTracerPool>() == null)
+                {
+                    contents.AddComponent<AgentTracerPool>();
                     changed = true;
                 }
 

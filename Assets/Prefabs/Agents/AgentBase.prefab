@@ -44,6 +44,8 @@ GameObject:
   - component: {fileID: 5385366064983668318}
   - component: {fileID: 4796979051319052566}
   - component: {fileID: 1813077875479097673}
+  - component: {fileID: 7838887827940311580}
+  - component: {fileID: 787380512139723401}
   m_Layer: 7
   m_Name: AgentBase
   m_TagString: Enemy
@@ -151,3 +153,52 @@ MonoBehaviour:
     minReplanInterval: 0.2
     groundDamping: 18
     snapDistance: 1
+    stuckTryingSpeedThreshold: 0.4
+    stuckCheckInterval: 1.4
+    stuckMinProgress: 0.35
+    stuckNudgeSpeed: 1.25
+--- !u!114 &7838887827940311580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7060581680614148639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acaa9dad5955d24459ff643b0b38ba0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentShooter
+  config:
+    damage: 7
+    range: 30
+    burstCount: 3
+    burstInterval: 0.11
+    burstPause: 0.9
+    spread: 0.035
+    reactionDelay: 0.55
+    facingDotThreshold: 0.85
+    noiseLoudness: 40
+    muzzleForwardOffset: 0.15
+  muzzle: {fileID: 0}
+  eyeHeight: 1.62
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  gunfireChannel: {fileID: 0}
+  tracerPool: {fileID: 0}
+--- !u!114 &787380512139723401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7060581680614148639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba2a0a6dd7603743a2a86956d17b75d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentTracerPool
+  tracerPrefab: {fileID: 0}
+  poolSize: 8
+  lifetimeSeconds: 0.05
