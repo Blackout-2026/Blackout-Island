@@ -27,6 +27,8 @@ namespace Blackout.Agents
 
         public IReadOnlyList<IAgentInfo> Agents => agents;
         public Blackboard Blackboard => Holder.Instance;
+        /// <summary>The player's transform, found by the "Player" tag if not assigned. Null if there is none in the loaded scenes.</summary>
+        public Transform Player => GetPlayer();
 
         private BlackboardHolder Holder
         {

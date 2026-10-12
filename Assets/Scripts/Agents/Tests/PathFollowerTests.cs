@@ -439,5 +439,77 @@ namespace Blackout.Agents.Tests
 
             Assert.AreEqual(40f, gameObject.transform.eulerAngles.y, 0.01f);
         }
+
+        private sealed class FakeSeparationSource : ISeparationSource
+        {
+            public Vector2 push;
+            public int calls;
+            public Vector3 lastPosition;
+            public Transform lastSelf;
+
+            public Vector2 ComputeSeparation(Vector3 position, Transform self)
+            {
+                calls++;
+                lastPosition = position;
+                lastSelf = self;
+                return push;
+            }
+        }
+
+        [Test]
+        public void WithNoSeparationSourceConfigured_BehavesExactlyAsBefore()
+        {
+            // The default SetUp calls Configure(provider) with one argument: separationSource stays null.
+            follower.SetDestination(new Vector3(10f, 0f, 0f), MoveSpeed.Walk);
+
+            Assert.DoesNotThrow(() => Run(1f));
+        }
+
+        [Test]
+        public void Separation_AddsToTheDesiredVelocity_EvenWhileStanding()
+        {
+            var separation = new FakeSeparationSource { push = new Vector2(2f, 0f) };
+            follower.Configure(provider, separation);
+            // No SetDestination: the agent is standing still, only separation should move it.
+
+            follower.Tick(Dt);
+            follower.Tick(Dt);
+
+            Assert.AreEqual(2, separation.calls, "queried once per Tick");
+            Assert.Greater(follower.Velocity.x, 0f, "separation pushed it even with no destination");
+        }
+
+        [Test]
+        public void Separation_IsAccelerationLimited_LikeAnyOtherDesiredVelocity()
+        {
+            var separation = new FakeSeparationSource { push = new Vector2(10f, 0f) }; // far beyond any real speed
+            follower.Configure(provider, separation);
+
+            follower.Tick(Dt);
+
+            Assert.AreEqual(7f * Dt, follower.Speed, 0.0001f, "one step of the same 7 m/s^2 acceleration, not an instant jump");
+        }
+
+        [Test]
+        public void Separation_PassesTheMoversOwnTransform_SoItCanExcludeItself()
+        {
+            var separation = new FakeSeparationSource();
+            follower.Configure(provider, separation);
+
+            follower.Tick(Dt);
+
+            Assert.AreSame(gameObject.transform, separation.lastSelf);
+        }
+
+        [Test]
+        public void AgentRegistrySeparationSource_WithNoRegistryInTheScene_ReturnsZero()
+        {
+            // AgentRegistry.Current is null outside a loaded Agents scene (and in this test's isolated GameObject).
+            var source = new AgentRegistrySeparationSource();
+
+            Vector2 push = source.ComputeSeparation(Vector3.zero, gameObject.transform);
+
+            Assert.AreEqual(Vector2.zero, push);
+        }
     }
 }

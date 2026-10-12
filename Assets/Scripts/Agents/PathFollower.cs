@@ -18,6 +18,7 @@ namespace Blackout.Agents
 
         private readonly PathTracker tracker = new PathTracker();
         private IPathProvider provider;
+        private ISeparationSource separationSource;
 
         private bool hasDestination;
         private Vector3 requestedDestination;
@@ -51,13 +52,17 @@ namespace Blackout.Agents
 
         private void Awake()
         {
-            Configure(new PathProvider());
+            Configure(new PathProvider(), new AgentRegistrySeparationSource());
         }
 
-        /// <summary>Chooses the navigation source. Awake uses the NavMesh; tests plug in a fake.</summary>
-        public void Configure(IPathProvider newProvider)
+        /// <summary>
+        /// Chooses the navigation source and (A4) the separation source. Awake uses the NavMesh and the live
+        /// AgentRegistry; tests plug in fakes. separationSource may be null, meaning this mover never separates.
+        /// </summary>
+        public void Configure(IPathProvider newProvider, ISeparationSource newSeparationSource = null)
         {
             provider = newProvider;
+            separationSource = newSeparationSource;
             yaw = transform.eulerAngles.y;
             repathTimer = RandomRepathDelay();
         }
@@ -128,6 +133,12 @@ namespace Blackout.Agents
                     float speed = settings.SpeedFor(speedClass) * SpeedMultiplier * tracker.SpeedFactor(position, settings);
                     desired = direction.normalized * speed;
                 }
+            }
+
+            // A4: applies even while standing still, so an idle agent still gets nudged out of a crowd.
+            if (separationSource != null)
+            {
+                desired += separationSource.ComputeSeparation(position, transform);
             }
 
             velocity = MotionMath.StepVelocity(velocity, desired, settings.acceleration, settings.decelerationMultiplier, dt);
