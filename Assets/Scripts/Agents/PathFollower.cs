@@ -18,6 +18,7 @@ namespace Blackout.Agents
 
         private readonly PathTracker tracker = new PathTracker();
         private IPathProvider provider;
+        private ISeparationSource separationSource;
 
         private bool hasDestination;
         private Vector3 requestedDestination;
@@ -32,6 +33,8 @@ namespace Blackout.Agents
         private bool hasLookTarget;
         private Vector3 lookTarget;
         private bool aiming;
+        private float stuckTimer;
+        private Vector3 stuckReferencePosition;
 
         public MovementSettings Settings => settings;
 
@@ -49,15 +52,22 @@ namespace Blackout.Agents
         public float RemainingDistance => tracker.RemainingDistance(transform.position);
         public Vector3[] CurrentPath => tracker.Corners;
 
+        /// <summary>A4: how many times this mover has nudged itself free after making no progress. For the debug overlay.</summary>
+        public int StuckCount { get; private set; }
+
         private void Awake()
         {
-            Configure(new PathProvider());
+            Configure(new PathProvider(), new AgentRegistrySeparationSource());
         }
 
-        /// <summary>Chooses the navigation source. Awake uses the NavMesh; tests plug in a fake.</summary>
-        public void Configure(IPathProvider newProvider)
+        /// <summary>
+        /// Chooses the navigation source and (A4) the separation source. Awake uses the NavMesh and the live
+        /// AgentRegistry; tests plug in fakes. separationSource may be null, meaning this mover never separates.
+        /// </summary>
+        public void Configure(IPathProvider newProvider, ISeparationSource newSeparationSource = null)
         {
             provider = newProvider;
+            separationSource = newSeparationSource;
             yaw = transform.eulerAngles.y;
             repathTimer = RandomRepathDelay();
         }
@@ -130,7 +140,20 @@ namespace Blackout.Agents
                 }
             }
 
+            // A4: applies even while standing still, so an idle agent still gets nudged out of a crowd.
+            if (separationSource != null)
+            {
+                desired += separationSource.ComputeSeparation(position, transform);
+            }
+
+            bool stuckNudge = UpdateStuckDetection(position, desired, dt);
+
             velocity = MotionMath.StepVelocity(velocity, desired, settings.acceleration, settings.decelerationMultiplier, dt);
+            if (stuckNudge)
+            {
+                velocity += new Vector2(Random.Range(-settings.stuckNudgeSpeed, settings.stuckNudgeSpeed), Random.Range(-settings.stuckNudgeSpeed, settings.stuckNudgeSpeed));
+            }
+
             MoveAndFace(position, dt);
         }
 
@@ -222,6 +245,43 @@ namespace Blackout.Agents
         private float RandomRepathDelay()
         {
             return settings.repathInterval + Random.value * settings.repathJitter;
+        }
+
+        /// <summary>
+        /// A4, docs/reference/agent-controller.md section 3.2. While the agent wants to move faster than
+        /// stuckTryingSpeedThreshold: every stuckCheckInterval seconds, if it covered less than stuckMinProgress
+        /// since the last check, it is stuck — clears the path and forces an immediate replan, counts it, and
+        /// tells the caller to apply a random nudge. The timer and reference position reset the moment it stops
+        /// trying to move, so stopping cleanly is never mistaken for being stuck.
+        /// </summary>
+        private bool UpdateStuckDetection(Vector3 position, Vector2 desired, float dt)
+        {
+            if (desired.magnitude <= settings.stuckTryingSpeedThreshold)
+            {
+                stuckTimer = 0f;
+                stuckReferencePosition = position;
+                return false;
+            }
+
+            stuckTimer += dt;
+            if (stuckTimer < settings.stuckCheckInterval)
+            {
+                return false;
+            }
+
+            stuckTimer = 0f;
+            float moved = Vector3.Distance(position, stuckReferencePosition);
+            stuckReferencePosition = position;
+            if (moved >= settings.stuckMinProgress)
+            {
+                return false;
+            }
+
+            StuckCount++;
+            needsPlan = true; // "clear the path": the corners go, the destination itself is untouched
+            repathTimer = 0f;
+            tracker.Clear();
+            return true;
         }
 
         private void OnDrawGizmosSelected()

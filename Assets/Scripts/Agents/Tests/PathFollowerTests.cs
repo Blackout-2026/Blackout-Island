@@ -439,5 +439,144 @@ namespace Blackout.Agents.Tests
 
             Assert.AreEqual(40f, gameObject.transform.eulerAngles.y, 0.01f);
         }
+
+        private sealed class FakeSeparationSource : ISeparationSource
+        {
+            public Vector2 push;
+            public int calls;
+            public Vector3 lastPosition;
+            public Transform lastSelf;
+
+            public Vector2 ComputeSeparation(Vector3 position, Transform self)
+            {
+                calls++;
+                lastPosition = position;
+                lastSelf = self;
+                return push;
+            }
+        }
+
+        [Test]
+        public void WithNoSeparationSourceConfigured_BehavesExactlyAsBefore()
+        {
+            // The default SetUp calls Configure(provider) with one argument: separationSource stays null.
+            follower.SetDestination(new Vector3(10f, 0f, 0f), MoveSpeed.Walk);
+
+            Assert.DoesNotThrow(() => Run(1f));
+        }
+
+        [Test]
+        public void Separation_AddsToTheDesiredVelocity_EvenWhileStanding()
+        {
+            var separation = new FakeSeparationSource { push = new Vector2(2f, 0f) };
+            follower.Configure(provider, separation);
+            // No SetDestination: the agent is standing still, only separation should move it.
+
+            follower.Tick(Dt);
+            follower.Tick(Dt);
+
+            Assert.AreEqual(2, separation.calls, "queried once per Tick");
+            Assert.Greater(follower.Velocity.x, 0f, "separation pushed it even with no destination");
+        }
+
+        [Test]
+        public void Separation_IsAccelerationLimited_LikeAnyOtherDesiredVelocity()
+        {
+            var separation = new FakeSeparationSource { push = new Vector2(10f, 0f) }; // far beyond any real speed
+            follower.Configure(provider, separation);
+
+            follower.Tick(Dt);
+
+            Assert.AreEqual(7f * Dt, follower.Speed, 0.0001f, "one step of the same 7 m/s^2 acceleration, not an instant jump");
+        }
+
+        [Test]
+        public void Separation_PassesTheMoversOwnTransform_SoItCanExcludeItself()
+        {
+            var separation = new FakeSeparationSource();
+            follower.Configure(provider, separation);
+
+            follower.Tick(Dt);
+
+            Assert.AreSame(gameObject.transform, separation.lastSelf);
+        }
+
+        [Test]
+        public void AgentRegistrySeparationSource_WithNoRegistryInTheScene_ReturnsZero()
+        {
+            // AgentRegistry.Current is null outside a loaded Agents scene (and in this test's isolated GameObject).
+            var source = new AgentRegistrySeparationSource();
+
+            Vector2 push = source.ComputeSeparation(Vector3.zero, gameObject.transform);
+
+            Assert.AreEqual(Vector2.zero, push);
+        }
+
+        /// <summary>Ticks while resetting the position back to the origin afterwards, simulating something
+        /// (a crowd, a corner geometry the fake provider does not know about) that blocks all real progress.</summary>
+        private void RunBlocked(float seconds)
+        {
+            int steps = Mathf.RoundToInt(seconds / Dt);
+            for (int i = 0; i < steps; i++)
+            {
+                follower.Tick(Dt);
+                gameObject.transform.position = Vector3.zero;
+            }
+        }
+
+        [Test]
+        public void StuckDetection_NudgesAndForcesAReplan_WhenMakingNoProgress()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+
+            RunBlocked(1.5f); // just past the 1.4 s check interval
+
+            Assert.AreEqual(1, follower.StuckCount);
+            Assert.Greater(provider.planCalls, 1, "stuck detection forced a fresh plan beyond the initial one");
+        }
+
+        [Test]
+        public void StuckDetection_CanTriggerMultipleTimes_IfStillBlocked()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+
+            RunBlocked(3f); // two full check intervals
+
+            Assert.GreaterOrEqual(follower.StuckCount, 2);
+        }
+
+        [Test]
+        public void StuckDetection_DoesNotTrigger_WhenMovingNormally()
+        {
+            follower.SetDestination(new Vector3(10f, 0f, 0f), MoveSpeed.Walk);
+
+            RunUntilArrived(30f, out _);
+
+            Assert.AreEqual(0, follower.StuckCount);
+        }
+
+        [Test]
+        public void StuckDetection_NeverTriggers_WhileStandingStill()
+        {
+            // Never trying to move: the timer must never accumulate towards a stuck event, no matter how long.
+            Run(5f); // well past the 1.4 s check interval, several times over
+
+            Assert.AreEqual(0, follower.StuckCount);
+        }
+
+        [Test]
+        public void StuckDetection_TimerResets_AfterStopping_SoResumingLaterStartsFresh()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+            RunBlocked(1f); // under the 1.4 s interval: no stuck event yet
+
+            follower.Stop(); // stops trying to move: resets the stuck timer and reference position
+            Run(1f);
+
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+            RunBlocked(1f); // another 1 s, still under the interval on its own
+
+            Assert.AreEqual(0, follower.StuckCount, "the earlier 1 s should not have carried over through the stop");
+        }
     }
 }

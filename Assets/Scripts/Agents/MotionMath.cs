@@ -37,5 +37,24 @@ namespace Blackout.Agents
         {
             return Mathf.MoveTowardsAngle(currentYaw, targetYaw, turnRateDegrees * dt);
         }
+
+        /// <summary>
+        /// A4, docs/reference/agent-controller.md section 3.2: pushes <paramref name="self"/> away from
+        /// <paramref name="other"/> when closer than <paramref name="range"/>, strength
+        /// <c>(range - distance) * strength</c>. Zero once outside range, and zero (not NaN) for two agents on
+        /// the exact same spot. Used for both agent-agent (range 1.3, strength 2.4) and agent-player
+        /// (range 1.0, strength 3) separation — only the two constants differ.
+        /// </summary>
+        public static Vector2 SeparationPush(Vector2 self, Vector2 other, float range, float strength)
+        {
+            Vector2 delta = self - other;
+            float distance = delta.magnitude;
+            if (distance >= range || distance <= 1e-5f)
+            {
+                return Vector2.zero;
+            }
+
+            return delta / distance * ((range - distance) * strength);
+        }
     }
 }
