@@ -5,7 +5,8 @@
         "Blackout.Shared",
         "Blackout.World.Layout",
         "Unity.AI.Navigation",
-        "Unity.RenderPipelines.Universal.Editor"
+        "Unity.RenderPipelines.Universal.Editor",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [
         "Editor"
