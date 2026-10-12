@@ -57,6 +57,16 @@ namespace Blackout.Agents
         [Tooltip("How far the agent may be from the NavMesh before it counts as off it (metres).")]
         [Min(0.1f)] public float snapDistance = 1f;
 
+        [Header("Stuck handling (A4)")]
+        [Tooltip("Below this desired speed (m/s) the agent is not 'trying to move', so it can never be stuck. The prototype uses 0.4.")]
+        [Min(0f)] public float stuckTryingSpeedThreshold = 0.4f;
+        [Tooltip("Seconds between stuck checks. The prototype uses 1.4.")]
+        [Min(0.1f)] public float stuckCheckInterval = 1.4f;
+        [Tooltip("Below this much progress (metres) since the last check, the agent counts as stuck. The prototype uses 0.35.")]
+        [Min(0f)] public float stuckMinProgress = 0.35f;
+        [Tooltip("The random nudge applied on each axis when stuck (m/s). The prototype uses 1.25.")]
+        [Min(0f)] public float stuckNudgeSpeed = 1.25f;
+
         /// <summary>The top speed for a speed class. Stop is zero.</summary>
         public float SpeedFor(MoveSpeed speed)
         {

@@ -511,5 +511,72 @@ namespace Blackout.Agents.Tests
 
             Assert.AreEqual(Vector2.zero, push);
         }
+
+        /// <summary>Ticks while resetting the position back to the origin afterwards, simulating something
+        /// (a crowd, a corner geometry the fake provider does not know about) that blocks all real progress.</summary>
+        private void RunBlocked(float seconds)
+        {
+            int steps = Mathf.RoundToInt(seconds / Dt);
+            for (int i = 0; i < steps; i++)
+            {
+                follower.Tick(Dt);
+                gameObject.transform.position = Vector3.zero;
+            }
+        }
+
+        [Test]
+        public void StuckDetection_NudgesAndForcesAReplan_WhenMakingNoProgress()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+
+            RunBlocked(1.5f); // just past the 1.4 s check interval
+
+            Assert.AreEqual(1, follower.StuckCount);
+            Assert.Greater(provider.planCalls, 1, "stuck detection forced a fresh plan beyond the initial one");
+        }
+
+        [Test]
+        public void StuckDetection_CanTriggerMultipleTimes_IfStillBlocked()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+
+            RunBlocked(3f); // two full check intervals
+
+            Assert.GreaterOrEqual(follower.StuckCount, 2);
+        }
+
+        [Test]
+        public void StuckDetection_DoesNotTrigger_WhenMovingNormally()
+        {
+            follower.SetDestination(new Vector3(10f, 0f, 0f), MoveSpeed.Walk);
+
+            RunUntilArrived(30f, out _);
+
+            Assert.AreEqual(0, follower.StuckCount);
+        }
+
+        [Test]
+        public void StuckDetection_NeverTriggers_WhileStandingStill()
+        {
+            // Never trying to move: the timer must never accumulate towards a stuck event, no matter how long.
+            Run(5f); // well past the 1.4 s check interval, several times over
+
+            Assert.AreEqual(0, follower.StuckCount);
+        }
+
+        [Test]
+        public void StuckDetection_TimerResets_AfterStopping_SoResumingLaterStartsFresh()
+        {
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+            RunBlocked(1f); // under the 1.4 s interval: no stuck event yet
+
+            follower.Stop(); // stops trying to move: resets the stuck timer and reference position
+            Run(1f);
+
+            follower.SetDestination(new Vector3(40f, 0f, 0f), MoveSpeed.Walk);
+            RunBlocked(1f); // another 1 s, still under the interval on its own
+
+            Assert.AreEqual(0, follower.StuckCount, "the earlier 1 s should not have carried over through the stop");
+        }
     }
 }
