@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "Blackout.Shared",
         "Blackout.Art",
-        "Blackout.Art.Editor"
+        "Blackout.Art.Editor",
+        "Blackout.Agents"
     ],
     "includePlatforms": [
         "Editor"
