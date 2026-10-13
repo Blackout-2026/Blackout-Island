@@ -258,9 +258,70 @@ Blackout.Editor.ModelReimporter.ReimportAll -logFile -`.
 
 ## 11. Parts and joint names for the Agent Controller
 
-Written in step C3, once the robot's part hierarchy exists. Until then the working names are the prototype's
-(`pelvis`, `chest`, `head`, `upperArm`, `foreArm`, `hand`, `thigh`, `shin`, `foot`; see `core-developer.md`
-section 3.5), written in PascalCase with the side suffix: `Thigh_L`, `Shin_R`.
+The security robot is rigid parts on pivots, not a skinned rig. The Agent Controller's `ProceduralRobotAnimator`
+finds each joint **by exact name anywhere below the visual** and rotates or moves it every frame. The tree below is
+the prototype's 16 bones (`prototype/src/models/robot.js`) with X mirrored (section 0 of `core-developer.md`), so the
+robot's right arm, which carries the weapon pod, is at +X. The table is `RobotRig.Joints` in
+`Assets/Editor/CoreDeveloper`; the placeholder prefab is built from it, and a test compares the animated names with the
+fields of `ProceduralRobotAnimator`.
+
+### 11.1 Joint tree, pivots and rest pose
+
+Offsets are the joint's local position in metres relative to its parent (Unity axes: +X is the robot's right, +Y up,
++Z the front). Height is above the floor, which is where the robot's origin is (between the feet).
+
+| Joint (exact name) | Parent | Offset (x, y, z) | Height | Driven by the animator |
+| --- | --- | --- | --- | --- |
+| `Pelvis` | the model | (0, 1.05, 0) | 1.05 | yes: moves up and down (walk stomp, death drop), pitches forward on death |
+| `Spine` | `Pelvis` | (0, 0.14, 0) | 1.19 | no |
+| `Chest` | `Spine` | (0, 0.30, 0) | 1.49 | no |
+| `Head` | `Chest` | (0, 0.44, 0.02) | 1.93 | yes: pitches on death |
+| `UpperArm_L` / `UpperArm_R` | `Chest` | (-0.37 / +0.37, 0.27, 0) | 1.76 | right arm only: raises -1.5 rad to aim |
+| `ForeArm_L` / `ForeArm_R` | `UpperArm_x` | (0, -0.34, 0) | 1.42 | yes: left -1.1 rad, right -0.08 rad when aiming |
+| `Hand_L` / `Hand_R` | `ForeArm_x` | (0, -0.32, 0) | 1.10 | no. `Hand_R` carries both sockets |
+| `Thigh_L` / `Thigh_R` | `Pelvis` | (-0.17 / +0.17, -0.06, 0) | 0.99 | yes: walk swing, death buckle |
+| `Shin_L` / `Shin_R` | `Thigh_x` | (0, -0.42, 0.13) | 0.57 | yes: knee bend |
+| `Foot_L` / `Foot_R` | `Shin_x` | (0, -0.43, -0.15) | 0.14 | yes: counter-rotates so the sole stays level |
+
+Rules the Blender model has to follow (they extend sections 3 and 5):
+
+1. **Every joint is an object whose origin is the rotation centre**, at the offset above. It can be a mesh object that
+   carries that part's mesh, or an Empty with the meshes as its children. Parent the joints exactly as in the table:
+   legs and arms nest (`Foot_L` under `Shin_L` under `Thigh_L` under `Pelvis`), so a thigh swing carries the shin and
+   foot with it.
+2. **Rest pose = rotation (0, 0, 0) and scale 1 on every joint.** The animator saves the rest rotation and adds to it,
+   but the digitigrade look has to be in the mesh: the thigh is modelled sloping forward 17 degrees and the shin
+   19 degrees backward inside an un-rotated object (the prototype does the same).
+3. **Rotation is about each joint's local X axis**, which must be the robot's left-right axis. A positive angle is a
+   nose-down pitch in Unity: the front tips down and the free end of a hanging limb swings back. The aim pose of -1.5 rad
+   therefore swings the right arm's lower end forward and up. The prototype's angles carry over unchanged because the
+   X mirror does not change a rotation about X.
+4. **Names are unique in the whole hierarchy** and a mesh part must never be called like a joint. The animator takes
+   the first match it finds. Detail parts use any other PascalCase name (`ThighArmour_L`, `HipActuator_R`).
+5. `Pelvis` must be a direct child of the model root, because the animator moves it by its **local position**.
+6. Keep the head's `ScannerDot` (a 0.016 m sphere at (0, 0.07, 0.15) in `Head`) as its own object: it is the one part
+   that slides side to side across the visor. Optional; the animator does not move it yet.
+
+### 11.2 Sockets
+
+| Name | Parent | Local position | Orientation |
+| --- | --- | --- | --- |
+| `WeaponSocket` | `Hand_R` | (0, 0, 0) | rotation (90, 0, 0): its +Z (`forward`) runs down the barrels |
+| `MuzzlePoint` | `Hand_R` | (0, -0.33, 0): 0.33 m below the wrist, between the two barrels | same: `forward` is the shooting direction |
+
+Both follow the arm, so they are in the right place when the pod is raised. Either can also be exported from Blender
+as an Empty with exactly that name; the prefab step keeps an existing one.
+
+### 11.3 Notes for the Agent Controller
+
+- The 12 names the animator already uses are all present: `Pelvis`, `Head`, `Thigh_L/R`, `Shin_L/R`, `Foot_L/R`,
+  `UpperArm_L/R`, `ForeArm_L/R`. `Spine`, `Chest`, `Hand_L`, `Hand_R` and `ScannerDot` exist too and are not driven yet.
+- The prototype also applies small rest offsets that A3 does not: thigh -0.15 rad, shin +0.12 rad, the arms leaning
+  out about 0.18 rad, spine and chest lean, pelvis twist. The model rests with all of them at zero.
+- `MuzzlePoint.position` is where a shot starts and `MuzzlePoint.forward` is its direction. `AgentShooter` takes the
+  muzzle as a serialized `Transform`; wire it to this object when nesting the prefab.
+- The `ScannerDot` shares `M_SecurityRobot_Eye` (red). The prototype turns it amber while patrolling. Changing that
+  per robot needs a `MaterialPropertyBlock` on its renderer; do not edit the shared material.
 
 ## 12. Generator prefab (step C2)
 
@@ -318,3 +379,66 @@ emission peaks at about 2 and is my reading of section 8.2, so tune it by eye.
 | `SM_Generator.fbx` (+ `Art/Blender/SM_Generator.blend`) | `Assets/Models/Custom` | not made yet, placeholder in use |
 | `T_Generator_*` textures (4 maps) | `Assets/Textures/Models` | not made yet, flat colours in use |
 | Looping generator hum (CC0 or recorded), 5 to 10 s | the `Clip` of `HumAudioSource` | none; credit it in `docs/credits/core-developer.md` |
+
+## 13. Security robot prefab (step C3)
+
+`Assets/Prefabs/Models/SecurityRobot_Visual.prefab` is built by **Blackout > Art > Build Security Robot Visual Prefab**
+(`RobotPrefabBuilder`). It is visual only: **no collider, no Rigidbody, no Health, no script**. The Agent Controller nests
+it under the `Visual` child of `AgentBase.prefab` and puts `ProceduralRobotAnimator` there. Until `SM_SecurityRobot.fbx`
+exists the tool builds a primitive placeholder with the real joint tree and size (2.38 m with the antenna, 1.04 m wide,
+0.64 m deep, feet on y 0), so the animation, the shooter and the AI can be tested now. When the FBX is imported, run the
+menu command again: only the `Model` child is replaced.
+
+**Re-running is safe.** Materials keep every hand edit and only get a texture into a slot that is still empty. While the
+same model stays, a socket moved by hand stays where it is. When the placeholder is replaced by the FBX, the sockets are
+created again at their defaults, unless the FBX already contains Empties with those names. After the swap the tool prints
+a warning for every name of section 11.1 that the FBX lacks, and for every material that matches none of the five below.
+
+### 13.1 Hierarchy
+
+| Object | Content |
+| --- | --- |
+| `SecurityRobot_Visual` | empty root at the feet, identity transform |
+| `Model` | the FBX instance, or the placeholder |
+| `Model/Pelvis/...` | the joint tree of section 11.1, with all parts below it |
+| `.../Hand_R/WeaponSocket`, `.../Hand_R/MuzzlePoint` | the sockets of section 11.2 |
+
+The placeholder has 81 primitive parts (101 objects in all). That is why it is not meant to ship: the real model is
+about 16 meshes.
+
+### 13.2 Materials
+
+Five URP/Lit assets in `Assets/Materials/Models`, created by **Blackout > Art > Build Robot Materials** (or by the prefab
+command). Flat colours and values are from `core-developer.md` 3.4 and 8.1.
+
+| Material | Flat placeholder | Used for | Textured |
+| --- | --- | --- | --- |
+| `M_SecurityRobot_Body` | #4a5056, metallic 0.55, smoothness 0.4 | painted armour, steel parts | yes |
+| `M_SecurityRobot_Joint` | #232527, metallic 0.85, smoothness 0.65 | dark metal: joints, pistons, barrels, visor slot, power pack | yes |
+| `M_SecurityRobot_Accent` | #c89a24, metallic 0.4, smoothness 0.55 | hazard yellow: chest bars, roof plate, shoulder and thigh stripes | yes |
+| `M_SecurityRobot_Eye` | dark red base, **emission HDR (5, 0.35, 0.15)** | eye bar, antenna tip, scanner dot | no |
+| `M_SecurityRobot_Cells` | dark cyan base, **emission HDR (0.4, 2.6, 3.0)** | the three back power cells | no |
+
+The importer allows **4 distinct materials in `SM_SecurityRobot.fbx`** (section 6), so the model uses at most four of the
+five names. Recommended: **`M_SecurityRobot_Body`, `M_SecurityRobot_Eye` and `M_SecurityRobot_Cells`**, with the joint
+metal and the yellow painted into the one BaseColor atlas (that is what the 2048 texture is for). The placeholder uses all
+five only because flat colours cannot come from an atlas. Use `Joint` or `Accent` as a fourth slot if you prefer a separate
+material for the dark metal or the yellow. A Blender material name must equal one of these five exactly (section 2). The
+glow colours are HDR values above 1 on purpose: they feed the bloom, so do not bake them into a texture.
+
+### 13.3 Textures
+
+One set shared by `Body`, `Joint` and `Accent`, 2048 x 2048, in `Assets/Textures/Models`: `T_SecurityRobot_BaseColor`,
+`T_SecurityRobot_Normal` and `T_SecurityRobot_MetalSmooth` (`.png`). Unity fixes the import settings from the name
+(`ModelTextureRules`). Then run **Blackout > Art > Build Robot Materials**, which fills the empty slots and sets the flat
+tint to white. `Eye` and `Cells` stay flat.
+
+### 13.4 Still to supply
+
+| What | Where | Status |
+| --- | --- | --- |
+| `SM_SecurityRobot.fbx` (+ `Art/Blender/SM_SecurityRobot.blend`) with the names of section 11 | `Assets/Models/Custom` | not made yet, placeholder in use |
+| `T_SecurityRobot_*` textures (3 maps) | `Assets/Textures/Models` | not made yet, flat colours in use |
+
+Budget reminder (section 6): 5,000 triangles target, 7,500 hard maximum, 4 materials. The placeholder is about 7,000
+triangles because Unity's spheres and cylinders are heavy; it is not subject to the budget.
