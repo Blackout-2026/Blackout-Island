@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce07e79b17a184d43ac814c14549e3a6, type: 3}
+  m_Name: LightingStateProfile
+  m_EditorClassIdentifier: Blackout.Environment::Blackout.Environment.LightingStateProfile
+  powered:
+    fogColor: {r: 0.22973508, g: 0.29458883, b: 0.38929677, a: 1}
+    fogDensity: 0.0135
+    ambientSky: {r: 0.5379106, g: 0.59435695, b: 0.69252104, a: 1}
+    ambientEquator: {r: 0.43146807, g: 0.47624147, b: 0.55416757, a: 1}
+    ambientGround: {r: 0.2743537, g: 0.30034873, b: 0.3456015, a: 1}
+    directionalIntensity: 0.9
+    reflectionIntensity: 1
+  blackout:
+    fogColor: {r: 0.22973508, g: 0.0849447, b: 0.110702045, a: 1}
+    fogDensity: 0.05
+    ambientSky: {r: 0.23610625, g: 0.07893402, b: 0.06561852, a: 1}
+    ambientEquator: {r: 0.1722143, g: 0.05408732, b: 0.04533714, a: 1}
+    ambientGround: {r: 0.058114827, g: 0.020266669, b: 0.020266669, a: 1}
+    directionalIntensity: 0
+    reflectionIntensity: 0.2
+  cascadeSeconds: 1.5
+  strobeSeconds: 0.3
+  jitterSeconds: 0.12
+  strobeHigh: 1.4
+  strobeLow: 0.05
+  strobeHighChance: 0.5
+  screenFadeSeconds: 0.4
+  transitionSeconds: 2
+  emergencyDelaySeconds: 2
+  emergencyFadeSeconds: 1.2
+  emergencyPulseDepth: 0.25
+  emergencyPulseSpeed: 3.2
+  emergencyLampEmission: {r: 2.078326, g: 0.9180132, b: 0.74177754, a: 1}
+  alarmDegreesPerSecond: 206.3
+  alarmDomeEmission: {r: 1.5166377, g: 0.54190874, b: 0.3458689, a: 1}
+  alarmDomePulseDepth: 0.32
+  alarmDomePulseSpeed: 7.2
