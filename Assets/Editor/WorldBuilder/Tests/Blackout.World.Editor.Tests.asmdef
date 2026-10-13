@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "Blackout.Shared",
         "Blackout.World.Editor",
-        "Blackout.World.Layout"
+        "Blackout.World.Layout",
+        "Blackout.Environment"
     ],
     "includePlatforms": [
         "Editor"

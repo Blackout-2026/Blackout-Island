@@ -5,8 +5,9 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `Assets/ScriptableObjects/Layout/BunkerLayout.asset`, filled by
 `Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
 `Assets/Editor/WorldBuilder/MarkerLayout.cs`, the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`, and the
-materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`, and the vegetation in
-`VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`.
+materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`, the vegetation in
+`VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`, and the lighting in `LightingLayout.cs`,
+`LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`.
 If you change a number here, change it there too.
 
 ## Conventions
@@ -97,11 +98,12 @@ Re-running the tool gives byte-identical output. It overwrites any hand sculptin
 | Boundary | `Terrain/IslandBoundary`: 180 invisible BoxColliders, 1 m thick, y −8 … 30, 841 m around. They sit on the 0.6 m water-depth line, traced every 2° from (0, 28). They go round x −10 … 12, z −132 … −92, so the dock, boat and boat zone stay inside |
 | Water | `Beach/Water`: 520 × 520 m plane at y 0 centred on (0, 20). Transparent placeholder material, no collider, no shadows |
 | Dock | `Beach/Dock`: deck x ±1.4, z −128 … −97, top 1.3, 0.35 thick. Posts Ø 0.3 m every 3 m at x ±1.5 (z −98 … −128), from y −4. Rails at deck + 0.8 … 0.9. The east rail is open from z −119 to −128 beside the boat, with short bollards (deck + 0.25) at z −122 and −125 |
-| Boat | `Beach/Boat` at (3.7, 0.15, −122.5), yaw −2.9°, bow to the south, motor toward the shore. Hull 2.9 m wide, deck y 0.7. Fenders on the dock (west) side. Lantern at about (2.6, 2.6, −124.3). Its light (W7) goes just above it; the reference's (2.5, 2.75, −124.2) ignores the boat's yaw. Colliders on the hull, sides, cabin and roof only. Keep it dynamic (it will bob) |
+| Boat | `Beach/Boat` at (3.7, 0.15, −122.5), yaw −2.9°, bow to the south, motor toward the shore. Hull 2.9 m wide, deck y 0.7. Fenders on the dock (west) side. Lantern at about (2.6, 2.6, −124.3). Its light, `Lighting/OutdoorLights/OutdoorLights_BoatLantern` (W7), is 0.15 m above it at (2.6, 2.75, −124.3); the reference's (2.5, 2.75, −124.2) ignores the boat's yaw. Colliders on the hull, sides, cabin and roof only. Keep it dynamic (it will bob) |
 
 Placeholder materials are in `Assets/Materials/Environment/Greybox`: Water, DockWood, DockWoodDark,
 BoatHull, BoatTrim and BoatDark. They stay for now: the W5 library has no wood, water or boat-paint surface (see
-"Materials (W5)"). Static flags are set in W7.
+"Materials (W5)"). Static flags (W7): the dock and the terrain are fully static and lightmapped, the water is only
+Occludee and Batching static, and the boat stays dynamic (see "Powered lighting (W7)").
 
 ## Bunker blockout (W3)
 
@@ -226,7 +228,7 @@ with code 1.
 - Every door gap (DoorSocket) is at least 1.2 m wide: the 0.8 m agent plus 0.2 m each side. The width is the
   narrowest of rays to the jambs at 0.2, 0.9 and 1.7 m above the floor. Only colliders in this scene count.
 
-**Result for this freeze:** PASS, 65 of 65 checks. After W6 (forest painted, NavMesh rebaked): PASS, 66 of 66, with every marker within 0.17 m of the NavMesh and both paths unchanged.
+**Result for this freeze:** PASS, 65 of 65 checks. After W6 (forest painted, NavMesh rebaked): PASS, 66 of 66, with every marker within 0.17 m of the NavMesh and both paths unchanged. After W7 (Setup Lighting, no colliders changed): still PASS, 66 of 66.
 
 | Check | Rows | Measured |
 | --- | --- | --- |
@@ -456,6 +458,270 @@ in 983 KB. Validate Layout passes 66 of 66, with a new row "Trunks cut out: 0 of
   the World Builder regenerates them.
 - The budget is computed, not measured on the GPU, and leaves out shadow passes.
 
+## Powered lighting (W7)
+
+**Blackout/World/Setup Lighting** (`LightingSetup.cs`) builds the pre-blackout lighting of `Environment.unity`. Its
+tables are in four files: `LightingLayout.cs` (sky, fog, ambient, moon, shadows), `LightFixtureLayout.cs`
+(bunker fixtures and outdoor lights), `ProbeLayout.cs` (probes) and `StaticFlagRules.cs`. The flicker is
+`Assets/Scripts/Environment/FlickerLight.cs` (assembly `Blackout.Environment`). The tests are in
+`Tests/LightingLayoutTests.cs`, `LightingSetupTests.cs`, `LightFixtureLayoutTests.cs`, `ProbeLayoutTests.cs`,
+`StaticFlagRulesTests.cs` and `Assets/Scripts/Environment/Tests/FlickerLightTests.cs`.
+
+**Order.** Build Terrain, Paint Terrain And Forest, Build Bunker Blockout, Apply Materials and Bake NavMesh come first.
+Then run Setup Lighting and Validate Layout, and bake by hand (see "Bake settings"). Re-run Setup Lighting after
+changing the bunker layout or the terrain, because the probes follow them, then bake again.
+- **Re-runs:** a re-run with no code change leaves every file byte-identical. It reuses objects by name under
+  `Lighting` and removes only objects it generated there.
+- **What it never does:** it never bakes and never edits the URP asset.
+
+### Sky, fog, ambient and moon
+
+The prototype runs three.js r128 without colour management, so the reference's hex values for lights, fog, ambient and
+sky are linear numbers. Unity's colour fields are sRGB, so the tool converts each one (`LightingLayout.FromLinearHex`).
+The Inspector therefore shows a different hex value from the reference, while the light that reaches a surface matches
+the prototype. Surface colours (W5) are albedo and are not converted.
+
+| Item | Reference (outside column) | Unity |
+| --- | --- | --- |
+| Fog | exponential squared, #0B1220, density 0.0135 | Exponential Squared, #3B4B63, 0.0135. It is the same formula as `FogExp2`, so the density copies across |
+| Ambient | hemisphere light, sky #52668F, ground #141820, × 0.78 | Gradient (Trilight): sky #8998B1, equator #6E798D (half sky, half ground, as a hemisphere light gives a wall), ground #464D58 |
+| Moon | directional #A9BDE6 × 0.9, toward (−0.349, 0.419, 0.838) | `Lighting/Moon`: Directional, Mixed, #D5DFF4 × 0.9, rotation (24.8°, 157.4°, 0°), soft shadows. It is the scene's Sun Source |
+| Sky | dome: horizon #0E1626, zenith #02040A, stars, moon disc, clouds (cover 0.5) | Skybox `Assets/Environment/Lighting/NightSky.mat`, shader `Blackout/NightSky`: a URP port of the dome |
+| Reflections | night cubemap outdoors | Environment Reflections from the skybox, 128 px. Each bunker room has its own probe (below) |
+
+The reference's "Bunker, powered" fog and ambient (density 0.022, ambient × 0.42) are not used. There is one value
+for the whole scene, and indoors the bake replaces the ambient with the light that actually reaches each room.
+
+### Intensities
+
+The prototype fades a light as (1 − d / range)^decay, so the light stays bright almost to its range. URP uses the
+inverse square, 1 / d², times (1 − (d / range)⁴)², which reaches 0 at the range. Copying the reference's intensities
+as they are would make the bunker 3 to 14 times too dark on the floor, and the floodlights 250 times too dark.
+
+`LightingLayout.MatchIntensity` picks the Unity intensity that matches the prototype's brightness at one distance:
+- the floor under each lamp, at the Unity height;
+- a floodlight's aim point;
+- the boat deck under the lantern.
+
+Nearer the lamp Unity is brighter than the prototype, and farther away it is darker. For example, a generator high-bay
+in the prototype gives 3.0 × (1 − 5.55 / 14)^1.6 = 1.34 on the floor 5.55 m below it. Unity needs
+1.34 × 5.55² / (1 − (5.55 / 14)⁴)² = **43.3** for the same.
+
+### Powered fixtures
+
+Each fixture is `Lighting/PoweredLights/<Room>/<Room>_<Kind>NN`: a Mixed point light plus a `_Lamp` mesh. The
+prototype's decay of 1.6 is used only in the intensity conversion, because URP has no decay setting.
+- **Lamp mesh:** it has no collider, casts no shadow and is not static. It uses an emissive material from
+  `Assets/Materials/Environment/Lighting` at the reference's emission: `Lamp_Tube` #E6F0FF × 4.2, `Lamp_Panel` #E4F6FF
+  × 3.2 and `Lamp_Sodium` #FFA555 × 6. The emission is marked real-time, so it is never baked: the Light components do
+  the lighting, and the lamps only glow.
+- **Rod:** each high-bay also hangs on a `_Rod`.
+- **Positions:** X and Z are the reference's. Each lamp hangs below the Unity ceiling by the same drop as in the
+  prototype (tube 0.1 m, panel 0.05 m, high-bay 0.7 m), and its light is 0.25 m under the lamp.
+
+| Room | Fixtures (x, z) | Reference colour, intensity, range | Unity intensity | Light over the floor | Shadows |
+| --- | --- | --- | --- | --- | --- |
+| BunkerEntranceRamp | 4 tubes across the ramp, at the middle of each quarter: z 54.55, 58.85, 63.15, 67.45 | #E2ECFF, 1.2, 8 m | 3.8 | 2.65 m | Tube01 only (y 11.7, above the plateau) |
+| SecurityArea | 6 tubes along Z: x −4.5 / 0 / 4.5 × z 73 / 79 | #E8F0FF, 1.5, 9 m | 5.2 | 2.65 m | none |
+| Corridor | 10 tubes along Z: x 0, z 85 … 121 every 4 m | #E2ECFF, 1.35, 8.5 m | 4.7 | 2.65 m | none |
+| GeneratorRoom | 6 sodium high-bays: x −16 / −11 / −6 × z 100 / 112 | #FFA555, 3.0, 14 m | 43.3 | 5.55 m | all 6 |
+| Laboratory | 5 ceiling panels: x −5 / 0 / 5 × z 128 / 138, none at (0, 138) over the cure | #E4F6FF, 1.3, 9 m | 4.1 | 2.70 m | none |
+
+**Faulty tubes.** `Corridor_Tube03` (z 93, seed 1) and `SecurityArea_Tube06` (4.5, 79; seed 2) have a `FlickerLight` in
+FaultyTube mode. Each 7 s cycle has a 0.6 s strobe, 0.15 s out at 5 %, then a 97 % ± 2 % hum, and the two seeds keep
+the tubes 2.3 s apart.
+- **Deterministic:** the random part is a hash of the time step and the seed, so the flicker is the same on every run
+  and at any frame rate. Nothing is allocated per frame.
+- **Lamp:** its emission follows the light through a MaterialPropertyBlock.
+- **Disabling:** disabling the component puts the light and lamp back to full strength.
+
+### Outdoor lights
+
+The generator only powers the bunker, so these stay on through the blackout. They are under
+`Lighting/OutdoorLights/OutdoorLights_<Name>`.
+
+| Light | Position (x, y, z) | Reference colour, intensity, range | Unity intensity | Other |
+| --- | --- | --- | --- | --- |
+| FloodlightW | (−19.5, 18.2, 30.5) → aim (−3, 10, 45) | #FFF0D8, 5.0, 42 m, decay 1.2 | 1265.0 | Spot 55°, inner 24.75°; shadows, Medium tier (512 px) |
+| FloodlightE | (19.5, 18.2, 30.5) → (4, 10, 44) | same | 1171.0 | same |
+| FloodlightN | (17.5, 17.2, 58) → (2, 10, 42) | same | 1262.4 | same |
+| WallPack | (0, 12.8, 47.2) | #D8E4FF, 2.2, 12 m, decay 2 | 7.9 | Shadows, Low tier |
+| BoatLantern | (2.6, 2.75, −124.3) | #FFA64D, 1.7, 15 m | 5.7 | `FlickerLight` Flame (85 % ± 10 % from two sine waves, plus ± 4 % noise), seed 3 |
+
+- **Spot angles:** three.js gives a half angle (0.48 rad), so the full cone is 55°. The inner angle is 55° × (1 − the
+  0.55 penumbra).
+- **Wall pack:** it is 0.5 m over the D-Bunker door and 0.8 m out from the wall, as in the prototype. That puts it
+  2.8 m over the yard instead of 3.9 m, because the Unity door is 2.3 m tall, not 3.4 m.
+- **Not placed yet:** the guard booth lamp (there is no booth yet) and the mast beacon (emissive only).
+
+### Shadows
+
+Only the lights that would visibly shine through a wall or the ground cast shadows. Every other tube and panel casts
+none, as in the prototype.
+
+| Lights | Why | Resolution |
+| --- | --- | --- |
+| Moon | the island, the forest, the compound | main light: 2048 px (URP asset) |
+| 6 sodium high-bays | about 9 times a tube's intensity, next to the corridor | Low tier: 256 px per cube face |
+| `BunkerEntranceRamp_Tube01` | at y 11.7, above the plateau (y 10), so without shadows it would light the yard through the ground | Low |
+| 3 floodlights | keep their beams out of the lobby and the ramp; one map each | Medium tier: 512 px |
+| Wall pack | would light the lobby through its wall | Low |
+
+All of them use soft shadows. In the worst case all 11 local lights with shadows are in view at once. They need
+8 × 6 × 256² + 3 × 512² = 3.93 M texels, which fits the PC asset's 2048² additional-light atlas (4.19 M).
+
+**URP asset (Systems Engineer).** Setup Lighting reads `Assets/Settings/PC_RPAsset.asset` and prints how it differs
+from a medium preset. It does not edit the asset.
+
+| Setting | Now | Medium preset |
+| --- | --- | --- |
+| Max Distance | 50 m | **60 m** |
+| Cascade Count | 4 | **2**, split at 25 % |
+| Main light resolution | 2048 px | 2048 px |
+| Soft shadows | on | on |
+
+- **Prototype:** its medium preset is one 2048 px moon map over an 80 × 80 m box.
+- **Cascades:** two cascades over 60 m give about the same detail near the player (the first cascade covers 15 m), and
+  they draw the shadow casters twice instead of four times.
+- **Distance:** at 60 m the fog already hides about half of a shadow (52 % is left).
+
+W9's QualityPreset will change the distance per quality level.
+
+### Probes
+
+**Reflection probes** (`Lighting/ReflectionProbes/<Room>`): one per room, captured in the middle of the room at eye
+height (1.65 m over the floor).
+- **Settings:** baked, 128 px, HDR, blend distance 0.5 m, far clip 60 m (longer than the corridor).
+- **Box projection:** each probe's box is the room's clear interior, so reflections line up with the walls.
+- **Ramp:** its box runs from the bottom floor to the top ceiling.
+
+| Room | Captured at | Box (X × Y × Z) |
+| --- | --- | --- |
+| BunkerEntranceLobby | (0, 11.65, 50.2) | 11.2 × 3.0 × 3.6 |
+| BunkerEntranceRamp | (0, 7.9, 61.0) | 3.0 × 10.5 × 17.2 (y 2.5 … 13.0) |
+| SecurityArea | (0, 4.15, 76) | 16 × 3.0 × 12 |
+| Corridor | (0, 4.15, 103) | 3.0 × 3.0 × 41.2 |
+| GeneratorRoom | (−10.9, 4.15, 106) | 18 × 6.5 × 20 |
+| Laboratory | (0, 4.15, 133) | 20 × 3.0 × 18 |
+
+**Light probes** (`Lighting/LightProbes`, 806 probes in three Light Probe Groups at the origin, with deringing on) give
+moving objects the baked bounce light: the player, the agents, the doors and the boat.
+- **Not Adaptive Probe Volumes:** they need Light Probe System = APV in the URP asset, which the World Builder does
+  not own.
+
+| Group | Probes | Placement |
+| --- | --- | --- |
+| Bunker | 504 | In every room, a grid at most 3 m apart, 0.5 m in from the walls, in layers at most 2 m apart from 0.5 m over the floor to 0.5 m under the ceiling. Two in every door gap or passage, at 0.5 m and 1.8 m, so light does not blend through a wall. None inside the generator's volume (x −14.2 … −7.8, y 2.5 … 6.1, z 104.4 … 107.6) |
+| Compound | 116 | Every 5 m over the yard (x −20 … 20, z 30 … 60), except over the lobby and ramp (+ 0.9 m); 0.5 m and 2.5 m over the ground |
+| Trail | 186 | The dock deck every 4 m. Then the trail every 6 m or less, on its centre line and 3 m to each side, 0.5 m and 2.5 m over the terrain |
+
+Hunters off the trail are outside the probes and take the light of the nearest ones at the edge. The forest is lit
+evenly by the moon and the sky, so that is close enough.
+
+### Static flags
+
+Setup Lighting sets the flags on every renderer under these objects, and on the terrain. In the first run it changed
+42 of 59 beach renderers and the terrain. The bunker parts already had these flags (W3).
+
+| Objects | Flags | Why |
+| --- | --- | --- |
+| `Bunker/*` (51 parts), `Beach/Dock`, `Terrain/IslandTerrain` | Contribute GI, Occluder, Occludee, Batching and Reflection Probe static | They are lightmapped, they hide what is behind them in an occlusion bake, they batch, and they show in the reflection probes |
+| `Beach/Water` | Occludee and Batching static only | A 520 m see-through plane. As an occluder it would hide the sea bed and the hull under it, and in the lightmap it would take a large area for nothing |
+| `Beach/Boat` | none | It bobs, so it is dynamic and takes its light from the dock's light probes |
+| Lamp meshes | none | W8 changes their emission at run time |
+
+Everything else (markers, the NavMesh, the boundary and the `Lighting` objects) is left as it is. Occlusion culling is
+not baked yet, but the flags are ready for it. The terrain's Scale In Lightmap is 0.064, so it gets 0.64 texels per
+metre (1.6 m per texel). That is enough for the sky's occlusion and the moon's bounce.
+
+### Bake settings (Window > Rendering > Lighting)
+
+Bake only in the Editor, never in batch mode, and only the World Builder bakes (playbook trap 4). Unity 6.3 has no
+Auto Generate any more, so lighting is baked only when someone clicks **Generate Lighting**.
+1. Open `Environment.unity` on its own (not additively with other scenes).
+2. Run Blackout/World/Setup Lighting. It writes every value below into
+   `Assets/Environment/Lighting/EnvironmentLighting.lighting`, the scene's Lighting Settings asset.
+3. Check the values in the **Scene** tab.
+
+| Section | Setting | Value |
+| --- | --- | --- |
+| Lighting Settings | Lighting Settings Asset | `EnvironmentLighting` (do not click New) |
+| Realtime Lighting | Realtime Global Illumination | off |
+| Mixed Lighting | Baked Global Illumination | on |
+| | Lighting Mode | **Baked Indirect** |
+| Lightmapping Settings | Lightmapper | **Progressive GPU** (Unity falls back to Progressive CPU if the GPU cannot bake) |
+| | Direct Samples | 32 |
+| | Indirect Samples | **256** |
+| | Environment Samples | 256 |
+| | Light Probe Sample Multiplier | 4 |
+| | Min Bounces / Max Bounces | 2 / 2 |
+| | Filtering | Advanced |
+| | Direct Denoiser, Filter | **OpenImageDenoise**, Gaussian, radius 1 |
+| | Indirect Denoiser, Filter | **OpenImageDenoise**, Gaussian, radius 5 |
+| | Ambient Occlusion Denoiser, Filter | **OpenImageDenoise**, Gaussian, radius 2 |
+| | Lightmap Resolution | **10** texels per unit |
+| | Lightmap Padding | 2 texels |
+| | Max Lightmap Size | 1024 |
+| | Lightmap Compression | Normal Quality |
+| | Ambient Occlusion | on: Max Distance 1, Indirect Contribution 1, Direct Contribution 0 |
+| | Directional Mode | Non-Directional |
+| | Albedo Boost / Indirect Intensity | 1 / 1 |
+| | Lightmap Parameters | the default (unchanged) |
+
+The **Environment** tab is also set by the tool. Check it only:
+- **Skybox Material:** `NightSky`. **Sun Source:** `Moon`.
+- **Environment Lighting:** Source Gradient (sky #8998B1, equator #6E798D, ground #464D58).
+- **Environment Reflections:** Source Skybox, Resolution 128, Intensity Multiplier 1, Bounces 1.
+- **Other Settings:** Fog on, #3B4B63, Exponential Squared, density 0.0135.
+
+**Why these values**
+- **Baked Indirect:** direct light and shadows stay real-time, so the W8 blackout can switch every fixture off. Only
+  the soft bounce is baked, so 10 texels per metre is enough (a 0.4 m wall gets 4 texels), and 1024 maps keep the
+  medium preset light.
+- **Shadowmask rejected:** it allows at most 4 overlapping shadowmask lights, and more than 4 corridor tubes overlap.
+  The extra ones would be demoted to fully baked, which W8 cannot switch off.
+- **Samples:** 256 indirect samples are enough for soft bounce light once OpenImageDenoise has filtered it. The direct
+  samples only matter for Baked lights and there are none, so 32 is enough. The light probes get 4 times the samples, because probes are not
+  denoised.
+- **Bounces:** concrete's linear albedo is about 0.17, so a third bounce would add less than 1 %.
+- **Ambient occlusion:** 1 m gives contact darkening in room corners and under the dock. It does not touch the
+  real-time direct light (Direct Contribution 0).
+- **Denoiser:** OpenImageDenoise does not need a particular GPU make, so any team PC can bake.
+
+**After Generate Lighting**
+- **Output:** Unity writes `Assets/Scenes/Environment/`: `LightingData.asset`, the `Lightmap-N_comp_light.exr` maps
+  and the `ReflectionProbe-N.exr` cubemaps. `Environment.unity` then points at that data.
+- **Before committing it:** that folder is not in the World Builder's paths yet (playbook section 2), and `.exr` is
+  not in Git LFS. Ask first (see the PR handoffs), then commit the folder with its `.meta` files and the scene.
+
+**What to check**
+- **Console:** no lightmapper errors. If the GPU cannot bake, Unity switches to Progressive CPU, which is only slower.
+- **Scene view, Baked Lightmap draw mode:** no black or blotchy bunker walls, which would mean overlapping UV2.
+- **The look:** compare each room with the prototype's pre-blackout screenshots. The ramp, security and corridor tubes
+  are cool white, the generator room has orange pools under its high-bays, and the lab panels are bright. Outside,
+  the floodlights light the yard and the moon casts tree shadows.
+- **Play mode:** `Corridor_Tube03` and `SecurityArea_Tube06` strobe every 7 s, and the boat lantern flickers.
+- **Validate Layout:** it still passes 66 of 66, because the bake changes no collider.
+
+### Known issues
+
+- **The bounce stays after the blackout.** The baked bounce of the powered fixtures stays in the lightmaps and light
+  probes after the blackout, and the reflection probes still show the lit rooms. The ambient is baked too, so changing
+  `RenderSettings` ambient at run time hardly reaches lightmapped or probe-lit objects. W8 options:
+  - bake a second "blackout" set with the fixtures off, and swap `LightmapSettings.lightmaps` and `lightProbes` on the
+    event;
+  - or accept a faint glow under the red emergency lights.
+
+  Either way, lower the reflection probes' intensity at the blackout.
+- **Indoor fog:** the bunker has the outside fog (0.0135, not the reference's 0.022) until W8 blends it.
+- **Light through walls:** tubes without shadows (range 8.5 to 9 m) light a few metres of the next room through its
+  0.4 m wall. Examples are the corridor tubes at z 101 … 109 next to the generator room, and the end tubes next to the
+  security area. If it shows after the bake, turn on Low-tier shadows for those tubes.
+- **Not baked yet:** the look has only been checked in batch mode, not by eye.
+- **Size:** W7 grew `Environment.unity` from 1,047 KB to 1,317 KB (37 lights, 806 probes, the lamp meshes).
+- **FlickerLight and W8:** it sets the light's intensity every frame. W8 must disable it before switching a faulty tube
+  off.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -484,6 +750,14 @@ in 983 KB. Validate Layout passes 66 of 66, with a new row "Trunks cut out: 0 of
 | Trail and gravel are mixes of 4 layers (W6) | The prototype's dirt and gravel colours are blends of Sand, ForestFloor and Rock, which keeps URP Terrain Lit at one pass | — |
 | 461 pines and 69 palms before clearings, not 465 and 65 (W6) | Exact heights instead of the prototype's 2 m grid; the same seeded rules | — |
 | No fallen logs, wet sand or wind sway yet (W6) | Logs come with the props (W10). Wet sand would be a fifth layer. Wind needs a foliage shader | World Builder (later steps) |
+| Reference light colours used as linear values (W7) | The Inspector shows other hex values than the reference (fog #0B1220 shows as #3B4B63), but surfaces receive the prototype's light. Convert a reference light colour the same way (`LightingLayout.FromLinearHex`) | Systems Engineer and Core Developer, for information (lights on their prefabs, for example the generator core or the health kits) |
+| Light intensities converted (W7) | Unity's inverse-square falloff needs 3 to 14 times the reference's intensity in the bunker (corridor tube 1.35 → 4.7, high-bay 3.0 → 43.3) and about 250 times for the floodlights | Systems Engineer and Core Developer, for information: convert lights copied from the reference with the same rule (`LightingLayout.MatchIntensity`) |
+| Fixtures under the 3.0 m Unity ceilings (W7) | Lights are 2.65 m over the floor (lab 2.70 m, generator 5.55 m). The ramp's 4 tubes sit in the middle of each quarter of the 17.2 m ramp, and the wall pack is 2.8 m over the yard, not 3.9 m | — |
+| Shadows instead of light layers (W7) | The reference suggests light layers to keep the outdoor lights out of the bunker. Instead the moon, floodlights, wall pack, high-bays and top ramp tube cast shadows, so every renderer stays on the Default rendering layer and teammates' lights (for example the muzzle flash) still reach everything | Systems Engineer and Core Developer, for information |
+| Mixed lights in Baked Indirect mode (W7) | Direct light and shadows stay real-time, so the blackout can switch the fixtures off, but their baked bounce stays after the blackout | World Builder (W8) |
+| One fog and ambient for the whole scene (W7) | The bunker has the outside fog (0.0135, not 0.022). The ambient indoors comes from the bake | World Builder (W8) |
+| Booth lamp and mast beacon not placed (W7) | There is no guard booth or mast yet | World Builder (later steps) |
+| Camera background and active scene (W7) | The night sky is a skybox material, so cameras should keep Background Type Skybox. The prototype clears to the fog colour behind its sky dome. Fog, skybox and ambient come from `Environment.unity` only when it is the active scene. After the additive loads, call `LightProbes.TetrahedralizeAsync()` so moving objects use Environment's light probes | Systems Engineer (player camera; Y6 Bootstrap makes Environment active), for information |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
