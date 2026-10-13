@@ -62,7 +62,7 @@ Player code never uses world coordinates, so this does not matter here.
 | Landing applied to camera | y += landOffset · 0.12 m, pitch += landOffset · 0.02 rad |
 | Step smoothing | camera y follows the body y, damped at rate 18, snaps if more than 1 m behind |
 | Eye height smoothing | damped at rate 16 (only matters for crouch) |
-| Damage shake | `shake += amount · 0.03` (max 1), decays 2.5/s, ±shake² · 0.04 rad of 47/39 Hz jitter. Belongs to Y4 (damage) |
+| Damage shake | `shake += amount · 0.03` (max 1), decays 2.5/s, ±shake² · 0.04 rad jitter as sin(47 t) / cos(39 t) (rad/s, about 7.5 / 6.2 Hz). Y4 |
 
 ## 4. Footsteps and noise
 
@@ -191,7 +191,7 @@ radians at these sizes).
 | Respawn | full health, **1.5 s** invulnerability, teleport to the current checkpoint facing its yaw, pitch 0, `player:respawned`. Generator and cure state are kept (the mission is not reset) |
 | Kill height | y < −20 m → die |
 | Fall damage | `(landedSpeed − 13) × 8` if landed faster than 13 m/s (so a 15 m/s landing costs 16 HP) |
-| Damage shake | `shake += amount × 0.03` (max 1), decays 2.5/s; camera jitters by `±shake² × 0.04 rad` (2.3°) at 47 Hz (pitch) and 39 Hz (yaw) |
+| Damage shake | `shake += amount × 0.03` (max 1), decays 2.5/s; camera jitters by `±shake² × 0.04 rad` (2.3°) as `sin(47 t)` on pitch and `cos(39 t)` on yaw (47 and 39 rad/s, about 7.5 and 6.2 Hz) |
 | Checkpoints | beach → forest → bunker entrance → generator room as the mission advances; after the cure is taken the escape checkpoints (escapeEntrance, escapeForest) take over so a death near the boat does not send the player back underground |
 
 **Unity mapping [GUESS].** The prototype moves the checkpoint when the mission phase changes (zones). Until the

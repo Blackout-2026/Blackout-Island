@@ -81,5 +81,13 @@ namespace Blackout.Player.Tests
             Assert.IsTrue(PlayerHealthRules.InReach(new Vector3(0f, 1f, 5.9f), new Vector3(0f, 1f, 0f), 6f));
             Assert.IsFalse(PlayerHealthRules.InReach(new Vector3(0f, 1f, 6.1f), new Vector3(0f, 1f, 0f), 6f));
         }
+
+        [Test]
+        public void CheckpointName_SplitsWordsAndDropsThePrefixes()
+        {
+            Assert.AreEqual("BUNKER ENTRANCE", PlayerHealthRules.CheckpointName("Checkpoint_BunkerEntrance"));
+            Assert.AreEqual("FOREST", PlayerHealthRules.CheckpointName("Checkpoint_EscapeForest"));
+            Assert.AreEqual("", PlayerHealthRules.CheckpointName(null));
+        }
     }
 }
