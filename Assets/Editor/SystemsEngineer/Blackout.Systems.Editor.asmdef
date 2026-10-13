@@ -3,7 +3,8 @@
     "rootNamespace": "Blackout.Editor",
     "references": [
         "Blackout.Shared",
-        "Blackout.PlayerAndInteraction"
+        "Blackout.PlayerAndInteraction",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

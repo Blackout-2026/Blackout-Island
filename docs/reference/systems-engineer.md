@@ -2,9 +2,10 @@
 
 Source: `prototype/src/player/player.js`, `prototype/src/core/input.js`, `prototype/src/core/engine.js`,
 `prototype/src/core/namespace.js` and the `noise` emitters across `prototype/src`. Written at the start of
-step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player** (Y2) and section 7 the
-**weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`). The door,
-crate, mission and HUD sections get added in Y4–Y6, each one when its step starts.
+step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player** (Y2), section 7 the
+**weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`), and sections
+8–9 **death, respawn and the HUD** (Y4, from `player/player.js`, `game/mission.js`, `ui/hud.js` and
+`ui/style.css`). The door, crate and mission sections get added in Y5–Y6, each one when its step starts.
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -61,7 +62,7 @@ Player code never uses world coordinates, so this does not matter here.
 | Landing applied to camera | y += landOffset · 0.12 m, pitch += landOffset · 0.02 rad |
 | Step smoothing | camera y follows the body y, damped at rate 18, snaps if more than 1 m behind |
 | Eye height smoothing | damped at rate 16 (only matters for crouch) |
-| Damage shake | `shake += amount · 0.03` (max 1), decays 2.5/s, ±shake² · 0.04 rad of 47/39 Hz jitter. Belongs to Y4 (damage) |
+| Damage shake | `shake += amount · 0.03` (max 1), decays 2.5/s, ±shake² · 0.04 rad jitter as sin(47 t) / cos(39 t) (rad/s, about 7.5 / 6.2 Hz). Y4 |
 
 ## 4. Footsteps and noise
 
@@ -176,3 +177,52 @@ radians at these sizes).
 - **Not ported in Y3:** headshot and backstab multipliers (no head hitbox or "in combat" contract yet),
   sniper zoom (a "Could"), surface-specific impacts, decals, shell casings, the viewmodel camera, sway,
   sprint pose and the bolt and swing animations. Weapon audio is a "Should" for later.
+
+---
+
+## 8. Death and respawn (`player/player.js`, `game/mission.js`)
+
+| Item | Value |
+| --- | --- |
+| Health | 100, clamped at 0, no regeneration. Damage is ignored while dead or invulnerable |
+| Death | `player:died` once. Input stops; the HUD shows "YOU DIED — RESPAWNING AT <checkpoint>" (warning toast) |
+| Fall-over camera | over **0.8 s**: eye height eases down to **0.25 m**, roll to **1.1 rad = 63°**, pitch to −0.2 rad (looks down 11.5°) |
+| Respawn delay | **2.2 s** after death (`mission.js`, `respawnAt`). No game-over screen |
+| Respawn | full health, **1.5 s** invulnerability, teleport to the current checkpoint facing its yaw, pitch 0, `player:respawned`. Generator and cure state are kept (the mission is not reset) |
+| Kill height | y < −20 m → die |
+| Fall damage | `(landedSpeed − 13) × 8` if landed faster than 13 m/s (so a 15 m/s landing costs 16 HP) |
+| Damage shake | `shake += amount × 0.03` (max 1), decays 2.5/s; camera jitters by `±shake² × 0.04 rad` (2.3°) as `sin(47 t)` on pitch and `cos(39 t)` on yaw (47 and 39 rad/s, about 7.5 and 6.2 Hz) |
+| Checkpoints | beach → forest → bunker entrance → generator room as the mission advances; after the cure is taken the escape checkpoints (escapeEntrance, escapeForest) take over so a death near the boat does not send the player back underground |
+
+**Unity mapping [GUESS].** The prototype moves the checkpoint when the mission phase changes (zones). Until the
+MissionDirector exists (Y6), a `Checkpoint` marker becomes the current one when the player comes within
+**6 m** of it. Markers whose id starts with `Checkpoint_Escape` only count after `CureTaken`; the others only
+before it. Before any checkpoint is reached, the player respawns where they spawned. Y6 can set the
+checkpoint directly instead.
+
+## 9. HUD (`ui/hud.js`, `ui/style.css`)
+
+Colours: text `rgba(226,232,226,0.92)`, dim text `rgba(200,210,205,0.55)`, accent `#d9a521`, danger
+`#ff3b2a`, good `#47d1d6`, panel `rgba(8,11,14,0.62)`. Font: Bahnschrift/DIN-style condensed sans,
+letter-spaced capitals. Margins 34 px from the screen edges, 30 px from top and bottom.
+
+| Element | Position and look | Behaviour |
+| --- | --- | --- |
+| Health | bottom-left, 300 px wide: "HEALTH" label (12 px, dim), value right-aligned (26 px), 8 px track | fill = health %; a red **ghost** bar trails it, damped at rate **2.5** (never below the fill); fill turns red below **35** |
+| Weapon slots | bottom-right, 104 × 58 px panels 8 px apart, key number top-left in accent, name bottom-right (10 px, dim) | inactive at 55 % opacity; active is opaque, 66 px tall, with a 2 px accent underline |
+| Crosshair | screen centre | SMG: four 2 × 8 px lines + 3 px dot, gap `6 + spread × 520` px; rifle: dot; knife: 22 px ring + dot. Hidden while dead |
+| Hit marker | centre, four 10 × 2 px lines at 45° | visible **0.16 s** (white), **0.35 s** and red on a kill |
+| Objective | top-left, max 420 px: phase label (12 px accent, letter-spaced) over the objective (20 px) | text from `objective:changed`; flashes accent for 1.2 s when it changes |
+| Checkpoint | top-right: "CHECKPOINT" (12 px dim) over the name (14 px) | a toast "CHECKPOINT — NAME" when one is reached |
+| Interaction prompt | centred at 60 % of the height, panel, boxed key + text (17 px), optional hold ring | shown while an interactable is targeted and the player is alive |
+| Alert banner | top-centre at 92 px: "SECURITY ALERT" (26 px bold, letter-spaced) + "THE CURE HAS BEEN STOLEN — ALL UNITS CONVERGING", red band fading at the sides | on `alert:broadcast` (the Commander, when the cure is taken): pulses (1 s, opacity 0.55) for **7 s**, then shrinks to a small permanent "SECURITY ALERT" |
+| Toast | centre at 28 % of the height, 15 px | **3.2 s**; warning colour for death, good colour for "CURE ACQUIRED" |
+| Damage direction | arcs of radius 90 px around the centre, pointing at the attacker | each hit adds an arc that fades over **1.1 s** |
+| Damage flash | full-screen red vignette (transparent inside 45 %) | `+amount / 25` per hit (max 1), fades 1.4/s; plus a low-health pulse `clamp01((40 − h) / 40) × (0.75 + 0.25 sin 6t)`, full while dead; opacity = min(0.9, flash + pulse × 0.5) |
+
+**Unity mapping [GUESS].**
+- **Text** uses the legacy uGUI `Text` with Unity's built-in font. TextMeshPro would need its Essential Resources
+  imported into `Assets/TextMesh Pro`, which no role owns.
+- **Alert** shows on the `CureTaken` channel, because the Commander's broadcast has no Unity channel yet.
+- **Crosshair** gap is fixed per weapon (it does not open with live spread). Weapon icons are names only.
+- **Not ported:** compass and objective distance, flashlight label, sniper scope overlay, objective slide-in animation.
