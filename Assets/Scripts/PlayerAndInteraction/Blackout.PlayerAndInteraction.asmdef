@@ -3,7 +3,8 @@
     "rootNamespace": "Blackout.Player",
     "references": [
         "Blackout.Shared",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
