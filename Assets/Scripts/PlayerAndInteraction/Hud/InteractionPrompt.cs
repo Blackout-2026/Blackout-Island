@@ -6,8 +6,9 @@ using UnityEngine.UI;
 namespace Blackout.Hud
 {
     /// <summary>
-    /// The "[E] Open door" prompt below the crosshair. Interactables (Y5) call <see cref="Show"/> while targeted
-    /// and <see cref="Hide"/> when not. It stays hidden while the player is dead.
+    /// The "[E] Open door" prompt below the crosshair. The PlayerInteractor (Y5) calls <see cref="Show"/> while an
+    /// interactable is targeted and <see cref="Hide"/> when not, and <see cref="SetProgress"/> for hold-E actions,
+    /// which fills the ring next to the text. It stays hidden while the player is dead.
     /// </summary>
     public class InteractionPrompt : MonoBehaviour
     {
@@ -15,6 +16,8 @@ namespace Blackout.Hud
         [SerializeField] private GameObject root;
         [SerializeField] private Text key;
         [SerializeField] private Text label;
+        [Tooltip("Radial-filled Image shown while an action is held (the generator's 2 s hold).")]
+        [SerializeField] private Image holdRing;
 
         private bool wanted;
 
@@ -43,7 +46,28 @@ namespace Blackout.Hud
         public void Hide()
         {
             wanted = false;
+            SetProgress(-1f);
             Refresh();
+        }
+
+        /// <summary>Fills the hold ring (0..1). A negative value hides it, for press-only actions.</summary>
+        public void SetProgress(float fraction)
+        {
+            if (holdRing == null)
+            {
+                return;
+            }
+
+            bool show = fraction >= 0f;
+            if (holdRing.enabled != show)
+            {
+                holdRing.enabled = show;
+            }
+
+            if (show)
+            {
+                holdRing.fillAmount = Mathf.Clamp01(fraction);
+            }
         }
 
         private void Update()

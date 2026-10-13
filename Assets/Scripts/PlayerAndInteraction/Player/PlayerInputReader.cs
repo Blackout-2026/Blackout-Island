@@ -28,6 +28,7 @@ namespace Blackout.Player
         private InputAction weapon2;
         private InputAction weapon3;
         private InputAction weaponScroll;
+        private InputAction interact;
 
         /// <summary>x = strafe, y = forward, each -1..1.</summary>
         public Vector2 Move => move.ReadValue<Vector2>();
@@ -38,6 +39,8 @@ namespace Blackout.Player
         public bool PausePressed => pause.WasPressedThisFrame();
         public bool FirePressed => fire.WasPressedThisFrame();
         public bool FireHeld => fire.IsPressed();
+        public bool InteractPressed => interact.WasPressedThisFrame();
+        public bool InteractHeld => interact.IsPressed();
         /// <summary>Mouse wheel this frame: positive = up. Only the sign matters (step size differs per OS).</summary>
         public float WeaponScroll => weaponScroll.ReadValue<float>();
 
@@ -80,6 +83,7 @@ namespace Blackout.Player
             weapon2 = map.FindAction("Weapon2", true);
             weapon3 = map.FindAction("Weapon3", true);
             weaponScroll = map.FindAction("WeaponScroll", true);
+            interact = map.FindAction("Interact", true);
         }
 
         private void OnEnable()
