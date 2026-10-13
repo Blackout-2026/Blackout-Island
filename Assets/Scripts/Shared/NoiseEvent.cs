@@ -10,7 +10,11 @@ namespace Blackout.Shared
         Gunshot,
         Melee,
         Door,
-        Generator
+        Generator,
+        /// <summary>The cure's alarm when it is taken (Y5). Appended: existing values keep their numbers.</summary>
+        Alarm,
+        /// <summary>The barricade crate scraping along the floor (Y5).</summary>
+        Crate
     }
 
     /// <summary>
