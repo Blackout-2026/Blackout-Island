@@ -281,7 +281,9 @@ letter-spaced capitals. Margins 34 px from the screen edges, 30 px from top and 
 ### Unity mapping [GUESS]
 
 - **Picking** is a camera raycast of **3 m** (the playbook), not the prototype's scoring. The first collider hit decides,
-  so walls block interaction.
+  so walls block interaction. Each door also has a **trigger box filling its gap** (1.4 × 2.3 × 0.4 m), because the panel's
+  collider switches off once the door is open: without it an open door could not be aimed at and closed. Only the
+  interaction ray hits triggers; movement, agents, bullets and the knife all ignore them.
 - **Placement:** prefabs are instanced at the DoorSocket, GeneratorSocket, CureSocket and HealthPickup markers into
   `Assets/Scenes/Interactables.unity`, which the Systems Engineer owns; the Environment scene is only read. Every Unity
   door gap is **1.4 × 2.3 m** (level-layout.md), so all doors use one panel size. **All doors slide**, D-Generator included.

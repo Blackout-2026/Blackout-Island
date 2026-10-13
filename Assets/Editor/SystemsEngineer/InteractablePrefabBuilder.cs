@@ -15,8 +15,9 @@ namespace Blackout.Editor
     /// Builds the interactable prefabs in Assets/Prefabs/Interactables (Door, Generator, CurePickup, HealthPickup,
     /// Crate) with placeholder looks, and gives the Player prefab its PlayerInteractor, PlayerPusher and the HUD
     /// hold ring. Numbers: docs/reference/systems-engineer.md section 10.
-    /// Re-runnable: an existing prefab, material or texture is left untouched (delete it to rebuild), and a Player
-    /// that already has a PlayerInteractor is not changed. The Generator prefab nests the Core Developer's
+    /// Re-runnable: an existing prefab, material or texture is left untouched (delete it to rebuild), except that
+    /// a Door missing its doorway trigger gets one added; a Player that already has a PlayerInteractor is not
+    /// changed. The Generator prefab nests the Core Developer's
     /// Generator_Visual and never edits it.
     /// </summary>
     public static class InteractablePrefabBuilder
@@ -72,6 +73,7 @@ namespace Blackout.Editor
             built += SaveIfMissing(CurePath, () => BuildCure(noise, cureTaken), layer);
             built += SaveIfMissing(HealthPath, BuildHealth, layer);
             built += SaveIfMissing(CratePath, () => BuildCrate(noise), layer);
+            AddDoorwayTriggerToExistingDoor();
             AssetDatabase.SaveAssets();
             Debug.Log($"[Blackout] Interactable prefabs: built {built}, others left unchanged.");
 
@@ -101,7 +103,7 @@ namespace Blackout.Editor
         // ---- door -------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Door (SlidingDoor, NavMeshObstacle carving the gap while locked)
+        /// Door (SlidingDoor, NavMeshObstacle carving the gap while locked, trigger box filling the doorway)
         ///   Panel (BoxCollider blocker, kinematic Rigidbody: a moving collider)
         ///   LockLamp (red / green above the gap on the side you enter from)
         /// The root sits at the DoorSocket: floor level, centre of the wall, facing into the room you enter.
@@ -129,6 +131,7 @@ namespace Blackout.Editor
             obstacle.carving = true;
             obstacle.enabled = false; // the door turns it on while locked
 
+            AddDoorwayTrigger(root);
             var door = root.AddComponent<SlidingDoor>();
             PlayerPrefabBuilder.Assign(door, "panel", panel);
             PlayerPrefabBuilder.Assign(door, "blocker", panel.GetComponent<Collider>());
@@ -139,6 +142,43 @@ namespace Blackout.Editor
             PlayerPrefabBuilder.Assign(door, "unlockedLampMaterial", unlocked);
             SetFloat(door, "slideDistance", GapWidth + 0.05f);
             return root;
+        }
+
+        /// <summary>
+        /// The interaction ray's target. The panel's collider switches off once the door is open enough to walk
+        /// through, so without this an open door could not be aimed at and closed. A trigger blocks nothing: the
+        /// player, agents, bullets and the knife all ignore triggers; only PlayerInteractor's ray hits them.
+        /// </summary>
+        private static void AddDoorwayTrigger(GameObject root)
+        {
+            var trigger = root.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.center = new Vector3(0f, GapHeight * 0.5f, 0f);
+            trigger.size = new Vector3(GapWidth, GapHeight, WallThickness);
+        }
+
+        /// <summary>Adds the doorway trigger to a Door prefab built before it existed; nothing else changes.</summary>
+        private static void AddDoorwayTriggerToExistingDoor()
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(DoorPath);
+            try
+            {
+                foreach (BoxCollider box in root.GetComponents<BoxCollider>())
+                {
+                    if (box.isTrigger)
+                    {
+                        return; // already there
+                    }
+                }
+
+                AddDoorwayTrigger(root);
+                PrefabUtility.SaveAsPrefabAsset(root, DoorPath);
+                Debug.Log($"[Blackout] Added the doorway trigger to {DoorPath}.");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         // ---- generator --------------------------------------------------------------------------------------
