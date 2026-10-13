@@ -3,9 +3,10 @@
 Source: `prototype/src/player/player.js`, `prototype/src/core/input.js`, `prototype/src/core/engine.js`,
 `prototype/src/core/namespace.js` and the `noise` emitters across `prototype/src`. Written at the start of
 step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player** (Y2), section 7 the
-**weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`), and sections
+**weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`), sections
 8–9 **death, respawn and the HUD** (Y4, from `player/player.js`, `game/mission.js`, `ui/hud.js` and
-`ui/style.css`). The door, crate and mission sections get added in Y5–Y6, each one when its step starts.
+`ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
+and `physics/crate.js`). The mission section gets added in Y6.
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -226,3 +227,70 @@ letter-spaced capitals. Margins 34 px from the screen edges, 30 px from top and 
 - **Alert** shows on the `CureTaken` channel, because the Commander's broadcast has no Unity channel yet.
 - **Crosshair** gap is fixed per weapon (it does not open with live spread). Weapon icons are names only.
 - **Not ported:** compass and objective distance, flashlight label, sniper scope overlay, objective slide-in animation.
+
+---
+
+## 10. Interactables (`physics/doors.js`, `physics/interactables.js`, `physics/crate.js`)
+
+### Picking what to interact with
+
+| Item | Value |
+| --- | --- |
+| Prototype rule | every interactable within its radius (doors 2.6 m, generator 2.4 m) and in front (`facing ≥ 0.35`) is scored `facing × 2 − distance × 0.3`; the best one shows its prompt |
+| Press | E on the best one (doors). A locked door shows its text with no key |
+| Hold | hold E on the same target: the timer adds dt; releasing or changing target resets it; at the hold time `use()` runs once (generator: **2.0 s**). The HUD ring shows `timer / hold` |
+| Hold feedback | a 1500 Hz tick at random, about 6 per second, while holding (`interact:holdtick`) |
+| While dead | no prompt, no interaction |
+
+### Doors
+
+| Door | Prototype size | Kind | Speed (open fraction / s) | Noise (m) | Start |
+| --- | --- | --- | --- | --- | --- |
+| Bunker | 3.0 × 3.4 m, two leaves | slide | 0.45 | 22 | unlocked |
+| Security | 2.4 × 2.8 m | slide | 1.1 | 14 | unlocked |
+| Generator room | 2.4 × 2.8 m | hinge, swings 1.75 rad = 100° into the room | 1.6 | 14 | unlocked |
+| Laboratory | 2.6 × 2.8 m | slide, maglock lamp | 1.1 | 14 | **locked** |
+
+- The open fraction moves linearly towards 0 or 1; the panel follows `smoothstep(open)` and slides `width + 0.05 m`
+  sideways. The collider stops blocking once `open > 0.8` (hinged: `> 0.35`).
+- Prompts: "Open <label>", "Close <label>", "Locked", or "Locked — magnetic lock powered" for the lab.
+- Every open or close publishes a `door` noise at the door (and `door:opened` / `door:closed`).
+- **Agents** open unlocked doors with `requestOpen(agent)`: when moving faster than 0.3 m/s with a closed door within
+  2.4 m ahead (agent-controller.md 3.2). Locked doors block the agents' navigation.
+- **Maglock:** 2.6 s after `generator:disabled`, the lab door unlocks and opens itself ("MAGLOCK RELEASED —
+  LABORATORY DOOR OPEN"). Lamp: red while locked, green after.
+
+### Generator, cure and health
+
+| Item | Value |
+| --- | --- |
+| Generator console | hold E for **2.0 s** at the control panel ("Disable generator", key "Hold E"). Then `generator:disabled` and a **60 m** `generator` noise. Only while the generator is running |
+| Cure | walk-in: within **1.05 m** horizontally and 1.5 m vertically of the case → `cure:taken` and an **18 m** `alarm` noise; the case disappears. Idle: rotates 0.6 rad/s, bobs ±0.02 m, cyan vials pulse |
+| Health pickup | walk over: within **1.1 m** horizontally (1.6 m vertically), **only when hurt**: **+35 HP**, toast "+N HEALTH", the kit disappears. At full health it stays ("HEALTH FULL — medkit left for later", once per visit). Idle: rotates 1.2 rad/s, bobs ±0.05 m, small green light |
+
+### Barricade crate
+
+| Item | Value |
+| --- | --- |
+| Size | 1.5 m cube in the corridor (Unity crate space (0.7, 2.5, 95), docs/level-layout.md) |
+| Push | walking into it pushes along the dominant axis only; target speed `min(playerSpeed, 4.5) × 0.42` (max 1.9 m/s), approached at damp rate **6**, for 0.12 s after each contact |
+| Friction | when not pushed it slows by **5.5 m/s²** until it stops |
+| Noise | while moving faster than 0.05 m/s, an **11 m** `crate` scrape every **0.45 s** |
+| Navigation | after it moves, the nav grid is re-marked so agents path around it |
+
+### Unity mapping [GUESS]
+
+- **Picking** is a camera raycast of **3 m** (the playbook), not the prototype's scoring. The first collider hit decides,
+  so walls block interaction. Each door also has a **trigger box filling its gap** (1.4 × 2.3 × 0.4 m), because the panel's
+  collider switches off once the door is open: without it an open door could not be aimed at and closed. Only the
+  interaction ray hits triggers; movement, agents, bullets and the knife all ignore them.
+- **Placement:** prefabs are instanced at the DoorSocket, GeneratorSocket, CureSocket and HealthPickup markers into
+  `Assets/Scenes/Interactables.unity`, which the Systems Engineer owns; the Environment scene is only read. Every Unity
+  door gap is **1.4 × 2.3 m** (level-layout.md), so all doors use one panel size. **All doors slide**, D-Generator included.
+  D-Bunker keeps the slow speed and 22 m noise.
+- **Navigation:** a door carves the NavMesh only while **locked**. Closed, unlocked doors stay walkable so agents can
+  reach them and call `IDoor.RequestOpen`.
+- **Noise types:** `Alarm` (cure) and `Crate` (scrape) are appended to `NoiseType`.
+- **Crate:** a Rigidbody (mass and linear damping) with all rotation frozen, pushed by the player's
+  `OnControllerColliderHit`, with a carving NavMeshObstacle that re-carves when it stops.
+- **Not ported:** the maglock toast, door and pickup sounds (UnityEvent hooks instead), and the crate tilt and dust.
