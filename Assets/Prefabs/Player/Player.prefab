@@ -5705,6 +5705,7 @@ MonoBehaviour:
   root: {fileID: 6315227087194063842}
   key: {fileID: 1950250470230508143}
   label: {fileID: 2552666563910753908}
+  holdRing: {fileID: 7867182154181010078}
 --- !u!114 &5000508770516364327
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9741,6 +9742,7 @@ RectTransform:
   m_Children:
   - {fileID: 6642713856535802340}
   - {fileID: 6123466597991178430}
+  - {fileID: 4546999113703562307}
   m_Father: {fileID: 6937052387151285076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -10074,6 +10076,81 @@ Transform:
   - {fileID: 689446688033743857}
   m_Father: {fileID: 719412732400092790}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6677886348689911049
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4546999113703562307}
+  - component: {fileID: 7942052137094431101}
+  - component: {fileID: 7867182154181010078}
+  m_Layer: 5
+  m_Name: HoldRing
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4546999113703562307
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6677886348689911049}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6157347621959852150}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -8, y: 0}
+  m_SizeDelta: {x: 34, y: 34}
+  m_Pivot: {x: 1, y: 0.5}
+--- !u!222 &7942052137094431101
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6677886348689911049}
+  m_CullTransparentMesh: 1
+--- !u!114 &7867182154181010078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6677886348689911049}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.8509804, g: 0.64705884, b: 0.12941177, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 8606164807200733816, guid: 459f414127b85419c8321107b3dc176f, type: 3}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 0
+  m_FillClockwise: 1
+  m_FillOrigin: 2
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &6952477986159496334
 GameObject:
   m_ObjectHideFlags: 0
@@ -10530,6 +10607,8 @@ GameObject:
   - component: {fileID: 8498714324318633510}
   - component: {fileID: 7746192581200207336}
   - component: {fileID: 8270314839946786807}
+  - component: {fileID: 8813139205175220179}
+  - component: {fileID: 7093629469916096188}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -10675,6 +10754,39 @@ MonoBehaviour:
   safeFallSpeed: 13
   fallDamagePerSpeed: 8
   killHeight: -20
+--- !u!114 &8813139205175220179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 244d594abe8174272a9a5e649b6da165, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.PlayerInteractor
+  input: {fileID: 796301633198802300}
+  playerHealth: {fileID: 8270314839946786807}
+  aim: {fileID: 2337448758495903787}
+  prompt: {fileID: 285734531059821740}
+  reach: 3
+  mask:
+    serializedVersion: 2
+    m_Bits: 4294967227
+--- !u!114 &7093629469916096188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7be6cf954f04643b4941a9c7b0b67da9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.PlayerPusher
+  motor: {fileID: 1044645646848375807}
 --- !u!1 &7314069638460910008
 GameObject:
   m_ObjectHideFlags: 0
