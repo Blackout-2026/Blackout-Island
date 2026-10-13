@@ -37,7 +37,7 @@ namespace Blackout.Editor.Tests
         {
             GeneratorMaterialSet set = Build();
 
-            foreach (GeneratorMaterialSpec spec in GeneratorMaterialBuilder.Specs)
+            foreach (ModelMaterialSpec spec in GeneratorMaterialBuilder.Specs)
             {
                 Material material = set.Find(spec.Name);
                 Assert.IsNotNull(material, spec.Name);
