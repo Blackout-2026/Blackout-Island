@@ -6,8 +6,8 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `Assets/Editor/WorldBuilder/BunkerLayoutAssetBuilder.cs`. The marker positions are also in
 `Assets/Editor/WorldBuilder/MarkerLayout.cs`, the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`, and the
 materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`, the vegetation in
-`VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`, and the lighting in `LightingLayout.cs`,
-`LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`.
+`VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`, the lighting in `LightingLayout.cs`,
+`LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`, and the blackout in `BlackoutLightLayout.cs`.
 If you change a number here, change it there too.
 
 ## Conventions
@@ -712,15 +712,178 @@ The **Environment** tab is also set by the tool. Check it only:
     event;
   - or accept a faint glow under the red emergency lights.
 
-  Either way, lower the reflection probes' intensity at the blackout.
-- **Indoor fog:** the bunker has the outside fog (0.0135, not the reference's 0.022) until W8 blends it.
+  Either way, lower the reflection probes' intensity at the blackout. W8 accepts the glow for now and dims the
+  reflection probes to 20 % (see "Blackout lighting (W8)").
+- **Indoor fog:** the bunker has the outside fog (0.0135, not the reference's 0.022) while it is powered. W8 blends
+  it to the blackout fog (0.05) only after the event.
 - **Light through walls:** tubes without shadows (range 8.5 to 9 m) light a few metres of the next room through its
   0.4 m wall. Examples are the corridor tubes at z 101 … 109 next to the generator room, and the end tubes next to the
   security area. If it shows after the bake, turn on Low-tier shadows for those tubes.
 - **Not baked yet:** the look has only been checked in batch mode, not by eye.
 - **Size:** W7 grew `Environment.unity` from 1,047 KB to 1,317 KB (37 lights, 806 probes, the lamp meshes).
-- **FlickerLight and W8:** it sets the light's intensity every frame. W8 must disable it before switching a faulty tube
-  off.
+- **FlickerLight and W8:** it sets the light's intensity every frame, so PowerStateLighting (W8) disables it before
+  the cascade and enables it again at a reset.
+
+## Blackout lighting (W8)
+
+When the generator is disabled, the bunker's powered lights die one by one and red emergency lighting takes over.
+- **`PowerStateLighting`** (`Assets/Scripts/Environment/PowerStateLighting.cs`, assembly `Blackout.Environment`) is a
+  component on the `Lighting` root. It plays the blackout.
+- **`LightingStateProfile`** (`LightingStateProfile.cs`) holds the two moods and the timings. The asset is
+  `Assets/Environment/Lighting/LightingStateProfile.asset`.
+- **Blackout/World/Setup Blackout Lighting** (`Assets/Editor/WorldBuilder/BlackoutLightingSetup.cs`, numbers in
+  `BlackoutLightLayout.cs`) builds the emergency lights and alarm beacons, writes the profile's states and wires the
+  component.
+
+The tests are `Assets/Scripts/Environment/Tests/LightingStateProfileTests.cs` (the interpolation and every timing),
+`PowerStateLightingTests.cs` (the bunker volumes), `Assets/Scripts/Environment/PlayTests/PowerStateLightingPlayTests.cs`
+(PlayMode: it raises the channels and checks the real component over time) and
+`Assets/Editor/WorldBuilder/Tests/BlackoutLightLayoutTests.cs`.
+
+**Order.** Run Setup Lighting (W7) first, then Setup Blackout Lighting. The component lists the powered fixtures, so
+run Setup Blackout Lighting again whenever Setup Lighting adds or removes one.
+- **Re-runs:** a re-run with no code change leaves every file byte-identical. It reuses objects by name and removes
+  only objects it generated under `Lighting/BlackoutLights`.
+- **Profile:** every run rewrites the two states and the two lamp colours from the reference. It keeps the timings, so
+  tune those on the asset.
+- **Bake:** it never bakes. The new lights are Realtime and saved switched off, so they do not change a bake.
+
+### How it works
+
+- **Event-driven.** It listens to the `GeneratorDisabled` and `PlayerRespawned` channels
+  (`Assets/ScriptableObjects/Events`). It has no reference to the generator: the cascade starts from a fixed point
+  2 m above `GeneratorSocket`, at (−11, 4.5, 106).
+- **Respawn.** `PlayerRespawned` puts the power back only while the generator is still on. After the real event, a
+  respawn keeps the blackout.
+- **Testing.** The component's context menu has two items, which work in Play mode only:
+  - **Trigger Blackout** plays the blackout without raising the event for anyone else. It is a preview, so a respawn
+    undoes it.
+  - **Reset To Powered** puts everything back and forgets the event. It is not called "Reset" because Unity's own
+    Reset item on the same menu would clear every field the tool filled in.
+  - To test the whole chain, right-click the `GeneratorDisabled` asset and choose **Raise**.
+
+| Seconds after the event | What happens | Profile setting |
+| --- | --- | --- |
+| 0 … 1.5 | The 31 powered fixtures die outward from the generator. Each strobes for 0.3 s (every 1/30 s step at 1.4 × or 0.05 ×, half and half), then its light is disabled and its lamp stops glowing. A fixture d metres from the origin goes out at 0.3 + 1.08 × d / d<sub>max</sub> s, plus up to 0.12 s of jitter, so the farthest one (the top ramp tube, 53 m away) is out by 1.5 s | cascadeSeconds 1.5, strobeSeconds 0.3, jitterSeconds 0.12, strobeHigh 1.4, strobeLow 0.05 |
+| 0 … 0.4 | Screens fade out. There are none yet: W10 adds the monitors to the component's `screens` list | screenFadeSeconds 0.4 |
+| 0 … 2 | Fog, ambient, the moon and the bunker's reflection probes move to the blackout state on an S-curve | transitionSeconds 2 |
+| 1.5 … 2 | Darkness. Only the outdoor lights are on | — |
+| 2 … 3.2 | The emergency lights and alarm beacons fade in. Then the emergency lights pulse at 0.75 + 0.25 sin(3.2 t), the beacons turn at 206.3° per second (3.6 rad/s), and their domes pulse at 2.5 ± 0.8 | emergencyDelaySeconds 2, emergencyFadeSeconds 1.2, emergencyPulseDepth 0.25, emergencyPulseSpeed 3.2, alarmDegreesPerSecond 206.3, alarmDomePulseDepth 0.32, alarmDomePulseSpeed 7.2 |
+
+- **Faster than the prototype:** its cascade takes about 2.0 s (0.35 + 0.028 × d + up to 0.12 s), with the emergency
+  lights 0.5 s after it. The brief asks for about 1.5 s, so the wave is faster, and the 0.5 s of darkness is kept.
+- **Faulty tubes:** their `FlickerLight` is disabled first, which puts the light and lamp back to full before the
+  strobe.
+- **Repeatable:** the jitter and the strobe use FlickerLight's hash, so the cascade is the same on every run.
+
+### Powered and blackout states
+
+The blackout values are the reference's linear hex values, converted as in W7 (`LightingLayout.FromLinearHex`). Colours
+are mixed in linear space.
+
+| Setting | Powered (the W7 scene) | Blackout: reference | Blackout: Unity |
+| --- | --- | --- | --- |
+| Fog colour | #3B4B63 (reference #0B1220) | #0B0203 | #3B161C |
+| Fog density | 0.0135 | 0.05 | 0.05 |
+| Ambient sky / equator / ground | #8998B1 / #6E798D / #464D58 | hemisphere #3A0907 / #060202 × 0.20 | #3C1411 / #2C0E0C / #0F0505 |
+| Moon intensity | 0.9 | 0 (the prototype's moon is off inside the bunker) | 0 |
+| Intensity of the 6 reflection probes | 1 | none: the prototype swaps to a near-black red cubemap | 0.2 (chosen: the old reflections only hint at shapes on metal) |
+
+**Where the blackout shows.** The generator powers only the bunker, so the outdoor lights stay on. The blackout look
+is weighted by how far inside the bunker the main camera is (`PowerStateLighting.Interior`): the applied blend is the
+transition × the interior factor.
+
+| Volume | Box | Interior factor |
+| --- | --- | --- |
+| Underground | x −20.3 … 10.4, y 2.1 … 9.4, z 69.6 … 142.4: SecurityArea, Corridor, GeneratorRoom and Laboratory with their walls | 1 |
+| Entrance | x −6 … 6, y 2.1 … 13.4, z 48.4 … 69.6: the lobby and ramp with their side walls | S-curve from 0 just inside the bunker door to 1 at the bottom of the ramp |
+| Everywhere else | — | 0 |
+
+- **Camera:** it is found by its MainCamera tag (`Camera.main`), because it lives in another scene. With no main
+  camera (Environment played on its own) the whole scene counts as inside.
+- **RenderSettings:** they are written only during a blackout or a reset. Before the event, the scene's own values
+  are in charge. Environment must be the active scene (playbook trap 7), or the writes go to another scene's settings.
+
+### Emergency lights and alarm beacons
+
+Each emergency light is `Lighting/BlackoutLights/<Room>/<Room>_EmergencyNN`: a point light with a `_Lamp` box. Each
+beacon is `<Room>_AlarmNN`: a spot light with a `_Dome` sphere. All 17 are **Realtime** and saved **switched off**.
+- **Not Mixed:** in Baked Indirect mode, a Mixed light would bake its red bounce into the powered lightmaps. A Baked
+  light could not change at run time.
+- **On and off:** the component turns them on at 2 s, and off again at a reset.
+
+| Lights | Reference | Unity intensity | Other |
+| --- | --- | --- | --- |
+| 14 emergency lamps (positions below) | #FF2614, 2.2, 9 m, decay 1.5 | 7.54 | No shadows |
+| 3 alarm beacons: Corridor (0, 5.3, 98) and (0, 5.3, 117), GeneratorRoom (−11, 8.8, 106) | #FF1808, 9, 22 m, decay 1.3, half angle 0.42 rad, penumbra 0.4 | 228.4 | Spot 48.1°, inner 28.9°, tilted 14.9° down, turning about the world's up axis from 0°, 120° and 240°. Soft shadows, Low tier |
+
+| Room | Wall | Light positions (x, y, z) |
+| --- | --- | --- |
+| SecurityArea | west, east | (−7.56, 4.8, 76), (7.56, 4.8, 79.5) |
+| Corridor | east, west, east, west, east | x ±1.06, y 4.8, z 86, 95, 104, 114, 121 (east is +x) |
+| GeneratorRoom | west, west, south | (−19.46, 6.3, 99), (−19.46, 6.3, 112), (−9, 6.3, 96.44) |
+| Laboratory | west, east, north | (−9.56, 4.8, 130), (9.56, 4.8, 137), (0, 4.8, 141.56) |
+| BunkerEntranceRamp | east | (1.06, 8.99, 60) |
+
+- **Placement:** these are the reference's positions, moved onto the Unity walls (the corridor's x ±1.9 becomes its
+  ±1.5 wall). The lamp (0.34 × 0.2 × 0.08 m) touches its wall 0.5 m under the ceiling, but no higher than 4.0 m, the
+  prototype's generator-room height. The light is 0.4 m out from the lamp and 0.2 m lower, as in the prototype. In the
+  3 m rooms the lamp is 2.5 m over the floor, above the 2.3 m doors.
+- **Intensities:** matched with `LightingLayout.MatchIntensity`, as in W7.
+  - Emergency lights: the prototype gives them all one intensity, so Unity does too. 7.54 matches the prototype 2.3 m
+    from the light, which is the floor in the 3 m rooms.
+  - Alarm beacons: matched at the prototype's aim point, 6 m out and 1.6 m down (6.2 m away), like the floodlights:
+    228.4. Closer than that, Unity is brighter than the prototype.
+- **Shadows:** the alarm beams reach 22 m and would sweep the next room through the walls, so they cast shadows. The
+  three spot maps take 0.2 M texels of the shadow atlas. By then the 6 high-bays and the top ramp tube are off, which
+  frees the 2.75 M they used. The emergency lights cast none, as in the prototype.
+- **Lamps:** `Lamp_Emergency` (base #330000, unlit emission linear (0.12, 0.02, 0.02)) and `Lamp_Alarm` (base #400404,
+  emission #FF1A0A × 0.2), in `Assets/Materials/Environment/Lighting`.
+  - The profile holds the lit colours: #FF2A1A × 5 and #FF1A0A × 2.5.
+  - The unlit emission is never black, because URP turns emission off for a black colour, and then the lamp could not
+    light up.
+  - The lamps have no collider and cast no shadow, and they are not static. Their emission changes through a
+    MaterialPropertyBlock, as in FlickerLight.
+
+### Performance
+
+- **No allocations per frame:** one MaterialPropertyBlock is reused, colours are cached in Awake, and the camera is
+  cached.
+- **Dead fixtures are disabled,** not set to 0, so Forward+ skips them and they give their shadow maps back.
+- **Work per frame:** before the event, Update returns at once. After the cascade it sets 17 light intensities, 3
+  rotations and 17 lamp colours. RenderSettings are written only when the blend changes: during the 2 s transition and
+  while the camera is on the ramp.
+
+### What to check
+
+1. Enter Play mode with `Environment.unity` on its own. With no player camera the whole scene counts as inside.
+2. Fly the Scene view into the generator room, select `Lighting` and right-click PowerStateLighting > Trigger
+   Blackout. You should see the lamps strobe and die outward to the ramp by 1.5 s and the fog thicken to dark red by
+   2 s. From 2 s the red lamps fade in and the three alarm beams start sweeping.
+3. Choose Reset To Powered: everything comes back, and the two faulty tubes flicker again.
+4. Right-click the `GeneratorDisabled` asset and choose Raise for the real event. Raising `PlayerRespawned` afterwards
+   must not bring the power back.
+5. **Validate Layout:** it still passes 66 of 66, because no collider changed.
+
+### Known issues
+
+- **The baked bounce stays.** Once the scene is baked, the powered fixtures' bounce is in the lightmaps and light
+  probes (W7, Baked Indirect). The walls and the robots will keep a faint warm glow after the blackout. W8 dims only the
+  reflection probes, and the ambient change barely reaches lightmapped surfaces. If the glow shows after the bake,
+  either:
+  - set the bunker fixtures' Indirect Multiplier to 0 in Setup Lighting (no bounce from them at all), or
+  - bake a second "blackout" set and swap the lightmaps and light probes at the event (W10, final bake).
+- **No visible beams or sparks.** The prototype's alarm beam cones, light shafts and sparks need an additive Shader
+  Graph and pooled particles (W9 or later). The generator's own sparks, hum and core glow belong to its prefab (Systems
+  Engineer and Core Developer), which listens to the same channel.
+- **The emergency lights leak a little.** They cast no shadows, so within their 9 m range they tint the next room red
+  through the wall.
+- **No screens yet.** W10's monitors go in the component's `screens` list, and their materials must use
+  `_EmissionColor`.
+- **The camera needs its tag.** The player's camera must be tagged MainCamera, or the blackout shows outdoors too.
+- **The tests use the default timings.** Timings tuned on the asset are not tested.
+- **Powered fog is W7's.** The powered bunker keeps W7's one fog value (0.0135), not the reference's 0.022.
+- **Not checked by eye:** the look was checked only in batch mode.
 
 ## Changes from the prototype, and who they affect
 
@@ -758,6 +921,11 @@ The **Environment** tab is also set by the tool. Check it only:
 | One fog and ambient for the whole scene (W7) | The bunker has the outside fog (0.0135, not 0.022). The ambient indoors comes from the bake | World Builder (W8) |
 | Booth lamp and mast beacon not placed (W7) | There is no guard booth or mast yet | World Builder (later steps) |
 | Camera background and active scene (W7) | The night sky is a skybox material, so cameras should keep Background Type Skybox. The prototype clears to the fog colour behind its sky dome. Fog, skybox and ambient come from `Environment.unity` only when it is the active scene. After the additive loads, call `LightProbes.TetrahedralizeAsync()` so moving objects use Environment's light probes | Systems Engineer (player camera; Y6 Bootstrap makes Environment active), for information |
+| Blackout cascade over 1.5 s, not about 2.0 s (W8) | The fixtures die faster, as the brief asks. The emergency lights still start 0.5 s after the last one, at 2 s | — |
+| PowerStateLighting listens to GeneratorDisabled and PlayerRespawned (W8) | Lighting has no reference to the generator. Raise GeneratorDisabled once, when the generator is disabled, and PlayerRespawned after every respawn. A respawn after the event keeps the blackout | Systems Engineer (generator and respawn) |
+| Blackout look only inside the bunker (W8) | Fog, ambient and the moon follow the main camera's depth in the bunker, and the outdoor lights stay on, as in the reference. The player camera must be tagged MainCamera, and Environment must be the active scene | Systems Engineer (player camera, Bootstrap) |
+| Emergency lamps on the Unity walls (W8) | In the smaller rooms the reference's lamps are 3.0 to 3.4 m up; Unity's hang 0.5 m under the 3 m ceilings (2.5 m) and at 4.0 m in the generator room. The corridor's lamps move from x ±1.9 to its ±1.5 walls | — |
+| No alarm beam cones, light shafts or sparks yet (W8) | The beacons light the walls but show no visible beam | World Builder (W9 or later) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
