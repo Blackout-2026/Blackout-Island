@@ -31,6 +31,8 @@ namespace Blackout.Agents
         [SerializeField] private bool spawnOnStart = true;
         [Tooltip("Optional: raise this to replace every agent with a fresh one (the mission's Restart button).")]
         [SerializeField] private VoidEventChannel restartChannel;
+        [Tooltip("For a prefab with no brain: add the placeholder that walks the agent's waypoints, instead of leaving it standing still. Turn off once the real brains are in the prefabs.")]
+        [SerializeField] private bool placeholderBrainWhenMissing;
 
         private readonly List<GameObject> spawned = new List<GameObject>();
         private AgentRegistry registry;
@@ -58,8 +60,10 @@ namespace Blackout.Agents
         }
 
         /// <summary>Replaces the Inspector setup. Awake uses the serialized fields; tests plug in their own.</summary>
-        public void Configure(AgentRegistry agentRegistry, DifficultyConfig newDifficulty, IEnumerable<SpawnEntry> newEntries, VoidEventChannel newRestartChannel = null)
+        public void Configure(AgentRegistry agentRegistry, DifficultyConfig newDifficulty, IEnumerable<SpawnEntry> newEntries,
+            VoidEventChannel newRestartChannel = null, bool addPlaceholderBrain = false)
         {
+            placeholderBrainWhenMissing = addPlaceholderBrain;
             registry = agentRegistry;
             difficulty = newDifficulty;
             entries = new List<SpawnEntry>(newEntries);
@@ -119,6 +123,15 @@ namespace Blackout.Agents
             else
             {
                 Debug.LogWarning("AgentSpawner: no DifficultyConfig, so agents keep their prefab numbers.", this);
+            }
+
+            if (placeholderBrainWhenMissing && agent.GetComponent<IAgentBrain>() == null)
+            {
+                AgentRoot root = agent.GetComponent<AgentRoot>();
+                if (root != null)
+                {
+                    root.SetBrain(agent.AddComponent<WaypointWalkerBrain>());
+                }
             }
 
             spawned.Add(agent);

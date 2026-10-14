@@ -279,6 +279,46 @@ namespace Blackout.Agents.Tests
             Assert.AreEqual(0, spawner.SpawnAll());
         }
 
+        [Test]
+        public void PlaceholderBrain_IsAddedToAPrefabWithNoBrain_WhenAskedFor()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Patrol-1", Vector3.zero);
+            spawner.Configure(registry, difficulty, new[] { Entry(AgentKind.SecurityPatrol, prefab, "Patrol-") }, null, addPlaceholderBrain: true);
+
+            spawner.SpawnAll();
+
+            Assert.IsNotNull(spawner.Spawned[0].GetComponent<WaypointWalkerBrain>());
+        }
+
+        [Test]
+        public void PlaceholderBrain_IsNotAddedByDefault()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Patrol-1", Vector3.zero);
+            spawner.Configure(registry, difficulty, new[] { Entry(AgentKind.SecurityPatrol, prefab, "Patrol-") });
+
+            spawner.SpawnAll();
+
+            Assert.IsNull(spawner.Spawned[0].GetComponent<WaypointWalkerBrain>());
+        }
+
+        private sealed class StubBrain : MonoBehaviour, IAgentBrain
+        {
+            public void Initialize(IAgentContext context) { }
+            public AgentIntent Tick(float deltaTime) { return AgentIntent.Idle; }
+        }
+
+        [Test]
+        public void PlaceholderBrain_IsNotAddedToAPrefabThatAlreadyHasARealBrain()
+        {
+            prefab.AddComponent<StubBrain>();
+            AddMarker(MarkerType.AgentSpawn, "Patrol-1", Vector3.zero);
+            spawner.Configure(registry, difficulty, new[] { Entry(AgentKind.SecurityPatrol, prefab, "Patrol-") }, null, addPlaceholderBrain: true);
+
+            spawner.SpawnAll();
+
+            Assert.IsNull(spawner.Spawned[0].GetComponent<WaypointWalkerBrain>());
+        }
+
         private GameObject Find(string name)
         {
             foreach (GameObject agent in spawner.Spawned)
