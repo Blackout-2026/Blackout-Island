@@ -94,6 +94,19 @@ namespace Blackout.Agents
             brain?.Initialize(registry.CreateContext(transform, health));
         }
 
+        /// <summary>
+        /// Puts a brain on an agent after it was created, which is how the spawner gives a prefab that has none a
+        /// placeholder brain. If the agent has already started, the brain is initialised straight away.
+        /// </summary>
+        public void SetBrain(IAgentBrain newBrain)
+        {
+            brain = newBrain;
+            if (registry != null)
+            {
+                brain?.Initialize(registry.CreateContext(transform, health));
+            }
+        }
+
         private void Update()
         {
             if (!IsAlive)
