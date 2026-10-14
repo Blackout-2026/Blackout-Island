@@ -83,7 +83,19 @@ namespace Blackout.Agents
         /// <summary>Builds the context handed to one agent's brain at Initialize.</summary>
         public IAgentContext CreateContext(Transform self, Health health)
         {
-            return new AgentContext(self, health, Blackboard, GetPlayer, GetMarkers);
+            return new AgentContext(self, health, Blackboard, GetPlayer, GetMarkerIndex);
+        }
+
+        /// <summary>Markers of a type from the loaded scenes (null owner = any owner). Do not modify the list.</summary>
+        public IReadOnlyList<Marker> GetMarkers(MarkerType type, string owner = null)
+        {
+            return GetMarkerIndex().Get(type, owner);
+        }
+
+        /// <summary>Uses exactly these markers instead of scanning the loaded scenes, so a test is not affected by whatever scene is open.</summary>
+        public void SetMarkers(IEnumerable<Marker> markerSource)
+        {
+            markers = new MarkerIndex(markerSource);
         }
 
         /// <summary>Forget the cached markers so the next query rescans the scenes, for example after Environment loads.</summary>
@@ -105,7 +117,7 @@ namespace Blackout.Agents
             return player;
         }
 
-        private MarkerIndex GetMarkers()
+        private MarkerIndex GetMarkerIndex()
         {
             if (markers == null)
             {
