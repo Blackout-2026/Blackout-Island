@@ -12,6 +12,7 @@ namespace Blackout.Editor.Tests
     {
         public const string Materials = "Assets/Materials/Models/_Test";
         public const string Textures = "Assets/Textures/Models/_Test";
+        public const string Prefabs = "Assets/Prefabs/Props/_Test";
 
         public static void Create()
         {
@@ -21,7 +22,7 @@ namespace Blackout.Editor.Tests
 
         public static void Delete()
         {
-            foreach (string folder in new[] { Materials, Textures })
+            foreach (string folder in new[] { Materials, Textures, Prefabs })
             {
                 if (AssetDatabase.IsValidFolder(folder))
                 {
