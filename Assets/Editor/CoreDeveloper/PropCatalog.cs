@@ -30,7 +30,7 @@ namespace Blackout.Editor
         BaseCentre, // centre of the footprint at the bottom face: furniture, anything that stands on a surface
         Centre, // geometric centre: the crate is pushed and rotated by physics
         WallFace, // centre of the face that touches the wall
-        Grip, // a weapon viewmodel: at the grip, muzzle along +Z
+        Grip, // a weapon viewmodel: the prototype's gun frame (receiver centre), muzzle along +Z; the weapon system places it
     }
 
     /// <summary>One prefab the Props palette lists: its path, size in metres, pivot rule and how many the level uses.</summary>
@@ -58,6 +58,24 @@ namespace Blackout.Editor
         }
 
         public string PrefabPath => $"{Folder}/{Name}.prefab";
+
+        /// <summary>
+        /// Where the Blender export goes: Prop_LabBench is SM_Prop_LabBench.fbx, Weapon_Smg_Visual is SM_Weapon_Smg.fbx and
+        /// a pickup such as Medkit_Visual is SM_Prop_Medkit.fbx (docs/art-pipeline.md section 2).
+        /// </summary>
+        public string FbxPath
+        {
+            get
+            {
+                string stem = Name.Replace("_Visual", string.Empty);
+                if (!stem.StartsWith("Prop_", System.StringComparison.Ordinal) && !stem.StartsWith("Weapon_", System.StringComparison.Ordinal))
+                {
+                    stem = "Prop_" + stem;
+                }
+
+                return $"Assets/Models/Custom/SM_{stem}.fbx";
+            }
+        }
 
         public PropSize SizeClass => PropSizes.Classify(Size);
 
@@ -97,7 +115,7 @@ namespace Blackout.Editor
         public static readonly IReadOnlyList<PropEntry> All = new List<PropEntry>
         {
             // Modelled in Blender (placeholder primitives until the FBX exists). Section 7.5, the laboratory.
-            Prop("ContainmentChamber", PropGroup.Lab, PropPivot.BaseCentre, 3.8f, 2.88f, 3.8f, 1, "Under 2.9 m with its base (level-layout.md); opening faces -Z, the D-Lab door"),
+            Prop("ContainmentChamber", PropGroup.Lab, PropPivot.BaseCentre, 3.8f, 2.88f, 3.8f, 1, "Under 2.9 m with its base (level-layout.md); opening faces +Z, the CureSocket's 180 degree yaw turns it to the D-Lab door"),
             Prop("LabBench", PropGroup.Lab, PropPivot.BaseCentre, 3.5f, 0.93f, 1.0f, 4, "White base and dark top; also cover"),
             Prop("Analyser", PropGroup.Lab, PropPivot.BaseCentre, 0.4f, 0.42f, 0.4f, 4, "Sits on a bench"),
             Prop("Microscope", PropGroup.Lab, PropPivot.BaseCentre, 0.18f, 0.34f, 0.3f, 4, "Sits on a bench"),
