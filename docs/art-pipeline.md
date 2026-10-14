@@ -442,3 +442,137 @@ tint to white. `Eye` and `Cells` stay flat.
 
 Budget reminder (section 6): 5,000 triangles target, 7,500 hard maximum, 4 materials. The placeholder is about 7,000
 triangles because Unity's spheres and cylinders are heavy; it is not subject to the budget.
+
+## 14. Prop kit, signs and weapon viewmodels (step C4)
+
+Everything here is made by **Blackout > Art > Build All Props, Signs and Weapons** (`PropKitBuilder`), which runs the
+prop, sign and weapon builders in order. It is safe to run again: a file that would not change is not rewritten, materials
+keep hand edits, and a prefab keeps its colliders, sockets and a `Model` child that is already the FBX. The data lives in
+`PropCatalog` (name, size, pivot, how many the level uses) and in the definitions next to it (`PropDefinitions`,
+`WeaponDefinitions`, `DecalCatalog`). The Props palette (**Window > Blackout > Props Palette**) lists every prefab with the
+triangle count measured on the file.
+
+### 14.1 What I model in Blender and what I take from CC0 packs
+
+| Group | Blender (custom low-poly) | CC0 pack | Why |
+| --- | --- | --- | --- |
+| The six the brief names | **Cure chamber** (`Prop_ContainmentChamber`), **lab table** (`Prop_LabBench`), **crate / barricade** (`Prop_Crate`, `Prop_CrateSmall`), **monitor** (`Prop_Monitor`, `Prop_WallMonitor`), **desk** (`Prop_Desk`, `Prop_DeskGuard`, `Prop_DeskCommander`), **barrel** (`Prop_Barrel`) | | They are the silhouettes in the screenshots and have exact sizes and a colour language; no pack matches the chamber, the strapped crate or the grey-blue desks. The crate and the chamber also need a specific pivot and collider. |
+| Rest of the "model" hints in the reference | Locker, electrical cabinet, control console, fuel tank, specimen fridge, fume hood, analyser, microscope, office chair, meeting table, cure case, medkit | | One-off sizes from the prototype's room code. Do these after the six: the placeholders already have the right size and pivot, so nothing waits on them. |
+| Fittings | | **Pipes** (`Prop_PipeStraight`), **cable tray and cables** (`Prop_CableTray`), **vents** (`Prop_Vent`), fire extinguisher, flasks, jars | Generic, repeated, and well covered by free packs. Hand-modelling 8 pipe runs and 27 jars would cost more than it earns. |
+| Signs | | | Neither: generated as textured quads (section 14.5). |
+| Weapons | | **SMG, rifle, knife** from a free low-poly gun pack (`docs/credits/core-developer.md`) | Guns take the longest to model well; the part to add in Blender is the hands and sleeves. |
+
+Not in this step, by design: sandbags, the military truck, guard booth, floodlights, antenna mast, boat and dock (World
+Builder dressing, section 7.6 of the reference), the doors (Systems Engineer), the catwalk, stairs and wall fan, the metal
+detector, glass partition, weapon rack, CCTV, checkpoint counter, fire-hose cabinet, fuse boxes, and the two wall maps.
+Ask if one of them is needed for the level and I will add it to `PropCatalog` and `PropDefinitions`.
+
+### 14.2 What every prop prefab follows
+
+- `Assets/Prefabs/Props/Prop_<Name>.prefab`, units in metres, **the front of a prop looks along +Z**. The World Builder turns
+  it with the marker's yaw.
+- The root is the pivot of section 5: `BaseCentre` (footprint centre on the floor, so the prop's `y` equals the floor height),
+  `Centre` (the crate), or `WallFace` (the wall monitor: origin on the middle of the face that touches the wall, the screen
+  looks along +Z).
+- One `Model` child (the FBX or the placeholder), **colliders on the root** (box, or capsule for the barrel and the glass
+  panels), sockets next to `Model`. No Rigidbody and no script: the Systems Engineer makes a prefab variant of `Prop_Crate` and
+  adds the Rigidbody and the push script.
+- Pickups (`CureCase_Visual`, `Medkit_Visual`) and weapons (`Weapon_*_Visual`) go to `Assets/Prefabs/Models` because they are
+  visual only (section 1): no collider. The Systems Engineer nests them.
+- A Blender export is `Assets/Models/Custom/SM_Prop_<Name>.fbx` (a pickup is `SM_Prop_CureCase.fbx`, a gun
+  `SM_Weapon_Smg.fbx`). After the import, run the menu command again: only `Model` is replaced, and the Console prints a
+  warning if the size or the pivot of the FBX differs from the table below (`PivotRules`, 0.05 m tolerance).
+- The Blender material names are the palette: `M_Prop_Steel`, `M_Prop_LabWhite`, and so on (section 14.4). A prop may use at
+  most two, which is the importer's limit; a name that matches none stays as imported and the Console warns.
+
+### 14.3 The prop list (placeholders as built)
+
+Sizes are width x height x depth. Triangles are the **placeholder's**, measured by the palette. A Unity cylinder is 80
+triangles, so a few placeholders (the cure case, the barrel, the chamber) are heavier than the Blender model will be, and
+they use more materials than the two a real prop may have. The budget for a real prop is the size class of section 6.
+
+| Prefab | Size (m) | Pivot | Level count | Placeholder tris | Colliders | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| Prop_ContainmentChamber | 3.8 x 2.88 x 3.8 | base centre | 1 | 812 | 18 | 16 glass panels, 72 degree opening on +Z, `CureAnchor` socket at (0, 1.22, 0). **2.88 m tall** because the lab ceiling is 3.0 (`level-layout.md`). The `CureSocket` marker's 180 degree yaw turns the opening to the D-Lab door. |
+| Prop_LabBench | 3.5 x 0.93 x 1.0 | base centre | 4 | 24 | 1 | White base, dark top |
+| Prop_Analyser, Prop_Microscope | 0.4 x 0.42 x 0.4, 0.18 x 0.34 x 0.3 | base centre | 4, 4 | 92, 104 | 1 | Stand on a bench (top at 0.93 m) |
+| Prop_SpecimenFridge | 1.3 x 2.1 x 0.8 | base centre | 3 | 24 | 1 | Cyan door panel on +Z |
+| Prop_FumeHood | 3.0 x 2.6 x 1.0 | base centre | 1 | 48 | 1 | Glass front on +Z |
+| Prop_Desk / DeskGuard / DeskCommander | 3.0 / 1.9 / 4.4 wide, 0.78 / 0.78 / 0.85 high, 1.0 deep | base centre | 2 / 1 / 1 | 184 each | 1 | Drawer unit on the right |
+| Prop_OfficeChair | 0.5 x 1.03 x 0.5 | base centre | 4 | 184 | 1 | |
+| Prop_MeetingTable | 2.0 x 0.76 x 1.0 | base centre | 1 | 332 | 1 | |
+| Prop_Monitor, Prop_WallMonitor | 0.7 x 0.75 x 0.2, 1.16 x 0.68 x 0.08 | base centre, wall face | 7, 1 | 48, 24 | 1 | Screen is an emissive material |
+| Prop_Locker | 0.52 x 2.0 x 0.55 | base centre | 16 | 24 | 1 | Model once, instance 16 times |
+| Prop_ElectricalCabinet | 1.2 x 2.2 x 0.7 | base centre | 6 | 60 | 1 | Panel and 3 LEDs on +Z |
+| Prop_ControlConsole | 1.8 x 1.13 x 0.75 | base centre | 1 | 36 | 1 | Sloped top, low edge toward +Z |
+| Prop_FuelTank | 2.0 x 2.35 x 4.2 | base centre | 2 | 104 | 1 | Lies along Z |
+| Prop_Crate, Prop_CrateSmall | 1.5 cube, 1.0 cube | **centre** | 1, 8 | 36 each | 1 | A clean cube so the physics box matches the mesh |
+| Prop_Barrel | 0.6 x 0.9 x 0.6 | base centre | 6 | 240 | 1 (capsule) | |
+| CureCase_Visual | 0.42 x 0.28 x 0.24 | base centre | 1 | 676 | 0 | Pivot under the base plate: spin and bob about the vertical axis. Rests on `CureAnchor`. |
+| Medkit_Visual | 0.42 x 0.33 x 0.28 | base centre | 3 | 96 | 0 | Red cross on front and back |
+
+### 14.4 Materials
+
+`M_Prop_<Key>` (16, in `Assets/Materials/Models`) is the single prop palette from `core-developer.md` 8.1 and 8.2:
+MetalDark, Steel, Chrome, Olive, Locker, LabWhite, PlasticDark, DeskTop, Wood, MedWhite, MedRed, Glass (12 % opacity),
+GlowCyan, GlowGreen, GlowScreen and CureVial. The glow ones are HDR emission colours above 1 (the cyan is `#47d1d6` x 2.5,
+the vials (0.4, 2.6, 2.8)), so the bloom picks them up. `M_Weapon_<Key>` (9) are the viewmodels': Metal, Polymer, Tan,
+Steel, Glove, Sleeve, Lens, RedDot (HDR (8, 0.4, 0.2)) and Flash. All are flat colours until a texture set exists.
+
+### 14.5 Signs and floor markings
+
+19 prefabs `Prop_Sign_<Name>` in `Assets/Prefabs/Props`, one quad each, with a texture `T_Sign_<Name>_BaseColor` in
+`Assets/Textures/Models` (18 files: the two hazard stripes share one) and a material `M_Sign_<Name>`: danger high voltage,
+two biohazard signs, fire hose, diesel flammable, authorised engineers, all personnel, security checkpoint, level B1,
+generator and laboratory arrows, restricted, med-supply (the crate's stencil), private island, the two large wall stencils
+(`GENERATOR G-1`, `LAB-01 // PROJECT LAZARUS`), keep clear, and the two hazard-stripe floor markings (ramp 4.0 x 0.4, lab door
+3.2 x 0.8). Sizes and colours are from the reference's sign list (7.8).
+
+- A wall sign **faces +Z**, its origin is the middle of the plate, and it sits 2 mm off the wall plane (z = 0.002) so it does
+  not flicker against the wall. Place it with the wall's normal as +Z. A floor marking lies flat, facing up, with the top of
+  the picture toward +Z, 2 mm above the floor.
+- The pictures are drawn by `DecalRenderer` with a 5 x 7 dot font (`BitmapFont`), about 160 pixels per metre, each side a power
+  of two, laid out in metres so the lettering is never stretched. The hazard stripes are one 64 x 64 tile repeated every 0.4 m
+  by the material's tiling.
+- Left out: the bolt icon and the biohazard trefoil (the sign says BIOHAZARD in text), the facility plan and the outbreak
+  screen. The tool rewrites a texture only when its own picture differs from the file, so a hand-drawn
+  `T_Sign_<Name>_BaseColor.png` placed over a generated one will be overwritten on the next run: keep it under another name
+  and point the material at it.
+
+### 14.6 Weapon viewmodels
+
+`Weapon_Smg_Visual`, `Weapon_Sniper_Visual` and `Weapon_Knife_Visual` are ported from `prototype/src/models/weapons.js` with the
+camera-space flip `(x, y, -z)`: the prototype looks down -Z and Unity down +Z, so every z and every pitch and yaw angle
+changes sign. They are placeholders of 758, 1,134 and 632 triangles (budget 2,000 each) with the gloved hands and sleeves
+included. Use a free low-poly gun in their place (credits in `docs/credits/core-developer.md`).
+
+| | SMG (MP-9) | Sniper (R-700) | Knife |
+| --- | --- | --- | --- |
+| Origin | the prototype's gun frame (receiver centre) | the same | the hand pivot |
+| `MuzzlePoint` (its `+Z` is the shot direction) | (0, 0.004, 0.33) | (0, 0.008, 0.81) | none |
+| `MuzzleFlash` (hidden, 3 crossed quads, under the muzzle) | yes | yes | none |
+| Moving part | none | `BoltHandle` pivot at (0.03, 0.01, -0.08), the bolt slides along Z | `Hand` pivot at the origin: the whole knife swings |
+| Held position, before the holder's 0.85 scale | (0.13, -0.125, 0.45) | (0.12, -0.12, 0.46) | (0.17, -0.18, 0.33), rotated (-14, -14, -23) degrees |
+
+**For the Systems Engineer** (nest, do not edit): put each `Weapon_*_Visual` under the weapon prefab's model slot, set its
+local position to the held position above (the constants are in `WeaponDefinitions`), start the shot at `MuzzlePoint`, enable
+`MuzzleFlash` for a few frames and add the point light yourself. The flash material is `M_Weapon_Flash`, a stand-in for the
+prototype's additive flash texture.
+
+### 14.7 Props palette
+
+**Window > Blackout > Props Palette** lists the catalog (props, pickups, weapons, both hero visuals, the 6 CC0 slots and the
+19 signs) with, for each prefab that exists: status (Placeholder, Model, Kit, Generated, or Missing), triangles (green at or
+under the target of section 6, amber up to the hard maximum, red above it), the budget, materials (amber above the limit),
+colliders, the size measured on the prefab (hover for the catalog size), how many the level uses and the triangles of all of
+them. Click a row to select the prefab, double-click to open it, drag it into the Scene. **Build all** runs
+`PropKitBuilder`. The window never changes an asset on its own.
+
+### 14.8 Still to supply
+
+| What | Where | Status |
+| --- | --- | --- |
+| Blender models of the six required props, then the rest of the "model" list | `Art/Blender/SM_Prop_<Name>.blend`, `Assets/Models/Custom/SM_Prop_<Name>.fbx` | not made yet, placeholders in use |
+| CC0 pipes, cable tray, vent, extinguisher, flask, jar as prefabs | `Assets/Prefabs/Props/Prop_<Name>.prefab` (names in `PropCatalog`) | slots are empty, the palette shows them as Missing |
+| Free low-poly SMG, rifle and knife meshes with hands | `Assets/Models/Custom/SM_Weapon_<Name>.fbx` | not downloaded yet, placeholders in use |
+| Credits rows for everything third-party | `docs/credits/core-developer.md` | template written |

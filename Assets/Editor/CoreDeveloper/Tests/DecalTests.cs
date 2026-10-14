@@ -344,6 +344,24 @@ namespace Blackout.Editor.Tests
             Material material = DecalBuilder.BuildMaterial(Stripe(), TestAssetFolders.Materials, TestAssetFolders.Textures);
 
             Assert.AreEqual(new Vector2(10f, 1f), material.GetTextureScale("_BaseMap")); // 4.0 x 0.4 m
+            Assert.AreEqual(new Vector2(10f, 1f), material.GetTextureScale("_MainTex"));
+        }
+
+        [Test]
+        public void BuildingTheStripeMaterialAgain_DoesNotChangeItsFile()
+        {
+            DecalBuilder.WriteTexture(Stripe(), TestAssetFolders.Textures);
+            DecalBuilder.BuildMaterial(Stripe(), TestAssetFolders.Materials, TestAssetFolders.Textures);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            string file = Path.GetFullPath($"{TestAssetFolders.Materials}/M_Sign_HazardStripeRamp.mat");
+            string first = File.ReadAllText(file);
+
+            DecalBuilder.BuildMaterial(Stripe(), TestAssetFolders.Materials, TestAssetFolders.Textures);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Assert.AreEqual(first, File.ReadAllText(file));
         }
 
         [Test]
@@ -383,6 +401,59 @@ namespace Blackout.Editor.Tests
             {
                 PrefabUtility.UnloadPrefabContents(contents);
             }
+        }
+
+        [Test]
+        public void ANewSign_UsesItsOwnMaterialAndNotTheDefaultOne()
+        {
+            foreach (DecalSpec spec in new[] { FireHose(), Floor(), Stripe() })
+            {
+                GameObject prefab = Make(spec);
+
+                Material used = prefab.transform.Find("Quad").GetComponent<Renderer>().sharedMaterial;
+
+                Assert.AreEqual(spec.MaterialName, used.name);
+                StringAssert.StartsWith("Assets/", AssetDatabase.GetAssetPath(used));
+                Assert.IsNotNull(used.GetTexture("_BaseMap"), spec.Name + " shows its picture");
+            }
+        }
+
+        [Test]
+        public void EveryGeneratedSignInTheProject_ShowsItsOwnPicture()
+        {
+            // The real prefabs in Assets/Prefabs/Props, not scratch copies. A sign that fell back to the default
+            // material looks like a blank grey panel in the level.
+            foreach (DecalSpec spec in DecalCatalog.All)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(spec.Entry.PrefabPath);
+                if (prefab == null)
+                {
+                    continue; // not generated on this checkout yet
+                }
+
+                Material used = prefab.transform.Find("Quad").GetComponent<Renderer>().sharedMaterial;
+                Assert.IsNotNull(used, spec.Name);
+                Assert.AreEqual(spec.MaterialName, used.name, spec.Name);
+                Assert.IsNotNull(used.GetTexture("_BaseMap"), spec.Name + " has no picture");
+            }
+        }
+
+        [Test]
+        public void ASignWithTheDefaultMaterial_IsRepairedOnTheNextRun()
+        {
+            GameObject prefab = Make(FireHose());
+            string path = AssetDatabase.GetAssetPath(prefab);
+            var stray = GameObject.CreatePrimitive(PrimitiveType.Quad); // brings the pipeline's default material
+            Material builtIn = stray.GetComponent<Renderer>().sharedMaterial;
+            Object.DestroyImmediate(stray);
+            GameObject contents = PrefabUtility.LoadPrefabContents(path);
+            contents.transform.Find("Quad").GetComponent<Renderer>().sharedMaterial = builtIn;
+            PrefabUtility.SaveAsPrefabAsset(contents, path);
+            PrefabUtility.UnloadPrefabContents(contents);
+
+            GameObject again = Make(FireHose());
+
+            Assert.AreEqual("M_Sign_FireHose", again.transform.Find("Quad").GetComponent<Renderer>().sharedMaterial.name);
         }
 
         [Test]

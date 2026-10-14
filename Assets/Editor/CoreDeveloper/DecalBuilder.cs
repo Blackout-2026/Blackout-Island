@@ -69,9 +69,13 @@ namespace Blackout.Editor
             Material material = ModelMaterials.GetOrCreate(modelSpec, materialFolder, textureFolder, spec.TexturePrefix);
 
             // The stripe tile repeats every StripeMetres. Only set while the tiling is still the default, so a hand edit stays.
+            // The legacy _MainTex scale is set too: Unity copies it from _BaseMap on the next save, so writing both keeps
+            // a second run from changing the file.
             if (spec.StripeMetres > 0f && material.GetTextureScale("_BaseMap") == Vector2.one)
             {
-                material.SetTextureScale("_BaseMap", new Vector2(spec.Width / spec.StripeMetres, spec.Height / spec.StripeMetres));
+                var tiling = new Vector2(spec.Width / spec.StripeMetres, spec.Height / spec.StripeMetres);
+                material.SetTextureScale("_BaseMap", tiling);
+                material.SetTextureScale("_MainTex", tiling);
                 EditorUtility.SetDirty(material);
             }
 
@@ -123,11 +127,18 @@ namespace Blackout.Editor
             quad.localPosition = spec.Floor ? new Vector3(0f, Lift, 0f) : new Vector3(0f, 0f, Lift);
             quad.localScale = new Vector3(spec.Width, spec.Height, 1f);
 
+            // A new primitive comes with the render pipeline's default material (called "Lit" in a URP project), which is
+            // not a project asset. Replace anything that is not one of ours; a material picked by hand from Assets stays.
             var renderer = quad.GetComponent<MeshRenderer>();
-            if (renderer.sharedMaterial == null || renderer.sharedMaterial.name.StartsWith("Default-", System.StringComparison.Ordinal))
+            if (!IsProjectAsset(renderer.sharedMaterial))
             {
                 renderer.sharedMaterial = material;
             }
+        }
+
+        private static bool IsProjectAsset(Material material)
+        {
+            return material != null && AssetDatabase.GetAssetPath(material).StartsWith("Assets/", System.StringComparison.Ordinal);
         }
 
         private static bool FileMatches(string fullPath, byte[] bytes)
