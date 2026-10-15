@@ -34,5 +34,7 @@ Measured by Blackout > Art > Model Report. Prefab rows include placeholder geome
 | Prefab | `Assets/Prefabs/Models/Weapon_Sniper_Visual.prefab` | 1134 | 29 | 8 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Models/Weapon_Knife_Visual.prefab` | 632 | 13 | 5 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Models/Generator_Visual.prefab` | 516 | 9 | 4 | UV0, UV1 | none |
-| Prefab | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 7140 | 81 | 5 | UV0, UV1 | none |
+| Prefab LOD0 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 7140 | 81 | 5 | UV0, UV1 | none |
+| Prefab LOD1 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 4884 | 53 | 4 | UV0, UV1 | none |
+| Prefab LOD2 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 512 | 20 | 3 | UV0, UV1 | none |
 <!-- C5 MODEL INVENTORY END -->

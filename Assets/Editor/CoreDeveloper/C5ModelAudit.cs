@@ -54,7 +54,19 @@ namespace Blackout.Editor
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(entry.PrefabPath);
                 if (prefab != null)
                 {
-                    AddRow(report, "Prefab", entry.PrefabPath, prefab);
+                    LODGroup lodGroup = prefab.GetComponent<LODGroup>();
+                    if (lodGroup == null)
+                    {
+                        AddRow(report, "Prefab", entry.PrefabPath, prefab.GetComponentsInChildren<Renderer>(true));
+                    }
+                    else
+                    {
+                        LOD[] lods = lodGroup.GetLODs();
+                        for (int i = 0; i < lods.Length; i++)
+                        {
+                            AddRow(report, "Prefab LOD" + i, entry.PrefabPath, lods[i].renderers);
+                        }
+                    }
                 }
             }
 
@@ -91,12 +103,17 @@ namespace Blackout.Editor
                 return;
             }
 
+            AddRow(report, source, path, root.GetComponentsInChildren<Renderer>(true));
+        }
+
+        private static void AddRow(StringBuilder report, string source, string path, Renderer[] rendererSet)
+        {
             int triangles = 0;
             int renderers = 0;
             var materials = new HashSet<Material>();
             var meshes = new HashSet<Mesh>();
             var textures = new HashSet<Texture>();
-            foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+            foreach (Renderer renderer in rendererSet)
             {
                 Mesh mesh = MeshOf(renderer);
                 if (mesh == null)

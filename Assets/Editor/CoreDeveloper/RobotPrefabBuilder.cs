@@ -63,6 +63,7 @@ namespace Blackout.Editor
             Transform hand = FindSocketParent(model);
             EnsureSocket(model, hand, RobotRig.WeaponSocket, Vector3.zero);
             EnsureSocket(model, hand, RobotRig.MuzzlePoint, RobotRig.MuzzleOffset);
+            RobotLODBuilder.Configure(root, model, fbx != null);
         }
 
         /// <summary>The names from <see cref="RobotRig.RequiredJoints"/> that the model does not contain.</summary>

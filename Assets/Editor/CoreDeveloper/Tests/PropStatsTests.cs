@@ -53,6 +53,17 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
+        public void Triangles_WithLodGroupCountsOnlyTheHighDetailLevel()
+        {
+            Renderer near = AddPrimitive(PrimitiveType.Cube, Vector3.zero, Vector3.one).GetComponent<Renderer>();
+            Renderer far = AddPrimitive(PrimitiveType.Cube, Vector3.zero, Vector3.one).GetComponent<Renderer>();
+            LODGroup group = root.AddComponent<LODGroup>();
+            group.SetLODs(new[] { new LOD(0.5f, new[] { near }), new LOD(0.01f, new[] { far }) });
+
+            Assert.AreEqual(12, PropStats.Triangles(root));
+        }
+
+        [Test]
         public void LocalBounds_IsTheModelSizeWhateverTheRootPosition()
         {
             root.transform.position = new Vector3(10f, 5f, -3f);

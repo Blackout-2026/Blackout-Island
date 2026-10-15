@@ -191,6 +191,27 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
+        public void Populate_LodLevelsReduceTrianglesWithoutSharingRenderers()
+        {
+            LOD[] lods = root.GetComponent<LODGroup>().GetLODs();
+            Assert.AreEqual(3, lods.Length);
+            var seen = new HashSet<Renderer>();
+            int previousTriangles = int.MaxValue;
+            foreach (LOD lod in lods)
+            {
+                int triangles = 0;
+                foreach (Renderer renderer in lod.renderers)
+                {
+                    Assert.IsTrue(seen.Add(renderer), renderer.name + " belongs to more than one LOD level.");
+                    triangles += MeshStats.CountTriangles(renderer.GetComponent<MeshFilter>().sharedMesh);
+                }
+
+                Assert.Less(triangles, previousTriangles);
+                previousTriangles = triangles;
+            }
+        }
+
+        [Test]
         public void Populate_KeepsASocketMovedByHand()
         {
             Find(RobotRig.MuzzlePoint).localPosition = new Vector3(0f, -0.4f, 0.01f);
