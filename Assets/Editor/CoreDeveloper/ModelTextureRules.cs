@@ -61,6 +61,10 @@ namespace Blackout.Editor
             importer.isReadable = false;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
             importer.wrapMode = TextureWrapMode.Repeat;
+            if (Path.GetFileNameWithoutExtension(importer.assetPath) == "T_Sign_Atlas_BaseColor")
+            {
+                importer.wrapMode = TextureWrapMode.Clamp;
+            }
 
             switch (map)
             {

@@ -13,6 +13,24 @@ namespace Blackout.Editor
         public static int Triangles(GameObject root)
         {
             int triangles = 0;
+            LODGroup lodGroup = root.GetComponent<LODGroup>();
+            if (lodGroup != null && lodGroup.lodCount > 0)
+            {
+                foreach (Renderer renderer in lodGroup.GetLODs()[0].renderers)
+                {
+                    if (renderer is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                    {
+                        triangles += MeshStats.CountTriangles(skinned.sharedMesh);
+                    }
+                    else if (renderer != null && renderer.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null)
+                    {
+                        triangles += MeshStats.CountTriangles(filter.sharedMesh);
+                    }
+                }
+
+                return triangles;
+            }
+
             foreach (MeshFilter filter in root.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (filter.sharedMesh != null)

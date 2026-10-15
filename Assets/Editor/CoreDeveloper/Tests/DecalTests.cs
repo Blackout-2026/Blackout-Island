@@ -419,23 +419,60 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
-        public void EveryGeneratedSignInTheProject_ShowsItsOwnPicture()
+        public void EveryGeneratedSignInTheProject_UsesTheSharedAtlas()
         {
-            // The real prefabs in Assets/Prefabs/Props, not scratch copies. A sign that fell back to the default
-            // material looks like a blank grey panel in the level.
+            Material atlas = AssetDatabase.LoadAssetAtPath<Material>(SignAtlasBuilder.MaterialPath);
+            Assert.IsNotNull(atlas);
+            Assert.AreEqual(SignAtlasBuilder.TexturePath, AssetDatabase.GetAssetPath(atlas.GetTexture("_BaseMap")));
+            int count = 0;
             foreach (DecalSpec spec in DecalCatalog.All)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(spec.Entry.PrefabPath);
-                if (prefab == null)
+                Assert.IsNotNull(prefab, spec.Name);
+                Transform quad = prefab.transform.Find("Quad");
+                Assert.AreSame(atlas, quad.GetComponent<Renderer>().sharedMaterial, spec.Name);
+                Mesh mesh = quad.GetComponent<MeshFilter>().sharedMesh;
+                Assert.AreEqual(SignAtlasBuilder.MeshPath, AssetDatabase.GetAssetPath(mesh), spec.Name);
+                Assert.AreEqual(4, mesh.uv.Length, spec.Name);
+                count++;
+            }
+
+            Assert.AreEqual(19, count);
+        }
+
+        [Test]
+        public void AtlasSignUvRegions_DoNotOverlap()
+        {
+            var regions = new List<Rect>();
+            foreach (DecalSpec spec in DecalCatalog.All)
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(spec.Entry.PrefabPath);
+                Mesh mesh = prefab.transform.Find("Quad").GetComponent<MeshFilter>().sharedMesh;
+                Vector2[] uv = mesh.uv;
+                float minX = 1f, minY = 1f, maxX = 0f, maxY = 0f;
+                foreach (Vector2 point in uv)
                 {
-                    continue; // not generated on this checkout yet
+                    minX = Mathf.Min(minX, point.x);
+                    minY = Mathf.Min(minY, point.y);
+                    maxX = Mathf.Max(maxX, point.x);
+                    maxY = Mathf.Max(maxY, point.y);
                 }
 
-                Material used = prefab.transform.Find("Quad").GetComponent<Renderer>().sharedMaterial;
-                Assert.IsNotNull(used, spec.Name);
-                Assert.AreEqual(spec.MaterialName, used.name, spec.Name);
-                Assert.IsNotNull(used.GetTexture("_BaseMap"), spec.Name + " has no picture");
+                Assert.That(minX, Is.InRange(0f, 1f), spec.Name);
+                Assert.That(minY, Is.InRange(0f, 1f), spec.Name);
+                Assert.That(maxX, Is.InRange(0f, 1f), spec.Name);
+                Assert.That(maxY, Is.InRange(0f, 1f), spec.Name);
+                var current = Rect.MinMaxRect(minX, minY, maxX, maxY);
+                foreach (Rect prior in regions)
+                {
+                    Assert.IsFalse(current.Overlaps(prior), spec.Name + " overlaps another sign's UV region.");
+                }
+
+                regions.Add(current);
             }
+
+            var importer = (TextureImporter)AssetImporter.GetAtPath(SignAtlasBuilder.TexturePath);
+            Assert.AreEqual(TextureWrapMode.Clamp, importer.wrapMode);
         }
 
         [Test]

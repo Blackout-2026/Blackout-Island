@@ -568,7 +568,13 @@ colliders, the size measured on the prefab (hover for the catalog size), how man
 them. Click a row to select the prefab, double-click to open it, drag it into the Scene. **Build all** runs
 `PropKitBuilder`. The window never changes an asset on its own.
 
-### 14.8 Still to supply
+### 14.8 Shared sign atlas (C5)
+
+**Blackout > Art > Build Sign Atlas** packs the 19 generated decals into `T_Sign_Atlas_BaseColor.png` (2048 x 512), gives each quad a stable UV region in `SignAtlasQuads.asset`, and assigns one `M_Sign_Atlas` material. It bakes the two repeating hazard stripes into their own regions. Four-pixel edge gutters protect the signs from neighbouring colours when filtered. **Build Sign Decals** runs this step after rebuilding the source signs, so it is safe to repeat. A prefab with a material assigned by hand is left alone.
+
+The original 18 sign PNGs and 19 materials remain as source assets; do not delete them with file commands. The atlas cuts material and bound-texture variety on the placed sign prefabs, while draw calls depend on scene batching. The World Builder owns static flags and scene measurements. Use **Blackout > Art > Model Report** to refresh the measured prefab table in `docs/viva/core-developer.md` after a rebuild.
+
+### 14.9 Still to supply
 
 | What | Where | Status |
 | --- | --- | --- |
