@@ -70,6 +70,15 @@ namespace Blackout.Editor
                 }
             }
 
+            foreach (DecalSpec spec in DecalCatalog.All)
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(spec.Entry.PrefabPath);
+                if (prefab != null)
+                {
+                    AddRow(report, "Sign", spec.Entry.PrefabPath, prefab);
+                }
+            }
+
             string projectRoot = Path.GetDirectoryName(Application.dataPath);
             string fullPath = Path.Combine(projectRoot, ReportPath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));

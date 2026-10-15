@@ -27,6 +27,7 @@ namespace Blackout.Editor
         public static void BuildAll()
         {
             BuildAll(TextureFolder, MaterialFolder, PropCatalog.PropsFolder);
+            SignAtlasBuilder.Build();
             Debug.Log($"[Decals] {DecalCatalog.All.Count} signs are up to date");
         }
 
