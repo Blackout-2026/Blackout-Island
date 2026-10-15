@@ -36,7 +36,10 @@ namespace Blackout.AI.TacticalGuard
 
         public float Evaluate(float inputValue)
         {
-            float input = ClampFinite01(inputValue);
+            if (!IsFinite(inputValue))
+                return 0f;
+
+            float input = Mathf.Clamp01(inputValue);
             switch (responseCurve)
             {
                 case ResponseCurve.Quadratic:
