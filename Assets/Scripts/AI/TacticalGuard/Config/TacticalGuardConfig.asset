@@ -23,7 +23,7 @@ MonoBehaviour:
   coverArriveDistance: 1
   postArriveDistance: 1.2
   repositionArriveDistance: 1.2
-  guardEyeHeight: 1.6
+  guardEyeHeight: 1.95
   playerEyeHeight: 1.6
   coverHeadHeight: 1
   playerChestHeight: 1.2
