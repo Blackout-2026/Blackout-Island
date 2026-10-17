@@ -29,16 +29,17 @@ namespace Blackout.Editor
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Dress Bunker works outside Play mode only.");
 
-            // Parse and check room names before opening or changing any scene.
+            // Parse before opening a scene; opening can unload assets not referenced by that scene.
             List<DressingSpec> specs = DressingLayout.Parse(File.ReadAllText(DressingLayout.DocumentPath));
-            var layout = AssetDatabase.LoadAssetAtPath<BunkerLayout>(BunkerLayoutAssetBuilder.AssetPath);
-            ValidateRooms(specs, layout);
             Scene scene = SceneManager.GetSceneByPath(WorldSceneSkeleton.ScenePath);
             if (!scene.IsValid() || !scene.isLoaded)
             {
                 if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
                 scene = EditorSceneManager.OpenScene(WorldSceneSkeleton.ScenePath, OpenSceneMode.Single);
             }
+
+            var layout = AssetDatabase.LoadAssetAtPath<BunkerLayout>(BunkerLayoutAssetBuilder.AssetPath);
+            ValidateRooms(specs, layout);
 
             GameObject props = WorldSceneSkeleton.FindRoot(scene, "Props");
             if (props == null) throw new InvalidOperationException("Environment needs its Props root; run Create Scene Skeleton first.");
