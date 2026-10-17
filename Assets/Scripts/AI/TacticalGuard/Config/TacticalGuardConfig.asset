@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de2c0089352fcc74a8ce14e4b3ffb79f, type: 3}
+  m_Name: TacticalGuardConfig
+  m_EditorClassIdentifier: Blackout.AI.TacticalGuard::Blackout.AI.TacticalGuard.TacticalGuardConfig
+  attackRange: 36
+  sightRange: 36
+  postRadius: 12
+  repositionLimit: 15
+  repositionLimitAlert: 30
+  coverSearchRadius: 14
+  coverPostRadius: 20
+  coverStandoff: 8
+  coverArriveDistance: 1
+  postArriveDistance: 1.2
+  repositionArriveDistance: 1.2
+  guardEyeHeight: 1.6
+  playerEyeHeight: 1.6
+  coverHeadHeight: 1
+  playerChestHeight: 1.2
+  knowledgeWindow: 10
+  damageWindow: 3
+  threatVisible: 0.4
+  threatRecentDamage: 0.7
+  threatAimedAt: 0.25
+  threatAlert: 0.15
+  aimedDot: 0.97
+  hysteresis: 0.1
+  scanRadius: 6
+  scanHeight: 1.6
+  scanSpeed: 0.5
+  attackWeight: 1
+  moveToCoverWeight: 1
+  repositionWeight: 0.6
+  holdPostWeight: 0.8
+  attackLineOfSight:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0
+  attackProximity:
+    curve: 2
+    steepness: 12
+    midpoint: 0.25
+    floor: 0
+  attackHealth:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0.1
+  coverAvailability:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0
+  coverThreat:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0
+  repositionKnowledge:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0
+  repositionDisengaged:
+    curve: 3
+    steepness: 10
+    midpoint: 0.5
+    floor: 0
+  holdPostPull:
+    curve: 0
+    steepness: 10
+    midpoint: 0.5
+    floor: 0.3
+  holdCalm:
+    curve: 3
+    steepness: 10
+    midpoint: 0.5
+    floor: 0.4
