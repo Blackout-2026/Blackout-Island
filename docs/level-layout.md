@@ -1015,6 +1015,103 @@ Before the PR, check the appearance in the Editor:
 The visual comparison, performance measurement and lighting bake remain manual work. Large fog particles can add
 transparent overdraw. W9 does not add visible alarm beam cones, fixture sparks or wind-sway shaders.
 
+## Bunker dressing table (W10)
+
+`DressingLayout.cs` reads the marked table below; it is the placement source for **Blackout/World/Dress Bunker**.
+Positions are absolute Unity metres, yaw is degrees, and SX/SY/SZ multiply the prefab's authored scale.
+Prefab names resolve only within `Assets/Prefabs/Props`. Missing prefabs are skipped and reported; the optional
+CC0 slots are `Prop_PipeStraight`, `Prop_CableTray`, `Prop_Vent`, `Prop_FireExtinguisher` and `Prop_Flask`.
+The Core Developer supplies those prefabs using their catalog's sizes and pivots. No kit assets are fabricated.
+
+The tool must test actual combined renderer/collider bounds before accepting a placement. It reserves a **1.2 m**
+wide, **2 m** high central walking path through the lobby, security and corridor, then to the generator console
+and the lab chamber approach. Every marker keeps a **0.4 m** radius standing space with 2 m headroom; door sockets
+keep 1.3 m on each horizontal axis for the opening and approach. The barricade keeps its 1.5 m footprint plus
+0.4 m clearance per side. The generator and cure chamber spaces remain reserved for gameplay prefabs.
+These conservative boxes can reject a detailed prop whose mesh would fit; rejection is preferable to blocking play.
+
+The lobby furniture moves south into the W1 lobby. Lab benches move to z 128.8 / 135.3 so the cover markers at
+130.5 / 137 remain free. The second diesel tank moves north to z 112.6, clear of CoverPoint_07 at (-18, 110).
+Crates here are fixed dressing; the Systems Engineer's pushable corridor crate is separate and stays dynamic.
+Floor props use base-centre pivots except crates (centre); signs and vents use wall-face pivots facing local +Z.
+Monitors and lab equipment sit on their listed desk/bench tops. Pipes and trays stay above the standing volumes.
+Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs need separate placement work.
+
+<!-- W10-DRESSING-BEGIN -->
+| Room | Id | Prefab | X | Y | Z | Yaw | SX | SY | SZ |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BunkerEntranceLobby | LobbyDesk | Prop_DeskGuard | -3.8 | 10 | 49.5 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyMonitor | Prop_Monitor | -3.8 | 10.78 | 49.5 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker01 | Prop_Locker | 3.2 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker02 | Prop_Locker | 3.8 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker03 | Prop_Locker | 4.4 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker04 | Prop_Locker | 5 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyExtinguisher | Prop_FireExtinguisher | 5.1 | 10 | 51.5 | 270 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbySign | Prop_Sign_AllPersonnel | -2.7 | 12 | 48.43 | 0 | 1 | 1 | 1 |
+| BunkerEntranceRamp | RampPipe01 | Prop_PipeStraight | 1.1 | 11.8 | 53.5 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityDesk01 | Prop_Desk | 6.6 | 2.5 | 76.6 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityDesk02 | Prop_Desk | 6.6 | 2.5 | 73.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor01 | Prop_Monitor | 6.6 | 3.28 | 76 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor02 | Prop_Monitor | 6.6 | 3.28 | 77.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor03 | Prop_Monitor | 6.6 | 3.28 | 72.6 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor04 | Prop_Monitor | 6.6 | 3.28 | 73.8 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityWallScreen | Prop_WallMonitor | 7.97 | 4.1 | 79.5 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker01 | Prop_Locker | -7.7 | 2.5 | 74 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker02 | Prop_Locker | -7.7 | 2.5 | 74.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker03 | Prop_Locker | -7.7 | 2.5 | 75.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker04 | Prop_Locker | -7.7 | 2.5 | 75.8 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker05 | Prop_Locker | -7.7 | 2.5 | 76.4 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker06 | Prop_Locker | -7.7 | 2.5 | 77 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker07 | Prop_Locker | -7.7 | 2.5 | 77.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker08 | Prop_Locker | -7.7 | 2.5 | 78.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker09 | Prop_Locker | -7.7 | 2.5 | 78.8 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker10 | Prop_Locker | -7.7 | 2.5 | 79.4 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker11 | Prop_Locker | -7.7 | 2.5 | 80 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker12 | Prop_Locker | -7.7 | 2.5 | 80.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityTable | Prop_MeetingTable | -3.2 | 2.5 | 76.7 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityChair01 | Prop_OfficeChair | -3.2 | 2.5 | 75.6 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityChair02 | Prop_OfficeChair | -3.2 | 2.5 | 77.8 | 180 | 1 | 1 | 1 |
+| SecurityArea | SecurityCrate | Prop_CrateSmall | -6 | 3 | 71.5 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecuritySign | Prop_Sign_SecurityCheckpoint | -2.8 | 4.5 | 81.97 | 180 | 1 | 1 | 1 |
+| Corridor | CorridorPipe01 | Prop_PipeStraight | 1.1 | 5.1 | 85 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorPipe02 | Prop_PipeStraight | 1.1 | 5.1 | 87 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorPipe03 | Prop_PipeStraight | 1.1 | 5.1 | 89 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorCable01 | Prop_CableTray | -0.6 | 5.2 | 101 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorCable02 | Prop_CableTray | -0.6 | 5.2 | 103 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorVent | Prop_Vent | -1.47 | 4.9 | 108 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorSign | Prop_Sign_SignLaboratory | 1.47 | 4.3 | 121 | 270 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorTank01 | Prop_FuelTank | -18.6 | 2.5 | 102 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorTank02 | Prop_FuelTank | -18.6 | 2.5 | 112.6 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet01 | Prop_ElectricalCabinet | -18 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet02 | Prop_ElectricalCabinet | -16.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet03 | Prop_ElectricalCabinet | -15 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet04 | Prop_ElectricalCabinet | -13.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet05 | Prop_ElectricalCabinet | -12 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet06 | Prop_ElectricalCabinet | -10.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorSign | Prop_Sign_DangerHighVoltage | -19.87 | 5.2 | 106 | 90 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCrate | Prop_CrateSmall | -3.3 | 3 | 98 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench01 | Prop_LabBench | -6.5 | 2.5 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench02 | Prop_LabBench | 6.5 | 2.5 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench03 | Prop_LabBench | -6.5 | 2.5 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench04 | Prop_LabBench | 6.5 | 2.5 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser01 | Prop_Analyser | -6.9 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser02 | Prop_Analyser | 6.1 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser03 | Prop_Analyser | -6.9 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser04 | Prop_Analyser | 6.1 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope01 | Prop_Microscope | -5.9 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope02 | Prop_Microscope | 7.1 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope03 | Prop_Microscope | -5.9 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope04 | Prop_Microscope | 7.1 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabFridge01 | Prop_SpecimenFridge | 9.5 | 2.5 | 127.5 | 270 | 1 | 1 | 1 |
+| Laboratory | LabFridge02 | Prop_SpecimenFridge | 9.5 | 2.5 | 128.9 | 270 | 1 | 1 | 1 |
+| Laboratory | LabFridge03 | Prop_SpecimenFridge | 9.5 | 2.5 | 130.3 | 270 | 1 | 1 | 1 |
+| Laboratory | LabHood | Prop_FumeHood | -9.4 | 2.5 | 139 | 90 | 1 | 1 | 1 |
+| Laboratory | LabCommanderDesk | Prop_DeskCommander | 6.4 | 2.5 | 141.1 | 180 | 1 | 1 | 1 |
+| Laboratory | LabCommanderMonitor | Prop_Monitor | 6.4 | 3.35 | 141.1 | 180 | 1 | 1 | 1 |
+| Laboratory | LabSign | Prop_Sign_BiohazardLevel4 | -2.8 | 4.5 | 124.03 | 0 | 1 | 1 | 1 |
+| Laboratory | LabFlask01 | Prop_Flask | -7.5 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+<!-- W10-DRESSING-END -->
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
