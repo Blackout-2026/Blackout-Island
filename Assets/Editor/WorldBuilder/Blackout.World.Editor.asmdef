@@ -6,6 +6,7 @@
         "Blackout.World.Layout",
         "Blackout.Environment",
         "Unity.AI.Navigation",
+        "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Editor",
         "Unity.RenderPipelines.Universal.Runtime"
     ],

@@ -2,7 +2,9 @@
     "name": "Blackout.Environment",
     "rootNamespace": "Blackout.Environment",
     "references": [
-        "Blackout.Shared"
+        "Blackout.Shared",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

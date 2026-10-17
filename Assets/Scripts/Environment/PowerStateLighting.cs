@@ -1,6 +1,7 @@
 using System;
 using Blackout.Shared;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Blackout.Environment
 {
@@ -19,8 +20,11 @@ namespace Blackout.Environment
     ///   charge until the event. Environment must be the active scene (playbook trap 7).
     /// - PlayerRespawned puts the power back only while the generator is still on: a respawn undoes a preview from
     ///   the context menu, never the real blackout.
-    /// Blackout/World/Setup Blackout Lighting adds it to the Lighting root and fills every field. Nothing is allocated
-    /// per frame. W9 can read <see cref="Blend"/> to blend the post-processing volumes.
+    /// - Post-processing (W9): the global Volume with the Blackout profile takes <see cref="Blend"/> as its weight. It
+    ///   sits one priority above the Powered volume (weight 1), so the camera sees the Powered look blended toward the
+    ///   Blackout look by the same amount as the fog and ambient.
+    /// Blackout/World/Setup Blackout Lighting adds it to the Lighting root and fills every field; Blackout/World/Setup
+    /// Post Processing sets the volume. Nothing is allocated per frame.
     /// Owner: World Builder.
     /// </summary>
     [DisallowMultipleComponent]
@@ -79,6 +83,10 @@ namespace Blackout.Environment
         [Tooltip("The lobby and ramp: the look blends in from the south end (min z) to the north end (max z).")]
         [SerializeField] private Bounds entrance;
 
+        [Header("Post-processing (W9)")]
+        [Tooltip("The global Volume with the Blackout profile. Its weight follows Blend, from 0 (powered) to 1.")]
+        [SerializeField] private Volume blackoutVolume;
+
         private FixtureState[] powered;
         private FixtureState[] emergency;
         private FixtureState[] alarms;
@@ -131,6 +139,12 @@ namespace Blackout.Environment
             cascadeOrigin = newCascadeOrigin;
             bunker = newBunker;
             entrance = newEntrance;
+        }
+
+        /// <summary>Sets the Blackout post-processing volume. Used by the Editor tool that builds the volumes (W9).</summary>
+        public void SetVolume(Volume newBlackoutVolume)
+        {
+            blackoutVolume = newBlackoutVolume;
         }
 
         /// <summary>
@@ -202,6 +216,10 @@ namespace Blackout.Environment
             emergencyOnLinear = profile.emergencyLampEmission.linear;
             domeOnLinear = profile.alarmDomeEmission.linear;
             SwitchOffBlackoutLights();
+            if (blackoutVolume != null)
+            {
+                blackoutVolume.weight = 0f; // powered until the event, whatever the scene was saved with
+            }
         }
 
         private void OnEnable()
@@ -489,6 +507,11 @@ namespace Blackout.Environment
                 {
                     probe.intensity = state.reflectionIntensity;
                 }
+            }
+
+            if (blackoutVolume != null)
+            {
+                blackoutVolume.weight = blend;
             }
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Blackout.Shared;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.TestTools;
 using Fixture = Blackout.Environment.PowerStateLighting.Fixture;
 using State = Blackout.Environment.LightingStateProfile.State;
@@ -11,8 +12,9 @@ namespace Blackout.Environment.PlayTests
 {
     /// <summary>
     /// Plays the real component in a small test scene: three powered fixtures at 5, 25 and 50 m from the cascade origin
-    /// (the nearest one a faulty tube), one emergency light, one alarm beacon and a moon. The events are raised on
-    /// test-only channel assets, as the generator and the respawn code would raise the real ones.
+    /// (the nearest one a faulty tube), one emergency light, one alarm beacon, a moon and the Blackout post-processing
+    /// volume. The events are raised on test-only channel assets, as the generator and the respawn code would raise the
+    /// real ones.
     /// </summary>
     public class PowerStateLightingPlayTests
     {
@@ -33,6 +35,7 @@ namespace Blackout.Environment.PlayTests
         private Light alarm;
         private Quaternion alarmAim;
         private Light moon;
+        private Volume blackoutVolume;
 
         [SetUp]
         public void SetUp()
@@ -72,10 +75,18 @@ namespace Blackout.Environment.PlayTests
             alarm.transform.rotation = alarmAim;
             moon = AddLight(root, "Moon", LightType.Directional, Vector3.zero, 0.9f);
 
+            // Saved half on, to show the component starts it at 0 (powered) whatever the scene holds.
+            var volumeObject = new GameObject("BlackoutVolume");
+            volumeObject.transform.SetParent(root.transform, false);
+            blackoutVolume = volumeObject.AddComponent<Volume>();
+            blackoutVolume.isGlobal = true;
+            blackoutVolume.weight = 0.5f;
+
             lighting = root.AddComponent<PowerStateLighting>();
             lighting.Configure(profile, generatorDisabled, playerRespawned);
             lighting.SetLights(fixtures, new[] { new Fixture { light = emergency } }, new[] { new Fixture { light = alarm } },
                 moon, new ReflectionProbe[0]);
+            lighting.SetVolume(blackoutVolume);
 
             // Everywhere counts as inside the bunker, wherever the test runner's camera is.
             lighting.SetArea(new Vector3(0f, 3f, 0f), new Bounds(Vector3.zero, Vector3.one * 10000f), new Bounds());
@@ -97,6 +108,7 @@ namespace Blackout.Environment.PlayTests
         public IEnumerator GeneratorDisabled_KillsTheFixturesOutwardThenFadesInTheEmergencyLights()
         {
             Assert.That(emergency.enabled || alarm.enabled, Is.False, "the blackout lights wait for the event");
+            Assert.That(blackoutVolume.weight, Is.EqualTo(0f), "the Powered look until the event");
 
             float start = Time.time;
             generatorDisabled.Raise();
@@ -141,6 +153,24 @@ namespace Blackout.Environment.PlayTests
             Assert.That(lighting.Blend, Is.EqualTo(1f));
             Assert.That(RenderSettings.fogDensity, Is.EqualTo(0.05f).Within(1e-5f));
             Assert.That(moon.intensity, Is.EqualTo(0f));
+            Assert.That(blackoutVolume.weight, Is.EqualTo(1f), "the Blackout look in full");
+        }
+
+        [UnityTest]
+        public IEnumerator GeneratorDisabled_BlendsTheBlackoutVolumeWithTheFog()
+        {
+            float start = Time.time;
+            generatorDisabled.Raise();
+            bool sawHalfway = false;
+            while (Time.time - start < profile.transitionSeconds + 0.2f)
+            {
+                yield return null;
+                Assert.That(blackoutVolume.weight, Is.EqualTo(lighting.Blend), "one blend for the fog and the volume");
+                sawHalfway |= blackoutVolume.weight > 0.2f && blackoutVolume.weight < 0.8f;
+            }
+
+            Assert.That(sawHalfway, Is.True, "the weight moves smoothly, it does not jump");
+            Assert.That(blackoutVolume.weight, Is.EqualTo(1f));
         }
 
         [UnityTest]
@@ -182,6 +212,7 @@ namespace Blackout.Environment.PlayTests
             Assert.That(lighting.Blend, Is.EqualTo(0f));
             Assert.That(RenderSettings.fogDensity, Is.EqualTo(0.0135f).Within(1e-5f));
             Assert.That(moon.intensity, Is.EqualTo(0.9f).Within(1e-5f));
+            Assert.That(blackoutVolume.weight, Is.EqualTo(0f), "back to the Powered look");
         }
 
         [UnityTest]
