@@ -25,13 +25,17 @@ namespace Blackout.AI.TacticalGuard
 
         [Range(0f, 1f)] public float midpoint = 0.5f;
 
+        [Tooltip("Lowest utility this consideration returns. The curve is rescaled into floor..1, so a zero input weakens an action instead of cancelling it.")]
+        [Range(0f, 1f)] public float floor;
+
         public Consideration() { }
 
-        public Consideration(ResponseCurve responseCurve, float steepness = 10f, float midpoint = 0.5f)
+        public Consideration(ResponseCurve responseCurve, float steepness = 10f, float midpoint = 0.5f, float floor = 0f)
         {
             this.responseCurve = responseCurve;
             this.steepness = steepness;
             this.midpoint = midpoint;
+            this.floor = floor;
         }
 
         public float Evaluate(float inputValue)
@@ -39,7 +43,14 @@ namespace Blackout.AI.TacticalGuard
             if (!IsFinite(inputValue))
                 return 0f;
 
-            float input = Mathf.Clamp01(inputValue);
+            float lowest = ClampFinite01(floor);
+            return lowest + (1f - lowest) * EvaluateCurve(Mathf.Clamp01(inputValue));
+        }
+
+        public float Evaluate() => Evaluate(inputValue);
+
+        private float EvaluateCurve(float input)
+        {
             switch (responseCurve)
             {
                 case ResponseCurve.Quadratic:
@@ -52,8 +63,6 @@ namespace Blackout.AI.TacticalGuard
                     return input;
             }
         }
-
-        public float Evaluate() => Evaluate(inputValue);
 
         private float EvaluateLogistic(float input)
         {
