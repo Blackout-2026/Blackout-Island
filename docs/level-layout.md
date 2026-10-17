@@ -9,7 +9,8 @@ materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.c
 `VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`, the lighting in `LightingLayout.cs`,
 `LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`, the blackout in `BlackoutLightLayout.cs`,
 and the post-processing and particles in `PostProcessLayout.cs` and `AtmosphereLayout.cs`.
-If you change a number here, change it there too.
+Keep those numbers in sync with their code. The exception is the marked W10 dressing table below:
+`DressingLayout.cs` reads that table directly; `BunkerDresser.cs` places its props.
 
 ## Conventions
 
@@ -159,7 +160,7 @@ waypoints by id.
 | CureSocket | (0, 2.5, 135) | 180 | Floor level, at the centre of the containment chamber; the opening faces D-Lab |
 | HealthPickup_Security | (6.5, 2.5, 80.5) | 0 | |
 | HealthPickup_Corridor | (0.9, 2.5, 119) | 0 | x 1.2 → 0.9 (corridor pillars) |
-| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | Catwalk deck height. Out of reach until the catwalk is built (W10) |
+| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | Catwalk deck height. Still out of reach: W10's dressing does not build a catwalk |
 | BoatExit | (0, 1.3, −124) | 0 | Centre of the 6 m exit zone |
 | DoorSocket_D-Bunker | (0, 10, 48.2) | 0 | Gap 1.4 × 2.3 m. Sliding, unlocked |
 | DoorSocket_D-Security | (0, 2.5, 82.2) | 0 | Sliding, unlocked |
@@ -328,7 +329,8 @@ add about 290 KB to `Environment.unity`. A re-run leaves the scene byte-identica
 65 of 65.
 
 **Not covered yet:** the dock, boat and water keep their greybox materials. The terrain uses Sand, Grass,
-ForestFloor and Rock through terrain layers (W6, next section), and Rust, Glass and Fabric are for props in W10.
+ForestFloor and Rock through terrain layers (W6, next section). Rust, Glass and Fabric remain available for future
+environment props; W10's linked props retain the Core Developer's own materials.
 
 **Known issues**
 - A roughness map larger than 1024 (or 2048 for `_Hero`) is shrunk by bilinear sampling, which can alias. Download
@@ -400,7 +402,7 @@ moves 4 pines and 4 palms: on exact values the prototype's own code also gives 4
 - **Terrain settings:** trees are drawn to 150 m and details to 60 m. The outdoor fog leaves 1.7 % of a tree visible at
   150 m and 52 % of a grass tuft at 60 m, where a 0.75 m tuft is under 10 pixels tall at 1080p. Detail density 1, scaled
   by the quality level.
-- **Not placed:** the prototype's 12 fallen logs (props, W10).
+- **Not placed:** the prototype's 12 fallen logs; W10 covers bunker rooms only.
 
 **Prefabs.** `VegetationLibrary` uses `Assets/Environment/Vegetation/<Name>.prefab` (Pine, Palm, Rock, RockSmall,
 Bush, Grass) if it exists, else the generated `Placeholder/<Name>_Placeholder.prefab`. The placeholders port the
@@ -630,6 +632,9 @@ Setup Lighting sets the flags on every renderer under these objects, and on the 
 | `Beach/Water` | Occludee and Batching static only | A 520 m see-through plane. As an occluder it would hide the sea bed and the hull under it, and in the lightmap it would take a large area for nothing |
 | `Beach/Boat` | none | It bobs, so it is dynamic and takes its light from the dock's light probes |
 | Lamp meshes | none | W8 changes their emission at run time |
+| Fixed opaque parts under `Props/BunkerDressing` | Same as `Bunker/*` | Dress Bunker sets these flags on scene instances, preserving the source prefabs |
+| Transparent dressing parts | Occludee and Batching only | They neither occlude rooms nor consume lightmap space |
+| Emissive dressing parts, including monitor screens and LEDs | none | They remain outside static batching and lightmaps; monitor emission changes at the blackout |
 
 Everything else (markers, the NavMesh, the boundary and the `Lighting` objects) is left as it is. Occlusion culling is
 not baked yet, but the flags are ready for it. The terrain's Scale In Lightmap is 0.064, so it gets 0.64 texels per
@@ -766,7 +771,7 @@ run Setup Blackout Lighting again whenever Setup Lighting adds or removes one.
 | Seconds after the event | What happens | Profile setting |
 | --- | --- | --- |
 | 0 … 1.5 | The 31 powered fixtures die outward from the generator. Each strobes for 0.3 s (every 1/30 s step at 1.4 × or 0.05 ×, half and half), then its light is disabled and its lamp stops glowing. A fixture d metres from the origin goes out at 0.3 + 1.08 × d / d<sub>max</sub> s, plus up to 0.12 s of jitter, so the farthest one (the top ramp tube, 53 m away) is out by 1.5 s | cascadeSeconds 1.5, strobeSeconds 0.3, jitterSeconds 0.12, strobeHigh 1.4, strobeLow 0.05 |
-| 0 … 0.4 | Screens fade out. There are none yet: W10 adds the monitors to the component's `screens` list | screenFadeSeconds 0.4 |
+| 0 … 0.4 | Seven W10 monitor screens fade out through the component's `screens` list | screenFadeSeconds 0.4 |
 | 0 … 2 | Fog, ambient, the moon and the bunker's reflection probes move to the blackout state on an S-curve | transitionSeconds 2 |
 | 1.5 … 2 | Darkness. Only the outdoor lights are on | — |
 | 2 … 3.2 | The emergency lights and alarm beacons fade in. Then the emergency lights pulse at 0.75 + 0.25 sin(3.2 t), the beacons turn at 206.3° per second (3.6 rad/s), and their domes pulse at 2.5 ± 0.8 | emergencyDelaySeconds 2, emergencyFadeSeconds 1.2, emergencyPulseDepth 0.25, emergencyPulseSpeed 3.2, alarmDegreesPerSecond 206.3, alarmDomePulseDepth 0.32, alarmDomePulseSpeed 7.2 |
@@ -873,14 +878,15 @@ beacon is `<Room>_AlarmNN`: a spot light with a `_Dome` sphere. All 17 are **Rea
   reflection probes, and the ambient change barely reaches lightmapped surfaces. If the glow shows after the bake,
   either:
   - set the bunker fixtures' Indirect Multiplier to 0 in Setup Lighting (no bounce from them at all), or
-  - bake a second "blackout" set and swap the lightmaps and light probes at the event (W10, final bake).
+  - add a second "blackout" bake and swap the lightmaps and light probes at the event (future work; W10 does not implement this).
 - **No visible beams or sparks.** The prototype's alarm beam cones, light shafts and sparks remain deferred after W9;
   W9 adds steam, dust, beach fog and optional rain. The generator's own sparks, hum and core glow belong to its prefab (Systems
   Engineer and Core Developer), which listens to the same channel.
 - **The emergency lights leak a little.** They cast no shadows, so within their 9 m range they tint the next room red
   through the wall.
-- **No screens yet.** W10's monitors go in the component's `screens` list, and their materials must use
-  `_EmissionColor`.
+- **Screens (W10).** Dress Bunker assigns seven monitor screen renderers to `screens`, retaining manual assignments.
+  Their materials use `_EmissionColor`; their static flags are clear. The other emissive dressing parts are not
+  added to this list, so specimen fridge glow and cabinet LEDs keep their authored emission.
 - **The camera needs its tag.** The player's camera must be tagged MainCamera, or the blackout shows outdoors too.
 - **The tests use the default timings.** Timings tuned on the asset are not tested.
 - **Powered fog is W7's.** The powered bunker keeps W7's one fog value (0.0135), not the reference's 0.022.
@@ -909,7 +915,8 @@ The particle tool also writes the 64 × 64 soft disc `Assets/Environment/Atmosph
 materials in `Assets/Materials/Environment/Atmosphere`: `Atmosphere_Steam`, `Atmosphere_Dust`, `Atmosphere_Fog` and
 `Atmosphere_Rain`. Dust uses URP Particles/Simple Lit; the other three use Particles/Unlit. Steam and fog use soft
 particles with depth fade distances 1 / 2 m; fog also fades near the camera over 1–4 m. The PC URP asset supplies
-the depth texture. No external image or audio is required for these effects; the vent housings remain W10 props.
+the depth texture. No external image or audio is required for these effects. Outdoor vent housings remain deferred;
+the W10 corridor grille slot is separate and its prefab is currently missing.
 
 Change numbers in **PostProcessLayout.cs** and **AtmosphereLayout.cs**, then rerun their tools. The tools overwrite
 their authored settings and particle materials. A particle rebuild saves rain inactive again. Keep generated `.meta`
@@ -1015,6 +1022,206 @@ Before the PR, check the appearance in the Editor:
 The visual comparison, performance measurement and lighting bake remain manual work. Large fog particles can add
 transparent overdraw. W9 does not add visible alarm beam cones, fixture sparks or wind-sway shaders.
 
+## Bunker dressing table (W10)
+
+`DressingLayout.cs` reads the marked table below; it is the placement source for **Blackout/World/Dress Bunker**.
+Positions are absolute Unity metres, yaw is degrees, and SX/SY/SZ multiply the prefab's authored scale.
+Prefab names resolve only within `Assets/Prefabs/Props`. Missing prefabs are skipped and reported; the optional
+CC0 slots are `Prop_PipeStraight`, `Prop_CableTray`, `Prop_Vent`, `Prop_FireExtinguisher` and `Prop_Flask`.
+The Core Developer supplies those prefabs using their catalog's sizes and pivots. No kit assets are fabricated.
+
+The tool tests actual combined renderer/collider bounds before accepting a placement. It reserves a **1.2 m**
+wide, **2 m** high central walking path through the lobby, ramp, security and corridor, then to the generator console
+and the lab chamber approach. Every marker keeps a **0.4 m** radius standing space with 2 m headroom; door sockets
+keep 1.3 m on each horizontal axis for the opening and approach. The barricade keeps its 1.5 m footprint plus
+0.4 m clearance per side. The generator and cure chamber spaces remain reserved for gameplay prefabs.
+These conservative boxes can reject a detailed prop whose mesh would fit; rejection is preferable to blocking play.
+
+The lobby furniture moves south into the W1 lobby. Lab benches move to z 128.8 / 135.3 so the cover markers at
+130.5 / 137 remain free. The second diesel tank moves north to z 112.6, clear of CoverPoint_07 at (-18, 110).
+Crates here are fixed dressing; the Systems Engineer's pushable corridor crate is separate and stays dynamic.
+The 4.6 m security sign is centred at x -3.8, one metre west of the initial draft, to clear the central route.
+Floor props use base-centre pivots except crates (centre); signs and vents use wall-face pivots facing local +Z.
+Monitors and lab equipment sit on their listed desk/bench tops. Pipes and trays stay above the standing volumes.
+Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs need separate placement work.
+
+<!-- W10-DRESSING-BEGIN -->
+| Room | Id | Prefab | X | Y | Z | Yaw | SX | SY | SZ |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BunkerEntranceLobby | LobbyDesk | Prop_DeskGuard | -3.8 | 10 | 49.5 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyMonitor | Prop_Monitor | -3.8 | 10.78 | 49.5 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker01 | Prop_Locker | 3.2 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker02 | Prop_Locker | 3.8 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker03 | Prop_Locker | 4.4 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyLocker04 | Prop_Locker | 5 | 10 | 49.1 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyExtinguisher | Prop_FireExtinguisher | 5.1 | 10 | 51.5 | 270 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbySign | Prop_Sign_AllPersonnel | -2.7 | 12 | 48.43 | 0 | 1 | 1 | 1 |
+| BunkerEntranceRamp | RampPipe01 | Prop_PipeStraight | 1.1 | 11.8 | 53.5 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityDesk01 | Prop_Desk | 6.6 | 2.5 | 76.6 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityDesk02 | Prop_Desk | 6.6 | 2.5 | 73.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor01 | Prop_Monitor | 6.6 | 3.28 | 76 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor02 | Prop_Monitor | 6.6 | 3.28 | 77.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor03 | Prop_Monitor | 6.6 | 3.28 | 72.6 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityMonitor04 | Prop_Monitor | 6.6 | 3.28 | 73.8 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityWallScreen | Prop_WallMonitor | 7.97 | 4.1 | 79.5 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker01 | Prop_Locker | -7.7 | 2.5 | 74 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker02 | Prop_Locker | -7.7 | 2.5 | 74.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker03 | Prop_Locker | -7.7 | 2.5 | 75.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker04 | Prop_Locker | -7.7 | 2.5 | 75.8 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker05 | Prop_Locker | -7.7 | 2.5 | 76.4 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker06 | Prop_Locker | -7.7 | 2.5 | 77 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker07 | Prop_Locker | -7.7 | 2.5 | 77.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker08 | Prop_Locker | -7.7 | 2.5 | 78.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker09 | Prop_Locker | -7.7 | 2.5 | 78.8 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker10 | Prop_Locker | -7.7 | 2.5 | 79.4 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker11 | Prop_Locker | -7.7 | 2.5 | 80 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityLocker12 | Prop_Locker | -7.7 | 2.5 | 80.6 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityTable | Prop_MeetingTable | -3.2 | 2.5 | 76.7 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityChair01 | Prop_OfficeChair | -3.2 | 2.5 | 75.6 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecurityChair02 | Prop_OfficeChair | -3.2 | 2.5 | 77.8 | 180 | 1 | 1 | 1 |
+| SecurityArea | SecurityCrate | Prop_CrateSmall | -6 | 3 | 71.5 | 0 | 1 | 1 | 1 |
+| SecurityArea | SecuritySign | Prop_Sign_SecurityCheckpoint | -3.8 | 4.5 | 81.97 | 180 | 1 | 1 | 1 |
+| Corridor | CorridorPipe01 | Prop_PipeStraight | 1.1 | 5.1 | 85 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorPipe02 | Prop_PipeStraight | 1.1 | 5.1 | 87 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorPipe03 | Prop_PipeStraight | 1.1 | 5.1 | 89 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorCable01 | Prop_CableTray | -0.6 | 5.2 | 101 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorCable02 | Prop_CableTray | -0.6 | 5.2 | 103 | 0 | 1 | 1 | 1 |
+| Corridor | CorridorVent | Prop_Vent | -1.47 | 4.9 | 108 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorSign | Prop_Sign_SignLaboratory | 1.47 | 4.3 | 121 | 270 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorTank01 | Prop_FuelTank | -18.6 | 2.5 | 102 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorTank02 | Prop_FuelTank | -18.6 | 2.5 | 112.6 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet01 | Prop_ElectricalCabinet | -18 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet02 | Prop_ElectricalCabinet | -16.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet03 | Prop_ElectricalCabinet | -15 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet04 | Prop_ElectricalCabinet | -13.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet05 | Prop_ElectricalCabinet | -12 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCabinet06 | Prop_ElectricalCabinet | -10.5 | 2.5 | 96.5 | 0 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorSign | Prop_Sign_DangerHighVoltage | -19.87 | 5.2 | 106 | 90 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorCrate | Prop_CrateSmall | -3.3 | 3 | 98 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench01 | Prop_LabBench | -6.5 | 2.5 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench02 | Prop_LabBench | 6.5 | 2.5 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench03 | Prop_LabBench | -6.5 | 2.5 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabBench04 | Prop_LabBench | 6.5 | 2.5 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser01 | Prop_Analyser | -6.9 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser02 | Prop_Analyser | 6.1 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser03 | Prop_Analyser | -6.9 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabAnalyser04 | Prop_Analyser | 6.1 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope01 | Prop_Microscope | -5.9 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope02 | Prop_Microscope | 7.1 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope03 | Prop_Microscope | -5.9 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabMicroscope04 | Prop_Microscope | 7.1 | 3.43 | 135.3 | 0 | 1 | 1 | 1 |
+| Laboratory | LabFridge01 | Prop_SpecimenFridge | 9.5 | 2.5 | 127.5 | 270 | 1 | 1 | 1 |
+| Laboratory | LabFridge02 | Prop_SpecimenFridge | 9.5 | 2.5 | 128.9 | 270 | 1 | 1 | 1 |
+| Laboratory | LabFridge03 | Prop_SpecimenFridge | 9.5 | 2.5 | 130.3 | 270 | 1 | 1 | 1 |
+| Laboratory | LabHood | Prop_FumeHood | -9.4 | 2.5 | 139 | 90 | 1 | 1 | 1 |
+| Laboratory | LabCommanderDesk | Prop_DeskCommander | 6.4 | 2.5 | 141.1 | 180 | 1 | 1 | 1 |
+| Laboratory | LabCommanderMonitor | Prop_Monitor | 6.4 | 3.35 | 141.1 | 180 | 1 | 1 | 1 |
+| Laboratory | LabSign | Prop_Sign_BiohazardLevel4 | -2.8 | 4.5 | 124.03 | 0 | 1 | 1 | 1 |
+| Laboratory | LabFlask01 | Prop_Flask | -7.5 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+<!-- W10-DRESSING-END -->
+
+### Rebuilding and preserving hand edits
+
+Open **Environment** outside Play mode and run these menus in order:
+
+1. **Blackout/World/Dress Bunker** (`Blackout.Editor.BunkerDresser.DressBunker`).
+2. **Blackout/World/Bake NavMesh** (`Blackout.Editor.NavMeshBaker.BakeNavMesh`).
+3. **Blackout/World/Validate Layout** (`Blackout.Editor.LayoutValidator.ValidateLayout`).
+
+Dress Bunker saves only `Assets/Scenes/Environment.unity`. It creates linked prefab instances under
+`Props/BunkerDressing/<Room>/<Room>_<Id>` and checks each candidate in a temporary preview scene first.
+Positions and bounds use world metres; the organisational containers need unit world scale and no rotation.
+There is no random placement or seed: table order, transforms and existing prefab links determine the result.
+The layout asset is loaded after opening Environment, because opening a scene can unload unreferenced assets.
+
+Rerunning reuses matching instances and overwrites their table position, yaw, scale and authored static flags.
+Hand-added children survive and are included in the next bounds check. An object with a different prefab source
+or an unsafe envelope is left unchanged with a warning. Removed table rows also remain with a warning; remove
+unwanted scene instances through the Editor's Hierarchy after reviewing their hand additions. If a row changes
+prefab type, replace its old instance through the Editor before rerunning. No existing scene object or asset is
+automatically deleted. The tool does not change source prefabs, materials, shared contracts or another owner's scene.
+
+The bounds check also rejects props outside their room footprint or intersecting its floor/ceiling (2 cm tolerance).
+Prefabs containing a Rigidbody, Animator, Animation, script, Particle System, Light or skinned mesh are rejected
+as fixed dressing. Unsupported collider shapes require manual review. These checks reserve authored routes;
+they do not guarantee a 1.2 m aisle between every pair of furniture pieces or account for another scene's closed doors.
+
+### Saved output and missing kit pieces
+
+The current scene contains **61 linked instances** from 70 rows. Existing art and its materials are reused;
+no new art placeholders were needed. Nine rows are skipped because these exact prefab paths are absent:
+
+| Missing prefab under `Assets/Prefabs/Props/` | Placements | Purpose |
+| --- | --- | --- |
+| `Prop_FireExtinguisher.prefab` | 1 | Lobby extinguisher |
+| `Prop_PipeStraight.prefab` | 4 | One ramp and three corridor pipe sections |
+| `Prop_CableTray.prefab` | 2 | Corridor cable runs |
+| `Prop_Vent.prefab` | 1 | Corridor grille |
+| `Prop_Flask.prefab` | 1 | Lab bench glassware |
+
+**Handoff to Core Developer:** please supply those five prefabs using `PropCatalog` sizes, pivots and local +Z
+fronts; then World Builder can rerun the three menus. Do not replace or edit the current prop assets for this step.
+
+| Room | Placed | Missing |
+| --- | --- | --- |
+| Lobby | 7 | 1 |
+| Ramp | 0 | 1 |
+| Security | 24 | 0 |
+| Corridor | 1 | 6 |
+| Generator | 10 | 0 |
+| Laboratory | 19 | 1 |
+
+### Objects that must stay dynamic
+
+Keep **all static flags clear** on moving or collectible objects and their affected children:
+
+| Objects | Reason / owner |
+| --- | --- |
+| Door leaves and moving children | Doors open and close; Systems Engineer owns their prefabs and Interactables scene. Fixed bunker frames can remain static |
+| Pushable barricade crate and its visual children | Physics moves it; Systems Engineer. This is separate from W10's two fixed dressing crates |
+| Cure and health pickup roots and collectible visuals | They are collected, hidden or respawned; Systems Engineer. Keep their marker spaces free |
+| Boat; player, agents and animated model parts | Boat bobs; player and agents move. Their owners configure those prefabs |
+| Monitor screens, emissive dressing surfaces and lamp meshes | Emission can change at runtime. W10 keeps emissive dressing dynamic; seven monitor renderers join PowerStateLighting |
+| Particle effects and other moving effects | Native particle systems animate them; W10 rejects such prefabs as fixed dressing |
+
+Only Environment's fixed dressing flags are authored here. Door, barricade, pickup, player and agent assets were
+not edited or validated by the saved-scene tests. Their owners must retain dynamic flags and closed-door navigation
+blocking. The catwalk, its stairs, outdoor dressing and the generator plinth remain deferred; the catwalk health
+marker is still unreachable. A future catwalk build must keep agents off its stairs as specified in the reference.
+
+### Verification and final lighting bake
+
+Verified with Unity **6000.3.25f1** during this W10 session:
+
+- Dress Bunker ran twice: **61/70** accepted each time, nine missing-prefab warnings, both exits **0**.
+  The scene was **byte-identical** on repeat. Its text contains 61 generated instance names and seven screen references.
+- Bake NavMesh exited **0**: **149 colliders**, **604** tree/rock capsules, **8,297 triangles**, **154,106 m²** walkable.
+  `Assets/Environment/NavMesh/EnvironmentNavMesh.asset` is 993,768 bytes; its GUID and the scene's GUID are unchanged.
+- Validate Layout exited **0**, **PASS 66/66**: complete mission/escape paths, four 1.40 m door gaps, all tested
+  spawns/waypoints/cover points within 1 m of the NavMesh, and none of 494 pine/palm trunks on it.
+- Focused EditMode tests: **43/43 passed**, exit **0** (DressingLayoutTests, BunkerDresserTests, SavedDressingTests
+  and StaticFlagRulesTests). Saved-scene checks use a preview scene; scene and NavMesh hashes remained unchanged.
+  No C# compiler errors or warnings were reported in the successful runs.
+- Logs and XML are outside the repo: `%TEMP%/blackout-w10-commit3-{dress,dress-repeat,navmesh,layout}.log`
+  and `%TEMP%/blackout-w10-commit4-tests.log` / `-tests.xml`. Early sandbox runs lacked a license; approved runs
+  used the existing activation. The earlier commit-1 test run logged a Unity Pipeline shutdown error despite passing.
+
+**NavMesh baking is complete. Lightmaps, reflection-probe baking and occlusion culling remain unbaked.**
+Saved lighting settings were checked: Baked Indirect, baked GI on, realtime GI off, 10 texels/m, 1024 maps.
+This verifies configuration, not a completed bake. No visual comparison or performance measurement was performed.
+Use the W7 bake settings above when completing the manual Editor bake; baked powered bounce will remain after blackout.
+
+**Handoff to the team:** please add `Assets/Scenes/Environment/` to World Builder ownership in the playbook before
+the default-location lighting bake is saved or committed. It is Unity's documented output folder for this scene,
+but it is outside the currently listed owned paths. This step did not generate files there or change the playbook.
+
+Before the PR, open Environment and inspect furniture and signs against `prototype/screenshots/`. Then play through
+Bootstrap, walk both the inward and escape routes, check door approaches and cover positions, and trigger the blackout
+from PowerStateLighting's context menu. Seven monitor emissions should fade over 0.4 s and return on Reset To Powered.
+Inspect static flags on fixed furniture and clear flags on screens. Check the Console for new errors and run
+Validate Layout again after any manual collider or prop changes. Complete the lighting bake and its W7 visual checks
+only after the ownership handoff is resolved; save and review every generated asset together with its metadata.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1042,7 +1249,7 @@ transparent overdraw. W9 does not add visible alarm beam cones, fixture sparks o
 | Tree trunks and boulders are solid (W6) | Their capsule colliders (through the TerrainCollider) stop the player and block raycasts: bullets and the Hunter's line of sight. Bushes and grass have no collider, as in the prototype | Systems Engineer (player, weapons, Hunter sight) |
 | Trail and gravel are mixes of 4 layers (W6) | The prototype's dirt and gravel colours are blends of Sand, ForestFloor and Rock, which keeps URP Terrain Lit at one pass | — |
 | 461 pines and 69 palms before clearings, not 465 and 65 (W6) | Exact heights instead of the prototype's 2 m grid; the same seeded rules | — |
-| No fallen logs, wet sand or wind sway yet (W6) | Logs come with the props (W10). Wet sand would be a fifth layer. Wind needs a foliage shader | World Builder (later steps) |
+| No fallen logs, wet sand or wind sway yet (W6) | Outdoor logs remain deferred after W10. Wet sand would be a fifth layer. Wind needs a foliage shader | World Builder (later steps) |
 | Reference light colours used as linear values (W7) | The Inspector shows other hex values than the reference (fog #0B1220 shows as #3B4B63), but surfaces receive the prototype's light. Convert a reference light colour the same way (`LightingLayout.FromLinearHex`) | Systems Engineer and Core Developer, for information (lights on their prefabs, for example the generator core or the health kits) |
 | Light intensities converted (W7) | Unity's inverse-square falloff needs 3 to 14 times the reference's intensity in the bunker (corridor tube 1.35 → 4.7, high-bay 3.0 → 43.3) and about 250 times for the floodlights | Systems Engineer and Core Developer, for information: convert lights copied from the reference with the same rule (`LightingLayout.MatchIntensity`) |
 | Fixtures under the 3.0 m Unity ceilings (W7) | Lights are 2.65 m over the floor (lab 2.70 m, generator 5.55 m). The ramp's 4 tubes sit in the middle of each quarter of the 17.2 m ramp, and the wall pack is 2.8 m over the yard, not 3.9 m | — |
@@ -1058,7 +1265,9 @@ transparent overdraw. W9 does not add visible alarm beam cones, fixture sparks o
 | No alarm beam cones, light shafts or sparks yet (W8) | The beacons light the walls but show no visible beam; W9's particles cover steam, dust, beach fog and optional rain | World Builder (later work) |
 | Separate Blackout post-processing profile (W9) | The prototype keeps one look; Unity adds contrast +10, vignette 0.27 and grain 0.2 inside the bunker | — |
 | URP post-processing enabled at runtime (W9) | QualityPreset configures MainCamera, including a camera loaded later; Low disables post-processing and FXAA | Systems Engineer (Player.prefab): add Universal Additional Camera Data, Post Processing on, FXAA |
-| Corridor dust, beach fog and optional rain (W9) | New native particle systems with fixed seeds; vent steam follows the prototype, rain remains inactive | World Builder (W10: vent housings) |
+| Corridor dust, beach fog and optional rain (W9) | New native particle systems with fixed seeds; vent steam follows the prototype, rain remains inactive. Outdoor vent housings remain deferred | World Builder (later work) |
+| Shifted benches, tank and security sign (W10) | Benches at z 128.8/135.3, second tank at z 112.6 and security sign x -3.8 leave standing markers and routes free | Agent Controller, for information; markers unchanged |
+| Nine optional dressing placements missing (W10) | Pipes, cable trays, grille, extinguisher and flask skip until their five prefabs are supplied | Core Developer (Assets/Prefabs/Props) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
