@@ -1033,6 +1033,7 @@ These conservative boxes can reject a detailed prop whose mesh would fit; reject
 The lobby furniture moves south into the W1 lobby. Lab benches move to z 128.8 / 135.3 so the cover markers at
 130.5 / 137 remain free. The second diesel tank moves north to z 112.6, clear of CoverPoint_07 at (-18, 110).
 Crates here are fixed dressing; the Systems Engineer's pushable corridor crate is separate and stays dynamic.
+The 4.6 m security sign is centred at x -3.8, one metre west of the initial draft, to clear the central route.
 Floor props use base-centre pivots except crates (centre); signs and vents use wall-face pivots facing local +Z.
 Monitors and lab equipment sit on their listed desk/bench tops. Pipes and trays stay above the standing volumes.
 Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs need separate placement work.
@@ -1072,7 +1073,7 @@ Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs
 | SecurityArea | SecurityChair01 | Prop_OfficeChair | -3.2 | 2.5 | 75.6 | 0 | 1 | 1 | 1 |
 | SecurityArea | SecurityChair02 | Prop_OfficeChair | -3.2 | 2.5 | 77.8 | 180 | 1 | 1 | 1 |
 | SecurityArea | SecurityCrate | Prop_CrateSmall | -6 | 3 | 71.5 | 0 | 1 | 1 | 1 |
-| SecurityArea | SecuritySign | Prop_Sign_SecurityCheckpoint | -2.8 | 4.5 | 81.97 | 180 | 1 | 1 | 1 |
+| SecurityArea | SecuritySign | Prop_Sign_SecurityCheckpoint | -3.8 | 4.5 | 81.97 | 180 | 1 | 1 | 1 |
 | Corridor | CorridorPipe01 | Prop_PipeStraight | 1.1 | 5.1 | 85 | 0 | 1 | 1 | 1 |
 | Corridor | CorridorPipe02 | Prop_PipeStraight | 1.1 | 5.1 | 87 | 0 | 1 | 1 | 1 |
 | Corridor | CorridorPipe03 | Prop_PipeStraight | 1.1 | 5.1 | 89 | 0 | 1 | 1 | 1 |
