@@ -4,6 +4,7 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
+        "Blackout.Shared",
         "Blackout.AI.TacticalGuard"
     ],
     "includePlatforms": [
