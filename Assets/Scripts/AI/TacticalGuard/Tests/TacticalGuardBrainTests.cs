@@ -103,6 +103,9 @@ namespace Blackout.AI.TacticalGuard.Tests
         private Marker AddCover(FakeContext ctx, float x, float z)
         {
             Marker marker = NewObject("CoverPoint_" + x, new Vector3(x, 0f, z)).AddComponent<Marker>();
+            // Marker's id is a private serialized field with no setter (World Builder owns it), so set it by reflection.
+            typeof(Marker).GetField("id", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(marker, "CoverPoint_" + x);
             ctx.covers.Add(marker);
             return marker;
         }
@@ -381,6 +384,52 @@ namespace Blackout.AI.TacticalGuard.Tests
             brain.Tick(0.1f);
 
             StringAssert.Contains("HoldPost", brain.GetDebugText());
+        }
+
+        [Test]
+        public void GetDebugText_ListsEveryActionScore()
+        {
+            brain.Tick(0.1f);
+
+            string text = brain.GetDebugText();
+
+            StringAssert.Contains("Attack ", text);
+            StringAssert.Contains("MoveToCover ", text);
+            StringAssert.Contains("Reposition ", text);
+            StringAssert.Contains("HoldPost ", text);
+            StringAssert.Contains("inputs:", text);
+        }
+
+        [Test]
+        public void GetDebugText_BeforeTheFirstTickSaysNotStarted()
+        {
+            StringAssert.Contains("not started", brain.GetDebugText());
+        }
+
+        [Test]
+        public void GetDebugText_IsBuiltOncePerTickAndRefreshedByTheNext()
+        {
+            brain.Tick(0.1f);
+            string first = brain.GetDebugText();
+            Assert.AreSame(first, brain.GetDebugText(), "asking again in the same tick reuses the string");
+
+            sensor.playerVisible = true;
+            brain.Tick(0.1f);
+
+            Assert.AreNotSame(first, brain.GetDebugText());
+            StringAssert.Contains("see=yes", brain.GetDebugText());
+        }
+
+        [Test]
+        public void GetDebugText_NamesTheHeldCover()
+        {
+            Marker cover = AddCover(context, 3f, 0f);
+            sensor.playerVisible = true;
+            Hurt(context, 70f);
+
+            brain.Tick(0.1f);
+
+            StringAssert.Contains("(cover " + cover.Id + ")", brain.GetDebugText().Split('\n')[0]);
         }
 
         [Test]
