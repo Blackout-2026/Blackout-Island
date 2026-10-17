@@ -7,7 +7,8 @@ This is the real-scale layout for `Assets/Scenes/Environment.unity`. It is built
 `Assets/Editor/WorldBuilder/MarkerLayout.cs`, the agent size in `Assets/Editor/WorldBuilder/NavMeshBaker.cs`, and the
 materials in `Assets/Editor/WorldBuilder/SurfaceLibrary.cs` and `MaterialRules.cs`, the vegetation in
 `VegetationLayout.cs`, `TerrainSplat.cs` and `TerrainPainter.cs`, the lighting in `LightingLayout.cs`,
-`LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`, and the blackout in `BlackoutLightLayout.cs`.
+`LightFixtureLayout.cs`, `ProbeLayout.cs` and `StaticFlagRules.cs`, the blackout in `BlackoutLightLayout.cs`,
+and the post-processing and particles in `PostProcessLayout.cs` and `AtmosphereLayout.cs`.
 If you change a number here, change it there too.
 
 ## Conventions
@@ -585,7 +586,7 @@ from a medium preset. It does not edit the asset.
   they draw the shadow casters twice instead of four times.
 - **Distance:** at 60 m the fog already hides about half of a shadow (52 % is left).
 
-W9's QualityPreset will change the distance per quality level.
+W9's QualityPreset changes the distance to 40 / 60 / 80 m for Low / Medium / High at runtime.
 
 ### Probes
 
@@ -873,8 +874,8 @@ beacon is `<Room>_AlarmNN`: a spot light with a `_Dome` sphere. All 17 are **Rea
   either:
   - set the bunker fixtures' Indirect Multiplier to 0 in Setup Lighting (no bounce from them at all), or
   - bake a second "blackout" set and swap the lightmaps and light probes at the event (W10, final bake).
-- **No visible beams or sparks.** The prototype's alarm beam cones, light shafts and sparks need an additive Shader
-  Graph and pooled particles (W9 or later). The generator's own sparks, hum and core glow belong to its prefab (Systems
+- **No visible beams or sparks.** The prototype's alarm beam cones, light shafts and sparks remain deferred after W9;
+  W9 adds steam, dust, beach fog and optional rain. The generator's own sparks, hum and core glow belong to its prefab (Systems
   Engineer and Core Developer), which listens to the same channel.
 - **The emergency lights leak a little.** They cast no shadows, so within their 9 m range they tint the next room red
   through the wall.
@@ -884,6 +885,135 @@ beacon is `<Room>_AlarmNN`: a spot light with a `_Dome` sphere. All 17 are **Rea
 - **The tests use the default timings.** Timings tuned on the asset are not tested.
 - **Powered fog is W7's.** The powered bunker keeps W7's one fog value (0.0135), not the reference's 0.022.
 - **Not checked by eye:** the look was checked only in batch mode.
+
+## Post-processing and atmosphere (W9)
+
+The **Volumes** root holds `Volumes_Powered`, `Volumes_Blackout`, `QualityPreset` and an `Atmosphere` child.
+Runtime scripts are in `Assets/Scripts/Environment` (`Blackout.Environment`, referencing `Blackout.Shared` and URP).
+Editor tools and their layout numbers are in `Assets/Editor/WorldBuilder` (`Blackout.Editor`).
+
+### Build order and generated assets
+
+Run these menus outside Play mode with Environment open:
+
+1. **Blackout/World/Setup Blackout Lighting** if the W8 lighting has not been built, or its fixtures changed.
+2. **Blackout/World/Setup Post Processing** (`PostProcessSetup.SetupPostProcessing`).
+3. **Blackout/World/Build Atmosphere Particles** (`AtmosphereParticlesBuilder.BuildAtmosphereParticles`).
+
+Setup Post Processing writes `Assets/Environment/Volumes/Powered.asset` and `Blackout.asset`, reuses the two global
+volumes and connects the Blackout volume to PowerStateLighting. Existing overrides for other effects are kept.
+Build Atmosphere Particles reuses its named systems, removes only stale generated children under `Volumes/Atmosphere`,
+and gives QualityPreset all five systems, including the inactive rain.
+
+The particle tool also writes the 64 × 64 soft disc `Assets/Environment/Atmosphere/SoftParticle.png` and four
+materials in `Assets/Materials/Environment/Atmosphere`: `Atmosphere_Steam`, `Atmosphere_Dust`, `Atmosphere_Fog` and
+`Atmosphere_Rain`. Dust uses URP Particles/Simple Lit; the other three use Particles/Unlit. Steam and fog use soft
+particles with depth fade distances 1 / 2 m; fog also fades near the camera over 1–4 m. The PC URP asset supplies
+the depth texture. No external image or audio is required for these effects; the vent housings remain W10 props.
+
+Change numbers in **PostProcessLayout.cs** and **AtmosphereLayout.cs**, then rerun their tools. The tools overwrite
+their authored settings and particle materials. A particle rebuild saves rain inactive again. Keep generated `.meta`
+files with the assets so their GUIDs survive teammates' imports.
+
+### Powered and Blackout profiles
+
+The prototype has the same post-processing before and after the blackout. The two-profile brief adds a modest
+Blackout variation: more contrast, grain and corner darkening. The emergency lights provide the red colour.
+
+| Override | Powered | Blackout | Reason |
+| --- | --- | --- | --- |
+| Tonemapping | ACES | ACES | Prototype's filmic curve |
+| Color Adjustments: Post Exposure | +0.737 EV | +0.737 EV | `log2(1 / 0.6)`, from the prototype's ACES input scale |
+| Contrast / Saturation / Color Filter | 0 / 0 / white | +10 / 0 / white | Blackout contrast is a Unity addition |
+| Bloom: Threshold / Intensity | 0.931 / 2.25 | 0.931 / 2.25 | Linear threshold 0.85 converted to gamma; strength 0.75 × five mip weights of 0.6 |
+| Bloom: Scatter / Max Iterations | 0.7 / 5 | 0.7 / 5 | URP spread and five-level blur |
+| Vignette: Intensity / Smoothness / Rounded | 0.25 / 0.4 / on | 0.27 / 0.4 / on | Fitted round falloff, darker blackout corners |
+| Film Grain: Type / Intensity / Response | Thin1 / 0.12 / 0.8 | Thin1 / 0.2 / 0.8 | Approximation of prototype grain 0.035; stronger blackout grain |
+
+These are conversions and curve fits, with a visual comparison still outstanding. The Powered vignette matches
+the prototype's top edge and corners within 0.01 in the tested linear-light calculation; its middle falloff can be
+up to 0.12 lighter. Grain and bloom use different implementations in URP, so the formulas give starting values.
+
+`Volumes_Powered` is global, priority **0**, weight **1**. `Volumes_Blackout` is global, priority **1**, saved at
+weight **0**. PowerStateLighting now writes its existing `Blend` into the Blackout volume's weight as well as the
+fog and ambient: the W8 **2 s** transition multiplied by the camera's interior factor. The Powered weight stays 1;
+the higher-priority volume blends toward Blackout. Outdoors its weight returns to 0, and Reset To Powered restores
+0. The W8 event, cascade and respawn behaviour stay as documented above. With no MainCamera, the interior factor is 1.
+
+### Particle placement and motion
+
+All positions below are Unity metres. All systems simulate in world space, reuse native Particle System storage,
+and have fixed seeds **9001–9005** in table order. Steam, dust and beach fog prewarm; rain starts empty.
+Rates and caps are the authored **Medium** values.
+
+| System under Volumes/Atmosphere | Position / emission box | Rate / cap | Lifetime / size | Motion |
+| --- | --- | --- | --- | --- |
+| Atmosphere_SteamVentWest | (−14, 11.75, 54) | 7/s / 32 | 2.6–3.6 s / 0.35 → 2.4 m | Cone leans east, speed 1.4–2.2 m/s, drag 0.5 |
+| Atmosphere_SteamVentEast | (13.5, 11.75, 51) | 7/s / 32 | Same as west | Same as west |
+| Atmosphere_CorridorDust | (0, 4, 103), box 2.6 × 2.6 × 40.8 m | 25/s / 300 | 8–12 s / 0.015–0.035 m | Noise strength 0.05, frequency 0.4 |
+| Atmosphere_BeachFog | (0, 1.5, −112), box 110 × 1 × 32 m | 3.2/s / 120 | 20–30 s / 6–10 m | Eastward drift 0.3–0.5 m/s, spin up to ±3°/s |
+| Atmosphere_Rain (inactive) | Initially (0, 13.3, −121), horizontal box 30 × 30 m | 500/s / 1200 | 2 s / 0.012 m | Downward 6–8 m/s, stretched with velocity scale 0.04 |
+
+Steam follows the prototype's two vents and fade: opacity 0.22 × `min(1, t / 0.2) × (1 − t)^1.3`, with normalized
+lifetime `t`. Its narrow cone approximates the prototype's mean velocity (0.25, 1.8, 0) m/s and sideways spread.
+Dust, beach fog and rain are Unity additions requested by the brief. Lit dust responds to the red emergency lights;
+unlit beach fog uses the outdoor ambient-sky tint at opacity 0.1. The fog's emission box bounds its starting positions;
+its large puffs and drift extend beyond it.
+
+To preview rain, enable **Atmosphere_Rain in Play mode**. RainEmitter follows the MainCamera 12 m above its eye.
+One upward raycast checks 30 m for a roof, using Physics.DefaultRaycastLayers and ignoring triggers. Cover disables
+emission; existing drops continue for up to 2 s. The single ray covers the camera's location, so roof edges can still
+show drops from the wider emitter. Rain has no per-drop collision. It remains optional and off in the saved scene.
+
+### Quality presets
+
+QualityPreset starts at **Medium**. In Play mode use its context menu **Apply Low**, **Apply Medium** or **Apply High**;
+settings code can call `Apply(Blackout.Environment.QualityLevel.Low)` (or Medium / High).
+
+| Setting | Low | Medium | High |
+| --- | --- | --- | --- |
+| Active URP asset shadow distance | 40 m | 60 m | 80 m |
+| MainCamera post-processing / FXAA | off / off | on / on | on / on |
+| Atmosphere emission rate and particle cap | ×0.5 | ×1 | ×1.5 |
+| Steam emission per vent | 3.5/s | 7/s | 10.5/s |
+
+The component caches authored rates and caps, so switching repeatedly always scales from Medium. Caps round to the
+nearest integer with a minimum of one. Inactive rain stays inactive at every quality level. The shadow distance is
+changed in memory during Play mode and restored when the component is destroyed; the Systems Engineer's URP asset
+is kept on disk. The camera is configured when found or replaced. These controls leave the existing terrain density,
+render scale and shadow-map resolution under their current project settings.
+
+**Handoff to Systems Engineer:** in `Assets/Prefabs/Player/Player.prefab`, add Universal Additional Camera Data to
+PlayerCamera, enable Post Processing and set Anti-aliasing to FXAA. It is already tagged MainCamera. QualityPreset
+provides this configuration at runtime, with Low switching it off. Keep Environment active after additive loading
+for the W8 RenderSettings changes.
+
+### Verification and Editor checks
+
+Batch verification on **2026-10-17**, Unity **6000.3.25f1**:
+
+- Both W9 generators completed and were rerun: all **19** checked files (including metadata) remained byte-identical.
+- Focused EditMode tests: **29/29** passed (PostProcessLayout, AtmosphereLayout, QualityPreset and PowerStateLighting).
+- Environment PlayMode tests: **8/8** passed, including the volume blend, quality switches and rain roof behaviour.
+- Validate Layout: **PASS, 66 of 66**. Generated files remained unchanged after the tests; no C# compiler errors or warnings.
+- Logs and XML results are outside the repo: `%TEMP%/blackout-w9-*.log` and `%TEMP%/blackout-w9-*-tests.xml`.
+  The layout run logged a Unity Pipeline `HandleStatusRequest` disposed-object error during shutdown and exited 0.
+
+Before the PR, check the appearance in the Editor:
+
+1. Open Environment and inspect Volumes: Powered weight 1, Blackout weight 0, QualityPreset Medium and rain inactive.
+2. Play through Bootstrap with the tagged player camera. Look at the vent steam, corridor dust and beach fog; compare
+   with `prototype/screenshots/`. Verify readable silhouettes, glow and corners in the Game view. Scene-view previews
+   require the Scene view's post-processing/effects controls enabled.
+3. On Lighting, use **PowerStateLighting > Trigger Blackout**: Blackout weight should approach 1 inside over 2 s,
+   fall to 0 outside, and return to 0 with **Reset To Powered**. Then test the real GeneratorDisabled event and respawn.
+4. Apply Low / High / Medium on QualityPreset. Verify post-processing, shadow reach and particle emission rates;
+   repeatedly switching back to Medium should restore steam to 7/s. Check for new Console errors.
+5. Enable rain in Play mode, move under a roof and back out, and allow 2 s for old drops to finish. Stop Play mode
+   and confirm rain is still inactive in the saved scene. Check performance on the intended demo machine.
+
+The visual comparison, performance measurement and lighting bake remain manual work. Large fog particles can add
+transparent overdraw. W9 does not add visible alarm beam cones, fixture sparks or wind-sway shaders.
 
 ## Changes from the prototype, and who they affect
 
@@ -925,7 +1055,10 @@ beacon is `<Room>_AlarmNN`: a spot light with a `_Dome` sphere. All 17 are **Rea
 | PowerStateLighting listens to GeneratorDisabled and PlayerRespawned (W8) | Lighting has no reference to the generator. Raise GeneratorDisabled once, when the generator is disabled, and PlayerRespawned after every respawn. A respawn after the event keeps the blackout | Systems Engineer (generator and respawn) |
 | Blackout look only inside the bunker (W8) | Fog, ambient and the moon follow the main camera's depth in the bunker, and the outdoor lights stay on, as in the reference. The player camera must be tagged MainCamera, and Environment must be the active scene | Systems Engineer (player camera, Bootstrap) |
 | Emergency lamps on the Unity walls (W8) | In the smaller rooms the reference's lamps are 3.0 to 3.4 m up; Unity's hang 0.5 m under the 3 m ceilings (2.5 m) and at 4.0 m in the generator room. The corridor's lamps move from x ±1.9 to its ±1.5 walls | — |
-| No alarm beam cones, light shafts or sparks yet (W8) | The beacons light the walls but show no visible beam | World Builder (W9 or later) |
+| No alarm beam cones, light shafts or sparks yet (W8) | The beacons light the walls but show no visible beam; W9's particles cover steam, dust, beach fog and optional rain | World Builder (later work) |
+| Separate Blackout post-processing profile (W9) | The prototype keeps one look; Unity adds contrast +10, vignette 0.27 and grain 0.2 inside the bunker | — |
+| URP post-processing enabled at runtime (W9) | QualityPreset configures MainCamera, including a camera loaded later; Low disables post-processing and FXAA | Systems Engineer (Player.prefab): add Universal Additional Camera Data, Post Processing on, FXAA |
+| Corridor dust, beach fog and optional rain (W9) | New native particle systems with fixed seeds; vent steam follows the prototype, rain remains inactive | World Builder (W10: vent housings) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
 berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
