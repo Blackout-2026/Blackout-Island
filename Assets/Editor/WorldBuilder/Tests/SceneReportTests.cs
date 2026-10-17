@@ -82,6 +82,62 @@ namespace Blackout.Editor.Tests
             Assert.That(result.Lights.Count, Is.EqualTo(2));
         }
 
+        [Test]
+        public void BatchingAuditReportsMissingAndUnsafeFlagsWithoutChangingThem()
+        {
+            var bunker = new GameObject("Bunker");
+            var beach = new GameObject("Beach");
+            SceneManager.MoveGameObjectToScene(bunker, scene);
+            SceneManager.MoveGameObjectToScene(beach, scene);
+            GameObject room = Cube(scene);
+            room.name = "Room";
+            room.transform.SetParent(bunker.transform);
+            GameObject boat = Cube(scene);
+            boat.name = "Boat";
+            boat.transform.SetParent(beach.transform);
+            GameObjectUtility.SetStaticEditorFlags(boat, StaticEditorFlags.BatchingStatic);
+            Cube(otherScene);
+
+            SceneBatchingAudit.Result result = SceneBatchingAudit.Capture(scene, new Material[0]);
+
+            Assert.That(result.RuleTargets, Is.EqualTo(2));
+            Assert.That(result.RuleMismatches, Does.Contain("Bunker/Room: BatchingStatic should be True"));
+            Assert.That(result.RuleMismatches, Does.Contain("Beach/Boat: BatchingStatic should be False"));
+            Assert.That(GameObjectUtility.GetStaticEditorFlags(room), Is.EqualTo((StaticEditorFlags)0));
+            Assert.That(GameObjectUtility.GetStaticEditorFlags(boat), Is.EqualTo(StaticEditorFlags.BatchingStatic));
+        }
+
+        [Test]
+        public void BatchingAuditCountsPropertyBlocksAndDeduplicatesConfiguredTargets()
+        {
+            GameObject lamp = Cube(scene);
+            Renderer renderer = lamp.GetComponent<Renderer>();
+            var block = new MaterialPropertyBlock();
+            block.SetColor("_EmissionColor", Color.red);
+            renderer.SetPropertyBlock(block);
+            lamp.AddComponent<Blackout.Environment.FlickerLight>().Configure(
+                Blackout.Environment.FlickerLight.Pattern.FaultyTube, 1, renderer);
+            Cube(scene).AddComponent<Blackout.Environment.FlickerLight>().Configure(
+                Blackout.Environment.FlickerLight.Pattern.FaultyTube, 2, renderer);
+
+            SceneBatchingAudit.Result result = SceneBatchingAudit.Capture(scene, new Material[0]);
+
+            Assert.That(result.PropertyBlocks, Is.EqualTo(1));
+            Assert.That(result.ConfiguredPropertyBlockTargets, Is.EqualTo(1));
+            renderer.GetPropertyBlock(block);
+            Assert.That(block.GetColor("_EmissionColor"), Is.EqualTo(Color.red));
+        }
+
+        [TestCase(0, null, SceneBatchingAudit.CompatibilityStatus.Compatible)]
+        [TestCase(1, "Not initialized ()", SceneBatchingAudit.CompatibilityStatus.Unknown)]
+        [TestCase(2, null, SceneBatchingAudit.CompatibilityStatus.Unknown)]
+        [TestCase(2, "Material property is outside UnityPerMaterial", SceneBatchingAudit.CompatibilityStatus.Incompatible)]
+        public void UninitialisedShaderDataIsNotReportedAsIncompatible(int code, string reason,
+            SceneBatchingAudit.CompatibilityStatus expected)
+        {
+            Assert.That(SceneBatchingAudit.ClassifyCompatibility(code, reason), Is.EqualTo(expected));
+        }
+
         private static GameObject Cube(Scene target)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);

@@ -26,6 +26,7 @@ namespace Blackout.Editor
             public long MeshTriangles, MeshVertices, TreeTriangles, TreeVertices, DetailTriangles, DetailVertices;
             public long TerrainTriangles, TerrainVertices;
             public int Trees, Details;
+            public SceneBatchingAudit.Result Batching;
             public readonly HashSet<Material> Materials = new HashSet<Material>();
             public readonly HashSet<Texture> Textures = new HashSet<Texture>();
             public readonly SortedDictionary<string, int> RendererTypes = new SortedDictionary<string, int>(StringComparer.Ordinal);
@@ -45,18 +46,23 @@ namespace Blackout.Editor
             WithEnvironment(scene =>
             {
                 string report = Format(Capture(scene));
-                string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ReportPath));
-                string heading = File.Exists(path) ? "" : "# World Builder optimisation (W11)\n\n"
-                    + "Run **Blackout > World > Scene Report** to inspect the loaded Environment scene. "
-                    + "Batch entry point: `Blackout.Editor.SceneReport.AppendBaseline`. Reports never save the scene or assets.\n\n";
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
-                File.AppendAllText(path, heading + "## " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
-                    + " — baseline\n\n" + report + "\n", new UTF8Encoding(false));
-                Debug.Log("[World] Scene Report appended to " + ReportPath + "\n" + report);
+                AppendObservation("baseline", report);
             });
         }
 
-        private static void WithEnvironment(Action<Scene> action)
+        internal static void AppendObservation(string title, string report)
+        {
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ReportPath));
+            string heading = File.Exists(path) ? "" : "# World Builder optimisation (W11)\n\n"
+                + "Run **Blackout > World > Scene Report** to inspect the loaded Environment scene. "
+                + "Reports never save the scene or assets.\n\n";
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.AppendAllText(path, heading + "## " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                + " — " + title + "\n\n" + report + "\n", new UTF8Encoding(false));
+            Debug.Log("[World] Scene Report appended to " + ReportPath + " (" + title + ")\n" + report);
+        }
+
+        internal static void WithEnvironment(Action<Scene> action)
         {
             Scene scene = SceneManager.GetSceneByPath(WorldSceneSkeleton.ScenePath);
             bool opened = !scene.IsValid() || !scene.isLoaded;
@@ -106,6 +112,7 @@ namespace Blackout.Editor
                     foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
                         if (asset is Texture texture) result.Textures.Add(texture);
                 }
+            result.Batching = SceneBatchingAudit.Capture(scene, result.Materials);
             return result;
         }
 
@@ -199,7 +206,8 @@ namespace Blackout.Editor
         {
             var text = new StringBuilder();
             text.AppendLine("Unity " + Application.unityVersion + "; target " + EditorUserBuildSettings.activeBuildTarget
-                + "; quality " + QualitySettings.names[QualitySettings.GetQualityLevel()] + "; LOD bias " + Number(QualitySettings.lodBias));
+                + "; quality " + QualitySettings.names[QualitySettings.GetQualityLevel()] + "; LOD bias " + Number(QualitySettings.lodBias)
+                + "; graphics " + SystemInfo.graphicsDeviceType);
             text.AppendLine("\nAll objects include inactive children; mesh counts repeat shared meshes per instance. "
                 + "Static means any authored static flag, not a promise that an object cannot move. "
                 + "Terrain vegetation is counted separately from scene Renderer components. "
@@ -236,6 +244,7 @@ namespace Blackout.Editor
                 text.AppendLine("| " + Cell(AssetDatabase.GetAssetPath(texture) + " / " + texture.name) + " | "
                     + texture.width + " × " + texture.height + " | " + format + " | " + Profiler.GetRuntimeMemorySizeLong(texture) + " |");
             }
+            if (data.Batching != null) text.AppendLine(SceneBatchingAudit.Format(data.Batching));
             text.AppendLine("\nVegetation estimate: fixed 72° FOV, 16:9, eye 1.65 m, active quality LOD bias; "
                 + "whole detail patches, without occlusion or shadow passes. Frame Debugger and Profiler validation remains an Editor task.");
             var layout = AssetDatabase.LoadAssetAtPath<Blackout.World.BunkerLayout>(BunkerLayoutAssetBuilder.AssetPath);
