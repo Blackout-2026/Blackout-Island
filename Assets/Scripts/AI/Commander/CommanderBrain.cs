@@ -35,6 +35,7 @@ namespace Blackout.AI.Commander
         private Vector3 post;
         private bool forceReplan;
         private bool regroupIssued;
+        private Blackboard subscribedBoard;
 
         public string State { get; private set; } = "Uninitialized";
         public string GoalName { get; private set; } = "none (monitoring)";
@@ -56,6 +57,7 @@ namespace Blackout.AI.Commander
             if (config == null)
                 throw new InvalidOperationException("Assign a CommanderConfig before initialization.");
 
+            Unsubscribe();
             context = newContext;
             actions = config.BuildActions();
             post = context.Self.position;
@@ -67,6 +69,29 @@ namespace Blackout.AI.Commander
             forceReplan = true;
             GoalName = "none (monitoring)";
             State = "Monitor";
+            Subscribe();
+        }
+
+        private void OnEnable() => Subscribe();
+        private void OnDisable() => Unsubscribe();
+        private void OnDestroy() => Unsubscribe();
+
+        private void Subscribe()
+        {
+            if (context == null || subscribedBoard != null || !isActiveAndEnabled)
+                return;
+            subscribedBoard = context.Blackboard;
+            subscribedBoard.CureTakenReported += NotifyCureTaken;
+            if (subscribedBoard.cureTaken)
+                NotifyCureTaken();
+        }
+
+        private void Unsubscribe()
+        {
+            if (subscribedBoard == null)
+                return;
+            subscribedBoard.CureTakenReported -= NotifyCureTaken;
+            subscribedBoard = null;
         }
 
         /// <summary>Called synchronously by the cure integration, without waiting for the next think tick.</summary>
@@ -75,7 +100,7 @@ namespace Blackout.AI.Commander
             if (!IsAlive)
                 return;
             context.Blackboard.cureTaken = true;
-            context.Blackboard.alertLevel = Math.Max(1, context.Blackboard.alertLevel);
+            ActivateAlert();
             forceReplan = true;
             Tick(0f);
         }
@@ -104,7 +129,7 @@ namespace Blackout.AI.Commander
                 return IdleIntent();
             }
             if (board.cureTaken)
-                board.alertLevel = Math.Max(1, board.alertLevel);
+                ActivateAlert();
 
             bool neutralized = board.playerNeutralized;
             bool located = ReadBool(CommanderFacts.PlayerLocated);
@@ -135,8 +160,14 @@ namespace Blackout.AI.Commander
             return IdleIntent();
         }
 
-        private bool IsAlive => context != null && context.Self != null &&
+        private bool IsAlive => isActiveAndEnabled && context != null && context.Self != null &&
             context.Health != null && context.Health.IsAlive;
+
+        private void ActivateAlert()
+        {
+            context.Blackboard.BroadcastAlert(new AgentAlert(config.alertSpeedMultiplier,
+                config.alertVisionMultiplier, config.alertAimErrorMultiplier));
+        }
 
         private void Observe(float now, int living)
         {
@@ -204,6 +235,7 @@ namespace Blackout.AI.Commander
                     {
                         // The reference permits regroup completion after 12 s if enough units survive.
                         context.Blackboard.squadAssembled = true;
+                        world.Set(CommanderFacts.SquadAssembled, true);
                         step++;
                         StartAction(now);
                     }

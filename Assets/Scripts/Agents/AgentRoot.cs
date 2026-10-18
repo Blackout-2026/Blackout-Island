@@ -30,6 +30,9 @@ namespace Blackout.Agents
         private IAgentAnimator animator;
         private IAgentShooter shooter;
         private AgentRegistry registry;
+        private Blackboard alertBoard;
+        private PathFollower pathFollower;
+        private AgentShooter agentShooter;
 
         private float thinkTimer;
         private float thinkElapsed;
@@ -38,6 +41,8 @@ namespace Blackout.Agents
         public string AgentName => string.IsNullOrEmpty(agentName) ? name : agentName;
         public Transform Transform => transform;
         public bool IsAlive => health != null && health.IsAlive;
+        public IDirectiveReceiver DirectiveReceiver => brain as IDirectiveReceiver;
+        public float VisionRangeMultiplier { get; private set; } = 1f;
         /// <summary>The intent most recently applied, for gizmos and the debug overlay.</summary>
         public AgentIntent LastIntent { get; private set; }
 
@@ -62,6 +67,13 @@ namespace Blackout.Agents
             UnregisterFromRegistry();
         }
 
+        private void OnEnable()
+        {
+            if (registry != null) BindAlert();
+        }
+
+        private void OnDisable() => UnbindAlert();
+
         /// <summary>
         /// Connects the brain and the three executors (any may be null while their steps are not built yet).
         /// Awake calls it; it is public so tests can plug in fakes.
@@ -75,8 +87,15 @@ namespace Blackout.Agents
             facing = newMover as IAgentFacing;
             animator = newAnimator;
             shooter = newShooter;
+            pathFollower = newMover as PathFollower;
+            agentShooter = newShooter as AgentShooter;
             health.OnDamaged += HandleDamaged;
             health.OnDied += HandleDied;
+            if (registry != null)
+            {
+                registry.Register(this);
+                BindAlert();
+            }
         }
 
         /// <summary>Registers with the registry and hands the brain its context. Called once, from Start.</summary>
@@ -92,6 +111,7 @@ namespace Blackout.Agents
 
             registry.Register(this);
             brain?.Initialize(registry.CreateContext(transform, health));
+            BindAlert();
         }
 
         /// <summary>
@@ -103,8 +123,44 @@ namespace Blackout.Agents
             brain = newBrain;
             if (registry != null)
             {
+                registry.Register(this); // refresh the Blackboard's receiver without duplicating the agent
                 brain?.Initialize(registry.CreateContext(transform, health));
+                if (registry.Blackboard.HasAlertBuff) ApplyAlert(registry.Blackboard.Alert);
+                var members = registry.Blackboard.Agents;
+                for (int i = 0; i < members.Count; i++)
+                    if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
+                        DirectiveReceiver?.OnDirective(members[i].LastDirective);
             }
+        }
+
+        private void BindAlert()
+        {
+            UnbindAlert();
+            if (!isActiveAndEnabled || registry == null)
+                return;
+            alertBoard = registry.Blackboard;
+            alertBoard.AlertChanged += ApplyAlert;
+            if (alertBoard.HasAlertBuff) ApplyAlert(alertBoard.Alert);
+        }
+
+        private void UnbindAlert()
+        {
+            if (alertBoard == null) return;
+            alertBoard.AlertChanged -= ApplyAlert;
+            alertBoard = null;
+        }
+
+        private void ApplyAlert(AgentAlert alert)
+        {
+            if (!IsAlive) return;
+            VisionRangeMultiplier = alert.visionMultiplier;
+            if (pathFollower != null) pathFollower.SpeedMultiplier = alert.speedMultiplier;
+            if (agentShooter != null)
+            {
+                agentShooter.Heightened = true;
+                agentShooter.HeightenedAimErrorMultiplier = alert.aimErrorMultiplier;
+            }
+            if (brain is IAlertReceiver receiver) receiver.OnAlert(alert);
         }
 
         private void Update()
@@ -179,6 +235,7 @@ namespace Blackout.Agents
 
         private void HandleDied()
         {
+            UnbindAlert();
             mover?.Stop();
             shooter?.CeaseFire();
             animator?.PlayDeath();
@@ -196,6 +253,7 @@ namespace Blackout.Agents
 
         private void Unsubscribe()
         {
+            UnbindAlert();
             if (health != null)
             {
                 health.OnDamaged -= HandleDamaged;

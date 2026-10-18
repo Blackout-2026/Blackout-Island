@@ -57,12 +57,22 @@ namespace Blackout.Agents
 
         public void Register(IAgentInfo agent)
         {
-            if (agent == null || agents.Contains(agent))
+            if (agent == null)
             {
                 return;
             }
-            agents.Add(agent);
-            Blackboard.SetAgentState(agent.AgentName, InitialState);
+            if (!agents.Contains(agent))
+            {
+                agents.Add(agent);
+                Blackboard.SetAgentState(agent.AgentName, InitialState);
+            }
+            if (agent.Transform != null)
+            {
+                IDirectiveReceiver receiver = agent is AgentRoot root ? root.DirectiveReceiver :
+                    agent.Transform.GetComponent<IDirectiveReceiver>();
+                Blackboard.RegisterAgent(agent.AgentName, agent.Transform,
+                    agent.Transform.GetComponent<Health>(), receiver);
+            }
         }
 
         public void Unregister(IAgentInfo agent)

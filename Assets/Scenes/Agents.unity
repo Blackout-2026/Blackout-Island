@@ -225,6 +225,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.BlackboardHolder
   generatorDisabled: {fileID: 11400000, guid: 576b9297d96eb4af18c28643cd32a396, type: 2}
   cureTaken: {fileID: 11400000, guid: f3c2f2ff34e7d4846931e00b780033c8, type: 2}
+  playerDied: {fileID: 11400000, guid: 1f97f714457364ee5a2169bd489ab4a8, type: 2}
+  playerRespawned: {fileID: 11400000, guid: 170f53bd4d92e496faef47c3ee794e42, type: 2}
 --- !u!4 &734768001
 Transform:
   m_ObjectHideFlags: 0

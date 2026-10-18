@@ -23,6 +23,29 @@ namespace Blackout.Shared
         /// <summary>Cleared when the roster changes; set after the Commander completes a regroup.</summary>
         public bool squadAssembled;
 
+        public event System.Action CureTakenReported;
+        public event System.Action<AgentAlert> AlertChanged;
+        public bool HasAlertBuff { get; private set; }
+        public AgentAlert Alert { get; private set; } = new AgentAlert(1f, 1f, 1f);
+
+        /// <summary>Called by the event-channel holder. Living Commanders react synchronously.</summary>
+        public void ReportCureTaken()
+        {
+            cureTaken = true;
+            CureTakenReported?.Invoke();
+        }
+
+        public void BroadcastAlert(AgentAlert alert)
+        {
+            alertLevel = System.Math.Max(1, alertLevel);
+            if (HasAlertBuff && Alert.speedMultiplier == alert.speedMultiplier &&
+                Alert.visionMultiplier == alert.visionMultiplier && Alert.aimErrorMultiplier == alert.aimErrorMultiplier)
+                return;
+            Alert = alert;
+            HasAlertBuff = true;
+            AlertChanged?.Invoke(alert);
+        }
+
         private readonly Dictionary<string, string> agentStates = new Dictionary<string, string>();
         private readonly List<BlackboardAgent> agents = new List<BlackboardAgent>();
 

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a74bf4c80c49ce4a96db48926c8d17f, type: 3}
+  m_Name: CommanderConfig
+  m_EditorClassIdentifier: Blackout.AI.Commander::Blackout.AI.Commander.CommanderConfig
+  orderRegroup:
+    cost: 2
+    preconditions:
+    - fact: 4
+      booleanValue: 0
+      integerValue: 0
+    effects:
+    - fact: 4
+      booleanValue: 1
+      integerValue: 0
+  orderSearchZone:
+    cost: 3
+    preconditions:
+    - fact: 0
+      booleanValue: 0
+      integerValue: 0
+    effects:
+    - fact: 0
+      booleanValue: 1
+      integerValue: 0
+  orderConverge:
+    cost: 2
+    preconditions:
+    - fact: 0
+      booleanValue: 1
+      integerValue: 0
+    - fact: 4
+      booleanValue: 1
+      integerValue: 0
+    effects:
+    - fact: 5
+      booleanValue: 1
+      integerValue: 0
+  sightingMemory: 6
+  minimumSquadSize: 2
+  convergeInterval: 1
+  searchInterval: 8
+  searchTimeout: 24
+  searchRingRadius: 7
+  searchRadius: 9
+  regroupTimeout: 12
+  regroupRadius: 10
+  alertSpeedMultiplier: 1.25
+  alertVisionMultiplier: 1.4
+  alertAimErrorMultiplier: 0.9
