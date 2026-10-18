@@ -117,9 +117,14 @@ namespace Blackout.Editor
                     // Script dependencies can pull Editor icons into the scene's dependency graph.
                     // These are not rendered by the game and must not inflate its texture inventory.
                     if (path.IndexOf("/Editor/", StringComparison.OrdinalIgnoreCase) >= 0
-                        || path.IndexOf("/Gizmos/", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                        || path.IndexOf("/Gizmos/", StringComparison.OrdinalIgnoreCase) >= 0
+                        || path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase)) continue;
+                    // Scene objects are traversed above through the Scene API, not loaded as asset sub-objects.
                     foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+                    {
                         if (asset is Texture texture) result.Textures.Add(texture);
+                        if (asset is Material material) AddMaterial(result, material);
+                    }
                 }
             result.Batching = SceneBatchingAudit.Capture(scene, result.Materials);
             if (scene.path == WorldSceneSkeleton.ScenePath)
@@ -156,14 +161,16 @@ namespace Blackout.Editor
 
         private static void AddMaterials(Snapshot result, Renderer renderer)
         {
-            foreach (Material material in renderer.sharedMaterials)
+            foreach (Material material in renderer.sharedMaterials) AddMaterial(result, material);
+        }
+
+        private static void AddMaterial(Snapshot result, Material material)
+        {
+            if (material == null || !result.Materials.Add(material)) return;
+            foreach (string property in material.GetTexturePropertyNames())
             {
-                if (material == null || !result.Materials.Add(material)) continue;
-                foreach (string property in material.GetTexturePropertyNames())
-                {
-                    Texture texture = material.GetTexture(property);
-                    if (texture != null) result.Textures.Add(texture);
-                }
+                Texture texture = material.GetTexture(property);
+                if (texture != null) result.Textures.Add(texture);
             }
         }
 
@@ -172,7 +179,7 @@ namespace Blackout.Editor
             TerrainData data = terrain.terrainData;
             if (data == null) return;
             result.Terrains.Add(terrain);
-            if (terrain.materialTemplate != null) result.Materials.Add(terrain.materialTemplate);
+            AddMaterial(result, terrain.materialTemplate);
             long cells = data.heightmapResolution - 1;
             result.TerrainVertices += (cells + 1) * (cells + 1);
             result.TerrainTriangles += cells * cells * 2; // full grid upper bound, including holes
@@ -241,7 +248,7 @@ namespace Blackout.Editor
             Row(text, "Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation)",
                 (data.MeshTriangles + data.TerrainTriangles + data.TreeTriangles + data.DetailTriangles) + " / "
                 + (data.MeshVertices + data.TerrainVertices + data.TreeVertices + data.DetailVertices));
-            Row(text, "Unique materials (scene, Terrain and all vegetation LODs)", data.Materials.Count);
+            Row(text, "Unique referenced materials (scene dependencies including skybox, Terrain and all vegetation LODs)", data.Materials.Count);
             Row(text, "Scene lightmap resolution (texels/unit; 0 = no assigned settings)", Number(data.LightmapResolution));
             foreach (var pair in data.MeshLightmapScales)
                 Row(text, "GI MeshRenderers with Scale In Lightmap " + Number(pair.Key), pair.Value);
@@ -249,6 +256,10 @@ namespace Blackout.Editor
             var pipeline = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
             Row(text, "Active URP SRP Batcher / shadow distance (m)", pipeline != null
                 ? pipeline.useSRPBatcher + " / " + Number(pipeline.shadowDistance) : "no active URP asset");
+            Row(text, "QualityPreset runtime Low / Medium / High shadow distance (m)",
+                Number(Blackout.Environment.QualityPreset.For(Blackout.Environment.QualityLevel.Low).ShadowDistance) + " / "
+                + Number(Blackout.Environment.QualityPreset.For(Blackout.Environment.QualityLevel.Medium).ShadowDistance) + " / "
+                + Number(Blackout.Environment.QualityPreset.For(Blackout.Environment.QualityLevel.High).ShadowDistance));
             Row(text, "Unique referenced textures (including embedded scene dependencies)", data.Textures.Count);
             Row(text, "Texture runtime memory estimate (bytes, Editor process)", data.Textures.Sum(t => Profiler.GetRuntimeMemorySizeLong(t)));
             text.AppendLine("\nTop 10 referenced textures by Editor runtime memory estimate; this includes object overhead and CPU copies, "

@@ -83,6 +83,25 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
+        public void CaptureIncludesTheSavedEnvironmentsSkyboxMaterial()
+        {
+            Scene environment = SceneManager.GetSceneByPath(WorldSceneSkeleton.ScenePath);
+            bool opened = !environment.IsValid() || !environment.isLoaded;
+            if (opened) environment = EditorSceneManager.OpenScene(WorldSceneSkeleton.ScenePath, OpenSceneMode.Additive);
+            try
+            {
+                Material skybox = AssetDatabase.LoadAssetAtPath<Material>(LightingSetup.SkyMaterialPath);
+                Assert.That(skybox, Is.Not.Null);
+
+                SceneReport.Snapshot result = SceneReport.Capture(environment);
+
+                Assert.That(result.Materials, Does.Contain(skybox), "The skybox is a scene dependency, not a Renderer material.");
+                Assert.That(environment.isDirty, Is.False, "The report must not dirty the scene.");
+            }
+            finally { if (opened) EditorSceneManager.CloseScene(environment, true); }
+        }
+
+        [Test]
         public void BatchingAuditReportsMissingAndUnsafeFlagsWithoutChangingThem()
         {
             var bunker = new GameObject("Bunker");

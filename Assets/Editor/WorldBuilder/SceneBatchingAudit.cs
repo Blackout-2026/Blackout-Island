@@ -160,7 +160,7 @@ namespace Blackout.Editor
             foreach (string row in data.ShaderRows) text.AppendLine(row);
             foreach (string mismatch in data.RuleMismatches) text.AppendLine("\n- " + mismatch);
             text.AppendLine("\nAll subshaders are listed; this does not identify the pass/variant chosen for a frame. "
-                + "Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers mesh/Terrain materials; "
+                + "Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers referenced material assets; "
                 + "skybox and other special passes still need Frame Debugger inspection. "
                 + "Property blocks exclude their renderer from SRP batching even with a compatible shader. "
                 + "Configured targets may have no block in EditMode; inspect both powered and blackout states in Play mode. "

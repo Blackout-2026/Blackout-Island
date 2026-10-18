@@ -23,7 +23,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Lights: Mixed / enabled | 37 |
 | Lights: Realtime / disabled | 17 |
 | Active URP SRP Batcher / shadow distance (m) | True / 50 |
@@ -78,7 +78,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Lights: Mixed / enabled | 37 |
 | Lights: Realtime / disabled | 17 |
 | Active URP SRP Batcher / shadow distance (m) | True / 50 |
@@ -164,7 +164,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Lights: Mixed / enabled | 37 |
 | Lights: Realtime / disabled | 17 |
 | Active URP SRP Batcher / shadow distance (m) | True / 50 |
@@ -264,7 +264,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Lights: Mixed / enabled | 37 |
 | Lights: Realtime / disabled | 17 |
 | Active URP SRP Batcher / shadow distance (m) | True / 50 |
@@ -392,7 +392,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Lights: Mixed / enabled | 37 |
 | Lights: Realtime / disabled | 17 |
 | Active URP SRP Batcher / shadow distance (m) | True / 50 |
@@ -491,7 +491,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Scene lightmap resolution (texels/unit; 0 = no assigned settings) | 10 |
 | GI MeshRenderers with Scale In Lightmap 0.5 | 22 |
 | GI MeshRenderers with Scale In Lightmap 1 | 70 |
@@ -585,7 +585,7 @@ All objects include inactive children; mesh counts repeat shared meshes per inst
 | Terrain detail instances (authored density) | 6376 |
 | Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
 | Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
-| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Unique Renderer/Terrain/vegetation materials (earlier scope excludes skybox) | 28 |
 | Scene lightmap resolution (texels/unit; 0 = no assigned settings) | 10 |
 | GI MeshRenderers with Scale In Lightmap 0.5 | 22 |
 | GI MeshRenderers with Scale In Lightmap 1 | 70 |
@@ -662,3 +662,123 @@ The texture pass covers this generated grass asset only. The environment texture
 Verification: apply and repeat batch runs exited 0; focused **WorldMemoryTuner, SceneReport and LightingSetup tests passed 16/16**. The repeat preserved Environment, GrassBlades and the report byte-for-byte and appended no duplicate comparisons. Of the protected assets, only Environment and GrassBlades changed from the starting state; existing metadata/GUIDs, TerrainData, NavMesh, meshes and vegetation prefabs stayed unchanged. Full geometry inventory remains 748,336 triangles / 731,628 vertices and the five-view vegetation peak remains 76,318. No C# compiler errors/warnings were logged.
 
 Logs/results: `%TEMP%/blackout-w11-commit5-memory.log`, `blackout-w11-commit5-repeat.log`, `blackout-w11-commit5-tests.log` and `blackout-w11-commit5-tests.xml`.
+## 2026-10-18 11:56:23 — runtime Medium shadow distance comparison
+
+| Metric | Before | After | What changed and why |
+| --- | ---: | ---: | --- |
+| Runtime Medium shadow distance (m) | 60 | 50 | Reduce Medium reach by 10 m; align it with the saved PC distance. Low/High and other preset settings are retained. |
+| Runtime Low / High distance (m) | 40 / 80 | 40 / 80 | Retained. |
+| Saved URP distance (m), asset read only | 50 | 50 | QualityPreset applies in Play mode and restores the original in-memory value when destroyed. |
+| Outdoor fog transmittance at Medium cutoff (calculated %) | 51.887 | 63.405 | Exponential-squared fog at density 0.0135; visual cutoff still needs review. |
+
+The before/after values are read from the compiled QualityPreset policy in matching contexts. This measures configuration, not rendered shadow triangles, draw calls, CPU/GPU time or visual quality. The saved pipeline asset, cascades, shadow map resolution, scene geometry and gameplay objects are not changed.
+
+Unity 6000.3.25f1; target StandaloneWindows64; quality PC; LOD bias 2; graphics Direct3D11
+
+All objects include inactive children; mesh counts repeat shared meshes per instance. Static means any authored static flag, not a promise that an object cannot move. Terrain vegetation is counted separately from scene Renderer components. Geometry totals are inventory bounds, not triangles visible in one frame.
+
+| Metric | Value |
+| --- | ---: |
+| GameObjects | 529 |
+| Objects with static flags / without flags | 94 / 435 |
+| Renderer components / active and enabled | 169 / 168 |
+| Renderer: MeshRenderer | 164 |
+| Renderer: ParticleSystemRenderer | 5 |
+| Renderers with BatchingStatic flag | 93 |
+| Scene mesh triangles / vertices (all LOD children) | 7144 / 8066 |
+| Terrain full-grid triangles / vertices (upper bound before holes and pixel-error LOD) | 524288 / 263169 |
+| Terrain tree instances | 657 |
+| Tree LOD0 triangles / vertices (all instances) | 120744 / 207913 |
+| Terrain detail instances (authored density) | 6376 |
+| Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
+| Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
+| Unique referenced materials (scene dependencies including skybox, Terrain and all vegetation LODs) | 29 |
+| Scene lightmap resolution (texels/unit; 0 = no assigned settings) | 10 |
+| GI MeshRenderers with Scale In Lightmap 0.5 | 22 |
+| GI MeshRenderers with Scale In Lightmap 1 | 70 |
+| Lights: Mixed / enabled | 37 |
+| Lights: Realtime / disabled | 17 |
+| Active URP SRP Batcher / shadow distance (m) | True / 50 |
+| QualityPreset runtime Low / Medium / High shadow distance (m) | 40 / 50 / 80 |
+| Unique referenced textures (including embedded scene dependencies) | 4 |
+| Texture runtime memory estimate (bytes, Editor process) | 2887344 |
+
+Top 10 referenced textures by Editor runtime memory estimate; this includes object overhead and CPU copies, so it is not compressed build size or GPU-only memory. Imported dimensions reflect the active target.
+
+| Texture / asset | Dimensions | Format | Estimated bytes |
+| --- | ---: | --- | ---: |
+| Assets/Environment/Terrain/IslandTerrainData.asset / SplatAlpha 0 | 512 × 512 | RGBA32 | 2797096 |
+| Assets/Environment/Vegetation/Placeholder/Textures/GrassBlades.asset / GrassBlades | 128 × 128 | DXT5 | 44640 |
+| Assets/Environment/Atmosphere/SoftParticle.png / SoftParticle | 64 × 64 | RGBA32 | 44584 |
+| Assets/Environment/Terrain/Layers/TerrainLayerWhite.asset / TerrainLayerWhite | 4 × 4 | RGBA32 | 1024 |
+
+Batching audit (shader layout and configuration, not measured draw calls):
+
+| Check | Observed |
+| --- | --- |
+| Player batching, active build target | Static 1, Dynamic 1 (1 enabled, 0 disabled) |
+| BatchingStatic Renderer components | 93 |
+| Static-rule targets (renderers plus Terrain) / mismatches | 111 / 0 |
+| Renderers with a property block now | 5 |
+| Configured FlickerLight/PowerStateLighting property-block targets (unique) | 48 |
+| Compatible / incompatible / unknown subshaders | 3 / 0 / 11 |
+
+| Referenced material shader | Subshader index | SRP layout check |
+| --- | ---: | --- |
+| Blackout/NightSky | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 3 | compatible |
+| Universal Render Pipeline/Particles/Unlit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 2 | compatible |
+| Universal Render Pipeline/Terrain/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 2 | compatible |
+
+All subshaders are listed; this does not identify the pass/variant chosen for a frame. Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers referenced material assets; skybox and other special passes still need Frame Debugger inspection. Property blocks exclude their renderer from SRP batching even with a compatible shader. Configured targets may have no block in EditMode; inspect both powered and blackout states in Play mode. Static flags and a Player setting do not prove that Unity combined a renderer into a batch. Repeated Terrain vegetation uses its own rendering path; these Renderer counts exclude Terrain instances.
+
+
+
+Vegetation estimate: fixed 72° FOV, 16:9, eye 1.65 m, active quality LOD bias; whole detail patches, without occlusion or shadow passes. Frame Debugger and Profiler validation remains an Editor task.
+
+```text
+
+  visible vegetation triangles (main camera: FOV 72, 16:9, eye 1.65 m, LOD bias 2 (PC); shadows not counted), budget 250,000:
+    Dock (start)         trees LOD0/1/2 25 / 281 / 91 = 34,568 tris; bushes + grass 2185 = 27,278 tris; total 61,846 (24.7 % of budget)
+    Forest checkpoint    trees LOD0/1/2 52 / 267 / 68 = 30,923 tris; bushes + grass 3306 = 43,552 tris; total 74,475 (29.8 % of budget)
+    Trail middle         trees LOD0/1/2 75 / 160 / 51 = 18,899 tris; bushes + grass 2901 = 41,430 tris; total 60,329 (24.1 % of budget)
+    Gate, looking back   trees LOD0/1/2 78 / 148 / 91 = 22,652 tris; bushes + grass 3657 = 53,666 tris; total 76,318 (30.5 % of budget)
+    Hunter-1 spawn       trees LOD0/1/2 76 / 171 / 53 = 21,466 tris; bushes + grass 2689 = 37,386 tris; total 58,852 (23.5 % of budget)
+    worst: Gate, looking back, 76,318 of 250,000 (within budget)
+```
+
+### 2026-10-18 — final results and remaining visual checks
+
+Each row below refers to its dated comparison above. Changes were applied separately; configuration and geometry estimates do not establish a frame-time improvement.
+
+| Review or change | Before | After | Reason and measurement limit |
+| --- | --- | --- | --- |
+| SRP Batcher compatibility check | Enabled | Retained | Shader-layout audit records compatible, incompatible and unknown results; property blocks and actual frame passes still need inspection. |
+| Static batching check | 93 flagged renderers; 111 rule targets | Retained; 0 rule mismatches | Static batching was already enabled. Do not change moving boats, lamps or gameplay objects to manufacture a difference. |
+| Occlusion culling | No saved baked-data reference | Manual bake steps supplied; not baked | Compare the same camera with culling on/off after a bake. Coordinate shared data and scene references with the other scene owners. |
+| Palm middle LOD threshold | 0.10; five-view peak 80,874 triangles | 0.15; peak 76,318 triangles | Switch distant palms to LOD2 sooner. Estimated peak drops 4,556 triangles (5.6%); silhouettes and transitions await visual review. |
+| Dock-post Scale In Lightmap | 22 generated posts at 1 | 22 at 0.5 | Give narrow posts less baked detail; 70 other GI MeshRenderers remain at 1. Actual atlas occupancy and quality require the documented controlled bake. |
+| Generated grass compression | RGBA32; 87,380 raw mip bytes | DXT5/BC3; 21,872 raw mip bytes | Keep alpha, 128 x 128 dimensions and eight mips. Matching Direct3D11 Editor texture estimates total 3,018,360 -> 2,887,344 bytes; inspect grass edges and distant mips. |
+| Runtime Medium shadow reach | 60 m | 50 m | Match the saved PC distance and reduce reach by 10 m. Low/High remain 40/80 m; saved PC distance remains 50 m with four cascades. Check shadow fade; no GPU timing was measured. |
+
+The final material count is **29**, including the existing NightSky skybox. Earlier rows retain their measured **28** and explicitly label their narrower Renderer/Terrain/vegetation scope. This is a reporting correction, not an extra material. The before-run log exposed `Do not use ReadObjectThreaded on scene objects!` errors from loading a scene as asset subobjects. Scene files are now traversed through the Scene API and excluded from asset-subobject loading; the final report and tests run without those errors. A regression test opens Environment, checks the skybox is included and verifies the scene stays clean. The final shader audit covers 14 subshaders: 3 compatible, 0 incompatible and 11 unknown because Unity reports uninitialised data. Earlier runs initialised different subshaders; neither change in scope nor initialisation counts is a batching speedup. Inspect the selected passes in Frame Debugger.
+
+Final geometry inventory remains **748,336 triangles / 731,628 vertices**, with **169 Renderer components**, **94 objects with static flags / 435 without**, and **37 enabled Mixed / 17 disabled Realtime lights**. The top-ten texture table has four rows because only four referenced game texture assets were found. Texture estimates include Editor object/CPU overhead and exclude pipeline buffers, internal render targets and other non-asset allocations; they are not total graphics memory or build size. Null-graphics and Direct3D11 estimates must not be compared.
+
+Verification actually run: Unity 6000.3.25f1 final comparison exited 0; final EditMode tests passed **24/24** and PlayMode tests **2/2**, with no C# compiler errors/warnings. PlayMode exercises Medium -> Low -> High -> Medium and restoration of the original pipeline distance when the preset is destroyed. The final report scan produced no scene-subobject loading errors. Scene, terrain, NavMesh, palm, grass, PC/Mobile URP assets and Quality/Graphics settings stayed byte-identical during the shadow chunk. Unity rewrote only line endings in ProjectSettings.asset (Git reports no content diff); leave it unstaged. Logs/results are outside the repository at `%TEMP%/blackout-w11-commit6-shadow-before.log`, `blackout-w11-commit6-shadow-after.log`, `blackout-w11-commit6-edit-tests.log/.xml` and `blackout-w11-commit6-play-tests.log/.xml`.
+
+Before recording the demo, review palm transitions, grass alpha/mips and Medium shadow fade at the dock, forest and gate in powered and blackout states. Complete the controlled lightmap and occlusion comparisons above, then use Frame Debugger and Profiler on the demo machine at matching resolution, quality and camera positions. Those interactive visual, bake and timing checks remain unmeasured.
+
+Handoff to Systems Engineer: coordinate occlusion references in Bootstrap/Interactables and verify shared-data loading once the additive runtime loader exists; keep saved rendering settings under your ownership. Runtime Medium now uses the World Builder's 50 m policy.
+
+Handoff to Agent Controller: save Agents' shared occlusion reference during the coordinated bake and verify moving agents remain visible; review the three unstaged PH_Commander/PH_Hunter/PH_SecurityPatrol material import changes separately.

@@ -51,7 +51,7 @@ namespace Blackout.Environment.PlayTests
             UniversalAdditionalCameraData data = camera.GetUniversalAdditionalCameraData();
             Assert.That(data.renderPostProcessing, Is.True, "Medium: post-processing on");
             Assert.That(data.antialiasing, Is.EqualTo(AntialiasingMode.FastApproximateAntialiasing));
-            Assert.That(pipeline.shadowDistance, Is.EqualTo(60f));
+            Assert.That(pipeline.shadowDistance, Is.EqualTo(50f));
 
             preset.Apply(QualityLevel.Low);
             yield return null;
@@ -63,6 +63,10 @@ namespace Blackout.Environment.PlayTests
             yield return null;
             Assert.That(data.renderPostProcessing, Is.True);
             Assert.That(pipeline.shadowDistance, Is.EqualTo(80f));
+
+            preset.Apply(QualityLevel.Medium);
+            yield return null;
+            Assert.That(pipeline.shadowDistance, Is.EqualTo(50f), "Medium returns to W11's authored distance");
         }
 
         [UnityTest]

@@ -587,17 +587,19 @@ from a medium preset. It does not edit the asset.
 
 | Setting | Now | Medium preset |
 | --- | --- | --- |
-| Max Distance | 50 m | **60 m** |
+| Max Distance | 50 m | **50 m** (W11 runtime policy) |
 | Cascade Count | 4 | **2**, split at 25 % |
 | Main light resolution | 2048 px | 2048 px |
 | Soft shadows | on | on |
 
 - **Prototype:** its medium preset is one 2048 px moon map over an 80 × 80 m box.
-- **Cascades:** two cascades over 60 m give about the same detail near the player (the first cascade covers 15 m), and
-  they draw the shadow casters twice instead of four times.
-- **Distance:** at 60 m the fog already hides about half of a shadow (52 % is left).
+- **Cascades:** the two-cascade recommendation is retained but has not been applied or profiled; the PC asset still uses four.
+- **Distance:** W11 reduces runtime Medium from 60 to 50 m, matching the saved PC distance. The outdoor fog leaves
+  about 63% transmittance at 50 m versus 52% at 60 m, so the nearer shadow fade needs visual review.
 
-W9's QualityPreset changes the distance to 40 / 60 / 80 m for Low / Medium / High at runtime.
+W11's QualityPreset changes the distance to **40 / 50 / 80 m** for Low / Medium / High at runtime.
+`QualityPreset.MediumShadowDistance` also drives the Editor recommendation so they stay consistent. The saved URP
+asset, cascade count and shadow-map resolutions stay as authored; shadow timing and fade quality remain manual checks.
 
 ### Probes
 
@@ -997,7 +999,7 @@ settings code can call `Apply(Blackout.Environment.QualityLevel.Low)` (or Medium
 
 | Setting | Low | Medium | High |
 | --- | --- | --- | --- |
-| Active URP asset shadow distance | 40 m | 60 m | 80 m |
+| Active URP asset shadow distance | 40 m | 50 m (W11; previously 60 m) | 80 m |
 | MainCamera post-processing / FXAA | off / off | on / on | on / on |
 | Atmosphere emission rate and particle cap | ×0.5 | ×1 | ×1.5 |
 | Steam emission per vent | 3.5/s | 7/s | 10.5/s |

@@ -15,7 +15,7 @@ namespace Blackout.Environment
     /// <summary>
     /// Switches the World Builder's part of the quality settings between Low, Medium and High (W9), as the prototype's
     /// presets do:
-    /// - Shadow distance on the active URP asset: 40, 60 or 80 m. Medium is the W7 value.
+    /// - Shadow distance on the active URP asset: 40, 50 or 80 m. W11 reduces Medium from W9's 60 m.
     /// - Post-processing on the main camera, with FXAA: off on Low, on Medium and High. On Low the prototype skips its
     ///   whole post chain (bloom, vignette, grain and FXAA).
     /// - Particle counts: the atmosphere particle systems' emission rate and particle cap, × 0.5, 1 or 1.5. The scale
@@ -31,6 +31,9 @@ namespace Blackout.Environment
     [DisallowMultipleComponent]
     public class QualityPreset : MonoBehaviour
     {
+        // W11: retain the saved PC asset's 50 m reach instead of extending Medium to 60 m at startup.
+        public const float MediumShadowDistance = 50f;
+
         /// <summary>What one level sets.</summary>
         public readonly struct Settings
         {
@@ -63,8 +66,8 @@ namespace Blackout.Environment
 
         /// <summary>
         /// The settings of a level.
-        /// - Shadow distance: the outdoor fog (exponential squared, 0.0135) leaves 75 % of a shadow visible at 40 m, 52 % at
-        ///   60 m and 31 % at 80 m. Low stops at 40 m, the reach of the prototype's 80 m shadow box centred on the camera.
+        /// - Shadow distance: outdoor fog (exponential squared, 0.0135) leaves 75 % visible at 40 m, 63 % at 50 m and
+        ///   31 % at 80 m. Medium's shorter reach still needs a visual cutoff check; W11 does not claim an FPS gain.
         /// - Particles: Medium is the prototype's own numbers (steam 7 per second). Low halves them, like the prototype's
         ///   grass (0.35 against 0.7). High is 1.5 times, close to its 1.0 against 0.7.
         /// </summary>
@@ -77,7 +80,7 @@ namespace Blackout.Environment
                 case QualityLevel.High:
                     return new Settings(80f, true, 1.5f);
                 default:
-                    return new Settings(60f, true, 1f);
+                    return new Settings(MediumShadowDistance, true, 1f);
             }
         }
 
