@@ -412,7 +412,7 @@ prototype's own models and add 2 lower LODs:
 | Palm | 712 / 230 / 96 | 0.25 / 0.15 / 0.02 (W11) | 7.9 m, 5.2 m reach | Veg_PalmBark, Veg_PalmLeaf (double-sided) |
 | Rock, RockSmall | 180 / 80 / 20 | 0.15 / 0.05 / 0.015 | 2.3 m | Env_Rock |
 | Bush | 160 | — | about 1 m tall | Veg_Bush |
-| Grass | 6 (3 crossed cards) | — | 1.0 × 0.75 m | Veg_Grass (alpha cut-out, 128 px blade texture) |
+| Grass | 6 (3 crossed cards) | — | 1.0 × 0.75 m | Veg_Grass (alpha cut-out, 128 px BC3 blade texture, W11) |
 
 The colours are the middle of the reference's albedo range, times its tint and the prototype's average per-tree HSL
 tint. The PC quality level has LOD bias 2, so every LOD switch happens twice as far away as these screen heights give
@@ -641,6 +641,20 @@ Setup Lighting sets the flags on every renderer under these objects, and on the 
 | `Beach/Water` | Occludee and Batching static only | A 520 m see-through plane. As an occluder it would hide the sea bed and the hull under it, and in the lightmap it would take a large area for nothing |
 | `Beach/Boat` | none | It bobs, so it is dynamic and takes its light from the dock's light probes |
 | Lamp meshes | none | W8 changes their emission at run time |
+
+W11 sets **Scale In Lightmap 0.5** on the **22** generated `Beach/Dock/Dock_Post_*` renderers, using
+`BeachGreyboxBuilder.DockPostLightmapScale`. The deck, rails and bunker keep scale 1; the scene's GI MeshRenderer
+distribution is now 22 at 0.5 and 70 at 1. The scene's lightmap resolution stays **10 texels/unit**. The generated
+posts keep their GI flags, transforms, meshes, colliders and materials. **Blackout/World/Apply Dock Post Lightmap
+Scale And Report** updates only their scale fields and saves Environment; no lighting bake runs. Actual occupied
+texels, lightmap memory and dock lighting quality still need a before/after bake.
+
+W11 also stores the generated `GrassBlades.asset` as **DXT5/BC3** for the Windows target, still **128 × 128**, with
+**8 mip levels**, the same GUID, Clamp and Bilinear. The mip payload falls from **87,380 to 21,872 bytes**. In the
+same Direct3D11 Editor context, its runtime memory estimate falls from **175,656 to 44,640 bytes**; this includes
+CPU copies and overhead. **Blackout/World/Compress Grass Texture And Report** updates only that texture and the
+placeholder builder uses the same compression method. Terrain control maps and the soft particle gradient stay
+as authored. Check grass edges, colour and distant mips visually; recheck format support when changing target.
 
 Everything else (markers, the NavMesh, the boundary and the `Lighting` objects) is left as it is. Occlusion culling is
 not baked yet, but the flags are ready for it. The terrain's Scale In Lightmap is 0.064, so it gets 0.64 texels per

@@ -17,6 +17,8 @@ namespace Blackout.Editor
     /// </summary>
     public static class BeachGreyboxBuilder
     {
+        // W11: allocate less baked-lightmap detail to the narrow dock support posts.
+        public const float DockPostLightmapScale = 0.5f;
         private const string UndoLabel = "Build Terrain";
 
         // Ocean plane (Unity's Plane primitive is 10 x 10 m).
@@ -160,7 +162,8 @@ namespace Blackout.Editor
         private static void Post(Transform dock, string part, ISet<string> built, float x, float z, float topY, Material material)
         {
             float height = topY - PostBottomY;
-            Cylinder(dock, part, built, new Vector3(x, PostBottomY + height * 0.5f, z), PostDiameter, height, material, true);
+            GameObject post = Cylinder(dock, part, built, new Vector3(x, PostBottomY + height * 0.5f, z), PostDiameter, height, material, true);
+            post.GetComponent<MeshRenderer>().scaleInLightmap = DockPostLightmapScale;
         }
 
         private static GameObject Box(Transform container, string part, ISet<string> built, Vector3 localCentre, Vector3 size,

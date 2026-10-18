@@ -210,6 +210,7 @@ namespace Blackout.Editor
             };
             texture.SetPixels32(VegetationMeshes.GrassBlades(GrassTextureSize));
             texture.Apply(true);
+            WorldMemoryTuner.CompressGrass(texture);
             return SaveInPlace(texture, GrassTexturePath);
         }
 

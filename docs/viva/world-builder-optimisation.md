@@ -464,3 +464,201 @@ Focused EditMode tests passed **20/20**: VegetationLodTuner, VegetationBudget an
 Before accepting the visual tradeoff, open the palm prefab and compare LOD1/LOD2 in its LODGroup preview; inspect distant palms in Environment along the dock and gate views. Confirm acceptable frond silhouettes and popping, and check the Console. Frame time, shadow-pass geometry and visual approval remain unmeasured. This is a viewpoint triangle estimate, not an FPS result.
 
 Logs/results: `%TEMP%/blackout-w11-commit4-palm-lod.log`, `blackout-w11-commit4-repeat.log`, `blackout-w11-commit4-tests.log` and `blackout-w11-commit4-tests.xml`.
+## 2026-10-18 11:34:23 — dock post lightmap scale comparison
+
+| Parameter | Before | After | What changed and why |
+| --- | --- | --- | --- |
+| Dock post Scale In Lightmap : renderer count | 1: 22 | 0.5: 22 | Allocate less baked-lightmap detail to narrow support posts; deck, rails and bunker remain authored. |
+
+Only the generated Dock_Post_ renderers' scale changes. GI flags, transforms, geometry, colliders and materials stay authored. No lighting was baked: actual occupied texels, lightmap memory and visual quality remain unmeasured.
+
+Unity 6000.3.25f1; target StandaloneWindows64; quality PC; LOD bias 2; graphics Direct3D11
+
+All objects include inactive children; mesh counts repeat shared meshes per instance. Static means any authored static flag, not a promise that an object cannot move. Terrain vegetation is counted separately from scene Renderer components. Geometry totals are inventory bounds, not triangles visible in one frame.
+
+| Metric | Value |
+| --- | ---: |
+| GameObjects | 529 |
+| Objects with static flags / without flags | 94 / 435 |
+| Renderer components / active and enabled | 169 / 168 |
+| Renderer: MeshRenderer | 164 |
+| Renderer: ParticleSystemRenderer | 5 |
+| Renderers with BatchingStatic flag | 93 |
+| Scene mesh triangles / vertices (all LOD children) | 7144 / 8066 |
+| Terrain full-grid triangles / vertices (upper bound before holes and pixel-error LOD) | 524288 / 263169 |
+| Terrain tree instances | 657 |
+| Tree LOD0 triangles / vertices (all instances) | 120744 / 207913 |
+| Terrain detail instances (authored density) | 6376 |
+| Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
+| Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
+| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Scene lightmap resolution (texels/unit; 0 = no assigned settings) | 10 |
+| GI MeshRenderers with Scale In Lightmap 0.5 | 22 |
+| GI MeshRenderers with Scale In Lightmap 1 | 70 |
+| Lights: Mixed / enabled | 37 |
+| Lights: Realtime / disabled | 17 |
+| Active URP SRP Batcher / shadow distance (m) | True / 50 |
+| Unique referenced textures (including embedded scene dependencies) | 4 |
+| Texture runtime memory estimate (bytes, Editor process) | 3018360 |
+
+Top 10 referenced textures by Editor runtime memory estimate; this includes object overhead and CPU copies, so it is not compressed build size or GPU-only memory. Imported dimensions reflect the active target.
+
+| Texture / asset | Dimensions | Format | Estimated bytes |
+| --- | ---: | --- | ---: |
+| Assets/Environment/Terrain/IslandTerrainData.asset / SplatAlpha 0 | 512 × 512 | RGBA32 | 2797096 |
+| Assets/Environment/Vegetation/Placeholder/Textures/GrassBlades.asset / GrassBlades | 128 × 128 | RGBA32 | 175656 |
+| Assets/Environment/Atmosphere/SoftParticle.png / SoftParticle | 64 × 64 | RGBA32 | 44584 |
+| Assets/Environment/Terrain/Layers/TerrainLayerWhite.asset / TerrainLayerWhite | 4 × 4 | RGBA32 | 1024 |
+
+Batching audit (shader layout and configuration, not measured draw calls):
+
+| Check | Observed |
+| --- | --- |
+| Player batching, active build target | Static 1, Dynamic 1 (1 enabled, 0 disabled) |
+| BatchingStatic Renderer components | 93 |
+| Static-rule targets (renderers plus Terrain) / mismatches | 111 / 0 |
+| Renderers with a property block now | 5 |
+| Configured FlickerLight/PowerStateLighting property-block targets (unique) | 48 |
+| Compatible / incompatible / unknown subshaders | 4 / 0 / 9 |
+
+| Referenced material shader | Subshader index | SRP layout check |
+| --- | ---: | --- |
+| Universal Render Pipeline/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 2 | compatible |
+| Universal Render Pipeline/Particles/Simple Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 3 | compatible |
+| Universal Render Pipeline/Particles/Unlit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 2 | compatible |
+| Universal Render Pipeline/Terrain/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 2 | compatible |
+
+All subshaders are listed; this does not identify the pass/variant chosen for a frame. Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers mesh/Terrain materials; skybox and other special passes still need Frame Debugger inspection. Property blocks exclude their renderer from SRP batching even with a compatible shader. Configured targets may have no block in EditMode; inspect both powered and blackout states in Play mode. Static flags and a Player setting do not prove that Unity combined a renderer into a batch. Repeated Terrain vegetation uses its own rendering path; these Renderer counts exclude Terrain instances.
+
+
+
+Vegetation estimate: fixed 72° FOV, 16:9, eye 1.65 m, active quality LOD bias; whole detail patches, without occlusion or shadow passes. Frame Debugger and Profiler validation remains an Editor task.
+
+```text
+
+  visible vegetation triangles (main camera: FOV 72, 16:9, eye 1.65 m, LOD bias 2 (PC); shadows not counted), budget 250,000:
+    Dock (start)         trees LOD0/1/2 25 / 281 / 91 = 34,568 tris; bushes + grass 2185 = 27,278 tris; total 61,846 (24.7 % of budget)
+    Forest checkpoint    trees LOD0/1/2 52 / 267 / 68 = 30,923 tris; bushes + grass 3306 = 43,552 tris; total 74,475 (29.8 % of budget)
+    Trail middle         trees LOD0/1/2 75 / 160 / 51 = 18,899 tris; bushes + grass 2901 = 41,430 tris; total 60,329 (24.1 % of budget)
+    Gate, looking back   trees LOD0/1/2 78 / 148 / 91 = 22,652 tris; bushes + grass 3657 = 53,666 tris; total 76,318 (30.5 % of budget)
+    Hunter-1 spawn       trees LOD0/1/2 76 / 171 / 53 = 21,466 tris; bushes + grass 2689 = 37,386 tris; total 58,852 (23.5 % of budget)
+    worst: Gate, looking back, 76,318 of 250,000 (within budget)
+```
+
+
+## 2026-10-18 11:34:24 — grass texture compression comparison
+
+| Metric | Before | After | What changed and why |
+| --- | ---: | ---: | --- |
+| Generated grass format | RGBA32 | DXT5 | Explicit DXT5/BC3 retains alpha for the Windows target. |
+| Grass raw mip payload (bytes) | 87380 | 21872 | Same 128x128 dimensions and mip levels. |
+| Grass Editor runtime memory estimate (bytes) | 175656 | 44640 | Same graphics context, includes CPU copies/overhead. |
+| All reported textures, Editor runtime memory estimate (bytes) | 3018360 | 2887344 | One texture changed; terrain control map and soft particle gradient are retained. |
+
+The generated texture keeps its GUID, wrap/filter settings, dimensions and mip count. The placeholder builder uses the same compression method. BC3 is lossy: inspect grass edges/colour and distant mip levels before accepting the visual tradeoff. Runtime memory estimates are not build size or GPU frame time.
+
+Unity 6000.3.25f1; target StandaloneWindows64; quality PC; LOD bias 2; graphics Direct3D11
+
+All objects include inactive children; mesh counts repeat shared meshes per instance. Static means any authored static flag, not a promise that an object cannot move. Terrain vegetation is counted separately from scene Renderer components. Geometry totals are inventory bounds, not triangles visible in one frame.
+
+| Metric | Value |
+| --- | ---: |
+| GameObjects | 529 |
+| Objects with static flags / without flags | 94 / 435 |
+| Renderer components / active and enabled | 169 / 168 |
+| Renderer: MeshRenderer | 164 |
+| Renderer: ParticleSystemRenderer | 5 |
+| Renderers with BatchingStatic flag | 93 |
+| Scene mesh triangles / vertices (all LOD children) | 7144 / 8066 |
+| Terrain full-grid triangles / vertices (upper bound before holes and pixel-error LOD) | 524288 / 263169 |
+| Terrain tree instances | 657 |
+| Tree LOD0 triangles / vertices (all instances) | 120744 / 207913 |
+| Terrain detail instances (authored density) | 6376 |
+| Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
+| Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
+| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Scene lightmap resolution (texels/unit; 0 = no assigned settings) | 10 |
+| GI MeshRenderers with Scale In Lightmap 0.5 | 22 |
+| GI MeshRenderers with Scale In Lightmap 1 | 70 |
+| Lights: Mixed / enabled | 37 |
+| Lights: Realtime / disabled | 17 |
+| Active URP SRP Batcher / shadow distance (m) | True / 50 |
+| Unique referenced textures (including embedded scene dependencies) | 4 |
+| Texture runtime memory estimate (bytes, Editor process) | 2887344 |
+
+Top 10 referenced textures by Editor runtime memory estimate; this includes object overhead and CPU copies, so it is not compressed build size or GPU-only memory. Imported dimensions reflect the active target.
+
+| Texture / asset | Dimensions | Format | Estimated bytes |
+| --- | ---: | --- | ---: |
+| Assets/Environment/Terrain/IslandTerrainData.asset / SplatAlpha 0 | 512 × 512 | RGBA32 | 2797096 |
+| Assets/Environment/Vegetation/Placeholder/Textures/GrassBlades.asset / GrassBlades | 128 × 128 | DXT5 | 44640 |
+| Assets/Environment/Atmosphere/SoftParticle.png / SoftParticle | 64 × 64 | RGBA32 | 44584 |
+| Assets/Environment/Terrain/Layers/TerrainLayerWhite.asset / TerrainLayerWhite | 4 × 4 | RGBA32 | 1024 |
+
+Batching audit (shader layout and configuration, not measured draw calls):
+
+| Check | Observed |
+| --- | --- |
+| Player batching, active build target | Static 1, Dynamic 1 (1 enabled, 0 disabled) |
+| BatchingStatic Renderer components | 93 |
+| Static-rule targets (renderers plus Terrain) / mismatches | 111 / 0 |
+| Renderers with a property block now | 5 |
+| Configured FlickerLight/PowerStateLighting property-block targets (unique) | 48 |
+| Compatible / incompatible / unknown subshaders | 4 / 0 / 9 |
+
+| Referenced material shader | Subshader index | SRP layout check |
+| --- | ---: | --- |
+| Universal Render Pipeline/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 2 | compatible |
+| Universal Render Pipeline/Particles/Simple Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 3 | compatible |
+| Universal Render Pipeline/Particles/Unlit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 2 | compatible |
+| Universal Render Pipeline/Terrain/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 2 | compatible |
+
+All subshaders are listed; this does not identify the pass/variant chosen for a frame. Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers mesh/Terrain materials; skybox and other special passes still need Frame Debugger inspection. Property blocks exclude their renderer from SRP batching even with a compatible shader. Configured targets may have no block in EditMode; inspect both powered and blackout states in Play mode. Static flags and a Player setting do not prove that Unity combined a renderer into a batch. Repeated Terrain vegetation uses its own rendering path; these Renderer counts exclude Terrain instances.
+
+
+
+Vegetation estimate: fixed 72° FOV, 16:9, eye 1.65 m, active quality LOD bias; whole detail patches, without occlusion or shadow passes. Frame Debugger and Profiler validation remains an Editor task.
+
+```text
+
+  visible vegetation triangles (main camera: FOV 72, 16:9, eye 1.65 m, LOD bias 2 (PC); shadows not counted), budget 250,000:
+    Dock (start)         trees LOD0/1/2 25 / 281 / 91 = 34,568 tris; bushes + grass 2185 = 27,278 tris; total 61,846 (24.7 % of budget)
+    Forest checkpoint    trees LOD0/1/2 52 / 267 / 68 = 30,923 tris; bushes + grass 3306 = 43,552 tris; total 74,475 (29.8 % of budget)
+    Trail middle         trees LOD0/1/2 75 / 160 / 51 = 18,899 tris; bushes + grass 2901 = 41,430 tris; total 60,329 (24.1 % of budget)
+    Gate, looking back   trees LOD0/1/2 78 / 148 / 91 = 22,652 tris; bushes + grass 3657 = 53,666 tris; total 76,318 (30.5 % of budget)
+    Hunter-1 spawn       trees LOD0/1/2 76 / 171 / 53 = 21,466 tris; bushes + grass 2689 = 37,386 tris; total 58,852 (23.5 % of budget)
+    worst: Gate, looking back, 76,318 of 250,000 (within budget)
+```
+
+
+### 2026-10-18 — lightmap-scale and texture-compression verification
+
+The two changes above ran sequentially in Direct3D11: first the dock posts' per-renderer lightmap scale, then a fresh Scene Report; next the grass compression, then another fresh report. The dock change is a configured relative resolution reduction, not a measured lightmap-memory saving. Only 22 generated support posts use 0.5; the remaining 70 GI MeshRenderers keep 1 and the Lighting Settings asset stays at 10 texels/unit. The Environment diff contains exactly those 22 scale fields. Unity defines Scale In Lightmap as per-object relative resolution. [Unity API](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MeshRenderer-scaleInLightmap.html).
+
+No lighting bake ran. To measure the lightmap result, use the existing W7 Lighting settings in this layout and change only the 22 post scales: first temporarily set them to 1, Generate Lighting from **Window > Rendering > Lighting**, and record occupied texels, resulting lightmap texture dimensions/memory, bake time and a dock screenshot. Then restore 0.5, generate again and record the same values at the same view and settings. Run Scene Report after each bake and append the real before/after row. Review post/deck contact lighting and light leaking; restore the authored 0.5 settings before saving. Include only owned generated bake assets and their metadata, and coordinate any output outside the allow-list before committing. Until this comparison is done, baked allocation and lighting quality remain pending; no atlas-size or bake-time reduction is claimed.
+
+The compressed grass is explicitly DXT5/BC3 using Unity's Editor compression API at Best quality; the builder regenerates it from the same seed-301 blade pixels. The original 128x128 dimensions, eight mip levels, Clamp/Bilinear sampling and readable flag are retained. Alpha is retained, but colour/alpha compression is lossy and needs visual review. The 87,380 → 21,872-byte mip payload is about 75% smaller. The all-texture runtime memory estimate falls by **131,016 bytes**, **3,018,360 → 2,887,344**, in the same Direct3D11 context. These estimates include CPU copies and overhead; no GPU-only memory, build-size or frame-time gain is claimed. [Unity texture compression API](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/EditorUtility.CompressTexture.html).
+
+The texture pass covers this generated grass asset only. The environment texture-import rules are retained; `Assets/Textures/Environment` currently contains only its placeholder `.gitkeep`. The terrain control map, tiny terrain white texture and uncompressed soft particle gradient were retained. Grass compression is specific to the measured Windows target and must be reviewed when porting. Inspect close grass edges and colour, then distant mip levels, against the authored appearance before accepting the visual tradeoff.
+
+Verification: apply and repeat batch runs exited 0; focused **WorldMemoryTuner, SceneReport and LightingSetup tests passed 16/16**. The repeat preserved Environment, GrassBlades and the report byte-for-byte and appended no duplicate comparisons. Of the protected assets, only Environment and GrassBlades changed from the starting state; existing metadata/GUIDs, TerrainData, NavMesh, meshes and vegetation prefabs stayed unchanged. Full geometry inventory remains 748,336 triangles / 731,628 vertices and the five-view vegetation peak remains 76,318. No C# compiler errors/warnings were logged.
+
+Logs/results: `%TEMP%/blackout-w11-commit5-memory.log`, `blackout-w11-commit5-repeat.log`, `blackout-w11-commit5-tests.log` and `blackout-w11-commit5-tests.xml`.

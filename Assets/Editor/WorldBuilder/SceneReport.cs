@@ -26,6 +26,8 @@ namespace Blackout.Editor
             public long MeshTriangles, MeshVertices, TreeTriangles, TreeVertices, DetailTriangles, DetailVertices;
             public long TerrainTriangles, TerrainVertices;
             public int Trees, Details;
+            public float LightmapResolution;
+            public readonly SortedDictionary<float, int> MeshLightmapScales = new SortedDictionary<float, int>();
             public SceneBatchingAudit.Result Batching;
             public readonly HashSet<Material> Materials = new HashSet<Material>();
             public readonly HashSet<Texture> Textures = new HashSet<Texture>();
@@ -93,6 +95,13 @@ namespace Blackout.Editor
                     Increment(result.RendererTypes, renderer.GetType().Name);
                     AddMaterials(result, renderer);
                     AddMesh(MeshOf(renderer), ref result.MeshTriangles, ref result.MeshVertices);
+                    if (renderer is MeshRenderer meshRenderer
+                        && (GameObjectUtility.GetStaticEditorFlags(renderer.gameObject) & StaticEditorFlags.ContributeGI) != 0)
+                    {
+                        float scale = meshRenderer.scaleInLightmap;
+                        result.MeshLightmapScales.TryGetValue(scale, out int count);
+                        result.MeshLightmapScales[scale] = count + 1;
+                    }
                 }
                 foreach (Light light in root.GetComponentsInChildren<Light>(true))
                     Increment(result.Lights, light.lightmapBakeType + " / "
@@ -113,6 +122,11 @@ namespace Blackout.Editor
                         if (asset is Texture texture) result.Textures.Add(texture);
                 }
             result.Batching = SceneBatchingAudit.Capture(scene, result.Materials);
+            if (scene.path == WorldSceneSkeleton.ScenePath)
+            {
+                LightingSettings settings = Lightmapping.GetLightingSettingsForScene(scene);
+                if (settings != null) result.LightmapResolution = settings.lightmapResolution;
+            }
             return result;
         }
 
@@ -228,6 +242,9 @@ namespace Blackout.Editor
                 (data.MeshTriangles + data.TerrainTriangles + data.TreeTriangles + data.DetailTriangles) + " / "
                 + (data.MeshVertices + data.TerrainVertices + data.TreeVertices + data.DetailVertices));
             Row(text, "Unique materials (scene, Terrain and all vegetation LODs)", data.Materials.Count);
+            Row(text, "Scene lightmap resolution (texels/unit; 0 = no assigned settings)", Number(data.LightmapResolution));
+            foreach (var pair in data.MeshLightmapScales)
+                Row(text, "GI MeshRenderers with Scale In Lightmap " + Number(pair.Key), pair.Value);
             foreach (var pair in data.Lights) Row(text, "Lights: " + pair.Key, pair.Value);
             var pipeline = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
             Row(text, "Active URP SRP Batcher / shadow distance (m)", pipeline != null
