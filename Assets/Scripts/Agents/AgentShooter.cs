@@ -61,8 +61,10 @@ namespace Blackout.Agents
                 hitMask = newHitMask.Value;
             }
         }
-        /// <summary>Set by whatever applies the alert buff (hook only; nothing wires this yet — A4 does not add the buff system). ×0.9 aim error while true, matching the heightened multiplier in agent-controller.md section 8.</summary>
+        /// <summary>Set by AgentRoot on the Commander alert. Default aim-error multiplier is ×0.9.</summary>
         public bool Heightened { get; set; }
+        /// <summary>G2 alert config; preserve the A4 default for callers that only set Heightened.</summary>
+        public float HeightenedAimErrorMultiplier { get; set; } = 0.9f;
         /// <summary>Shots actually fired (not just attempted). For tests and the future debug overlay.</summary>
         public int ShotsFired { get; private set; }
 
@@ -151,7 +153,8 @@ namespace Blackout.Agents
 
         private void FireOneShot(Vector3 origin, Vector3 direction, float distance)
         {
-            float error = ShotMath.AimError(config.spread, distance, engagedSeconds, Heightened);
+            float error = ShotMath.AimError(config.spread, distance, engagedSeconds, false)
+                * (Heightened ? HeightenedAimErrorMultiplier : 1f);
             Vector3 right = Vector3.Cross(Vector3.up, direction);
             right = right.sqrMagnitude > 1e-6f ? right.normalized : Vector3.right; // direction is ~vertical: pick an arbitrary perpendicular
             Vector3 up = Vector3.Cross(direction, right);

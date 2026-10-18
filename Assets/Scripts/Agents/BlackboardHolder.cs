@@ -13,15 +13,20 @@ namespace Blackout.Agents
     {
         [SerializeField] private VoidEventChannel generatorDisabled;
         [SerializeField] private VoidEventChannel cureTaken;
+        [SerializeField] private VoidEventChannel playerDied;
+        [SerializeField] private VoidEventChannel playerRespawned;
 
         private VoidEventChannel boundGenerator;
         private VoidEventChannel boundCure;
+        private VoidEventChannel boundPlayerDied;
+        private VoidEventChannel boundPlayerRespawned;
 
         public Blackboard Instance { get; } = new Blackboard();
 
         private void Awake()
         {
             Bind(generatorDisabled, cureTaken);
+            BindPlayerLifecycle(playerDied, playerRespawned);
         }
 
         private void OnDestroy()
@@ -32,7 +37,7 @@ namespace Blackout.Agents
         /// <summary>Starts listening to the two channels (either may be null). Public so tests can bind fake channels.</summary>
         public void Bind(VoidEventChannel generator, VoidEventChannel cure)
         {
-            Unbind();
+            UnbindWorldChannels();
             boundGenerator = generator;
             boundCure = cure;
             if (boundGenerator != null)
@@ -46,6 +51,12 @@ namespace Blackout.Agents
         }
 
         public void Unbind()
+        {
+            UnbindWorldChannels();
+            BindPlayerLifecycle(null, null);
+        }
+
+        private void UnbindWorldChannels()
         {
             if (boundGenerator != null)
             {
@@ -66,7 +77,26 @@ namespace Blackout.Agents
 
         private void OnCureTaken()
         {
-            Instance.cureTaken = true;
+            Instance.ReportCureTaken();
+        }
+
+        public void BindPlayerLifecycle(VoidEventChannel died, VoidEventChannel respawned)
+        {
+            if (boundPlayerDied != null) boundPlayerDied.OnRaised -= OnPlayerDied;
+            if (boundPlayerRespawned != null) boundPlayerRespawned.OnRaised -= OnPlayerRespawned;
+            boundPlayerDied = died;
+            boundPlayerRespawned = respawned;
+            if (boundPlayerDied != null) boundPlayerDied.OnRaised += OnPlayerDied;
+            if (boundPlayerRespawned != null) boundPlayerRespawned.OnRaised += OnPlayerRespawned;
+        }
+
+        private void OnPlayerDied() => Instance.playerNeutralized = true;
+
+        private void OnPlayerRespawned()
+        {
+            Instance.playerNeutralized = false;
+            Instance.lastKnownPlayerTime = float.NegativeInfinity;
+            Instance.squadAssembled = false;
         }
     }
 }

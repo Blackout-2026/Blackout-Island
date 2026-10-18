@@ -1,0 +1,19 @@
+{
+    "name": "Blackout.AI.Commander.PlayMode.Tests",
+    "rootNamespace": "Blackout.AI.Commander.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "Blackout.Shared",
+        "Blackout.Agents",
+        "Blackout.AI.Commander"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

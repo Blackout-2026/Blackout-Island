@@ -3,7 +3,8 @@
     "rootNamespace": "Blackout.Editor",
     "references": [
         "Blackout.Shared",
-        "Blackout.Agents"
+        "Blackout.Agents",
+        "Blackout.AI.Commander"
     ],
     "includePlatforms": [
         "Editor"
