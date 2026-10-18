@@ -38,10 +38,9 @@ namespace Blackout.Editor
         public const int SkyReflectionResolution = 128;
 
         // ---- URP shadows recommended for a medium preset (the URP asset is not World Builder's to edit) -----------
-        // The prototype's medium preset is one 2048 px moon shadow map over an 80 x 80 m box. Two cascades over 60 m
-        // give about the same detail near the player (the first cascade covers 15 m) and draw the shadow casters twice
-        // instead of four times. At 60 m the fog leaves 52 % of a shadow visible, so a longer distance is wasted.
-        public const float ShadowDistance = 60f;
+        // W11's Medium distance follows the runtime policy (50 m, reduced from W9's 60 m). The two-cascade advice
+        // stays separate: the saved PC asset still uses four cascades and is not edited by World Builder tools.
+        public const float ShadowDistance = Blackout.Environment.QualityPreset.MediumShadowDistance;
         public const int ShadowCascades = 2;
         public const float ShadowCascadeSplit = 0.25f;
         public const int MainShadowResolution = 2048;

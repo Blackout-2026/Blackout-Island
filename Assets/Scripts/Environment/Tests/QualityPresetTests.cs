@@ -19,18 +19,18 @@ namespace Blackout.Environment.Tests
         }
 
         [Test]
-        public void For_GivesThePrototypesThreePresets()
+        public void For_GivesThreePresetsWithTheW11MediumDistance()
         {
             AssertSettings(QualityLevel.Low, 40f, false, 0.5f);
-            AssertSettings(QualityLevel.Medium, 60f, true, 1f);
+            AssertSettings(QualityLevel.Medium, 50f, true, 1f);
             AssertSettings(QualityLevel.High, 80f, true, 1.5f);
         }
 
         [Test]
-        public void For_Medium_KeepsTheW7ShadowDistanceAndTheBuiltParticleCounts()
+        public void For_Medium_UsesTheW11DistanceAndKeepsBuiltParticleCounts()
         {
             QualityPreset.Settings medium = QualityPreset.For(QualityLevel.Medium);
-            Assert.That(medium.ShadowDistance, Is.EqualTo(60f), "the W7 medium preset");
+            Assert.That(medium.ShadowDistance, Is.EqualTo(50f), "the W11 medium preset");
             Assert.That(medium.ParticleScale, Is.EqualTo(1f), "the tool builds the Medium (prototype) numbers");
         }
 

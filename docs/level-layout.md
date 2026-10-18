@@ -411,14 +411,25 @@ prototype's own models and add 2 lower LODs:
 | Placeholder | Triangles LOD0 / LOD1 / LOD2 | LOD heights (screen) | Size | Material |
 | --- | --- | --- | --- | --- |
 | Pine | 108 / 46 / 23 | 0.25 / 0.10 / 0.02 | 9.8 m tall, 2.7 m reach | Veg_PineBark, Veg_PineNeedles (double-sided) |
-| Palm | 712 / 230 / 96 | 0.25 / 0.10 / 0.02 | 7.9 m, 5.2 m reach | Veg_PalmBark, Veg_PalmLeaf (double-sided) |
+| Palm | 712 / 230 / 96 | 0.25 / 0.15 / 0.02 (W11) | 7.9 m, 5.2 m reach | Veg_PalmBark, Veg_PalmLeaf (double-sided) |
 | Rock, RockSmall | 180 / 80 / 20 | 0.15 / 0.05 / 0.015 | 2.3 m | Env_Rock |
 | Bush | 160 | — | about 1 m tall | Veg_Bush |
-| Grass | 6 (3 crossed cards) | — | 1.0 × 0.75 m | Veg_Grass (alpha cut-out, 128 px blade texture) |
+| Grass | 6 (3 crossed cards) | — | 1.0 × 0.75 m | Veg_Grass (alpha cut-out, 128 px BC3 blade texture, W11) |
 
 The colours are the middle of the reference's albedo range, times its tint and the prototype's average per-tree HSL
 tint. The PC quality level has LOD bias 2, so every LOD switch happens twice as far away as these screen heights give
 at the 72° FOV (the pine's LOD1 at about 59 m instead of 29 m). To use real models, see `docs/credits/world-builder.md`.
+
+W11 changes only the generated palm's middle screen-height threshold from 0.10 to **0.15**
+(`VegetationLibrary.PalmLod1Height`). **Blackout/World/Apply Palm LOD And Report** updates that one field in
+`Placeholder/Palm_Placeholder.prefab`; Build Vegetation Placeholders uses the same constant. Nearby LOD0,
+the final 0.02 cull threshold, meshes, material references, colliders and scatter are retained. The LOD1-to-LOD2
+switch distance is two thirds of its former distance at the same instance scale, FOV and LOD bias.
+The dated comparison is in `docs/viva/world-builder-optimisation.md`; distant silhouettes and popping need an Editor check.
+Measured at PC LOD bias 2, the unit-scale palm's LOD1-to-LOD2 distance changes from **109.883 m to 73.255 m**.
+The five-view vegetation estimates are now Dock **61,846**, Forest checkpoint **74,475**, Trail middle **60,329**,
+Gate looking back **76,318** and Hunter-1 spawn **58,852** triangles. The highest falls from **80,874 to 76,318**
+(about **5.6%**); detail counts and the full LOD0 geometry inventory stay unchanged. These are estimates, not GPU timings.
 
 ### Visible-triangle budget
 
@@ -429,7 +440,7 @@ nearby trees again), the terrain, the compound, the agents and the weapons.
 Paint Terrain And Forest measures it with Unity's own rules on the painted data. A tree counts if its bounds are in the
 view and it is within 150 m, at the LOD that its LOD group size × scale, the 72° FOV and the quality level's LOD bias
 select. Details count by whole 25 m patches in view and within 60 m, from Unity's own instance positions. The camera
-is 16:9 with the eye 1.65 m above the ground. Result with the placeholders, at PC LOD bias 2:
+is 16:9 with the eye 1.65 m above the ground. **W6 baseline before W11**, at PC LOD bias 2:
 
 | Viewpoint | Trees LOD0 / LOD1 / LOD2 | Tree triangles | Bushes + grass | Detail triangles | Total | Share of budget |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -578,17 +589,19 @@ from a medium preset. It does not edit the asset.
 
 | Setting | Now | Medium preset |
 | --- | --- | --- |
-| Max Distance | 50 m | **60 m** |
+| Max Distance | 50 m | **50 m** (W11 runtime policy) |
 | Cascade Count | 4 | **2**, split at 25 % |
 | Main light resolution | 2048 px | 2048 px |
 | Soft shadows | on | on |
 
 - **Prototype:** its medium preset is one 2048 px moon map over an 80 × 80 m box.
-- **Cascades:** two cascades over 60 m give about the same detail near the player (the first cascade covers 15 m), and
-  they draw the shadow casters twice instead of four times.
-- **Distance:** at 60 m the fog already hides about half of a shadow (52 % is left).
+- **Cascades:** the two-cascade recommendation is retained but has not been applied or profiled; the PC asset still uses four.
+- **Distance:** W11 reduces runtime Medium from 60 to 50 m, matching the saved PC distance. The outdoor fog leaves
+  about 63% transmittance at 50 m versus 52% at 60 m, so the nearer shadow fade needs visual review.
 
-W9's QualityPreset changes the distance to 40 / 60 / 80 m for Low / Medium / High at runtime.
+W11's QualityPreset changes the distance to **40 / 50 / 80 m** for Low / Medium / High at runtime.
+`QualityPreset.MediumShadowDistance` also drives the Editor recommendation so they stay consistent. The saved URP
+asset, cascade count and shadow-map resolutions stay as authored; shadow timing and fade quality remain manual checks.
 
 ### Probes
 
@@ -635,6 +648,20 @@ Setup Lighting sets the flags on every renderer under these objects, and on the 
 | Fixed opaque parts under `Props/BunkerDressing` | Same as `Bunker/*` | Dress Bunker sets these flags on scene instances, preserving the source prefabs |
 | Transparent dressing parts | Occludee and Batching only | They neither occlude rooms nor consume lightmap space |
 | Emissive dressing parts, including monitor screens and LEDs | none | They remain outside static batching and lightmaps; monitor emission changes at the blackout |
+
+W11 sets **Scale In Lightmap 0.5** on the **22** generated `Beach/Dock/Dock_Post_*` renderers, using
+`BeachGreyboxBuilder.DockPostLightmapScale`. The deck, rails and bunker keep scale 1; the scene's GI MeshRenderer
+distribution is now 22 at 0.5 and 70 at 1. The scene's lightmap resolution stays **10 texels/unit**. The generated
+posts keep their GI flags, transforms, meshes, colliders and materials. **Blackout/World/Apply Dock Post Lightmap
+Scale And Report** updates only their scale fields and saves Environment; no lighting bake runs. Actual occupied
+texels, lightmap memory and dock lighting quality still need a before/after bake.
+
+W11 also stores the generated `GrassBlades.asset` as **DXT5/BC3** for the Windows target, still **128 × 128**, with
+**8 mip levels**, the same GUID, Clamp and Bilinear. The mip payload falls from **87,380 to 21,872 bytes**. In the
+same Direct3D11 Editor context, its runtime memory estimate falls from **175,656 to 44,640 bytes**; this includes
+CPU copies and overhead. **Blackout/World/Compress Grass Texture And Report** updates only that texture and the
+placeholder builder uses the same compression method. Terrain control maps and the soft particle gradient stay
+as authored. Check grass edges, colour and distant mips visually; recheck format support when changing target.
 
 Everything else (markers, the NavMesh, the boundary and the `Lighting` objects) is left as it is. Occlusion culling is
 not baked yet, but the flags are ready for it. The terrain's Scale In Lightmap is 0.064, so it gets 0.64 texels per
@@ -979,7 +1006,7 @@ settings code can call `Apply(Blackout.Environment.QualityLevel.Low)` (or Medium
 
 | Setting | Low | Medium | High |
 | --- | --- | --- | --- |
-| Active URP asset shadow distance | 40 m | 60 m | 80 m |
+| Active URP asset shadow distance | 40 m | 50 m (W11; previously 60 m) | 80 m |
 | MainCamera post-processing / FXAA | off / off | on / on | on / on |
 | Atmosphere emission rate and particle cap | ×0.5 | ×1 | ×1.5 |
 | Steam emission per vent | 3.5/s | 7/s | 10.5/s |
