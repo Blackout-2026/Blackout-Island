@@ -1,7 +1,6 @@
 // Owner: Agent Controller (Commander AI).
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Blackout.Shared;
 using UnityEngine;
 
@@ -313,16 +312,11 @@ namespace Blackout.AI.Commander
 
         public string GetDebugText()
         {
-            var text = new StringBuilder("Commander [GOAP] goal: ");
-            text.Append(GoalName).Append(" | ").Append(State).Append(" | ");
-            for (int i = 0; i < plan.Count; i++)
-            {
-                if (i > 0) text.Append(" -> ");
-                if (i == step) text.Append('[');
-                text.Append(plan[i].Name);
-                if (i == step) text.Append(']');
-            }
-            return text.ToString();
+            // AgentRoot may stop ticking after death; diagnostics must still describe the actual health.
+            string displayState = context?.Health != null && !context.Health.IsAlive ? "Dead" :
+                !isActiveAndEnabled ? "Disabled" : State;
+            return CommanderDebugText.Format(GoalName, displayState, plan, step,
+                world, context?.Blackboard, clock());
         }
     }
 }

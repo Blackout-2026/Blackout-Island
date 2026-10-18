@@ -378,6 +378,38 @@ namespace Blackout.AI.Commander.Tests
             Assert.That(brain.PlanVersion, Is.EqualTo(version));
         }
 
+        [Test]
+        public void DebugText_ReportsLivePlanWithoutReplanningOrSendingExtraOrders()
+        {
+            StartConverge();
+            int version = brain.PlanVersion;
+
+            string text = brain.GetDebugText();
+            brain.GetDebugText();
+
+            Assert.That(text, Does.Contain("goal: PlayerNeutralized | state: OrderConverge"));
+            Assert.That(text, Does.Contain("Plan: [OrderConverge(cost=2)] | totalCost=2 | remainingCost=2"));
+            Assert.That(text, Does.Contain("agentsAlive=3"));
+            Assert.That(text, Does.Contain("lastKnownPlayerPos=(20, 0, 0)"));
+            Assert.That(brain.PlanVersion, Is.EqualTo(version));
+            Assert.That(receivers[0].Count, Is.EqualTo(1));
+            Assert.That(board.playerNeutralized, Is.False);
+        }
+
+        [Test]
+        public void DebugText_ShowsDeathEvenWhenBrainTicksHaveStopped()
+        {
+            StartConverge();
+            int version = brain.PlanVersion;
+            Kill(context.Health);
+
+            string text = brain.GetDebugText();
+
+            Assert.That(text, Does.Contain("state: Dead"));
+            Assert.That(brain.PlanVersion, Is.EqualTo(version));
+            Assert.That(receivers[0].Count, Is.EqualTo(1));
+        }
+
         private void StartConverge()
         {
             board.alertLevel = 1;
