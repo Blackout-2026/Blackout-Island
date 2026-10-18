@@ -32,9 +32,30 @@ namespace Blackout.AI.Commander.Coordination.Tests
         protected readonly DirectiveHandling orders = new DirectiveHandling();
         public bool HasOrder => orders.HasOrder;
         public Directive LastOrder => orders.Order;
+        public float OrderElapsed { get; private set; }
 
-        public virtual void OnDirective(Directive directive) => orders.OnDirective(directive);
-        public void CompleteOrder() => orders.CompleteOrder();
+        public virtual void OnDirective(Directive directive)
+        {
+            bool changed = !HasOrder || directive.type != LastOrder.type ||
+                directive.position != LastOrder.position || directive.radius != LastOrder.radius;
+            orders.OnDirective(directive);
+            // Unknown enum values leave the mailbox untouched, including its elapsed time.
+            bool accepted = directive.type == DirectiveType.Converge ||
+                directive.type == DirectiveType.SearchZone || directive.type == DirectiveType.Regroup;
+            if (accepted && changed) OrderElapsed = 0f;
+        }
+
+        public void CompleteOrder()
+        {
+            orders.CompleteOrder();
+            OrderElapsed = 0f;
+        }
+
+        protected void AdvanceOrder(float deltaTime)
+        {
+            if (HasOrder) OrderElapsed += Mathf.Max(0f, deltaTime);
+        }
+
         public abstract AgentIntent Tick(float deltaTime);
 
         protected static AgentIntent Move(Vector3 target, MoveSpeed speed)
@@ -43,19 +64,26 @@ namespace Blackout.AI.Commander.Coordination.Tests
         }
     }
 
-    internal enum PatrolState { Patrol, Pursue, Search, Investigate }
+    internal enum PatrolState { Patrol, Pursue, Search, Investigate, Attack }
 
     internal sealed class FakePatrolReceiver : FakeDirectiveReceiver
     {
         public PatrolState State { get; private set; } = PatrolState.Patrol;
+        public bool LocalCombat { get; set; }
 
         public override AgentIntent Tick(float deltaTime)
         {
+            if (LocalCombat)
+            {
+                State = PatrolState.Attack;
+                return AgentIntent.Idle; // the fake has no actual perception or shooting executor
+            }
             if (!HasOrder)
             {
                 State = PatrolState.Patrol;
                 return AgentIntent.Idle;
             }
+            AdvanceOrder(deltaTime);
             switch (LastOrder.type)
             {
                 case DirectiveType.Converge:
@@ -71,22 +99,30 @@ namespace Blackout.AI.Commander.Coordination.Tests
         }
     }
 
-    internal enum HunterBranch { Prowl, FollowOrders }
+    internal enum HunterBranch { Prowl, FollowOrders, Engage }
     internal enum HunterTask { None, Converge, Search, Regroup }
 
     internal sealed class FakeHunterReceiver : FakeDirectiveReceiver
     {
         public HunterBranch Branch { get; private set; } = HunterBranch.Prowl;
         public HunterTask Task { get; private set; }
+        public bool LocalCombat { get; set; }
 
         public override AgentIntent Tick(float deltaTime)
         {
+            if (LocalCombat)
+            {
+                Branch = HunterBranch.Engage;
+                Task = HunterTask.None;
+                return AgentIntent.Idle;
+            }
             if (!HasOrder)
             {
                 Branch = HunterBranch.Prowl;
                 Task = HunterTask.None;
                 return AgentIntent.Idle;
             }
+            AdvanceOrder(deltaTime);
             Branch = HunterBranch.FollowOrders;
             switch (LastOrder.type)
             {
@@ -121,8 +157,10 @@ namespace Blackout.AI.Commander.Coordination.Tests
         public override AgentIntent Tick(float deltaTime)
         {
             // This fake only models post movement, not combat, cover or utility scoring.
-            return HasOrder && SelectedAction == GuardDecision.HoldPost
-                ? Move(Post, MoveSpeed.Walk) : AgentIntent.Idle;
+            if (SelectedAction != GuardDecision.HoldPost) return AgentIntent.Idle;
+            AdvanceOrder(deltaTime);
+            // A completed order does not undo a Guard's new post.
+            return Move(Post, MoveSpeed.Walk);
         }
     }
 

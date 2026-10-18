@@ -128,11 +128,49 @@ Each owner should check all three order types, a repeated type with a new target
 and an interruption by their own combat behavior. Confirm that receiving an order
 alone does not enable firing, and that Commander death does not clear the order.
 These samples describe the handoff; they do not claim the other owners' runtime
-brains already implement it. G3's scene-free fake-receiver harness will demonstrate
+brains already implement it. G3's scene-free fake-receiver harness demonstrates
 the mappings independently of their scenes and AI assemblies.
 
 The G2 alert is a separate contract: `IAlertReceiver.OnAlert(AgentAlert)` supplies
 the vision multiplier. Directive handling does not apply or stack alert buffs.
+
+## Running the scene-free handoff harness
+
+Open **Window > General > Test Runner > EditMode** and run the assembly
+`Blackout.AI.Commander.Coordination.Tests`. No scene needs to be loaded or saved.
+The source is `Assets/Scripts/AI/Commander/Tests/Coordination/`.
+
+| Fixture | What it demonstrates |
+| --- | --- |
+| DirectiveMappingTests | All nine receiver/type combinations, payloads and movement intents; the assembly references no game assembly except Blackout.Shared. |
+| DirectiveLifetimeTests | Moved targets, repeated orders, unknown enum values, local interruptions, owner completion and retention without further deliveries. |
+
+The fake Patrol and Hunter have a manually controlled local-combat flag. The
+fake Guard has a manually selected utility decision; it does not implement the
+real scorer. Their combat paths return Idle rather than inventing perception or
+shooting. The Hunter's search point is deterministically halfway along the zone's
+positive X radius; this only demonstrates radius handling, not a NavMesh search.
+The examples count active execution time and pause it during local interruptions.
+Actual brain owners retain responsibility for their own timer and completion rules.
+
+No GameObjects, MonoBehaviours, Health components, Commander instances or scene
+assets are created by this harness. Retention without future deliveries illustrates
+the receiving side of Commander death; the actual death/lifecycle wiring is covered
+by G2 integration and PlayMode tests. Passing these fake tests does not prove that
+the other owners' runtime brains have accepted the handoff.
+
+For a batch run, close the Editor first and use the project path for your clone:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.25f1\Editor\Unity.exe' `
+  -batchmode -nographics -projectPath '<repo>' -runTests -testPlatform EditMode `
+  -testFilter Blackout.AI.Commander.Coordination.Tests `
+  -testResults "$env:TEMP\blackout-g3-tests.xml" -logFile "$env:TEMP\blackout-g3.log"
+```
+
+Use a normal local terminal if a restricted sandbox prevents the Editor from
+connecting to its Licensing Client. The Test Runner exits the batch process when
+finished; the test command deliberately omits `-quit` so it can finish running.
 
 ## Sources and scope
 
