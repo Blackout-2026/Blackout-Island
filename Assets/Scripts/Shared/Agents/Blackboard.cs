@@ -18,8 +18,36 @@ namespace Blackout.Shared
         public int alertLevel;
         public bool generatorDisabled;
         public bool cureTaken;
+        /// <summary>Set by the player lifecycle integration, never by a predicted GOAP effect.</summary>
+        public bool playerNeutralized;
+        /// <summary>Cleared when the roster changes; set after the Commander completes a regroup.</summary>
+        public bool squadAssembled;
 
         private readonly Dictionary<string, string> agentStates = new Dictionary<string, string>();
+        private readonly List<BlackboardAgent> agents = new List<BlackboardAgent>();
+
+        /// <summary>Agent positions, health and optional directive receivers. Registration allocates; reading does not.</summary>
+        public IReadOnlyList<BlackboardAgent> Agents => agents;
+
+        /// <summary>Registers or updates an agent. Updating a brain preserves its last directive.</summary>
+        public BlackboardAgent RegisterAgent(string agentName, Transform transform, Health health,
+            IDirectiveReceiver receiver)
+        {
+            if (string.IsNullOrWhiteSpace(agentName))
+                throw new System.ArgumentException("An agent needs a unique name.", nameof(agentName));
+            for (int i = 0; i < agents.Count; i++)
+            {
+                if (agents[i].Name != agentName)
+                    continue;
+                agents[i].Update(transform, health, receiver);
+                return agents[i];
+            }
+
+            var agent = new BlackboardAgent(agentName, transform, health, receiver);
+            agents.Add(agent);
+            squadAssembled = false;
+            return agent;
+        }
 
         /// <summary>Registered agents (by name) and their current state text, for the debug overlay and the Commander.</summary>
         public IReadOnlyDictionary<string, string> AgentStates => agentStates;
@@ -33,6 +61,14 @@ namespace Blackout.Shared
         public void RemoveAgent(string agentName)
         {
             agentStates.Remove(agentName);
+            for (int i = agents.Count - 1; i >= 0; i--)
+            {
+                if (agents[i].Name == agentName)
+                {
+                    agents.RemoveAt(i);
+                    squadAssembled = false;
+                }
+            }
         }
     }
 }

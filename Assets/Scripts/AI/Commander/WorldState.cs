@@ -8,6 +8,8 @@ namespace Blackout.AI.Commander
     public sealed class WorldState : IEquatable<WorldState>
     {
         private readonly Dictionary<string, object> values;
+        private static readonly object TrueValue = true;
+        private static readonly object FalseValue = false;
 
         public WorldState()
         {
@@ -25,13 +27,16 @@ namespace Blackout.AI.Commander
 
         public WorldState Set(string key, bool value)
         {
-            values[ValidateKey(key)] = value;
+            values[ValidateKey(key)] = value ? TrueValue : FalseValue;
             return this;
         }
 
         public WorldState Set(string key, int value)
         {
-            values[ValidateKey(key)] = value;
+            ValidateKey(key);
+            // Observation writes these facts every think tick: only box a changed count.
+            if (!values.TryGetValue(key, out object previous) || !(previous is int oldValue) || oldValue != value)
+                values[key] = value;
             return this;
         }
 
