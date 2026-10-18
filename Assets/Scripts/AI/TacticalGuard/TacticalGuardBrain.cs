@@ -1,5 +1,6 @@
 // Owner: Core Developer (Tactical Guard AI).
 using System;
+using System.Text;
 using Blackout.Shared;
 using UnityEngine;
 
@@ -31,6 +32,14 @@ namespace Blackout.AI.TacticalGuard
         private Vector3 post;
         private float lastDamageTime = float.NegativeInfinity;
         private Marker heldCover;
+
+        // Kept for the debug text and the gizmos only; the decision never reads them back.
+        private GuardSituation lastSituation;
+        private Vector3 lastRepositionTarget;
+        private int tickCount;
+        private int textTick = -1;
+        private string debugText = "TacticalGuard (not started)";
+        private readonly StringBuilder debugBuilder = new StringBuilder(160);
 
         /// <summary>The action chosen on the last tick.</summary>
         public GuardActionType CurrentAction => scorer != null ? scorer.CurrentAction : GuardActionType.HoldPost;
@@ -68,6 +77,8 @@ namespace Blackout.AI.TacticalGuard
 
             post = FindPost();
             lastDamageTime = float.NegativeInfinity;
+            tickCount = 0;
+            textTick = -1;
 
             if (context.Health != null)
             {
@@ -91,6 +102,8 @@ namespace Blackout.AI.TacticalGuard
 
             GuardSituation situation = Sense(self, player, board, now, out Vector3 playerPos, out Vector3 playerChest);
             GuardActionType action = scorer.Choose(situation);
+            lastSituation = situation;
+            tickCount++;
 
             // Cover is only held while fighting from it or running to it; going back to a post or searching frees it.
             if (action == GuardActionType.Reposition || action == GuardActionType.HoldPost)
@@ -119,21 +132,75 @@ namespace Blackout.AI.TacticalGuard
                 case GuardActionType.Reposition:
                     float limit = board != null && board.alertLevel > 0 ? config.repositionLimitAlert : config.repositionLimit;
                     Vector3 target = GuardMath.RepositionTarget(post, lastKnown, limit);
+                    lastRepositionTarget = target;
                     return GuardIntentBuilder.Reposition(target, GuardMath.FlatDistance(self, target), lastKnown, hasLastKnown, config);
             }
 
             return GuardIntentBuilder.HoldPost(post, GuardMath.FlatDistance(self, post), now, config);
         }
 
+        /// <summary>
+        /// Chosen action, every action's score and the inputs, as three lines (see <see cref="GuardDebugFormatter"/>).
+        /// Rebuilt at most once per brain tick, so an overlay that asks every frame allocates only 10 times a second.
+        /// If something parses this text, read only the first line.
+        /// </summary>
         public string GetDebugText()
         {
-            if (scorer == null)
+            if (scorer == null || tickCount == 0)
             {
-                return "TacticalGuard (not started)";
+                return debugText;
             }
-            return heldCover != null
-                ? $"TacticalGuard {scorer.CurrentAction} (cover {heldCover.Id})"
-                : $"TacticalGuard {scorer.CurrentAction}";
+
+            if (textTick != tickCount)
+            {
+                debugBuilder.Clear();
+                GuardDebugFormatter.Append(debugBuilder, scorer, lastSituation, heldCover != null ? heldCover.Id : null);
+                debugText = debugBuilder.ToString();
+                textTick = tickCount;
+            }
+            return debugText;
+        }
+
+        // Selected guard only: yellow box = post, green = claimed cover (with a line to it), red = cover another guard
+        // holds, grey = free cover, cyan = where it is repositioning to.
+        private void OnDrawGizmosSelected()
+        {
+            if (context == null || context.Self == null)
+            {
+                return;
+            }
+
+            Vector3 self = context.Self.position;
+            Vector3 lift = Vector3.up * 0.1f;
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireCube(post + lift, new Vector3(0.6f, 0.2f, 0.6f));
+
+            var covers = context.GetMarkers(MarkerType.CoverPoint);
+            for (int i = 0; i < covers.Count; i++)
+            {
+                Marker cover = covers[i];
+                if (cover == null || cover == heldCover)
+                {
+                    continue;
+                }
+                Gizmos.color = claims != null && claims.IsClaimedByOther(cover, this) ? Color.red : Color.gray;
+                Gizmos.DrawWireSphere(cover.transform.position + lift, 0.25f);
+            }
+
+            if (heldCover != null)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(heldCover.transform.position + lift, 0.6f);
+                Gizmos.DrawLine(self + Vector3.up, heldCover.transform.position + Vector3.up);
+            }
+
+            if (CurrentAction == GuardActionType.Reposition)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawWireSphere(lastRepositionTarget + lift, 0.5f);
+                Gizmos.DrawLine(self + Vector3.up, lastRepositionTarget + Vector3.up);
+            }
         }
 
         private void OnDestroy()

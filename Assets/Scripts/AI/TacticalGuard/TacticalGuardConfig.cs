@@ -65,7 +65,8 @@ namespace Blackout.AI.TacticalGuard
         [Min(0.1f)] public float repositionArriveDistance = 1.2f;
 
         [Header("Heights (metres above the feet)")]
-        [Min(0f)] public float guardEyeHeight = 1.6f;
+        [Tooltip("Where the guard's sight ray starts. The prototype and the Agent Controller's guard prefab both use 1.95 m (the robot is tall).")]
+        [Min(0f)] public float guardEyeHeight = 1.95f;
         [Min(0f)] public float playerEyeHeight = 1.6f;
         [Tooltip("Height of a crouching guard's head; a cover point must hide this from the player's eye.")]
         [Min(0f)] public float coverHeadHeight = 1f;
