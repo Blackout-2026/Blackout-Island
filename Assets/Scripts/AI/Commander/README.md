@@ -1,4 +1,4 @@
-# Commander (G1 + G2)
+# Commander (G1-G4)
 
 Owner: Agent Controller. Runtime assembly: `Blackout.AI.Commander`.
 
@@ -9,6 +9,9 @@ Run **Blackout > Agents > Set Up Commander (G2)**. The tool creates
 `AgentRoot`, and connects the existing PlayerDied and PlayerRespawned channels in
 `Assets/Scenes/Agents.unity`. Existing config tuning is preserved. Re-running the
 tool does not change already configured assets or save other scenes.
+
+G4 also assigns CommanderDirectiveGizmos on the prefab. The additional menu
+**Blackout > Agents > Set Up Commander Debug (G4)** runs the same setup safely.
 
 The scene's existing BlackboardHolder listens for CureTaken. It sets the fact and
 notifies the living Commander immediately, without waiting for its 10 Hz think
@@ -70,3 +73,21 @@ Commander and confirm no new directives. Raise PlayerDied then PlayerRespawned
 to check goal completion and stale-sighting reset. The integration tests exercise
 delivery and the 1.4 vision multiplier with receiver doubles; they do not claim
 the other owners' actual brains already implement those behaviors.
+
+## G4 diagnostics and viva
+
+IDebugInfo now reports the current goal and state, the stored plan with action
+costs and active-step brackets, total/remaining cost, observed world facts and
+current Blackboard values. Formatting happens on diagnostic requests. AgentRoot
+publishes it on the existing state interval; stable think ticks do not format it.
+Published agent summaries use only their first line to avoid nested reports.
+
+In Play mode, enable Scene view Gizmos. CommanderDirectiveGizmos draws one
+visualization per living recipient's latest retained directive: cyan Converge,
+yellow SearchZone, magenta Regroup. Regroup also has a square center marker.
+The renderer reads the live Blackboard without issuing orders or moving agents.
+Retained orders remain visible after Commander death while its object exists.
+
+See [Commander coordination and viva notes](../../../../docs/viva/commander.md)
+for owner mappings, GOAP/FSM and Blackboard rationale, the worked cost-4 plan,
+the regroup-timeout weakness, test coverage and the Editor demonstration.
