@@ -44,6 +44,8 @@ namespace Blackout.AI.Commander
         public WorldState WorldState => world.Clone();
         public int PlanVersion { get; private set; }
         public CommanderConfig Config => config;
+        /// <summary>Live diagnostic source. Gizmo readers must not mutate it or tick the brain.</summary>
+        public Blackboard DebugBlackboard => context?.Blackboard;
 
         // Set these before Initialize. The clock seam keeps all timing tests deterministic.
         public void SetConfig(CommanderConfig value) => config = value;
