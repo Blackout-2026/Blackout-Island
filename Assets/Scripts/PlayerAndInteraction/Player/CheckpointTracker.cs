@@ -32,6 +32,11 @@ namespace Blackout.Player
         /// <summary>The respawn checkpoint, or null before any is reached (respawn at the spawn point).</summary>
         public Marker Current { get; private set; }
         public bool IsCureTaken { get; private set; }
+        /// <summary>
+        /// True: a checkpoint becomes current when the player comes near it. The MissionDirector (Y6) turns this off
+        /// and chooses the checkpoint per mission phase instead.
+        /// </summary>
+        public bool ReachByDistance { get; set; } = true;
 
         private void Awake()
         {
@@ -62,6 +67,11 @@ namespace Blackout.Player
 
         private void Update()
         {
+            if (!ReachByDistance)
+            {
+                return;
+            }
+
             if (checkpoints.Count == 0 && Time.time >= nextSearchTime)
             {
                 FindCheckpoints();
@@ -85,7 +95,7 @@ namespace Blackout.Player
             }
         }
 
-        /// <summary>Makes a checkpoint the respawn point. Public so the MissionDirector (Y6) can set it.</summary>
+        /// <summary>Makes a checkpoint the respawn point. Public so the MissionDirector can set it.</summary>
         public void SetCheckpoint(Marker marker)
         {
             Current = marker;

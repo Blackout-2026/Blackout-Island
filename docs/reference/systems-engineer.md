@@ -6,7 +6,7 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 **weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`), sections
 8–9 **death, respawn and the HUD** (Y4, from `player/player.js`, `game/mission.js`, `ui/hud.js` and
 `ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
-and `physics/crate.js`). The mission section gets added in Y6.
+and `physics/crate.js`), and section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -294,3 +294,78 @@ letter-spaced capitals. Margins 34 px from the screen edges, 30 px from top and 
 - **Crate:** a Rigidbody (mass and linear damping) with all rotation frozen, pushed by the player's
   `OnControllerColliderHit`, with a carving NavMeshObstacle that re-carves when it stops.
 - **Not ported:** the maglock toast, door and pickup sounds (UnityEvent hooks instead), and the crate tilt and dust.
+
+## 11. Mission flow (`game/mission.js`, `ui/menus.js`)
+
+### Phases and objectives
+
+The prototype checks the player's position every frame (after 20 other updates) and only ever moves forward.
+
+| Prototype phase | Entered when | Objective text | HUD label | Checkpoint set |
+| --- | --- | --- | --- | --- |
+| `beach` | start | Reach the bunker in the north of the island | BEACH | beach |
+| `forest` | left the beach (crossed the beach's inland edge) | Follow the trail and get into the bunker | FOREST | forest |
+| `entrance` | inside the compound (from beach or forest) | Open the bunker door [E], then Go down the ramp to level B1 once `door:opened` for the bunker door | BUNKER ENTRANCE | entrance |
+| `bunker` | underground (`player.zone === 'bunker'`) | Find the generator room | LEVEL B1 | (kept) |
+| `generator` | inside the generator room (from entrance or bunker) | Disable the generator — hold [E] at the control console | GENERATOR ROOM | generator |
+| (same phase) | `generator:disabled` | Take the cure from the laboratory | GENERATOR ROOM | (kept) |
+| `escape` | `cure:taken` | Escape — get back to the boat! | ESCAPE | (kept, then the escape ones below) |
+
+- **Events:** `objective:changed { text, phase, label }` whenever the text changes, `phase:changed` and `checkpoint`
+  when the phase changes. Toasts: "POWER FAILURE — EMERGENCY LIGHTING ACTIVE" on the blackout, "CURE ACQUIRED" on the cure.
+- **Escape checkpoints:** while the checkpoint is still `generator`, being outside inside the compound moves it to
+  `escapeEntrance`; then being out of the compound and past the gate moves it to `escapeForest`.
+- **Win:** after `cure:taken`, within the boat zone's radius (**6 m**, horizontal) and above y 0.5 →
+  `mission:complete { time, kills, deaths }`, once.
+- **Counters:** `kills` +1 on every `enemy:killed`, `deaths` +1 on every `player:died`, time from the mission start.
+
+### Mission Complete screen (`menus.js`)
+
+The game pauses and the pointer is released. Title **MISSION COMPLETE**, subtitle **THE CURE IS OFF THE ISLAND**,
+then a panel (dark, accent line on top) with a two-column stats grid: TIME `m:ss` (rounded seconds), KILLS
+`kills / total agents`, DEATHS. Labels 15 px, dim, letter-spaced; values 20 px. One **RESTART** button, which reloads
+the page (the whole mission starts again).
+
+### Unity mapping [GUESS]
+
+- **Phases** follow the playbook: **Beach → Forest → BunkerEntrance → Corridor → GeneratorRoom → Lab → Escape →
+  Complete**. `Corridor` is the prototype's `bunker` phase (underground, before the generator room). `Lab` is the
+  prototype's "generator disabled" objective, made its own phase. Phases only move forward; a debug jump is the only
+  way back, and it keeps the generator and cure state.
+- **Zones** come from the zone table in `docs/level-layout.md`, as boxes in `MissionZones`:
+  - Forest: z > −92 (the beach's inland edge).
+  - Compound: x −22 … 22, z 28 … 62, y > 7.
+  - Underground: the SecurityArea, Corridor, GeneratorRoom and Laboratory boxes, floor 2.5, y 1.5 … 9.
+  - Generator room: x −19.9 … −1.9, z 96 … 116, y 1.5 … 9.
+  - Boat zone: 6 m around the `BoatExit` marker, horizontal, y > 0.5.
+- **Transitions:** the prototype's zone tests, plus `GeneratorDisabled` moves any earlier phase to Lab, and
+  `CureTaken` moves any earlier phase to Escape. Complete needs Escape (so the cure) and the boat zone.
+- **Objectives** are the prototype strings, raised on `ObjectiveChanged` only when the text changes. The
+  BunkerEntrance text switches once `Door_D-Bunker` is open. The HUD shows the text only, without a phase label.
+- **Checkpoints:** the director tells `CheckpointTracker` which marker to use, and the 6 m distance rule (section 8)
+  switches off:
+  - Beach → `Checkpoint_Beach`
+  - Forest → `Checkpoint_Forest`
+  - BunkerEntrance and Corridor → `Checkpoint_BunkerEntrance`
+  - GeneratorRoom and Lab → `Checkpoint_GeneratorRoom`
+  - Escape → `Checkpoint_EscapeEntrance`, once back in the compound
+  - Escape → `Checkpoint_EscapeForest`, once out of the compound with z < 26
+- **Kills** count the player's own kills (`WeaponController.HitConfirmed(killed: true)`). `Shared` has no
+  "agent killed" channel, so KILLS shows the count only, without "/ total". **Deaths** count `PlayerDied`.
+  **Time** is from the moment the scenes have loaded.
+- **Complete:** `MissionComplete` is raised once; player input stops, the cursor is released and `Time.timeScale` is
+  0. Restart sets the time scale back to 1 and reloads `Bootstrap.unity`.
+- **Bootstrap:** `Bootstrap.unity` holds the Player (inactive until the level has loaded), the MissionDirector, the
+  Mission Complete screen and the UI EventSystem. It loads Environment, Interactables and Agents additively, skips a
+  scene that is not in Build Settings (Agents does not exist yet), makes **Environment the active scene** (fog,
+  skybox and ambient light), and then places the player at `PlayerStart`. A black LOADING screen covers the wait.
+- **Debug jumps** (`Blackout/Debug/Mission`, Play mode): the player goes to the phase's start and the mission
+  jumps there. The starts are:
+  - Beach, Forest, BunkerEntrance and GeneratorRoom: the phase's checkpoint.
+  - Corridor: 2 m past `DoorSocket_D-Security`.
+  - Lab: 2 m past `DoorSocket_D-Lab`.
+  - Escape: 2 m in front of `CureSocket`.
+  - Complete: `BoatExit`.
+  Jumping to Lab or later turns the generator off, and to Escape or later takes the cure. Both go through the real
+  objects, so the blackout, the lab door and the alert happen as in play.
+- **Not ported:** the start screen and pause menu, phase-change and power-failure toasts, the compass.
