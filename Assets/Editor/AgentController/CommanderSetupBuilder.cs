@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 namespace Blackout.Editor
 {
-    /// <summary>G2 setup. Preserves existing tuning and saves only this role's Commander prefab and Agents scene.</summary>
+    /// <summary>G2/G4 setup. Preserves tuning and saves only this role's Commander prefab and Agents scene.</summary>
     public static class CommanderSetupBuilder
     {
         public const string ConfigPath = "Assets/Scripts/AI/Commander/Config/CommanderConfig.asset";
@@ -34,6 +34,9 @@ namespace Blackout.Editor
             Debug.Log("CommanderSetupBuilder: Commander prefab, config and player lifecycle channels are configured.");
         }
 
+        [MenuItem("Blackout/Agents/Set Up Commander Debug (G4)")]
+        public static void BuildDebug() => Build();
+
         private static void ConfigurePrefab(CommanderConfig config)
         {
             GameObject contents = PrefabUtility.LoadPrefabContents(PrefabPath);
@@ -44,6 +47,11 @@ namespace Blackout.Editor
                 if (brain == null)
                 {
                     brain = contents.AddComponent<CommanderBrain>();
+                    changed = true;
+                }
+                if (contents.GetComponent<CommanderDirectiveGizmos>() == null)
+                {
+                    contents.AddComponent<CommanderDirectiveGizmos>();
                     changed = true;
                 }
                 var brainData = new SerializedObject(brain);

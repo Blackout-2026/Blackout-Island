@@ -19,6 +19,7 @@ namespace Blackout.Agents.Tests
             Assert.That(prefab, Is.Not.Null);
             var brain = prefab.GetComponent<CommanderBrain>();
             Assert.That(brain, Is.Not.Null);
+            Assert.That(prefab.GetComponent<CommanderDirectiveGizmos>(), Is.Not.Null);
             Assert.That(brain.Config, Is.Not.Null);
             Assert.That(new SerializedObject(prefab.GetComponent<AgentRoot>())
                 .FindProperty("brainBehaviour").objectReferenceValue, Is.SameAs(brain));
