@@ -92,8 +92,9 @@ namespace Blackout.Editor
             public bool CastShadows;
         }
 
-        // LOD heights: trees switch at 0.25 / 0.10 of the screen height (about 29 m and 73 m for the 10.6 m pine at
-        // the 72 degree FOV) and the last LOD stays until the terrain's tree distance culls it; rocks are smaller, so
+        // LOD heights: pine switches at 0.25 / 0.10 of the screen height (about 29 m and 73 m for the 10.6 m pine at
+        // the 72 degree FOV); W11's palm middle threshold comes from VegetationLibrary. The last tree LOD stays until
+        // the terrain's tree distance culls it; rocks are smaller, so
         // their thresholds are lower. Capsules: the prototype's tree cylinders (pine r 0.3, 1 m below to 9 m above the
         // ground; palm r 0.25, to 7 m) and rock cylinders (r 0.8 x scale, up to 0.6 x scale above the rock's centre).
         private static PrefabSpec[] Specs()
@@ -106,7 +107,7 @@ namespace Blackout.Editor
                     LodHeights = new[] { 0.25f, 0.10f, 0.02f }, MaterialPaths = new[] { bark, MaterialPath("PineNeedles") },
                     Capsule = new Vector3(0.3f, 10f, 4f), CastShadows = true },
                 new PrefabSpec { Prototype = VegetationPrototype.Palm, MeshName = "Palm", Mesh = VegetationMeshes.Palm,
-                    LodHeights = new[] { 0.25f, 0.10f, 0.02f }, MaterialPaths = new[] { MaterialPath("PalmBark"), MaterialPath("PalmLeaf") },
+                    LodHeights = new[] { 0.25f, VegetationLibrary.PalmLod1Height, 0.02f }, MaterialPaths = new[] { MaterialPath("PalmBark"), MaterialPath("PalmLeaf") },
                     Capsule = new Vector3(0.25f, 8f, 3f), CastShadows = true },
                 new PrefabSpec { Prototype = VegetationPrototype.Rock, MeshName = "Rock", Mesh = VegetationMeshes.Rock,
                     LodHeights = new[] { 0.15f, 0.05f, 0.015f }, MaterialPaths = new[] { rock },

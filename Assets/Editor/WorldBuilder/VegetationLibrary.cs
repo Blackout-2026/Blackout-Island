@@ -28,6 +28,9 @@ namespace Blackout.Editor
         /// <summary>The player camera's vertical field of view (reference section 4), used for LOD distances.</summary>
         public const float CameraFov = 72f;
 
+        // W11: keep nearby palm LOD0, but use its 96-triangle LOD2 sooner than the old 0.10 threshold.
+        public const float PalmLod1Height = 0.15f;
+
         public static string PrefabPath(VegetationPrototype prototype)
         {
             return $"{Folder}/{prototype}.prefab";

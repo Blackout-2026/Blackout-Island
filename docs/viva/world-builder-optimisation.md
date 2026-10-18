@@ -354,3 +354,113 @@ Handoff to Systems Engineer (`Assets/Scenes/Bootstrap.unity`, `Assets/Scenes/Int
 Handoff to Agent Controller (`Assets/Scenes/Agents.unity`): join the coordinated occlusion bake, save/commit Agents' reference to the same data yourself, and verify agents remain visible through door openings and never become static occluders.
 
 Verification: Unity 6000.3.25f1, Direct3D11, batch exit 0; Environment SHA256 unchanged; no C# compiler errors/warnings. No tests rerun for this documentation-only chunk. Log: `%TEMP%/blackout-w11-commit3-occlusion.log`. Unity Pipeline logged an ObjectDisposedException serving `/api/commands` during shutdown; the report completed and Unity exited 0. Bake/visual/performance checks above remain manual.
+## 2026-10-18 03:20:33 — palm LOD1 threshold comparison
+
+Changed only the generated palm's LOD1 transition height; 712-triangle LOD0 stays at 0.25, 230-triangle LOD1 switches to 96-triangle LOD2 sooner, and the final cull threshold stays at 0.02. The builder uses the same shared constant.
+
+| Parameter | Before | After | Why |
+| --- | ---: | ---: | --- |
+| Palm LOD1 screen height | 0.1 | 0.15 | Reduce distant palm geometry while retaining nearby LOD0. |
+| Unit-scale LOD1-to-LOD2 distance at current LOD bias (m) | 109.883 | 73.255 | Instance scale changes actual distances; camera FOV stays 72 degrees. |
+
+| Viewpoint | Tree triangles before | Tree triangles after | Total before | Total after | Triangles saved |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Dock (start) | 36310 | 34568 | 63588 | 61846 | 1742 |
+| Forest checkpoint | 31057 | 30923 | 74609 | 74475 | 134 |
+| Trail middle | 18899 | 18899 | 60329 | 60329 | 0 |
+| Gate, looking back | 27208 | 22652 | 80874 | 76318 | 4556 |
+| Hunter-1 spawn | 21466 | 21466 | 58852 | 58852 | 0 |
+
+Highest five-view estimate: 80874 -> 76318 triangles. These are main-view estimates, without shadow passes or occlusion, not GPU timings. Check distant palm silhouettes and the LOD switch in the Editor before accepting the visual tradeoff.
+
+Unity 6000.3.25f1; target StandaloneWindows64; quality PC; LOD bias 2; graphics Direct3D11
+
+All objects include inactive children; mesh counts repeat shared meshes per instance. Static means any authored static flag, not a promise that an object cannot move. Terrain vegetation is counted separately from scene Renderer components. Geometry totals are inventory bounds, not triangles visible in one frame.
+
+| Metric | Value |
+| --- | ---: |
+| GameObjects | 529 |
+| Objects with static flags / without flags | 94 / 435 |
+| Renderer components / active and enabled | 169 / 168 |
+| Renderer: MeshRenderer | 164 |
+| Renderer: ParticleSystemRenderer | 5 |
+| Renderers with BatchingStatic flag | 93 |
+| Scene mesh triangles / vertices (all LOD children) | 7144 / 8066 |
+| Terrain full-grid triangles / vertices (upper bound before holes and pixel-error LOD) | 524288 / 263169 |
+| Terrain tree instances | 657 |
+| Tree LOD0 triangles / vertices (all instances) | 120744 / 207913 |
+| Terrain detail instances (authored density) | 6376 |
+| Detail mesh triangles / vertices (all instances) | 96160 / 252480 |
+| Combined inventory triangles / vertices (full Terrain grid and LOD0 vegetation) | 748336 / 731628 |
+| Unique materials (scene, Terrain and all vegetation LODs) | 28 |
+| Lights: Mixed / enabled | 37 |
+| Lights: Realtime / disabled | 17 |
+| Active URP SRP Batcher / shadow distance (m) | True / 50 |
+| Unique referenced textures (including embedded scene dependencies) | 4 |
+| Texture runtime memory estimate (bytes, Editor process) | 3018360 |
+
+Top 10 referenced textures by Editor runtime memory estimate; this includes object overhead and CPU copies, so it is not compressed build size or GPU-only memory. Imported dimensions reflect the active target.
+
+| Texture / asset | Dimensions | Format | Estimated bytes |
+| --- | ---: | --- | ---: |
+| Assets/Environment/Terrain/IslandTerrainData.asset / SplatAlpha 0 | 512 × 512 | RGBA32 | 2797096 |
+| Assets/Environment/Vegetation/Placeholder/Textures/GrassBlades.asset / GrassBlades | 128 × 128 | RGBA32 | 175656 |
+| Assets/Environment/Atmosphere/SoftParticle.png / SoftParticle | 64 × 64 | RGBA32 | 44584 |
+| Assets/Environment/Terrain/Layers/TerrainLayerWhite.asset / TerrainLayerWhite | 4 × 4 | RGBA32 | 1024 |
+
+Batching audit (shader layout and configuration, not measured draw calls):
+
+| Check | Observed |
+| --- | --- |
+| Player batching, active build target | Static 1, Dynamic 1 (1 enabled, 0 disabled) |
+| BatchingStatic Renderer components | 93 |
+| Static-rule targets (renderers plus Terrain) / mismatches | 111 / 0 |
+| Renderers with a property block now | 5 |
+| Configured FlickerLight/PowerStateLighting property-block targets (unique) | 48 |
+| Compatible / incompatible / unknown subshaders | 2 / 0 / 11 |
+
+| Referenced material shader | Subshader index | SRP layout check |
+| --- | ---: | --- |
+| Universal Render Pipeline/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Simple Lit | 3 | compatible |
+| Universal Render Pipeline/Particles/Unlit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Particles/Unlit | 2 | compatible |
+| Universal Render Pipeline/Terrain/Lit | 0 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 1 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+| Universal Render Pipeline/Terrain/Lit | 2 | unknown (code 1): Not initialized (); inspect Shader Inspector |
+
+All subshaders are listed; this does not identify the pass/variant chosen for a frame. Uninitialised shader data is unknown, including in graphics-free batch mode. The shader list covers mesh/Terrain materials; skybox and other special passes still need Frame Debugger inspection. Property blocks exclude their renderer from SRP batching even with a compatible shader. Configured targets may have no block in EditMode; inspect both powered and blackout states in Play mode. Static flags and a Player setting do not prove that Unity combined a renderer into a batch. Repeated Terrain vegetation uses its own rendering path; these Renderer counts exclude Terrain instances.
+
+
+
+Vegetation estimate: fixed 72° FOV, 16:9, eye 1.65 m, active quality LOD bias; whole detail patches, without occlusion or shadow passes. Frame Debugger and Profiler validation remains an Editor task.
+
+```text
+
+  visible vegetation triangles (main camera: FOV 72, 16:9, eye 1.65 m, LOD bias 2 (PC); shadows not counted), budget 250,000:
+    Dock (start)         trees LOD0/1/2 25 / 281 / 91 = 34,568 tris; bushes + grass 2185 = 27,278 tris; total 61,846 (24.7 % of budget)
+    Forest checkpoint    trees LOD0/1/2 52 / 267 / 68 = 30,923 tris; bushes + grass 3306 = 43,552 tris; total 74,475 (29.8 % of budget)
+    Trail middle         trees LOD0/1/2 75 / 160 / 51 = 18,899 tris; bushes + grass 2901 = 41,430 tris; total 60,329 (24.1 % of budget)
+    Gate, looking back   trees LOD0/1/2 78 / 148 / 91 = 22,652 tris; bushes + grass 3657 = 53,666 tris; total 76,318 (30.5 % of budget)
+    Hunter-1 spawn       trees LOD0/1/2 76 / 171 / 53 = 21,466 tris; bushes + grass 2689 = 37,386 tris; total 58,852 (23.5 % of budget)
+    worst: Gate, looking back, 76,318 of 250,000 (within budget)
+```
+
+
+### 2026-10-18 — palm LOD verification
+
+The highest of the five vegetation estimates falls by 4,556 triangles, about 5.6%, from 32.3% to 30.5% of the existing 250,000-triangle budget. The 0.15 threshold moves the LOD1-to-LOD2 switch to two thirds of its former distance at the same scale, 72 degree FOV and LOD bias. This targets distant palms; nearby LOD0 and the final cull threshold are retained. Whole-scene LOD0 inventory counts remain unchanged because no mesh geometry was removed.
+
+Unity 6000.3.25f1 Direct3D11 apply and repeat runs both exited 0. SHA256 checks of 54 protected files found only `Assets/Environment/Vegetation/Placeholder/Palm_Placeholder.prefab` changed; its diff is one line, `screenRelativeHeight: 0.1` to `0.15`. Environment, TerrainData, NavMesh, meshes, other prefabs and existing metadata stayed byte-identical. The new tuner and test metadata were generated by Unity. The repeat kept the palm prefab byte-identical and appended no duplicate report.
+
+Focused EditMode tests passed **20/20**: VegetationLodTuner, VegetationBudget and SceneReport. The preservation test caught Unity recalculating bounds in SetLODs, so the tuner explicitly restores the authored size and reference point. Tests also preserve renderer references, fade widths and collider data, refuse an unexpected authored threshold, and verify repeated application does nothing. Final runs logged no C# compiler errors/warnings.
+
+Before accepting the visual tradeoff, open the palm prefab and compare LOD1/LOD2 in its LODGroup preview; inspect distant palms in Environment along the dock and gate views. Confirm acceptable frond silhouettes and popping, and check the Console. Frame time, shadow-pass geometry and visual approval remain unmeasured. This is a viewpoint triangle estimate, not an FPS result.
+
+Logs/results: `%TEMP%/blackout-w11-commit4-palm-lod.log`, `blackout-w11-commit4-repeat.log`, `blackout-w11-commit4-tests.log` and `blackout-w11-commit4-tests.xml`.
