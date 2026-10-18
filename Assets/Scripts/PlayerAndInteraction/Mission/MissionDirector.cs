@@ -123,6 +123,105 @@ namespace Blackout.Mission
             }
         }
 
+        /// <summary>
+        /// Debug (Blackout/Debug/Mission): puts the player at the start of a phase and the mission in it. Jumping to
+        /// Lab or later turns the generator off and to Escape or later takes the cure, through the real objects so
+        /// the blackout, the lab door and the alert all happen. Jumping back keeps both.
+        /// </summary>
+        public void DebugJump(MissionPhase phase)
+        {
+            if (!running || mission.IsComplete || (playerHealth != null && playerHealth.IsDead))
+            {
+                Debug.LogWarning("[Blackout] Debug jump needs a running mission and a living player " +
+                                 "(the Mission Complete screen ends it: press Restart).", this);
+                return;
+            }
+
+            if (phase >= MissionPhase.Lab && !mission.GeneratorDisabled)
+            {
+                DisableGenerator();
+            }
+
+            if (phase >= MissionPhase.Escape && !mission.CureTaken)
+            {
+                TakeCure();
+            }
+
+            TeleportTo(phase);
+            Apply(mission.JumpTo(phase));
+            Debug.Log($"[Blackout] Debug jump to {phase}.", this);
+        }
+
+        private void DisableGenerator()
+        {
+            var generator = FindFirstObjectByType<GeneratorInteractable>();
+            if (generator != null && generator.IsRunning)
+            {
+                generator.Interact(player);
+            }
+            else if (generatorDisabled != null)
+            {
+                generatorDisabled.Raise();
+            }
+        }
+
+        private void TakeCure()
+        {
+            var cure = FindFirstObjectByType<CurePickup>();
+            if (cure != null && !cure.IsTaken)
+            {
+                cure.Take(player);
+            }
+            else if (cureTaken != null)
+            {
+                cureTaken.Raise();
+            }
+        }
+
+        /// <summary>Teleports the player to the phase's marker, a little past a door socket so it lands in the room.</summary>
+        private void TeleportTo(MissionPhase phase)
+        {
+            DebugAnchor(phase, out string markerId, out float forward);
+            if (!markers.TryGetValue(markerId, out Marker marker) || marker == null)
+            {
+                Debug.LogWarning($"[Blackout] No marker '{markerId}'; the player was not moved.", this);
+                return;
+            }
+
+            Transform anchor = marker.transform;
+            motor.Teleport(anchor.position + anchor.forward * forward, anchor.eulerAngles.y);
+            if (motor.TryGetComponent(out PlayerLook look))
+            {
+                look.ResetPitch();
+            }
+        }
+
+        private static void DebugAnchor(MissionPhase phase, out string markerId, out float forward)
+        {
+            forward = 0f;
+            switch (phase)
+            {
+                case MissionPhase.Corridor:
+                    markerId = "DoorSocket_D-Security";
+                    forward = 2f;
+                    return;
+                case MissionPhase.Lab:
+                    markerId = "DoorSocket_D-Lab";
+                    forward = 2f;
+                    return;
+                case MissionPhase.Escape:
+                    markerId = "CureSocket"; // faces D-Lab: 2 m in front of the chamber
+                    forward = 2f;
+                    return;
+                case MissionPhase.Complete:
+                    markerId = "BoatExit";
+                    return;
+                default:
+                    markerId = MissionStateMachine.CheckpointFor(phase);
+                    return;
+            }
+        }
+
         private void OnGeneratorDisabled()
         {
             Apply(mission.OnGeneratorDisabled());

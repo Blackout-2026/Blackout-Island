@@ -359,4 +359,13 @@ the page (the whole mission starts again).
   Mission Complete screen and the UI EventSystem. It loads Environment, Interactables and Agents additively, skips a
   scene that is not in Build Settings (Agents does not exist yet), makes **Environment the active scene** (fog,
   skybox and ambient light), and then places the player at `PlayerStart`. A black LOADING screen covers the wait.
+- **Debug jumps** (`Blackout/Debug/Mission`, Play mode): the player goes to the phase's start and the mission
+  jumps there. The starts are:
+  - Beach, Forest, BunkerEntrance and GeneratorRoom: the phase's checkpoint.
+  - Corridor: 2 m past `DoorSocket_D-Security`.
+  - Lab: 2 m past `DoorSocket_D-Lab`.
+  - Escape: 2 m in front of `CureSocket`.
+  - Complete: `BoatExit`.
+  Jumping to Lab or later turns the generator off, and to Escape or later takes the cure. Both go through the real
+  objects, so the blackout, the lab door and the alert happen as in play.
 - **Not ported:** the start screen and pause menu, phase-change and power-failure toasts, the compass.
