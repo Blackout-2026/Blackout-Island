@@ -30,7 +30,7 @@ PR #5. Commits 787cd24, 572f921, 84ee794, 0ba639d and 1e6c0a4, all in `Assets/Sc
   another role's implementation, and merges don't break each other.
 - **Channels as assets.** The scenes are loaded additively (Environment, Interactables, Agents). Every scene can
   reference an asset, but no scene can reference an object in another scene. The full argument is in
-  `systems-engineer.md` section 1.
+  `docs/viva/systems-engineer.md` section 1.
 - **Assets made once, by the owner.** If two branches each made "GeneratorDisabled", there would be two GUIDs. The
   builder refuses to replace an existing asset.
 - **`DamageInfo` is a struct.** No allocation per hit. It carries the source, so agents can react to who shot them.
@@ -55,5 +55,5 @@ PR #5. Commits 787cd24, 572f921, 84ee794, 0ba639d and 1e6c0a4, all in `Assets/Sc
 
 - No damage multipliers (headshots, backstabs) in the contract yet.
 - A single `AgentIntent` per tick can't express a sequence, so the brain has to hold that state itself.
-- A channel has no memory, so a listener that subscribes late misses the event (see `systems-engineer.md`
+- A channel has no memory, so a listener that subscribes late misses the event (see `docs/viva/systems-engineer.md`
   section 1).

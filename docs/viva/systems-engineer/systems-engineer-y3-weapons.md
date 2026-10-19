@@ -1,7 +1,7 @@
 # Viva notes: weapons (Systems Engineer, step Y3)
 
 PR #19. Commits 7988390, 8f7cdb5, 9a138d5, c826baa and fa8cdae. Numbers are in `docs/reference/systems-engineer.md`
-section 7. The design argument is in `systems-engineer.md` section 2, and this file records the step.
+section 7. The design argument is in `docs/viva/systems-engineer.md` section 2, and this file records the step.
 
 ## What I built
 

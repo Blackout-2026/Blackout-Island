@@ -95,6 +95,32 @@ namespace Blackout.Shared.Tests
         }
 
         [Test]
+        public void CollisionMask_MatchesTheMatrix_ForEveryPairOfLayers()
+        {
+            for (int a = 0; a < 32; a++)
+            {
+                int mask = PhysicsLayers.CollisionMask(a);
+                for (int b = 0; b < 32; b++)
+                {
+                    Assert.AreEqual(!Physics.GetIgnoreLayerCollision(a, b), PhysicsLayers.Contains(mask, b),
+                        $"layer {a} x layer {b}");
+                }
+            }
+        }
+
+        [TestCase(PhysicsLayers.Default, true)]
+        [TestCase(PhysicsLayers.Level, true)]
+        [TestCase(PhysicsLayers.Enemy, true)]
+        [TestCase(PhysicsLayers.Interactable, true)]
+        [TestCase(PhysicsLayers.IgnoreRaycast, true)]
+        [TestCase(PhysicsLayers.Hit, false)]
+        [TestCase(PhysicsLayers.Ragdoll, false)]
+        public void CollisionMask_Player_StandsOnTheWorldButNotOnHitboxesOrRagdolls(int layer, bool expected)
+        {
+            Assert.AreEqual(expected, PhysicsLayers.Contains(PhysicsLayers.CollisionMask(PhysicsLayers.Player), layer));
+        }
+
+        [Test]
         public void AgentShots_HitThePlayerButNotOtherAgents()
         {
             Assert.IsTrue(PhysicsLayers.Contains(PhysicsLayers.AgentShots, PhysicsLayers.Player));

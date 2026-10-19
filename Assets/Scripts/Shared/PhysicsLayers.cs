@@ -1,4 +1,6 @@
 // Owner: Systems Engineer. Shared contract (docs/UNITY_BUILD_PLAYBOOK.md section 3): extend it, never break it.
+using UnityEngine;
+
 namespace Blackout.Shared
 {
     /// <summary>
@@ -36,6 +38,25 @@ namespace Blackout.Shared
         public static bool Contains(int mask, int layer)
         {
             return (mask & (1 << layer)) != 0;
+        }
+
+        /// <summary>
+        /// The layers a body on this layer collides with, read from the collision matrix. For queries that must agree
+        /// with the physics, such as a ground probe: it should not find what the body would pass through. Loops over
+        /// the 32 layers, so call it once (in Awake), not per frame.
+        /// </summary>
+        public static int CollisionMask(int layer)
+        {
+            int mask = 0;
+            for (int other = 0; other < 32; other++)
+            {
+                if (!Physics.GetIgnoreLayerCollision(layer, other))
+                {
+                    mask |= 1 << other;
+                }
+            }
+
+            return mask;
         }
     }
 }

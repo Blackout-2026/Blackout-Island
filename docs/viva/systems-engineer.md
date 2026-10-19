@@ -4,17 +4,17 @@ Role: Systems Engineer (player, weapons, interactables, mission flow, shared con
 Background for every number here: `docs/reference/systems-engineer.md` (prototype values in sections 1–11, physics in
 section 12). All measurements come from `Blackout/Debug/Stress Test` (Y7) unless the row says otherwise.
 
-This file covers the three topics step Y7 asks for. Each earlier step has its own notes:
+This file covers the three topics step Y7 asks for. Each earlier step has its own notes in `docs/viva/systems-engineer/`:
 
 | Step | Notes | What it delivered |
 | --- | --- | --- |
-| P0 | [systems-engineer-p0-setup.md](systems-engineer-p0-setup.md) | Shared folders, tags, layers, collision matrix, `Blackout.Shared` assembly |
-| Y1 | [systems-engineer-y1-shared-contracts.md](systems-engineer-y1-shared-contracts.md) | Health and damage, event channels and their 7 assets, Marker and agent contracts |
-| Y2 | [systems-engineer-y2-player.md](systems-engineer-y2-player.md) | FPS controller, input, camera feel, footstep noise, Player prefab, checkpoint teleport |
-| Y3 | [systems-engineer-y3-weapons.md](systems-engineer-y3-weapons.md) | SMG, rifle and knife, weapon controller, pooled effects |
-| Y4 | [systems-engineer-y4-respawn-hud.md](systems-engineer-y4-respawn-hud.md) | Death, respawn, checkpoints, fall damage, HUD |
-| Y5 | [systems-engineer-y5-interactables.md](systems-engineer-y5-interactables.md) | Doors, generator, cure, health pickups, crate, Interactables scene |
-| Y6 | [systems-engineer-y6-mission-flow.md](systems-engineer-y6-mission-flow.md) | Mission state machine, director, Bootstrap scene, Mission Complete screen, debug jumps |
+| P0 | [systems-engineer-p0-setup.md](systems-engineer/systems-engineer-p0-setup.md) | Shared folders, tags, layers, collision matrix, `Blackout.Shared` assembly |
+| Y1 | [systems-engineer-y1-shared-contracts.md](systems-engineer/systems-engineer-y1-shared-contracts.md) | Health and damage, event channels and their 7 assets, Marker and agent contracts |
+| Y2 | [systems-engineer-y2-player.md](systems-engineer/systems-engineer-y2-player.md) | FPS controller, input, camera feel, footstep noise, Player prefab, checkpoint teleport |
+| Y3 | [systems-engineer-y3-weapons.md](systems-engineer/systems-engineer-y3-weapons.md) | SMG, rifle and knife, weapon controller, pooled effects |
+| Y4 | [systems-engineer-y4-respawn-hud.md](systems-engineer/systems-engineer-y4-respawn-hud.md) | Death, respawn, checkpoints, fall damage, HUD |
+| Y5 | [systems-engineer-y5-interactables.md](systems-engineer/systems-engineer-y5-interactables.md) | Doors, generator, cure, health pickups, crate, Interactables scene |
+| Y6 | [systems-engineer-y6-mission-flow.md](systems-engineer/systems-engineer-y6-mission-flow.md) | Mission state machine, director, Bootstrap scene, Mission Complete screen, debug jumps |
 | Y7 | this file, section 3 | Layer audit, weapon masks, Stress Test, physics numbers |
 
 ---

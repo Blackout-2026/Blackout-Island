@@ -449,6 +449,9 @@ The scene and prefab changes are made by **`Blackout/Systems/Assign Physics Laye
 - All weapon queries pass `QueryTriggerInteraction.Ignore`, so the triggers (pickups, doorway, cure) never stop
   bullets, whatever "Queries Hit Triggers" says in the project settings.
 - The knife's overlap sphere and line-of-sight check use the same mask as the guns.
+- The player's ground probe (`PlayerMotor`'s 0.35 m snap) uses `PhysicsLayers.CollisionMask(Player)` minus Player:
+  the layers the capsule collides with, read from the matrix. Before, it used "everything except Player", so after
+  Hit stopped colliding it could snap the player onto a head hitbox or a ragdoll the capsule passes through.
 
 **Physics settings (`DynamicsManager`, `TimeManager`), checked and kept:**
 

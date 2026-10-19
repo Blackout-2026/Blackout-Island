@@ -55,8 +55,9 @@ namespace Blackout.Player
 
             ApplyBodySettings(controller, settings);
             footsteps = new FootstepTracker(settings);
-            // Everything except the player's own layer, so the ground probe never hits the player.
-            groundMask = ~(1 << gameObject.layer);
+            // What the capsule collides with, minus the player's own layer, so the ground probe never snaps onto
+            // something the player would fall through (hitboxes, ragdolls) or onto the player itself.
+            groundMask = PhysicsLayers.CollisionMask(gameObject.layer) & ~(1 << gameObject.layer);
         }
 
         /// <summary>Copies the body numbers onto a CharacterController (also used by the prefab builder).</summary>
