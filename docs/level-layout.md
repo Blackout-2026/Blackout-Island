@@ -1476,6 +1476,62 @@ Logs: `%TEMP%/blackout-w13-fix4-chamber.log` and `blackout-w13-fix4-capture.log`
 Before committing, play through Bootstrap, trigger the blackout, enter the lab and walk through the south opening
 to take the cure. Check ceiling clearance, glass visibility, a single pedestal and the Console.
 
+## Security and corridor details (W13, fix 5)
+
+**Blackout/World/Build Security and Corridor Details** (`Assets/Editor/WorldBuilder/SecurityCorridorBuilder.cs`)
+generates `Props/SecurityCorridorDetails/SecurityDetails` and `CorridorDetails`. It reuses named parts and
+removes only stale children with its generated prefix. Existing W10 dressing, markers and other owners'
+prefabs/scenes are preserved. Positions below are world metres, +Z north.
+
+| Detail | Placement / dimensions |
+| --- | --- |
+| Security wainscot | Six 1 m high wall skins, leaving the 3 m ramp mouth and 1.4 m D-Security opening clear |
+| Security partition | x4.35…4.50, z72…78; solid base to y3.45, glass to y4.8, top trim at y4.86 and three posts; open at both ends |
+| Detector frame | Posts at x±1.05, z80.8, each 0.24 m wide; 1.86 m clear passage, header underside y4.85; decorative, no detector gameplay |
+| Checkpoint counter | x−4.2…−1.8, z80.9…81.6; 1.1 m high |
+| Security overhead | 14 m cross-room tray and four cables at z76, ceiling grille near (−5.4, 5.45, 70.9), box camera placeholder at (−7.6, 5.08, 81.6) |
+| Corridor pillars | Five pairs at z88/94/100/112/118; x±1.2…±1.5, 0.64 m along Z, hazard feet 0.68 m along Z; 2.4 m clear between each pair |
+| Floor lines | 0.1 m wide at x±1.1, z82.4…123.6, surface y2.506 |
+| Overhead services | East main/rust pipes, west yellow branch and cable tray with five cables; fourteen east brackets; all below the y5.5 ceiling, lowest pipe underside y4.88 |
+| Wall fittings | Hose cabinet placeholder on east wall at z91.1; fuse boxes west at z97/115; low east grilles at z90/110 |
+| Puddles | Three thin, non-colliding ellipses around (0.4,92), (−0.5,103.5), (0.4,115); maximum width 1.7 m to fit the narrowed corridor |
+
+Existing environment materials are reused. The new owned `Assets/Materials/Environment/CorridorPuddle.mat`
+uses URP Lit, smoothness 0.92 and metallic 0.1; it is a flat wet-floor placeholder, without ripple animation.
+Boxes use world-metre UVs; pipes use built-in cylinder UVs. Solid partitions, posts, counter, pillars, wall boxes
+and trays have Level colliders. Thin wall/floor skins, grilles, overhead cylinders and puddles have disabled
+primitive colliders. Glass uses see-through static flags without shadow casting; puddles do not occlude or
+contribute GI. Other fixed parts use the environment static flags. No runtime scripts or input changes are added.
+
+The batch entry `Blackout.Editor.SecurityCorridorBuilder.BuildAndVerify` rebuilds twice to compare scene/material
+bytes, walks a temporary CharacterController using the saved player settings from the ramp mouth around the
+partition's north end to the security health marker, through the detector to the lab door and back, then removes
+the probe, rebakes navigation and runs Validate Layout. It checks the saved player settings and both gameplay
+scenes remain unchanged. This does not exercise moving agents, the pushable crate or door gameplay.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: final batch exit0, 30 security parts and 82 corridor parts;
+scene/material byte-identical on repeat, including fresh generation; player route passed; protected files
+unchanged. Rebake: 328 colliders plus604 tree/rock capsules, 8,548 triangles, 153,852 m²; layout PASS66/66.
+The initial repeat check caught URP synchronising the new material's legacy `_Color` after first import.
+The builder now runs URP material validation before the first asset write; fresh and subsequent runs pass.
+No final C# compiler errors/warnings. Logs: `%TEMP%/blackout-w13-fix5-details.log` and
+`blackout-w13-fix5-fresh.log`. A scene-block comparison found no removed original objects: only the Props
+root's child reference changed among pre-existing blocks.
+Direct3D11 capture also exits0 with Environment unchanged. The corridor image shows the pillars, floor lines,
+pipes, wall fittings and flat puddle placeholders. Images: `%TEMP%/BlackoutIsland-Screenshots/20261020-050903-72da319b`;
+log: `%TEMP%/blackout-w13-fix5-capture.log`. Security visuals still need the interactive check below.
+
+Before committing, run the menu again and confirm no new scene/material diff. In Bootstrap, walk both ends of
+the partition, reach the security health pickup, pass through the detector and corridor, and inspect pillars,
+grilles, pipes and wet-floor patches. Check doors, the crate and the Console with the gameplay scenes loaded.
+
+Remaining reference details are separate work: security east-side chairs, wall weapon rack, facility map and
+additional signage, live camera feed, corridor leaking-pipe particles, and generator/lab dressing gaps. The
+camera and hose cabinet are explicitly named `PH_` box placeholders; replace their generated geometry in this
+builder when detailed visuals are available. W10's optional missing pipe/tray/vent prefabs are still skipped;
+coordinate their eventual placement with these generated services to avoid duplicates. No asset supply is
+required to run this builder.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
