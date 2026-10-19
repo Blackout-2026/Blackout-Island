@@ -358,7 +358,7 @@ the page (the whole mission starts again).
   0. Restart sets the time scale back to 1 and reloads `Bootstrap.unity`.
 - **Bootstrap:** `Bootstrap.unity` holds the Player (inactive until the level has loaded), the MissionDirector, the
   Mission Complete screen and the UI EventSystem. It loads Environment, Interactables and Agents additively, skips a
-  scene that is not in Build Settings (Agents does not exist yet), makes **Environment the active scene** (fog,
+  scene that is not in Build Settings (Agents.unity was added in Y7), makes **Environment the active scene** (fog,
   skybox and ambient light), and then places the player at `PlayerStart`. A black LOADING screen covers the wait.
 - **Debug jumps** (`Blackout/Debug/Mission`, Play mode): the player goes to the phase's start and the mission
   jumps there. The starts are:
