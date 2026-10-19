@@ -1249,6 +1249,84 @@ Inspect static flags on fixed furniture and clear flags on screens. Check the Co
 Validate Layout again after any manual collider or prop changes. Complete the lighting bake and its W7 visual checks
 only after the ownership handoff is resolved; save and review every generated asset together with its metadata.
 
+## Screenshot capture (W12)
+
+**Blackout/World/Capture Screenshots** renders seven PNGs from the saved `Environment.unity` scene for
+the demo and viva. The tool is `Assets/Editor/WorldBuilder/ScreenshotCapture.cs`; the temporary blackout
+preview is in `ScreenshotLightingPreview.cs`. Both belong to the existing `Blackout.World.Editor` assembly.
+
+### Run and collect
+
+1. Finish Play mode and save or close unsaved scenes. Capture refuses dirty scenes and, in the interactive
+   Editor, untitled scenes. Save changes to Environment first: the tool captures the saved version.
+2. Choose **Blackout > World > Capture Screenshots**. Wait for **[World] Captured 7 screenshots** in the Console.
+3. Open the printed folder: `%TEMP%/BlackoutIsland-Screenshots/<timestamp>-<suffix>/`. It contains seven PNGs
+   and `capture.txt` with Unity version, graphics API, saved quality, camera poses and blackout sample time.
+   Each run creates a new folder and preserves earlier output. The tool rejects output inside the repo.
+4. Copy the selected images to your demo/video folder outside the repo; the temporary folder may be cleaned
+   by Windows. Do not stage the PNGs, manifest, batch logs or test results.
+
+Output is **1920 × 1080**, vertical **FOV 72°**, aspect **16:9**, eye height **1.65 m**, near/far clips
+**0.08/700 m**. Post-processing and FXAA are enabled for the capture camera. Other rendering settings use
+the saved quality level; this is not a runtime QualityPreset comparison. Positions use Unity metres, +Z north.
+
+| File | Eye position (x, y, z) | Yaw | State |
+| --- | --- | ---: | --- |
+| `01_Beach.png` | (0, 2.95, −121) | 0° | Powered, dock looking inland |
+| `02_Forest.png` | (4, 6.351, −44) | −47.3° | Powered, looking along the trail; y = sampled terrain height + 1.65 |
+| `03_BunkerEntrance.png` | (0, 11.65, 33) | 0° | Powered, compound looking at the entrance |
+| `04_Corridor.png` | (0, 4.15, 85) | 0° | Powered, looking toward the lab |
+| `05_GeneratorRoom_powered.png` | (−4.5, 4.15, 106) | 270° | Powered, looking west |
+| `06_GeneratorRoom_blackout.png` | (−4.5, 4.15, 106) | 270° | Settled blackout, same camera pose |
+| `07_Lab.png` | (0, 4.15, 126) | 0° | Powered, looking into the lab |
+
+Pitch and roll are zero. Lab is captured before the blackout; numbering is the presentation order.
+The preview reads the existing PowerStateLighting fixture/screen/probe references and LightingStateProfile.
+It samples a settled blackout at **6 s**, or one second after the longest transition if the profile needs longer.
+It switches powered fixtures off, samples emergency pulses and alarm rotation, darkens monitor emission,
+and applies blackout fog, ambient, moon/probe intensities and volume weight without raising gameplay events.
+Particle systems use fixed seeds starting at 1201 and are simulated to **4 s**. Time-based shaders, film grain
+and graphics hardware can still change individual pixels between runs.
+
+The tool temporarily opens Environment alone, adds a camera, renders through URP's `SingleCameraRequest`,
+then unloads without saving and reloads the previous saved scene setup in `finally`. It changes scene instances;
+it does not save scenes, shared materials, profiles or particle prefabs. Loaded object selections/references
+may be lost when scenes reload.
+
+For batch capture, close the Editor first and run this in **PowerShell**. Graphics are required; omit `-nographics`:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.3.25f1\Editor\Unity.exe' -batchmode -force-d3d11 -quit -projectPath 'C:\GV , IS Assignment\Blackout-Island' -executeMethod Blackout.Editor.ScreenshotCapture.CaptureScreenshots -logFile "$env:TEMP\blackout-w12-capture.log"
+```
+
+### Verified results and demo checks
+
+Verified on **2026-10-19**, Unity **6000.3.25f1**, Direct3D11, saved **PC** quality:
+
+- Capture completed with exit **0** and seven PNGs; Environment SHA256 stayed unchanged. All seven images were
+  inspected, including the matching powered/red blackout views. Log: `%TEMP%/blackout-w12-commit1-capture.log`.
+- `ScreenshotCaptureTests` passed **2/2**, exit **0**: dirty-scene refusal preserves an unsaved object; two complete
+  captures produce seven decodable 1080p images each, with visible variation and a darker generator blackout.
+  The first output is preserved, loaded Environment state is restored, and **244 dependency/metadata hashes**
+  remain unchanged. Logs/results: `%TEMP%/blackout-w12-commit2-tests.log` and `.xml`.
+- Final runs had no C# compiler errors or warnings. They logged licensing token messages but completed.
+  An initial sandbox capture failed licensing; an initial test setup rejected the batch runner's untitled
+  scene, and the corrected tests passed on rerun.
+
+Before the PR, capture from your saved Editor scene setup and confirm it returns to the same loaded/active
+scenes, with powered lighting and no temporary camera or dirty scene. Inspect all seven PNGs at full size;
+compare the generator pair and the relevant `prototype/screenshots/` views. Check the Console for new errors.
+In **Window > General > Test Runner > EditMode**, run `ScreenshotCaptureTests` with saved scenes if desired.
+The automated restoration check starts with Environment alone; interactive additive-scene restoration remains
+a manual check. The image tests detect empty output and an absent blackout, not artistic quality.
+
+**Capture scope:** Environment only. Gameplay generator/cure/doors, agents, player, weapons and HUD from the
+other scenes are absent. These images show the current placeholder surfaces and very pale outdoor terrain;
+they are world-layout/lighting evidence, not a complete mission recording. Full gameplay footage needs the
+team's integrated scene setup. Lightmap/reflection/occlusion bakes and deferred props retain the earlier sections'
+limitations; W12 does not complete them. The user explicitly dropped the missing `docs/playtest-log.md` task,
+so W12 claims no fixes from that log.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
