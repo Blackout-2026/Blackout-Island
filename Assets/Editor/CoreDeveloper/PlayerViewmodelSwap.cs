@@ -33,10 +33,10 @@ namespace Blackout.Editor
         public static readonly Vector3 RifleEuler = new Vector3(4f, -16f, -4f);
 
         // Where the Hand of the Knife sits and how it is turned: the blade points up and to the left across the screen and the fist
-        // and the camouflaged forearm come in from below, so the knife is held ready to stab. The roll (-35) shows the flat of the
-        // blade (a blade held edge-on looks like a needle from behind) with the fist wrapped round the handle under it.
+        // and the camouflaged forearm come in from below, so the knife is held ready to stab. The hand is a reverse grip (build_knife.py,
+        // REVERSE): the fingers are curled towards the camera and the flat of the blade shows.
         public static readonly Vector3 KnifeHandPosition = new Vector3(0.207f, -0.166f, 0.447f);
-        public static readonly Vector3 KnifeHandEuler = new Vector3(-30f, -33f, -35f);
+        public static readonly Vector3 KnifeHandEuler = new Vector3(-19f, -33f, 12f);
 
         private const string HolderPath = "CameraRig/CameraPivot/PlayerCamera/WeaponHolder";
 

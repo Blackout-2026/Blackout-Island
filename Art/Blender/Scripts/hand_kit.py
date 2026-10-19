@@ -36,7 +36,7 @@ FINGERS = (
 SPLAY = (-4.0, 0.0, 3.0, 8.0)       # degrees the fingers fan out about the back-of-hand axis when relaxed
 TAPER = (1.0, 0.90, 0.80, 0.68)     # radius at the knuckle, middle joint, fingertip joint, tip
 
-HAND_SCALE = 1.18                   # first-person models draw the hands larger than life so they read on screen
+HAND_SCALE = 1.35                   # first-person models draw the hands larger than life so they read on screen
 
 RELAXED = {"curls": ((12, 14, 10), (14, 16, 10), (16, 18, 12), (20, 22, 12)), "thumb": None}
 

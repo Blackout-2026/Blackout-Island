@@ -31,6 +31,7 @@ import hand_kit as H  # noqa: E402
 from weapon_kit import bevel_bm, boolean_difference, star_bm  # noqa: E402
 
 B = P.B
+REVERSE = True  # the hand grips the knife with the blade out of the little-finger side (see build_hand)
 METAL, POLYMER, SLEEVE, GLOVE = S.METAL, S.POLYMER, S.SLEEVE, S.GLOVE
 REPO = S.REPO
 BLEND_PATH = os.path.join(REPO, "Art", "Blender", "SM_Weapon_Knife.blend")
@@ -184,10 +185,14 @@ def build_handle():
 # --------------------------------------------------------------------------- the gripping hand
 
 def build_hand():
-    """A right hand with the palm against the left face of the handle, the fingers wrapping up over the spine and the thumb
-    along the handle towards the guard; the forearm leaves back, down and to the right (hand_kit.grip_frame)."""
+    """A right hand in a reverse (ice-pick) grip: the palm against the left face of the handle, the fingers wrapping round it so
+    the player sees them curled, the blade out of the little-finger side and the thumb towards the butt; the forearm leaves back
+    and down (hand_kit.grip_frame)."""
     a = math.radians(70.0)
-    fwd, up = H.grip_frame((0.0, 0.0, 1.0), (-math.cos(a), math.sin(a), 0.0), 25.0)
+    # REVERSE: the hand is turned 180 degrees about the handle (an ice-pick grip): the blade comes out of the little-finger side
+    # and the thumb lies towards the butt, so the player sees the curled fingers.
+    zs = -1.0 if REVERSE else 1.0
+    fwd, up = H.grip_frame((0.0, 0.0, zs), (-math.cos(a), math.sin(a), 0.0), 25.0)
     pos = H.palm_position((0.0, 0.0, 0.002), fwd, up)
     fist = ((86, 78, 52), (88, 80, 52), (90, 82, 50), (90, 82, 48))
     # thumb: from under the heel it comes up the far face of the handle (the face away from the palm), lies flat against it and
@@ -196,13 +201,16 @@ def build_hand():
     inv = S.frame3(fwd, up).inverted()
 
     def hand_pt(g):
-        return Vector(inv @ (Vector(g) - pos) / H.HAND_SCALE)
+        g = Vector(g)
+        if REVERSE:
+            g.z = 0.004 - g.z
+        return Vector(inv @ (g - pos) / H.HAND_SCALE)
 
     thumb_base = [(hand_pt((0.0010, -0.0663, 0.0079)), 0.0190, 0.0150), (hand_pt((0.0110, -0.0470, 0.0090)), 0.0150, 0.0130)]
     thumb = [(hand_pt((0.0190, -0.0340, 0.0060)), 0.0125), (hand_pt((0.0215, -0.0235, 0.0170)), 0.0112),
              (hand_pt((0.0220, -0.0170, 0.0270)), 0.0100), (hand_pt((0.0215, -0.0140, 0.0340)), 0.0090)]
     H.add_hand("R", pos, fwd, up, curls=fist, thumb=thumb, thumb_base=thumb_base, ridge=None,
-               arm_dir=-fwd + Vector((0.1, -0.1, -0.15)), visible=0.04)
+               arm_dir=-fwd + Vector((0.1, -0.1, -0.55 if REVERSE else -0.15)), visible=0.04)
 
 
 # --------------------------------------------------------------------------- scene and export
