@@ -1327,6 +1327,39 @@ team's integrated scene setup. Lightmap/reflection/occlusion bakes and deferred 
 limitations; W12 does not complete them. The user explicitly dropped the missing `docs/playtest-log.md` task,
 so W12 claims no fixes from that log.
 
+## Compound fence and open gate (W13, fix 1)
+
+**Blackout/World/Build Compound Fence** (`Assets/Editor/WorldBuilder/CompoundFenceBuilder.cs`) adds
+`BunkerExterior/CompoundFence`. It reuses its named generated children and retains other exterior content.
+Run **Blackout/World/Bake NavMesh** after changing the fence, then **Validate Layout**.
+
+- Four fence runs: west/east at x ±22, z 28…61; south at z 28, x −22…−3.2 and 3.2…22. These match the
+  prototype's fence endpoints after negating Z. The northern retaining wall is a separate pending fix.
+- 36 chain-link panels, each at most 3 m wide and 3 m high, with posts, upper/lower rails and coiled top wire.
+  Bases follow `IslandHeightField`; the mesh is generated once in the Editor with two material submeshes.
+- Two 3 × 2.6 m gate leaves are fixed open by 1.9 radians (108.9°), leaving the 6.4 m passage clear.
+  A raised 5.6 m barrier arm and its housing stand beside the gate. These are static scenery, not interactive doors.
+- Broad fence/leaf colliders use the existing **Ignore Raycast** layer: the player collides with them, while
+  the shared weapon masks exclude them, matching the prototype's shoot-through fence. The existing Systems
+  Engineer layer assigner preserves non-Default layers. The owned NavMesh must be rebaked around these blockers;
+  their thin tops are narrower than the 0.8 m agent diameter.
+- Static flags are Occludee and Batching only: chain link must not become a solid occluder or lightmap surface.
+- Generated assets: `Assets/Environment/CompoundFence.asset`, `Assets/Materials/Environment/CompoundFence.mat`,
+  `Assets/Textures/Environment/CompoundFence_ChainLink.png`. Steel reuses `Env_MetalPlate.mat`.
+  The chain texture is a generated 64 px cutout tile; no supplied asset is required. Mipmaps are off to retain
+  thin wires, so distant shimmer needs visual review. The top wire is a simple helix without individual barbs.
+
+The batch entry `Blackout.Editor.CompoundFenceBuilder.BuildAndVerify` builds twice and checks that the scene,
+mesh, material and texture are byte-identical, checks gate clearance and the player/fence collision setting,
+then rebakes the owned NavMesh and runs the existing mission/marker/door-gap layout validation.
+Verified with Unity 6000.3.25f1 on 2026-10-19: batch exit 0, 10,992 generated triangles, repeat outputs
+byte-identical, gate-clearance and collision checks passed. The rebake uses 156 colliders plus 604 tree/rock
+capsules and produces 8,342 triangles; Validate Layout passes 66/66. Direct3D11 capture also exits 0 with
+Environment unchanged; its entrance image shows the new side fences. No C# compiler errors/warnings were logged.
+Logs are outside the repo: `%TEMP%/blackout-w13-fix1-fence.log` and `blackout-w13-fix1-capture.log`.
+Before committing, inspect the fence from both sides, walk through the open gate, and check that shots pass
+through the fence. Entrance exterior, retaining wall, booth and compound dressing remain separate fixes.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
