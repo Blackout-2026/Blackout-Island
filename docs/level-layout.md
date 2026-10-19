@@ -159,7 +159,7 @@ waypoints by id.
 | CureSocket | (0, 2.5, 135) | 180 | Floor level, at the centre of the containment chamber; the opening faces D-Lab |
 | HealthPickup_Security | (6.5, 2.5, 80.5) | 0 | |
 | HealthPickup_Corridor | (0.9, 2.5, 119) | 0 | x 1.2 → 0.9 (corridor pillars) |
-| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | Catwalk deck height. Still out of reach: W10's dressing does not build a catwalk |
+| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | On the W13 catwalk; reached by the ten steps at the room's north-east corner |
 | BoatExit | (0, 1.3, −124) | 0 | Centre of the 6 m exit zone |
 | DoorSocket_D-Bunker | (0, 10, 48.2) | 0 | Gap 1.4 × 2.3 m. Sliding, unlocked |
 | DoorSocket_D-Security | (0, 2.5, 82.2) | 0 | Sliding, unlocked |
@@ -1212,8 +1212,8 @@ Keep **all static flags clear** on moving or collectible objects and their affec
 
 Only Environment's fixed dressing flags are authored here. Door, barricade, pickup, player and agent assets were
 not edited or validated by the saved-scene tests. Their owners must retain dynamic flags and closed-door navigation
-blocking. The catwalk, its stairs, outdoor dressing and the generator plinth remain deferred; the catwalk health
-marker is still unreachable. A future catwalk build must keep agents off its stairs as specified in the reference.
+blocking. W13 now adds the player-only catwalk/stairs and supports the existing health marker (see fix 3 below).
+Outdoor dressing and the generator plinth remain pending.
 
 ### Verification and final lighting bake
 
@@ -1401,6 +1401,47 @@ Inspect the exterior from the yard and both sides, then walk from the apron thro
 Check for terrain in the lobby floor, exposed ramp geometry, a blocked doorway, or new Console errors.
 The guard booth, mast, truck, compound props and signage remain separate world-completion work.
 
+## Generator catwalk and stairs (W13, fix 3)
+
+**Blackout/World/Build Generator Catwalk** (`Assets/Editor/WorldBuilder/GeneratorCatwalkBuilder.cs`) adds
+`Bunker/GeneratorRoom/GeneratorCatwalk`. It reuses 51 named generated parts and preserves other room content.
+The existing health marker and Systems Engineer's pickup are not moved or edited.
+
+| Item | Placement / dimensions |
+| --- | --- |
+| Deck | x −19.6…−6, z113.6…116; 13.6 × 2.4 m, top y5.5, slab 0.15 m |
+| Stairs | x −6…−2.9, z114.6…116; 10 risers × 0.3 m, 0.31 m run, 1.4 m width; floor y2.5 to deck y5.5 |
+| Guard rails | Front/west/east deck edges, with the east stair connection left open; sloping rail beside stairs; top rail 1 m above its local walking surface |
+| Supports | Columns/crossbeams at x−16, −13, −10, −7; westernmost prototype column omitted because it intersects the placed second fuel tank |
+| Health marker | Existing (−18.5, 5.5, 114.5), now supported by the deck |
+
+The existing MetalPlate material and world-space box UVs are used. The surface is a continuous metal placeholder
+for the reference's textured grating; no new texture/model asset is required. Real boxes provide deck/stair
+collision on Level. Thin rail geometry and broad movement guards use Ignore Raycast, allowing shots through
+the open railings. Fixed rendered parts use the existing environment static flags; invisible guards have none.
+
+**Player only:** NavMeshBaker marks this container's collision geometry Not Walkable during collection. It remains
+in the bake as obstruction, so agents avoid columns and cannot climb the stairs or stand on the deck. This is
+explicit because 0.3 m risers are below the agent's 0.4 m step height. The rest of the generator-room floor stays
+available. Run **Bake NavMesh** and **Validate Layout** after rebuilding the catwalk.
+
+`Blackout.Editor.GeneratorCatwalkBuilder.BuildAndVerify` builds twice and checks a byte-identical scene. It then
+uses a temporary CharacterController configured from the saved player movement settings to walk from the floor,
+up the stairs, to the health marker, back to the stairs and down to the floor. It destroys the probe before saving,
+rebakes navigation, and checks for absent agent NavMesh at 26 deck positions and all ten stair treads.
+
+Verified in Unity 6000.3.25f1 on 2026-10-19: build exit0; repeat scene identical; full CharacterController route
+passed using saved height1.75, radius0.35, stepOffset0.45 and slopeLimit49. These current gameplay settings differ
+from the 1.8 m design target; they were read, not changed. Rebake: 247 colliders plus 604 tree/rock capsules,
+8,455 triangles, 153,880 m². No agent NavMesh at checked deck/stair positions; Validate Layout PASS66/66.
+Direct3D11 capture also exits0, with Environment unchanged; the powered and blackout images show the new deck,
+rails and supports. No C# compiler errors/warnings were logged. Scene-block comparison finds no removed existing
+blocks, with only the generator-room child reference changed among existing blocks.
+Logs: `%TEMP%/blackout-w13-fix3-catwalk.log` and `blackout-w13-fix3-capture.log`.
+Before committing, walk the route through Bootstrap and collect the catwalk health pickup while injured;
+inspect railing gaps and confirm agents stay downstairs. The automated movement probe
+checks the saved world collision, not the actual pickup collection or complete player-input/agent behaviour.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1421,7 +1462,7 @@ The guard booth, mast, truck, compound props and signage remain separate world-c
 | Generator plinth not built yet (W3) | GeneratorSocket is at floor level (y 2.5); the reference's generator origin sits on a 0.3 m plinth at y 2.8 | Systems Engineer and Core Developer (generator prefab) |
 | Agent size set by the bake tool, not Project Settings (W4) | The baked data uses 0.4 / 1.8 / 0.4 / 40 on agent type 0, while Humanoid in Project Settings > Navigation still shows 0.5 / 2 / 0.75 / 45 | Systems Engineer (optional: set Humanoid to match, so the NavMeshSurface Inspector shows the same size); Agent Controller, for information |
 | NavMesh runs through the door gaps (W4) | Doors are in another scene, so agents would path through a closed or locked door, for example D-Lab before the blackout | Systems Engineer (doors): block agents while a door is shut, for example with a carving NavMeshObstacle |
-| Step height 0.4 m (W4) | The catwalk stairs' 0.3 m risers would be climbable by agents, but the reference says agents cannot climb them | World Builder (W10: mark the stairs not walkable when the catwalk is built) |
+| Player-only catwalk (W13) | NavMeshBaker marks its collision geometry Not Walkable, even though 0.3 m risers are below the agent's 0.4 m step limit | Agent Controller, for information |
 | One material per surface, not a tint per room (W5) | The reference tints the same wall panel per room (security #AEB9C4, generator #9A968A). The library has one material per surface, so rooms differ by surface instead: Concrete walls in most rooms, MetalPlate in the GeneratorRoom, Tile in the Laboratory | — |
 | Door sills are HazardStripe (W5) | A yellow 0.4 m strip runs across the floor under every door and ramp passage, where the door leaf will stand | Systems Engineer (doors), for information |
 | Trees and boulders cut out of the NavMesh (W6) | 494 pines and palms and 110 boulders are Not Walkable capsules, so agents path round them. Hunters' routes keep 6 m clearings at every waypoint | Agent Controller, for information |

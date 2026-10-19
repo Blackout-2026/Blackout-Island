@@ -135,6 +135,14 @@ namespace Blackout.Editor
                 }
             }
 
+            // The reference reserves the catwalk for the player. Keep its physical geometry in the bake
+            // as an obstacle, but mark its surfaces Not Walkable even though each riser is below agentClimb.
+            GameObject bunker = WorldSceneSkeleton.FindRoot(scene, "Bunker");
+            Transform catwalk = bunker != null ? bunker.transform.Find(GeneratorCatwalkBuilder.ObjectPath) : null;
+            if (catwalk != null)
+                markups.Add(new NavMeshBuildMarkup { root = catwalk, overrideArea = true,
+                    area = NavMesh.GetAreaFromName("Not Walkable"), applyToChildren = true });
+
             // Root by root, in hierarchy order, so the bake only sees this scene and always in the same order.
             var sources = new List<NavMeshBuildSource>();
             var rootSources = new List<NavMeshBuildSource>();
