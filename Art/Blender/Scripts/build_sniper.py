@@ -165,18 +165,23 @@ def build_bipod():
 
 # --------------------------------------------------------------------------- hands
 
+LEFT_HAND = True  # two hands on the rifle: the right on the pistol grip, the left on the forend (the SMG has one hand only)
+
+
 def build_hands():
     """The right hand on the pistol grip with the index finger on the trigger; the left hand gripping the forend from its left side, the back of the hand towards the player."""
     grip_c = (0.0, -0.092, -0.141)
     fwd, up = H.grip_frame((0.0, 0.980, 0.196), (0.0, -0.196, 0.980), 20.0, "R")
     pos = H.palm_position(grip_c, fwd, up, 0.0300, -0.020)
     curls = ((20, 32, 22), (92, 84, 50), (94, 86, 52), (96, 88, 50))
-    H.add_hand("R", pos, fwd, up, curls=curls, thumb=None, arm_dir=(0.30, -0.28, -0.90), visible=0.04)
+    H.add_hand("R", pos, fwd, up, curls=curls, thumb=None, arm_dir=(0.35, -0.95, -0.20), visible=0.04)
+    if not LEFT_HAND:
+        return
     fend_c = (0.0, -0.022, 0.270)
     fwd, up = H.grip_frame((0.0, 0.0, 1.0), (0.45, -1.0, 0.0), 22.0, "L")
     pos = H.palm_position(fend_c, fwd, up, 0.044, -0.020)
     curls = ((62, 86, 54), (66, 88, 54), (70, 90, 52), (72, 90, 50))
-    H.add_hand("L", pos, fwd, up, curls=curls, thumb=None, arm_dir=(-0.50, -0.80, -0.30), visible=0.07)
+    H.add_hand("L", pos, fwd, up, curls=curls, thumb=None, arm_dir=(-0.35, -0.90, -0.20), visible=0.04)
 
 
 # --------------------------------------------------------------------------- scene and export
@@ -191,7 +196,7 @@ def main():
     build_hands()
     mats = [S.make_material(n) for n in S.SLOTS]
     H.glove_material(mats[S.GLOVE])
-    names = (G, "GloveR", "GloveL", "SleeveR", "SleeveL")
+    names = (G, "GloveR", "GloveL", "SleeveR", "SleeveL") if LEFT_HAND else (G, "GloveR", "SleeveR")
     objs = [S.create_object(n, mats, 85.0 if n.startswith(("Glove", "Sleeve")) else 40.0) for n in names]
     total = 0
     for ob in objs:

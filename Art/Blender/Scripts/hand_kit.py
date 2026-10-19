@@ -36,6 +36,7 @@ FINGERS = (
 SPLAY = (-4.0, 0.0, 3.0, 8.0)       # degrees the fingers fan out about the back-of-hand axis when relaxed
 TAPER = (1.0, 0.90, 0.80, 0.68)     # radius at the knuckle, middle joint, fingertip joint, tip
 
+ARM_THIN = 0.80                     # the forearm and sleeve are slimmer than the enlarged hand, so a big sleeve does not fill the screen
 HAND_SCALE = 1.35                   # first-person models draw the hands larger than life so they read on screen
 
 RELAXED = {"curls": ((12, 14, 10), (14, 16, 10), (16, 18, 12), (20, 22, 12)), "thumb": None}
@@ -137,7 +138,7 @@ def arm_points(w, d, visible):
     out = []
     for k, pt in enumerate(path):
         rx, ry = _lerp_radius(table, cum[k] - cum[2])
-        out.append((pt, rx, ry))
+        out.append((pt, rx * ARM_THIN, ry * ARM_THIN))
     return out
 
 
@@ -281,7 +282,7 @@ def add_hand(side, pos, fwd, up, curls=None, thumb=None, arm_dir=(0.0, -0.5, -1.
     sname = "Sleeve" + side
     srot = S.frame3(d, (0.0, 1.0, 0.0) if abs(d.y) < 0.9 else (1.0, 0.0, 0.0))
     first = len(S.OBJECTS.get(sname, []))
-    k = HAND_SCALE
+    k = HAND_SCALE * 0.85
     S.cyl(sname, SLEEVE, (0.0, 0.0, sleeve_len / 2.0 + 0.012), 'z', 0.0430 * k, sleeve_len, segs=14, r2=0.0520 * k)
     S.cyl(sname, SLEEVE, (0.0, 0.0, 0.010), 'z', 0.0470 * k, 0.026, segs=14)          # the rolled cuff
     S.cyl(sname, SLEEVE, (0.0, 0.0, 0.0), 'z', 0.0490 * k, 0.008, segs=14)            # its folded edge

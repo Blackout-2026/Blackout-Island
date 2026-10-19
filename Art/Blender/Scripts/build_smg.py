@@ -319,7 +319,9 @@ def build_hands():
     fwd, up = H.grip_frame((0.0, 0.946, 0.324), (0.0, -0.324, 0.946), 20.0, "R")
     pos = H.palm_position(grip_c, fwd, up, 0.031, -0.020)
     curls = ((26, 40, 24), (92, 84, 50), (94, 86, 52), (96, 88, 50))     # the index lies along the trigger, the rest wrap the grip
-    H.add_hand("R", pos, fwd, up, curls=curls, thumb=SMG_THUMB_R, arm_dir=(0.30, -0.30, -0.90), visible=0.04)
+    H.add_hand("R", pos, fwd, up, curls=curls, thumb=SMG_THUMB_R, arm_dir=(0.35, -0.95, -0.20), visible=0.04)
+    if not LEFT_HAND:
+        return
     # handguard: a C-grip from below. The palm lies under it facing up, the fingers cross to the right and curl up its right side,
     # and the forearm comes in from the lower left.
     hg_c = (0.0, 0.002, 0.175)
@@ -329,6 +331,7 @@ def build_hands():
     H.add_hand("L", pos, fwd, up, curls=curls, thumb=None, arm_dir=(-0.50, -0.80, -0.30), visible=0.07)
 
 
+LEFT_HAND = False  # one hand only, like a first-person rifle photo: the right hand on the pistol grip, the gun held out in front
 SMG_THUMB_R = None  # the right thumb: the relaxed default until it is placed against the receiver
 
 
@@ -421,7 +424,7 @@ def main():
     mats = [make_material(n) for n in SLOTS]
     import hand_kit as H
     H.glove_material(mats[GLOVE])
-    objs = [create_object(n, mats, 85.0 if n.startswith(("Glove", "Sleeve")) else 40.0) for n in ("Smg", "GloveR", "GloveL", "SleeveR", "SleeveL")]
+    objs = [create_object(n, mats, 85.0 if n.startswith(("Glove", "Sleeve")) else 40.0) for n in (("Smg", "GloveR", "GloveL", "SleeveR", "SleeveL") if LEFT_HAND else ("Smg", "GloveR", "SleeveR"))]
     total = 0
     for ob in objs:
         unwrap(ob)
