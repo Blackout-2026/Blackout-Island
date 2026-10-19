@@ -1,5 +1,6 @@
 using System.Collections;
 using Blackout.Mission;
+using Blackout.Shared;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -62,6 +63,9 @@ namespace Blackout.Diagnostics.PlayTests
             Assert.AreEqual(0, result.MissedHits, report);
             Assert.AreEqual(0, result.SelfBlocked, report);
             Assert.AreEqual(result.KnifeSwings, result.KnifeLanded, report);
+            // Y7: the level's solid colliders are on Level (Blackout/Systems/Assign Physics Layers), none left on Default.
+            Assert.Greater(result.CollidersPerLayer[PhysicsLayers.Level], 0, report);
+            Assert.AreEqual(0, result.CollidersPerLayer[PhysicsLayers.Default], report);
         }
     }
 }

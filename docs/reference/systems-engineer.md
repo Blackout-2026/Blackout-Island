@@ -396,39 +396,48 @@ the page (the whole mission starts again).
 **Layers (P0, verified in Y7).** The playbook's six layers are defined at the indices teammates already use.
 `Blackout.Shared.PhysicsLayers` holds them as constants, and EditMode tests fail if `ProjectSettings` stops matching.
 
-| Layer | Index | On it today | Meant for |
-| --- | --- | --- | --- |
-| Default | 0 | All of Environment.unity (257 boxes, 22 capsules, the terrain and the vegetation prefabs) | — |
-| Ignore Raycast | 2 | nothing | colliders no query should see |
-| UI | 5 | the HUD and the Bootstrap canvas (no colliders) | — |
-| Player | 6 | the Player prefab (one CharacterController) | the player |
-| Enemy | 7 | AgentBase and its four variants (one capsule each) | agent bodies |
-| Level | 8 | **nothing yet** | static level geometry |
-| Interactable | 9 | doors, generator, cure, health pickups, crate | things the player uses |
-| Hit | 10 | nothing yet | hitboxes that only queries see (heads) |
-| Ragdoll | 11 | nothing yet | ragdoll limbs |
+| Layer | Index | At the start of Y7 | After Y7 | Meant for |
+| --- | --- | --- | --- | --- |
+| Default | 0 | All of Environment.unity's colliders (337 at runtime) | **no colliders**; renderers without colliders stay here | — |
+| Ignore Raycast | 2 | nothing | the **18 dock railings** | colliders no query should see |
+| UI | 5 | the HUD and the Bootstrap canvas (no colliders) | same | — |
+| Player | 6 | the Player prefab (one CharacterController) | same | the player |
+| Enemy | 7 | AgentBase and its four variants (one capsule each) | same | agent bodies |
+| Level | 8 | nothing | **319 colliders**: the level (318) and the generator's body | static level geometry |
+| Interactable | 9 | doors, generator console, cure, health pickups, crate | same | things the player uses |
+| Hit | 10 | nothing | nothing yet | hitboxes that only queries see (heads) |
+| Ragdoll | 11 | nothing | nothing yet | ragdoll limbs |
 
-**Collision matrix (P0, verified in Y7).** It matches the playbook exactly:
+**Collision matrix (P0, verified in Y7).** As found, it matched the playbook exactly:
 
 - Enemy × Enemy is off, so agents never push each other (the NavMesh avoidance handles crowds).
 - Ragdoll collides only with Level, so a falling body never pushes the player, agents, doors or another ragdoll.
 - Every other pair is on.
 
-Of the 66 pairs between the 11 named layers, 11 are off (Enemy × Enemy, and Ragdoll with the 10 others except Level).
+That was 11 of the 66 pairs between the 11 named layers. After Y7, Hit collides with nothing (finding 2), so
+**21 of 66** are off.
 
-**Findings (not changed: the team is told first, playbook Y7).**
+**Findings.** Reported to the team first (playbook Y7). The team then agreed, and all four were changed in Y7:
 
-1. **Level is empty.** The World Builder's colliders are all on Default. Today that only matters for ragdolls:
-   Ragdoll collides with Level only, so a ragdoll would fall through the terrain and the bunker floors. Either the
-   static colliders move to Level (World Builder), or Ragdoll × Default is turned on (Systems Engineer). Nobody uses
-   ragdolls yet.
-2. **Hit collides with everything.** A head hitbox on Hit would push and be pushed by the player, the doors and the
-   other agents' bodies. Hit is meant for queries only, so its row should be off. Nobody uses Hit yet.
-3. **Agent shots can hit agents.** `AgentShooter.hitMask` is everything (Agent Controller). The prototype has no
-   friendly fire, so the agents' mask should leave out Enemy, Hit and Ragdoll. `PhysicsLayers.AgentShots` is ready
-   for it.
-4. **The dock railings stop bullets.** In the prototype they have `bullets: false`. Putting the railing colliders on
-   Ignore Raycast would match (World Builder), at the cost of also hiding them from the use prompt.
+1. **Level was empty.** The World Builder's colliders were all on Default. Ragdoll collides with Level only, so a
+   ragdoll would have fallen through the terrain and the bunker floors. The Tactical Guard's sight check counts only
+   Level as blocking, so **guards could see through every wall**.
+   *Changed:* every solid collider in Environment.unity moved to Level (318), and so did the nested generator body in
+   `Generator.prefab`. Ragdoll × Default stays off.
+2. **Hit collided with everything.** A head hitbox on Hit would push and be pushed by the player, the doors and the
+   other agents' bodies. *Changed:* Hit collides with nothing; rays still hit it.
+3. **Agent shots could hit agents.** `AgentShooter.hitMask` was everything, and the prototype has no friendly fire.
+   *Changed:* it is `PhysicsLayers.AgentShots`, both as the default in `AgentShooter.cs` and in `AgentBase.prefab`.
+4. **The dock railings stopped bullets.** In the prototype they have `bullets: false` and `sight: false`.
+   *Changed:* the 18 `Dock_Rail_*` colliders are on Ignore Raycast. The player still bumps into them, while bullets
+   and guards' eyes pass through.
+
+The scene and prefab changes are made by **`Blackout/Systems/Assign Physics Layers`**:
+- It moves only objects still on Default, and it skips triggers and objects with a Rigidbody, so a layer set by hand
+  is kept.
+- A second run changes nothing.
+- **Re-run it after a World Builder tool rebuilds part of the level**, because new objects are created on Default.
+- The Stress Test's PlayMode test fails if any collider is left on Default, and its report names each one.
 
 **Weapon masks [GUESS].** The weapons now list the layers they hit instead of leaving some out:
 
@@ -436,7 +445,7 @@ Of the 66 pairs between the 11 named layers, 11 are off (Enemy × Enemy, and Rag
   and the hitboxes. It leaves out Player (the shooter), Ragdoll (dead bodies), UI, Water, TransparentFX, Ignore Raycast
   and the 20 unnamed layers. Before Y7 the mask was "everything except Player, Ignore Raycast and Ragdoll", which
   also let UI, Water, TransparentFX and any future layer stop bullets.
-- `AgentShots` = Default, Level, Player, Interactable, for the Agent Controller (finding 3).
+- `AgentShots` = Default, Level, Player, Interactable, used by `AgentShooter` (finding 3).
 - All weapon queries pass `QueryTriggerInteraction.Ignore`, so the triggers (pickups, doorway, cure) never stop
   bullets, whatever "Queries Hit Triggers" says in the project settings.
 - The knife's overlap sphere and line-of-sight check use the same mask as the guns.

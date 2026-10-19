@@ -46,6 +46,7 @@ PR #3 (merged into `develop` as 91d3014). Commits b542163, 02c1602, 2890402.
 
 - The hand-written matrix hex is hard to read. Check it in Project Settings → Physics instead. Since Y7, 28
   `PhysicsLayersTests` fail if it changes.
-- Hit was left colliding with everything, and nothing was put on Level. Y7 found both and reported them to the team
-  (`systems-engineer.md` section 3).
+- Hit was left colliding with everything, and nothing was put on Level. Y7 found both, reported them to the team,
+  and, with the team's agreement, changed them: Hit now collides with nothing, and the level's colliders are on
+  Level (`systems-engineer.md` section 3).
 - Empty `.gitkeep` files stay until real content arrives.

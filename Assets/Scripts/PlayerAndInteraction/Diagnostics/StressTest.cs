@@ -318,6 +318,11 @@ namespace Blackout.Diagnostics
                 Result.CollidersPerLayer[collider.gameObject.layer]++;
                 Result.Triggers += collider.isTrigger ? 1 : 0;
                 Result.MeshColliders += collider is MeshCollider ? 1 : 0;
+                if (collider.gameObject.layer == PhysicsLayers.Default)
+                {
+                    // Level geometry belongs on Level (Blackout/Systems/Assign Physics Layers); name what is left.
+                    Result.AddDetail($"Collider on Default: {collider.name} in {collider.gameObject.scene.name}");
+                }
             }
 
             foreach (Rigidbody body in FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))

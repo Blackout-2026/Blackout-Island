@@ -138,12 +138,12 @@ hits.
 
 | Measure | Value |
 | --- | --- |
-| Colliders | **361**: Default 337, Interactable 15, Enemy 8, Player 1 |
+| Colliders | **361**. Before the Y7 layer changes: Default 337, Interactable 15, Enemy 8, Player 1. After: **Level 319**, Ignore Raycast 18 (dock railings), Interactable 15, Enemy 8, Player 1, **Default 0** |
 | Triggers | 9 (pickups, cure, doorway, generator console) |
 | Mesh colliders | **0**: everything is a box, capsule or the terrain |
 | Rigidbodies | **1 dynamic** (the crate) + **4 kinematic** (the doors) |
 | Characters | the player is a `CharacterController`, and the agents use NavMesh paths with a capsule. Neither is simulated |
-| Matrix | **11 of 66** pairs between the 11 named layers are off |
+| Matrix | **21 of 66** pairs between the 11 named layers are off (11 from P0, then 10 more when Hit stopped colliding) |
 | Fixed timestep | 0.02 s (50 Hz), 6 solver iterations / 1 velocity iteration |
 
 ### Choices
@@ -156,7 +156,8 @@ hits.
 3. **The collision matrix removes pairs that should never meet.**
    - Enemy × Enemy is off: agents never push each other, and the NavMesh avoidance spaces them instead.
    - Ragdoll only touches Level: a falling body never pushes the player, a door or another ragdoll.
-   That is 11 of 66 pairs the broadphase never reports. The P0 matrix is pinned by 28 EditMode tests
+   - Hit touches nothing (Y7): hitboxes are for rays only, so they never push or get pushed.
+   That is 21 of 66 pairs the broadphase never reports. The matrix is pinned by 29 EditMode tests
    (`PhysicsLayersTests`).
 4. **Queries filter by layer and ignore triggers.** Every weapon query passes `PlayerShots` and
    `QueryTriggerInteraction.Ignore`. **Measured:** 28,000 rays per mask from all 7 phase starts:
@@ -166,8 +167,9 @@ hits.
    | Batch PlayMode test | 0.679 µs | 0.685 µs | 24,642 of 28,000 (both) |
    | Editor, Play mode | 0.959 µs | 0.937 µs | 24,638 of 28,000 (both) |
    | Batch PlayMode test, repeated | 0.686 µs | 0.691 µs | 24,642 of 28,000 (both) |
+   | Batch, after the level moved to Level | 0.686 µs | 0.695 µs | 24,642 of 28,000 (both) |
 
-   **There is no speed difference** (under 3 % in all three runs, and the sign flips between runs). The excluded
+   **There is no speed difference** (under 3 % in all four runs, and the sign flips between runs). The excluded
    layers hold no colliders today, so PhysX has nothing extra to skip. The mask is a **correctness** choice: anything
    later placed on UI, Water or a new layer can't eat bullets. I am not claiming a speedup.
 5. **No allocation in queries or effects.** `OverlapSphereNonAlloc`, pooled tracers, `ParticleSystem.Emit` sparks, a
@@ -179,28 +181,39 @@ hits.
 
 ### Correctness results (Stress Test)
 
-| Check | Batch PlayMode test | Editor, Play mode |
-| --- | --- | --- |
-| Phases visited, then Complete | 7, Complete reached | 7, Complete reached |
-| Null references / exceptions / errors | 0 / 0 / 0 | 0 / 0 / 0 |
-| Pellets: dummy / wide / blocked / own collider / **missed** | 245: 214 / 31 / 0 / 0 / **0** | 245: 201 / 44 / 0 / 0 / **0** |
-| Pellets stopped per layer | Enemy 209, Default 21, Interactable 9, Hit 5 | Enemy 200, Default 28, Interactable 11, Hit 3 |
-| Knife swings landed | 35 / 35 | 35 / 35 |
-| Kills counted by the mission | 14 | 14 |
-| Allocation per shot | 0 B (275 shots) | 0 B (275 shots) |
+| Check | Batch PlayMode test | Editor, Play mode | Batch, after the layer changes |
+| --- | --- | --- | --- |
+| Phases visited, then Complete | 7, Complete reached | 7, Complete reached | 7, Complete reached |
+| Null references / exceptions / errors | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+| Pellets: dummy / wide / blocked / own collider / **missed** | 245: 214 / 31 / 0 / 0 / **0** | 245: 201 / 44 / 0 / 0 / **0** | 245: 213 / 32 / 0 / 0 / **0** |
+| Pellets stopped per layer | Enemy 209, Default 21, Interactable 9, Hit 5 | Enemy 200, Default 28, Interactable 11, Hit 3 | Enemy 208, Level 11, Interactable 18, Hit 5 |
+| Knife swings landed | 35 / 35 | 35 / 35 | 35 / 35 |
+| Kills counted by the mission | 14 | 14 | 14 |
+| Allocation per shot | 0 B (275 shots) | 0 B (275 shots) | 0 B (275 shots) |
 
-### Findings sent to the team (not changed in Y7; layers are shared)
+### Findings, reported to the team and then changed with their agreement
 
-1. **Level is empty**: all Environment colliders are on Default. A ragdoll would fall through the world, because
-   Ragdoll only collides with Level.
-2. **Hit collides with everything**: a head hitbox would push the player and the doors. It should be query-only.
-3. **`AgentShooter.hitMask` is everything**: agents can shoot each other, and the prototype has no friendly fire.
-   `PhysicsLayers.AgentShots` is ready for it.
-4. **The dock railings stop bullets**: in the prototype they don't (`bullets: false`).
+The layers and the matrix are shared, so the team heard about these before anything changed (playbook Y7). The
+World Builder and the Agent Controller then agreed to the changes in their parts.
+
+1. **Level was empty.** All Environment colliders were on Default.
+   - A ragdoll would have fallen through the world, because Ragdoll only collides with Level.
+   - The Tactical Guard's sight check counts only Level as blocking, so **guards saw through every wall**.
+   - *Now:* 319 colliders are on Level and **0 on Default**. The Stress Test fails if one is left on Default.
+2. **Hit collided with everything**, so a head hitbox would have pushed the player and the doors. *Now:* it collides
+   with nothing and stays hittable by rays.
+3. **`AgentShooter.hitMask` was everything**, so agents could shoot each other, and the prototype has no friendly
+   fire. *Now:* `PhysicsLayers.AgentShots`.
+4. **The dock railings stopped bullets**, while in the prototype they don't (`bullets: false`). *Now:* the 18 railings
+   are on Ignore Raycast. The player still bumps into them, while bullets and guards' eyes pass through.
+
+`Blackout/Systems/Assign Physics Layers` makes the scene and prefab changes. It is re-runnable: the second run
+changed nothing, and it only touches objects still on Default. Re-run it after a World Builder tool rebuilds part of
+the level.
 
 ### Weaknesses
 
-- Both timing runs are from one Mac (once in batch mode, once in the Editor). They show "no difference", not
+- All timing runs are from one Mac (batch mode and the Editor). They show "no difference", not
   absolute budgets.
 - The Stress Test fires from fixed starts at a dummy straight ahead. It doesn't cover moving targets or agents
   shooting back (the player is invulnerable during the run).

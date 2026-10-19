@@ -129,7 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1391618}
   - component: {fileID: 1391619}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_120
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -182,7 +182,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4430502}
   - component: {fileID: 4430503}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_178
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -284,7 +284,7 @@ GameObject:
   m_Component:
   - component: {fileID: 13666964}
   - component: {fileID: 13666965}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_069
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -337,7 +337,7 @@ GameObject:
   m_Component:
   - component: {fileID: 16443555}
   - component: {fileID: 16443556}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_171
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -601,7 +601,7 @@ GameObject:
   m_Component:
   - component: {fileID: 28402202}
   - component: {fileID: 28402203}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_031
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -656,7 +656,7 @@ GameObject:
   - component: {fileID: 28794514}
   - component: {fileID: 28794513}
   - component: {fileID: 28794512}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceRamp_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -766,7 +766,7 @@ GameObject:
   m_Component:
   - component: {fileID: 30386156}
   - component: {fileID: 30386157}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_062
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -866,7 +866,7 @@ GameObject:
   m_Component:
   - component: {fileID: 35212800}
   - component: {fileID: 35212801}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_018
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1015,7 +1015,7 @@ GameObject:
   - component: {fileID: 47249330}
   - component: {fileID: 47249329}
   - component: {fileID: 47249328}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Wall_N_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1204,7 +1204,7 @@ GameObject:
   m_Component:
   - component: {fileID: 58992546}
   - component: {fileID: 58992547}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_118
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1297,7 +1297,7 @@ GameObject:
   - component: {fileID: 67254319}
   - component: {fileID: 67254318}
   - component: {fileID: 67254317}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1411,7 +1411,7 @@ GameObject:
   - component: {fileID: 67918519}
   - component: {fileID: 67918518}
   - component: {fileID: 67918517}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Lintel_S_D-Lab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1521,7 +1521,7 @@ GameObject:
   m_Component:
   - component: {fileID: 74747309}
   - component: {fileID: 74747310}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_025
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2481,6 +2481,10 @@ PrefabInstance:
       value: BunkerEntranceLobby_LobbyLocker02
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -2510,7 +2514,7 @@ GameObject:
   - component: {fileID: 123552498}
   - component: {fileID: 123552497}
   - component: {fileID: 123552496}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2667,7 +2671,7 @@ GameObject:
   m_Component:
   - component: {fileID: 126589998}
   - component: {fileID: 126589999}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3031,7 +3035,7 @@ GameObject:
   m_Component:
   - component: {fileID: 133991561}
   - component: {fileID: 133991562}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_046
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3086,7 +3090,7 @@ GameObject:
   - component: {fileID: 136060191}
   - component: {fileID: 136060190}
   - component: {fileID: 136060189}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3451,7 +3455,7 @@ GameObject:
   m_Component:
   - component: {fileID: 142033247}
   - component: {fileID: 142033248}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_063
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3504,7 +3508,7 @@ GameObject:
   m_Component:
   - component: {fileID: 148845886}
   - component: {fileID: 148845887}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_061
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3562,6 +3566,10 @@ PrefabInstance:
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabAnalyser03
+      objectReference: {fileID: 0}
+    - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -3635,7 +3643,7 @@ GameObject:
   m_Component:
   - component: {fileID: 170630811}
   - component: {fileID: 170630812}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_010
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3780,7 +3788,7 @@ GameObject:
   - component: {fileID: 178111919}
   - component: {fileID: 178111918}
   - component: {fileID: 178111917}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3892,7 +3900,7 @@ GameObject:
   - component: {fileID: 179182414}
   - component: {fileID: 179182413}
   - component: {fileID: 179182412}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Corridor_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4269,7 +4277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 190496517}
   - component: {fileID: 190496518}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_060
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4373,6 +4381,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker06
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -4402,7 +4414,7 @@ GameObject:
   - component: {fileID: 193627077}
   - component: {fileID: 193627076}
   - component: {fileID: 193627075}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4512,7 +4524,7 @@ GameObject:
   m_Component:
   - component: {fileID: 195680835}
   - component: {fileID: 195680836}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_032
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4567,7 +4579,7 @@ GameObject:
   - component: {fileID: 205216512}
   - component: {fileID: 205216511}
   - component: {fileID: 205216510}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4846,7 +4858,7 @@ GameObject:
   - component: {fileID: 205539896}
   - component: {fileID: 205539895}
   - component: {fileID: 205539894}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Hull
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5003,7 +5015,7 @@ GameObject:
   m_Component:
   - component: {fileID: 207869725}
   - component: {fileID: 207869726}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_142
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5058,7 +5070,7 @@ GameObject:
   - component: {fileID: 207987487}
   - component: {fileID: 207987486}
   - component: {fileID: 207987485}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5170,7 +5182,7 @@ GameObject:
   m_Component:
   - component: {fileID: 208085107}
   - component: {fileID: 208085108}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_106
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5224,7 +5236,7 @@ GameObject:
   - component: {fileID: 215659096}
   - component: {fileID: 215659098}
   - component: {fileID: 215659097}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandTerrain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5317,7 +5329,7 @@ GameObject:
   m_Component:
   - component: {fileID: 216311948}
   - component: {fileID: 216311949}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_148
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5630,6 +5642,10 @@ PrefabInstance:
       value: SecurityArea_SecurityMonitor01
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -5834,7 +5850,7 @@ GameObject:
   m_Component:
   - component: {fileID: 243460111}
   - component: {fileID: 243460112}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_034
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5924,7 +5940,7 @@ GameObject:
   m_Component:
   - component: {fileID: 263675081}
   - component: {fileID: 263675082}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_161
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10882,6 +10898,10 @@ PrefabInstance:
       value: Laboratory_LabAnalyser02
       objectReference: {fileID: 0}
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -11690,6 +11710,10 @@ PrefabInstance:
       value: Laboratory_LabMicroscope02
       objectReference: {fileID: 0}
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -11765,7 +11789,7 @@ GameObject:
   m_Component:
   - component: {fileID: 315996749}
   - component: {fileID: 315996750}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_042
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12097,6 +12121,10 @@ PrefabInstance:
       value: Laboratory_LabCommanderDesk
       objectReference: {fileID: 0}
     - target: {fileID: 3340279720942527281, guid: 7a364e22b2ecb824f9dbfb15ea904d96, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3340279720942527281, guid: 7a364e22b2ecb824f9dbfb15ea904d96, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -12202,7 +12230,7 @@ GameObject:
   m_Component:
   - component: {fileID: 332083292}
   - component: {fileID: 332083293}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_044
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12607,7 +12635,7 @@ GameObject:
   m_Component:
   - component: {fileID: 342908889}
   - component: {fileID: 342908890}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_082
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12824,6 +12852,10 @@ PrefabInstance:
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_Name
       value: BunkerEntranceLobby_LobbyMonitor
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -13214,7 +13246,7 @@ GameObject:
   m_Component:
   - component: {fileID: 400672638}
   - component: {fileID: 400672639}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_125
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13267,7 +13299,7 @@ GameObject:
   m_Component:
   - component: {fileID: 406609477}
   - component: {fileID: 406609478}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_136
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13322,7 +13354,7 @@ GameObject:
   - component: {fileID: 406751884}
   - component: {fileID: 406751883}
   - component: {fileID: 406751882}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13434,7 +13466,7 @@ GameObject:
   - component: {fileID: 407657242}
   - component: {fileID: 407657241}
   - component: {fileID: 407657240}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W08
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13546,7 +13578,7 @@ GameObject:
   m_Component:
   - component: {fileID: 409614522}
   - component: {fileID: 409614523}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_030
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13601,7 +13633,7 @@ GameObject:
   - component: {fileID: 412356995}
   - component: {fileID: 412356994}
   - component: {fileID: 412356993}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13713,7 +13745,7 @@ GameObject:
   - component: {fileID: 415307455}
   - component: {fileID: 415307454}
   - component: {fileID: 415307453}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_CabinRoof
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13823,7 +13855,7 @@ GameObject:
   m_Component:
   - component: {fileID: 415382389}
   - component: {fileID: 415382390}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_065
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14144,7 +14176,7 @@ GameObject:
   m_Component:
   - component: {fileID: 430699189}
   - component: {fileID: 430699190}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_040
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14231,7 +14263,7 @@ GameObject:
   m_Component:
   - component: {fileID: 433231253}
   - component: {fileID: 433231254}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_095
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14284,7 +14316,7 @@ GameObject:
   m_Component:
   - component: {fileID: 435623228}
   - component: {fileID: 435623229}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_172
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14476,6 +14508,10 @@ PrefabInstance:
       value: SecurityArea_SecurityMonitor04
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -14552,7 +14588,7 @@ GameObject:
   m_Component:
   - component: {fileID: 445487972}
   - component: {fileID: 445487973}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_024
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14607,7 +14643,7 @@ GameObject:
   - component: {fileID: 452433755}
   - component: {fileID: 452433754}
   - component: {fileID: 452433753}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14724,6 +14760,10 @@ PrefabInstance:
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabMicroscope03
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -14898,7 +14938,7 @@ GameObject:
   m_Component:
   - component: {fileID: 463859842}
   - component: {fileID: 463859843}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_143
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15081,7 +15121,7 @@ GameObject:
   - component: {fileID: 469604777}
   - component: {fileID: 469604776}
   - component: {fileID: 469604775}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Sill_N_O-RampTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15193,7 +15233,7 @@ GameObject:
   - component: {fileID: 469714396}
   - component: {fileID: 469714395}
   - component: {fileID: 469714394}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15395,7 +15435,7 @@ GameObject:
   - component: {fileID: 477940958}
   - component: {fileID: 477940957}
   - component: {fileID: 477940956}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15509,7 +15549,7 @@ GameObject:
   - component: {fileID: 481788427}
   - component: {fileID: 481788426}
   - component: {fileID: 481788425}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Wall_S_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15619,7 +15659,7 @@ GameObject:
   m_Component:
   - component: {fileID: 482524782}
   - component: {fileID: 482524783}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_066
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15762,7 +15802,7 @@ GameObject:
   m_Component:
   - component: {fileID: 485519286}
   - component: {fileID: 485519287}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_160
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15815,7 +15855,7 @@ GameObject:
   m_Component:
   - component: {fileID: 487235056}
   - component: {fileID: 487235057}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_168
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15868,7 +15908,7 @@ GameObject:
   m_Component:
   - component: {fileID: 488474760}
   - component: {fileID: 488474761}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_008
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16189,7 +16229,7 @@ GameObject:
   m_Component:
   - component: {fileID: 498814025}
   - component: {fileID: 498814026}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_015
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16726,7 +16766,7 @@ GameObject:
   m_Component:
   - component: {fileID: 520279717}
   - component: {fileID: 520279718}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_039
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16781,7 +16821,7 @@ GameObject:
   - component: {fileID: 522885289}
   - component: {fileID: 522885288}
   - component: {fileID: 522885287}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Wall_S_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17253,7 +17293,7 @@ GameObject:
   m_Component:
   - component: {fileID: 539159369}
   - component: {fileID: 539159370}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_176
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17485,6 +17525,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker12
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -17512,7 +17556,7 @@ GameObject:
   m_Component:
   - component: {fileID: 546148697}
   - component: {fileID: 546148698}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_005
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17657,7 +17701,7 @@ GameObject:
   - component: {fileID: 548287007}
   - component: {fileID: 548287006}
   - component: {fileID: 548287005}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17769,7 +17813,7 @@ GameObject:
   m_Component:
   - component: {fileID: 549062867}
   - component: {fileID: 549062868}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_038
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17827,6 +17871,10 @@ PrefabInstance:
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabAnalyser01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -17948,6 +17996,10 @@ PrefabInstance:
       value: GeneratorRoom_GeneratorCabinet02
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -18019,7 +18071,7 @@ GameObject:
   m_Component:
   - component: {fileID: 555951751}
   - component: {fileID: 555951752}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_101
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18355,6 +18407,10 @@ PrefabInstance:
       value: Laboratory_LabBench04
       objectReference: {fileID: 0}
     - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -18418,7 +18474,7 @@ GameObject:
   m_Component:
   - component: {fileID: 563850777}
   - component: {fileID: 563850778}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_112
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18473,7 +18529,7 @@ GameObject:
   - component: {fileID: 564102769}
   - component: {fileID: 564102768}
   - component: {fileID: 564102767}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Transom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18585,7 +18641,7 @@ GameObject:
   - component: {fileID: 572194836}
   - component: {fileID: 572194835}
   - component: {fileID: 572194834}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Lintel_S_D-Bunker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18695,7 +18751,7 @@ GameObject:
   m_Component:
   - component: {fileID: 575425704}
   - component: {fileID: 575425705}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_068
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18748,7 +18804,7 @@ GameObject:
   m_Component:
   - component: {fileID: 579192295}
   - component: {fileID: 579192296}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_074
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18979,7 +19035,7 @@ GameObject:
   m_Component:
   - component: {fileID: 584422600}
   - component: {fileID: 584422601}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_075
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19034,7 +19090,7 @@ GameObject:
   - component: {fileID: 587497327}
   - component: {fileID: 587497326}
   - component: {fileID: 587497325}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19146,7 +19202,7 @@ GameObject:
   - component: {fileID: 593906778}
   - component: {fileID: 593906777}
   - component: {fileID: 593906776}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19607,7 +19663,7 @@ GameObject:
   - component: {fileID: 629247296}
   - component: {fileID: 629247295}
   - component: {fileID: 629247294}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19855,6 +19911,10 @@ PrefabInstance:
       value: BunkerEntranceLobby_LobbyLocker01
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -19967,6 +20027,10 @@ PrefabInstance:
       value: Laboratory_LabMicroscope01
       objectReference: {fileID: 0}
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -20042,7 +20106,7 @@ GameObject:
   m_Component:
   - component: {fileID: 654771594}
   - component: {fileID: 654771595}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_177
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20144,6 +20208,10 @@ PrefabInstance:
     - target: {fileID: 6126276236117027814, guid: 30fcea3cad7dbd54296655586eadecd9, type: 3}
       propertyPath: m_Name
       value: SecurityArea_SecurityTable
+      objectReference: {fileID: 0}
+    - target: {fileID: 6126276236117027814, guid: 30fcea3cad7dbd54296655586eadecd9, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 6126276236117027814, guid: 30fcea3cad7dbd54296655586eadecd9, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -20470,6 +20538,10 @@ PrefabInstance:
       value: SecurityArea_SecurityWallScreen
       objectReference: {fileID: 0}
     - target: {fileID: 4375328290893430369, guid: 67465ebf46c25d24cb930fed7a410a3d, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4375328290893430369, guid: 67465ebf46c25d24cb930fed7a410a3d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -20506,7 +20578,7 @@ GameObject:
   m_Component:
   - component: {fileID: 668961219}
   - component: {fileID: 668961220}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_099
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20561,7 +20633,7 @@ GameObject:
   - component: {fileID: 671103320}
   - component: {fileID: 671103319}
   - component: {fileID: 671103318}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20851,7 +20923,7 @@ GameObject:
   m_Component:
   - component: {fileID: 677387551}
   - component: {fileID: 677387552}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_084
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20951,7 +21023,7 @@ GameObject:
   m_Component:
   - component: {fileID: 685967369}
   - component: {fileID: 685967370}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_127
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21047,6 +21119,10 @@ PrefabInstance:
       value: SecurityArea_SecurityDesk01
       objectReference: {fileID: 0}
     - target: {fileID: 5627369991686928486, guid: 54ab387df89ffc945a911416ad7e819e, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5627369991686928486, guid: 54ab387df89ffc945a911416ad7e819e, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -21090,7 +21166,7 @@ GameObject:
   m_Component:
   - component: {fileID: 695087402}
   - component: {fileID: 695087403}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_130
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21143,7 +21219,7 @@ GameObject:
   m_Component:
   - component: {fileID: 696076364}
   - component: {fileID: 696076365}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_085
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21606,6 +21682,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker09
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -21633,7 +21713,7 @@ GameObject:
   m_Component:
   - component: {fileID: 706983056}
   - component: {fileID: 706983057}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_026
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21882,6 +21962,10 @@ PrefabInstance:
       value: GeneratorRoom_GeneratorCrate
       objectReference: {fileID: 0}
     - target: {fileID: 8437258971000995184, guid: f66814a454ddb3245ae888728c26d006, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8437258971000995184, guid: f66814a454ddb3245ae888728c26d006, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -21907,7 +21991,7 @@ GameObject:
   - component: {fileID: 709242748}
   - component: {fileID: 709242747}
   - component: {fileID: 709242746}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22195,7 +22279,7 @@ GameObject:
   m_Component:
   - component: {fileID: 711125007}
   - component: {fileID: 711125008}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_109
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22250,7 +22334,7 @@ GameObject:
   - component: {fileID: 711190596}
   - component: {fileID: 711190595}
   - component: {fileID: 711190594}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Corridor_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22360,7 +22444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 713600896}
   - component: {fileID: 713600897}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_019
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22624,7 +22708,7 @@ GameObject:
   - component: {fileID: 720621433}
   - component: {fileID: 720621432}
   - component: {fileID: 720621431}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22875,7 +22959,7 @@ GameObject:
   - component: {fileID: 742333874}
   - component: {fileID: 742333873}
   - component: {fileID: 742333872}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Lintel_E_D-Generator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22985,7 +23069,7 @@ GameObject:
   m_Component:
   - component: {fileID: 751850787}
   - component: {fileID: 751850788}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_029
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23040,7 +23124,7 @@ GameObject:
   - component: {fileID: 753630776}
   - component: {fileID: 753630775}
   - component: {fileID: 753630774}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23150,7 +23234,7 @@ GameObject:
   m_Component:
   - component: {fileID: 755401294}
   - component: {fileID: 755401295}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_175
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23588,7 +23672,7 @@ GameObject:
   m_Component:
   - component: {fileID: 774473163}
   - component: {fileID: 774473164}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_047
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23641,7 +23725,7 @@ GameObject:
   m_Component:
   - component: {fileID: 775476000}
   - component: {fileID: 775476001}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_173
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23694,7 +23778,7 @@ GameObject:
   m_Component:
   - component: {fileID: 778086589}
   - component: {fileID: 778086590}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_006
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24153,6 +24237,10 @@ PrefabInstance:
       value: GeneratorRoom_GeneratorCabinet03
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -24224,7 +24312,7 @@ GameObject:
   m_Component:
   - component: {fileID: 792176982}
   - component: {fileID: 792176983}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_149
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24533,7 +24621,7 @@ GameObject:
   m_Component:
   - component: {fileID: 799510126}
   - component: {fileID: 799510127}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_164
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24725,7 +24813,7 @@ GameObject:
   - component: {fileID: 801877777}
   - component: {fileID: 801877776}
   - component: {fileID: 801877775}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30438,7 +30526,7 @@ GameObject:
   m_Component:
   - component: {fileID: 822911995}
   - component: {fileID: 822911996}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_174
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30493,7 +30581,7 @@ GameObject:
   - component: {fileID: 824359841}
   - component: {fileID: 824359840}
   - component: {fileID: 824359839}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30603,7 +30691,7 @@ GameObject:
   m_Component:
   - component: {fileID: 826849007}
   - component: {fileID: 826849008}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_037
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31189,7 +31277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 838376297}
   - component: {fileID: 838376298}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_105
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31244,7 +31332,7 @@ GameObject:
   - component: {fileID: 839510945}
   - component: {fileID: 839510944}
   - component: {fileID: 839510943}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Corridor_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31356,7 +31444,7 @@ GameObject:
   - component: {fileID: 851945599}
   - component: {fileID: 851945598}
   - component: {fileID: 851945597}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31471,6 +31559,10 @@ PrefabInstance:
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_Name
       value: GeneratorRoom_GeneratorCabinet05
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31616,7 +31708,7 @@ GameObject:
   - component: {fileID: 865392584}
   - component: {fileID: 865392583}
   - component: {fileID: 865392582}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31730,7 +31822,7 @@ GameObject:
   - component: {fileID: 868979050}
   - component: {fileID: 868979049}
   - component: {fileID: 868979048}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_N_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31842,7 +31934,7 @@ GameObject:
   - component: {fileID: 871041534}
   - component: {fileID: 871041533}
   - component: {fileID: 871041532}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Deck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31989,7 +32081,7 @@ GameObject:
   - component: {fileID: 878770637}
   - component: {fileID: 878770636}
   - component: {fileID: 878770635}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32189,7 +32281,7 @@ GameObject:
   m_Component:
   - component: {fileID: 882821622}
   - component: {fileID: 882821623}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_057
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32242,7 +32334,7 @@ GameObject:
   m_Component:
   - component: {fileID: 882945012}
   - component: {fileID: 882945013}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_053
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32295,7 +32387,7 @@ GameObject:
   m_Component:
   - component: {fileID: 883693485}
   - component: {fileID: 883693486}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_012
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32382,6 +32474,10 @@ PrefabInstance:
     - target: {fileID: 835468202641262180, guid: 0eef7c97a6489cc4ea57147195767a4b, type: 3}
       propertyPath: m_Name
       value: GeneratorRoom_GeneratorTank01
+      objectReference: {fileID: 0}
+    - target: {fileID: 835468202641262180, guid: 0eef7c97a6489cc4ea57147195767a4b, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 835468202641262180, guid: 0eef7c97a6489cc4ea57147195767a4b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32592,7 +32688,7 @@ GameObject:
   m_Component:
   - component: {fileID: 898856575}
   - component: {fileID: 898856576}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_162
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32762,7 +32858,7 @@ GameObject:
   - component: {fileID: 925844494}
   - component: {fileID: 925844493}
   - component: {fileID: 925844492}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Sill_E_D-Generator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32962,7 +33058,7 @@ GameObject:
   m_Component:
   - component: {fileID: 928154717}
   - component: {fileID: 928154718}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_152
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33024,6 +33120,10 @@ PrefabInstance:
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_Name
       value: SecurityArea_SecurityMonitor03
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -33102,7 +33202,7 @@ GameObject:
   m_Component:
   - component: {fileID: 932185002}
   - component: {fileID: 932185003}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_020
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33195,7 +33295,7 @@ GameObject:
   - component: {fileID: 940773332}
   - component: {fileID: 940773331}
   - component: {fileID: 940773330}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Corridor_Wall_W_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33524,6 +33624,10 @@ PrefabInstance:
     - target: {fileID: 5627369991686928486, guid: 54ab387df89ffc945a911416ad7e819e, type: 3}
       propertyPath: m_Name
       value: SecurityArea_SecurityDesk02
+      objectReference: {fileID: 0}
+    - target: {fileID: 5627369991686928486, guid: 54ab387df89ffc945a911416ad7e819e, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5627369991686928486, guid: 54ab387df89ffc945a911416ad7e819e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -34107,7 +34211,7 @@ GameObject:
   - component: {fileID: 965754499}
   - component: {fileID: 965754498}
   - component: {fileID: 965754497}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_End
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34219,7 +34323,7 @@ GameObject:
   - component: {fileID: 965762691}
   - component: {fileID: 965762690}
   - component: {fileID: 965762689}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34329,7 +34433,7 @@ GameObject:
   m_Component:
   - component: {fileID: 966095489}
   - component: {fileID: 966095490}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_059
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34382,7 +34486,7 @@ GameObject:
   m_Component:
   - component: {fileID: 969835489}
   - component: {fileID: 969835490}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_132
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34554,7 +34658,7 @@ GameObject:
   m_Component:
   - component: {fileID: 987759742}
   - component: {fileID: 987759743}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_154
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34705,6 +34809,10 @@ PrefabInstance:
       value: BunkerEntranceLobby_LobbyLocker04
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -34732,7 +34840,7 @@ GameObject:
   m_Component:
   - component: {fileID: 995852339}
   - component: {fileID: 995852340}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_129
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34787,7 +34895,7 @@ GameObject:
   - component: {fileID: 996233418}
   - component: {fileID: 996233417}
   - component: {fileID: 996233416}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_S_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35271,6 +35379,10 @@ PrefabInstance:
       value: BunkerEntranceLobby_LobbyDesk
       objectReference: {fileID: 0}
     - target: {fileID: 7819922159394391198, guid: 26c06ac0951fe9d4692ec039a0ccbf2d, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7819922159394391198, guid: 26c06ac0951fe9d4692ec039a0ccbf2d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -35300,7 +35412,7 @@ GameObject:
   - component: {fileID: 1014680934}
   - component: {fileID: 1014680933}
   - component: {fileID: 1014680932}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35471,6 +35583,10 @@ PrefabInstance:
       value: SecurityArea_SecurityCrate
       objectReference: {fileID: 0}
     - target: {fileID: 8437258971000995184, guid: f66814a454ddb3245ae888728c26d006, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8437258971000995184, guid: f66814a454ddb3245ae888728c26d006, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -35537,7 +35653,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1022695816}
   - component: {fileID: 1022695817}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_169
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35590,7 +35706,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1028639987}
   - component: {fileID: 1028639988}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_051
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36216,7 +36332,7 @@ GameObject:
   - component: {fileID: 1074267800}
   - component: {fileID: 1074267799}
   - component: {fileID: 1074267798}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36375,7 +36491,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1083100922}
   - component: {fileID: 1083100923}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_083
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36479,6 +36595,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker08
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -36553,7 +36673,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1093721712}
   - component: {fileID: 1093721713}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_021
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36745,7 +36865,7 @@ GameObject:
   - component: {fileID: 1105823774}
   - component: {fileID: 1105823773}
   - component: {fileID: 1105823772}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37077,7 +37197,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1117296029}
   - component: {fileID: 1117296030}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_096
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37132,7 +37252,7 @@ GameObject:
   - component: {fileID: 1124048711}
   - component: {fileID: 1124048710}
   - component: {fileID: 1124048709}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Side_West
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37274,7 +37394,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1132080054}
   - component: {fileID: 1132080055}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_133
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37508,6 +37628,10 @@ PrefabInstance:
       value: GeneratorRoom_GeneratorTank02
       objectReference: {fileID: 0}
     - target: {fileID: 835468202641262180, guid: 0eef7c97a6489cc4ea57147195767a4b, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 835468202641262180, guid: 0eef7c97a6489cc4ea57147195767a4b, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -37690,6 +37814,10 @@ PrefabInstance:
     - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabBench02
+      objectReference: {fileID: 0}
+    - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -38183,7 +38311,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1151020015}
   - component: {fileID: 1151020016}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_144
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38236,7 +38364,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1158839256}
   - component: {fileID: 1158839257}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_134
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38289,7 +38417,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1159538806}
   - component: {fileID: 1159538807}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_017
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38607,7 +38735,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1167682215}
   - component: {fileID: 1167682216}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_058
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39108,7 +39236,7 @@ GameObject:
   - component: {fileID: 1190506273}
   - component: {fileID: 1190506272}
   - component: {fileID: 1190506271}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Lintel_N_D-Security
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39540,7 +39668,7 @@ GameObject:
   - component: {fileID: 1209468744}
   - component: {fileID: 1209468743}
   - component: {fileID: 1209468742}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Sill_S_D-Lab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39717,7 +39845,7 @@ GameObject:
   - component: {fileID: 1219571286}
   - component: {fileID: 1219571285}
   - component: {fileID: 1219571284}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Wall_N_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39829,7 +39957,7 @@ GameObject:
   - component: {fileID: 1222336713}
   - component: {fileID: 1222336712}
   - component: {fileID: 1222336711}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Cabin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40083,7 +40211,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1227412097}
   - component: {fileID: 1227412098}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_052
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40136,7 +40264,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1228609884}
   - component: {fileID: 1228609885}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_138
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40189,7 +40317,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1230563192}
   - component: {fileID: 1230563193}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_009
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40242,7 +40370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1231289622}
   - component: {fileID: 1231289623}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_079
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45133,7 +45261,7 @@ GameObject:
   - component: {fileID: 1245063619}
   - component: {fileID: 1245063618}
   - component: {fileID: 1245063617}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45245,7 +45373,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1247992085}
   - component: {fileID: 1247992086}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_167
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45428,7 +45556,7 @@ GameObject:
   - component: {fileID: 1250601696}
   - component: {fileID: 1250601695}
   - component: {fileID: 1250601694}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45796,7 +45924,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1262535501}
   - component: {fileID: 1262535502}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_002
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -50685,7 +50813,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1265112957}
   - component: {fileID: 1265112958}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_117
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -50738,7 +50866,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1267837053}
   - component: {fileID: 1267837054}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_158
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -50793,7 +50921,7 @@ GameObject:
   - component: {fileID: 1268275929}
   - component: {fileID: 1268275928}
   - component: {fileID: 1268275927}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51078,7 +51206,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1280419384}
   - component: {fileID: 1280419385}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_115
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51666,6 +51794,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker03
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -51693,7 +51825,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1286693308}
   - component: {fileID: 1286693309}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_104
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52081,7 +52213,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1308387068}
   - component: {fileID: 1308387069}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_119
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52136,7 +52268,7 @@ GameObject:
   - component: {fileID: 1316361378}
   - component: {fileID: 1316361377}
   - component: {fileID: 1316361376}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E08
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52338,7 +52470,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1322850023}
   - component: {fileID: 1322850024}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_137
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52438,7 +52570,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1325001895}
   - component: {fileID: 1325001896}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_088
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52774,7 +52906,7 @@ GameObject:
   - component: {fileID: 1355455187}
   - component: {fileID: 1355455186}
   - component: {fileID: 1355455185}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_N_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52886,7 +53018,7 @@ GameObject:
   - component: {fileID: 1358719667}
   - component: {fileID: 1358719666}
   - component: {fileID: 1358719665}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53027,7 +53159,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1361407103}
   - component: {fileID: 1361407104}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_004
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53082,7 +53214,7 @@ GameObject:
   - component: {fileID: 1362170517}
   - component: {fileID: 1362170516}
   - component: {fileID: 1362170515}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Bow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53194,7 +53326,7 @@ GameObject:
   - component: {fileID: 1366659899}
   - component: {fileID: 1366659898}
   - component: {fileID: 1366659897}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53484,7 +53616,7 @@ GameObject:
   - component: {fileID: 1377513337}
   - component: {fileID: 1377513336}
   - component: {fileID: 1377513335}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boat_Side_East
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53684,7 +53816,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1387074992}
   - component: {fileID: 1387074993}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_091
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53746,6 +53878,10 @@ PrefabInstance:
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_Name
       value: SecurityArea_SecurityMonitor02
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -53826,7 +53962,7 @@ GameObject:
   - component: {fileID: 1395021581}
   - component: {fileID: 1395021580}
   - component: {fileID: 1395021579}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_E_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53936,7 +54072,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1395153251}
   - component: {fileID: 1395153252}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_041
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54126,7 +54262,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1405044856}
   - component: {fileID: 1405044857}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_050
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54179,7 +54315,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1413318709}
   - component: {fileID: 1413318710}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_170
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54232,7 +54368,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1417008316}
   - component: {fileID: 1417008317}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_102
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54285,7 +54421,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1425166804}
   - component: {fileID: 1425166805}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_135
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54347,6 +54483,10 @@ PrefabInstance:
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabCommanderMonitor
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5125157885874392710, guid: 4b2e437f54733854aa77921afb3cb585, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -54425,7 +54565,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1426427062}
   - component: {fileID: 1426427063}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_014
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54827,7 +54967,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1435099944}
   - component: {fileID: 1435099945}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_150
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54929,7 +55069,7 @@ GameObject:
   - component: {fileID: 1440786321}
   - component: {fileID: 1440786320}
   - component: {fileID: 1440786319}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_S_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55167,7 +55307,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1446602652}
   - component: {fileID: 1446602653}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_023
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55267,7 +55407,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1457954553}
   - component: {fileID: 1457954554}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_073
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55447,7 +55587,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1458927669}
   - component: {fileID: 1458927670}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_108
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55500,7 +55640,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1460429326}
   - component: {fileID: 1460429327}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_081
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -56355,7 +56495,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1479239104}
   - component: {fileID: 1479239105}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_064
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -56410,7 +56550,7 @@ GameObject:
   - component: {fileID: 1487524027}
   - component: {fileID: 1487524026}
   - component: {fileID: 1487524025}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -56527,6 +56667,10 @@ PrefabInstance:
       value: GeneratorRoom_GeneratorCabinet06
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -56598,7 +56742,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1500254002}
   - component: {fileID: 1500254003}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_093
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -61489,7 +61633,7 @@ GameObject:
   - component: {fileID: 1501974272}
   - component: {fileID: 1501974271}
   - component: {fileID: 1501974270}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -61603,7 +61747,7 @@ GameObject:
   - component: {fileID: 1502811696}
   - component: {fileID: 1502811695}
   - component: {fileID: 1502811694}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Sill_S_D-Bunker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -61983,7 +62127,7 @@ GameObject:
   - component: {fileID: 1511970496}
   - component: {fileID: 1511970495}
   - component: {fileID: 1511970494}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_S_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -62185,7 +62329,7 @@ GameObject:
   - component: {fileID: 1514433171}
   - component: {fileID: 1514433170}
   - component: {fileID: 1514433169}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -62295,7 +62439,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1518986542}
   - component: {fileID: 1518986543}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_090
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -62570,7 +62714,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1542647311}
   - component: {fileID: 1542647312}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_139
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -62863,7 +63007,7 @@ GameObject:
   - component: {fileID: 1552215780}
   - component: {fileID: 1552215779}
   - component: {fileID: 1552215778}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceRamp_Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -63078,6 +63222,10 @@ PrefabInstance:
       value: Laboratory_LabBench01
       objectReference: {fileID: 0}
     - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -63190,6 +63338,10 @@ PrefabInstance:
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_Name
       value: SecurityArea_SecurityLocker07
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -63561,7 +63713,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1576358287}
   - component: {fileID: 1576358288}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_098
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -63619,6 +63771,10 @@ PrefabInstance:
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_Name
       value: GeneratorRoom_GeneratorCabinet01
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -63788,7 +63944,7 @@ GameObject:
   - component: {fileID: 1586322562}
   - component: {fileID: 1586322561}
   - component: {fileID: 1586322560}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceRamp_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64206,7 +64362,7 @@ GameObject:
   - component: {fileID: 1593732327}
   - component: {fileID: 1593732326}
   - component: {fileID: 1593732325}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Wall_E_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64316,7 +64472,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1594256024}
   - component: {fileID: 1594256025}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_110
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64371,7 +64527,7 @@ GameObject:
   - component: {fileID: 1594865297}
   - component: {fileID: 1594865296}
   - component: {fileID: 1594865295}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Sill_S_O-RampBottom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64844,6 +65000,10 @@ PrefabInstance:
       value: Laboratory_LabAnalyser04
       objectReference: {fileID: 0}
     - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4082447926518744857, guid: 0d08e286137f83a46a55e11c5d88e731, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -65043,7 +65203,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1606921903}
   - component: {fileID: 1606921904}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_124
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65096,7 +65256,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1608406518}
   - component: {fileID: 1608406519}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_092
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65149,7 +65309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1610347903}
   - component: {fileID: 1610347904}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_078
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65329,7 +65489,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1614464003}
   - component: {fileID: 1614464004}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_111
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65382,7 +65542,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1615766194}
   - component: {fileID: 1615766195}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_003
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65435,7 +65595,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1616489533}
   - component: {fileID: 1616489534}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_107
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65490,7 +65650,7 @@ GameObject:
   - component: {fileID: 1617696330}
   - component: {fileID: 1617696329}
   - component: {fileID: 1617696328}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65602,7 +65762,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1618495703}
   - component: {fileID: 1618495704}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_072
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65747,7 +65907,7 @@ GameObject:
   - component: {fileID: 1623267135}
   - component: {fileID: 1623267134}
   - component: {fileID: 1623267133}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65857,7 +66017,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1624640344}
   - component: {fileID: 1624640345}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_067
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65912,7 +66072,7 @@ GameObject:
   - component: {fileID: 1629225294}
   - component: {fileID: 1629225293}
   - component: {fileID: 1629225292}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Lintel_N_O-RampTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66022,7 +66182,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1629752414}
   - component: {fileID: 1629752415}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_103
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66075,7 +66235,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1635167108}
   - component: {fileID: 1635167109}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_086
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66179,6 +66339,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker10
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -66206,7 +66370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1636382240}
   - component: {fileID: 1636382241}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_022
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66259,7 +66423,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1642576231}
   - component: {fileID: 1642576232}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_156
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66312,7 +66476,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1646516594}
   - component: {fileID: 1646516595}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_070
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66412,7 +66576,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1648712762}
   - component: {fileID: 1648712763}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_121
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66465,7 +66629,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1656020773}
   - component: {fileID: 1656020774}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_116
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66520,7 +66684,7 @@ GameObject:
   - component: {fileID: 1657862451}
   - component: {fileID: 1657862450}
   - component: {fileID: 1657862449}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66632,7 +66796,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1660001985}
   - component: {fileID: 1660001986}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_049
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66685,7 +66849,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1663401163}
   - component: {fileID: 1663401164}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_089
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66785,7 +66949,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1673914303}
   - component: {fileID: 1673914304}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_027
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66840,7 +67004,7 @@ GameObject:
   - component: {fileID: 1674024033}
   - component: {fileID: 1674024032}
   - component: {fileID: 1674024031}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_N_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67614,7 +67778,7 @@ GameObject:
   - component: {fileID: 1693445257}
   - component: {fileID: 1693445256}
   - component: {fileID: 1693445255}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67724,7 +67888,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1695682658}
   - component: {fileID: 1695682659}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_113
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67869,7 +68033,7 @@ GameObject:
   - component: {fileID: 1703267031}
   - component: {fileID: 1703267030}
   - component: {fileID: 1703267029}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GeneratorRoom_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67979,7 +68143,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1704919608}
   - component: {fileID: 1704919609}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_159
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68034,7 +68198,7 @@ GameObject:
   - component: {fileID: 1705881975}
   - component: {fileID: 1705881974}
   - component: {fileID: 1705881973}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68193,7 +68357,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1708805025}
   - component: {fileID: 1708805026}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_097
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68336,7 +68500,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1710703311}
   - component: {fileID: 1710703312}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_147
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68389,7 +68553,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1712034471}
   - component: {fileID: 1712034472}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_165
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68749,7 +68913,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1725441953}
   - component: {fileID: 1725441954}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_100
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -68977,6 +69141,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker01
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -69053,7 +69221,7 @@ GameObject:
   - component: {fileID: 1751000998}
   - component: {fileID: 1751000997}
   - component: {fileID: 1751000996}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69434,7 +69602,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1762989354}
   - component: {fileID: 1762989355}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_045
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69489,7 +69657,7 @@ GameObject:
   - component: {fileID: 1764508775}
   - component: {fileID: 1764508774}
   - component: {fileID: 1764508773}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69649,7 +69817,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1777266993}
   - component: {fileID: 1777266994}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_028
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69704,7 +69872,7 @@ GameObject:
   - component: {fileID: 1780180168}
   - component: {fileID: 1780180167}
   - component: {fileID: 1780180166}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Lintel_S_O-RampBottom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70009,6 +70177,10 @@ PrefabInstance:
       value: Laboratory_LabBench03
       objectReference: {fileID: 0}
     - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5487974325204539281, guid: 62e6b6ec7a2ac9246aeac91f87bdd0a1, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -70072,7 +70244,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1793258238}
   - component: {fileID: 1793258239}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_056
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70339,7 +70511,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1800665223}
   - component: {fileID: 1800665224}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_077
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70433,7 +70605,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1805794504}
   - component: {fileID: 1805794505}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_153
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70720,6 +70892,10 @@ PrefabInstance:
       value: SecurityArea_SecurityChair02
       objectReference: {fileID: 0}
     - target: {fileID: 6590623603190888231, guid: a2ee5d15b3ac496428a202e8348dc57f, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6590623603190888231, guid: a2ee5d15b3ac496428a202e8348dc57f, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -70922,7 +71098,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1829926456}
   - component: {fileID: 1829926457}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_145
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70975,7 +71151,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1833106637}
   - component: {fileID: 1833106638}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_048
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71298,7 +71474,7 @@ GameObject:
   - component: {fileID: 1853092249}
   - component: {fileID: 1853092248}
   - component: {fileID: 1853092247}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_W10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71410,7 +71586,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1854249907}
   - component: {fileID: 1854249908}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_071
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71591,7 +71767,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1858746676}
   - component: {fileID: 1858746677}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_114
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71644,7 +71820,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1859968514}
   - component: {fileID: 1859968515}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_094
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71820,6 +71996,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker11
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -71847,7 +72027,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1867800087}
   - component: {fileID: 1867800088}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_123
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -71900,7 +72080,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1869036188}
   - component: {fileID: 1869036189}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_140
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -72237,6 +72417,10 @@ PrefabInstance:
       value: SecurityArea_SecurityChair01
       objectReference: {fileID: 0}
     - target: {fileID: 6590623603190888231, guid: a2ee5d15b3ac496428a202e8348dc57f, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6590623603190888231, guid: a2ee5d15b3ac496428a202e8348dc57f, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -72264,7 +72448,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1878053193}
   - component: {fileID: 1878053194}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_151
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -72394,6 +72578,10 @@ PrefabInstance:
     - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabFridge02
+      objectReference: {fileID: 0}
+    - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -72810,7 +72998,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1893503813}
   - component: {fileID: 1893503814}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_126
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -72912,7 +73100,7 @@ GameObject:
   - component: {fileID: 1895504939}
   - component: {fileID: 1895504938}
   - component: {fileID: 1895504937}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73237,7 +73425,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1907290174}
   - component: {fileID: 1907290175}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_043
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73596,7 +73784,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1915130949}
   - component: {fileID: 1915130950}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_166
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73692,7 +73880,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1916713834}
   - component: {fileID: 1916713835}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_141
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73747,7 +73935,7 @@ GameObject:
   - component: {fileID: 1921905568}
   - component: {fileID: 1921905567}
   - component: {fileID: 1921905566}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Laboratory_Wall_S_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73857,7 +74045,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1923610165}
   - component: {fileID: 1923610166}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_016
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73912,7 +74100,7 @@ GameObject:
   - component: {fileID: 1936714821}
   - component: {fileID: 1936714820}
   - component: {fileID: 1936714819}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74114,7 +74302,7 @@ GameObject:
   - component: {fileID: 1938990380}
   - component: {fileID: 1938990379}
   - component: {fileID: 1938990378}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_E04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74224,7 +74412,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1941095550}
   - component: {fileID: 1941095551}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_011
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74324,6 +74512,10 @@ PrefabInstance:
       value: Laboratory_LabHood
       objectReference: {fileID: 0}
     - target: {fileID: 3001770244723720022, guid: 2540970900223e94faf83dbe36960121, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3001770244723720022, guid: 2540970900223e94faf83dbe36960121, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -74363,7 +74555,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1943095541}
   - component: {fileID: 1943095542}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_163
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74543,7 +74735,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1955091479}
   - component: {fileID: 1955091480}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_076
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74596,7 +74788,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1958971580}
   - component: {fileID: 1958971581}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_087
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74654,6 +74846,10 @@ PrefabInstance:
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_Name
       value: GeneratorRoom_GeneratorCabinet04
+      objectReference: {fileID: 0}
+    - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 349328939144106676, guid: 3b9580a87fd0eca4a8efe9c4382c2910, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -74776,6 +74972,10 @@ PrefabInstance:
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_Name
       value: BunkerEntranceLobby_LobbyLocker03
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -74985,7 +75185,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1984415035}
   - component: {fileID: 1984415036}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_128
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -75038,7 +75238,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1984920790}
   - component: {fileID: 1984920791}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_179
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -75500,6 +75700,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker02
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -75527,7 +75731,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1991447986}
   - component: {fileID: 1991447987}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_054
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76088,7 +76292,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2008075298}
   - component: {fileID: 2008075299}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_036
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76223,6 +76427,10 @@ PrefabInstance:
       value: Laboratory_LabFridge01
       objectReference: {fileID: 0}
     - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -76256,7 +76464,7 @@ GameObject:
   - component: {fileID: 2012862566}
   - component: {fileID: 2012862565}
   - component: {fileID: 2012862564}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Sill_N_D-Security
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76417,6 +76625,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker05
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -76536,7 +76748,7 @@ GameObject:
   - component: {fileID: 2019445801}
   - component: {fileID: 2019445800}
   - component: {fileID: 2019445799}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceRamp_Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76646,7 +76858,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2028549750}
   - component: {fileID: 2028549751}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_007
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76699,7 +76911,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2029100116}
   - component: {fileID: 2029100117}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_055
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76754,7 +76966,7 @@ GameObject:
   - component: {fileID: 2031187266}
   - component: {fileID: 2031187265}
   - component: {fileID: 2031187264}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Corridor_Wall_W_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -76967,7 +77179,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2037860577}
   - component: {fileID: 2037860578}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_013
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77067,7 +77279,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2055852279}
   - component: {fileID: 2055852280}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_033
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77120,7 +77332,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2064037388}
   - component: {fileID: 2064037389}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_122
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77402,6 +77614,10 @@ PrefabInstance:
       value: SecurityArea_SecurityLocker04
       objectReference: {fileID: 0}
     - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253367221052925952, guid: 54d39b75ceb672149862d7dfe6adf096, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -77431,7 +77647,7 @@ GameObject:
   - component: {fileID: 2082553180}
   - component: {fileID: 2082553179}
   - component: {fileID: 2082553178}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SecurityArea_Wall_S_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77590,7 +77806,7 @@ GameObject:
   - component: {fileID: 2085428576}
   - component: {fileID: 2085428575}
   - component: {fileID: 2085428574}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BunkerEntranceLobby_Wall_N_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77743,6 +77959,10 @@ PrefabInstance:
       value: Laboratory_LabFridge03
       objectReference: {fileID: 0}
     - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2571244407514204462, guid: b107e7c10ba1bc64b840f9749cd6680d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 87
       objectReference: {fileID: 0}
@@ -77774,7 +77994,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2096402904}
   - component: {fileID: 2096402905}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_155
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78005,7 +78225,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2109167167}
   - component: {fileID: 2109167168}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_000
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78060,7 +78280,7 @@ GameObject:
   - component: {fileID: 2112558175}
   - component: {fileID: 2112558174}
   - component: {fileID: 2112558173}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W08
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78170,7 +78390,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2114880390}
   - component: {fileID: 2114880391}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_035
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78223,7 +78443,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2121657563}
   - component: {fileID: 2121657564}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_157
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78278,7 +78498,7 @@ GameObject:
   - component: {fileID: 2125875740}
   - component: {fileID: 2125875739}
   - component: {fileID: 2125875738}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Dock_Rail_W04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78388,7 +78608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2138899853}
   - component: {fileID: 2138899854}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_146
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78443,7 +78663,7 @@ GameObject:
   - component: {fileID: 2139266489}
   - component: {fileID: 2139266488}
   - component: {fileID: 2139266487}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dock_Post_E03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78683,7 +78903,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2141986080}
   - component: {fileID: 2141986081}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_080
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78741,6 +78961,10 @@ PrefabInstance:
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_Name
       value: Laboratory_LabMicroscope04
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 3877888559962514995, guid: 270b1ea0884811e4abfbff2cbc2ed22a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -78818,7 +79042,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2146705860}
   - component: {fileID: 2146705861}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: IslandBoundary_131
   m_TagString: Untagged
   m_Icon: {fileID: 0}

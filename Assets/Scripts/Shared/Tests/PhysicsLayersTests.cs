@@ -5,7 +5,8 @@ namespace Blackout.Shared.Tests
 {
     /// <summary>
     /// Pins the P0 layers and collision matrix (docs/UNITY_BUILD_PLAYBOOK.md P0, docs/reference/systems-engineer.md
-    /// section 12) so a change to ProjectSettings fails here before it reaches a teammate's scene.
+    /// section 12), plus the Y7 change the team agreed (Hit collides with nothing), so a change to ProjectSettings fails
+    /// here before it reaches a teammate's scene.
     /// </summary>
     public class PhysicsLayersTests
     {
@@ -44,6 +45,15 @@ namespace Blackout.Shared.Tests
             {
                 bool collides = !Physics.GetIgnoreLayerCollision(PhysicsLayers.Ragdoll, layer);
                 Assert.AreEqual(layer == PhysicsLayers.Level, collides, $"Ragdoll x layer {layer}");
+            }
+        }
+
+        [Test]
+        public void Hit_CollidesWithNothing_SoHitboxesAreForQueriesOnly()
+        {
+            for (int layer = 0; layer < 32; layer++)
+            {
+                Assert.IsTrue(Physics.GetIgnoreLayerCollision(PhysicsLayers.Hit, layer), $"Hit x layer {layer}");
             }
         }
 
