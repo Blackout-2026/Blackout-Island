@@ -181,7 +181,7 @@ def build_hands():
     fwd, up = H.grip_frame((0.0, 0.0, 1.0), (0.45, -1.0, 0.0), 22.0, "L")
     pos = H.palm_position(fend_c, fwd, up, 0.044, -0.020)
     curls = ((62, 86, 54), (66, 88, 54), (70, 90, 52), (72, 90, 50))
-    H.add_hand("L", pos, fwd, up, curls=curls, thumb=None, arm_dir=(-0.35, -0.90, -0.20), visible=0.04)
+    H.add_hand("L", pos, fwd, up, curls=curls, thumb=None, arm_dir=(-0.20, -0.97, -0.15), visible=0.04)
 
 
 # --------------------------------------------------------------------------- scene and export
