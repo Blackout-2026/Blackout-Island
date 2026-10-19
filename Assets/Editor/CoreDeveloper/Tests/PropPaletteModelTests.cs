@@ -83,16 +83,16 @@ namespace Blackout.Editor.Tests
             Assert.AreEqual(80, row.Triangles);
         }
 
-        [TestCase(300, BudgetState.Ok)]
-        [TestCase(301, BudgetState.OverTarget)]
-        [TestCase(450, BudgetState.OverTarget)]
-        [TestCase(451, BudgetState.OverMax)]
+        [TestCase(1200, BudgetState.Ok)]
+        [TestCase(1201, BudgetState.OverTarget)]
+        [TestCase(1800, BudgetState.OverTarget)]
+        [TestCase(1801, BudgetState.OverMax)]
         public void TheBudgetState_FollowsTargetAndHardMaximum(int triangles, BudgetState expected)
         {
             var instance = new GameObject("Stand-in");
             try
             {
-                // 0.4 m is a small prop: target 300, hard maximum 450.
+                // 0.4 m is a small prop: target 1,200, hard maximum 1,800.
                 var row = new PropPaletteRow
                 {
                     Entry = TestEntry("Prop_TestSmall", PropSource.Blender, new Vector3(0.4f, 0.4f, 0.4f)),

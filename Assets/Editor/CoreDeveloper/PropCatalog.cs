@@ -89,7 +89,7 @@ namespace Blackout.Editor
             {
                 if (Group == PropGroup.Weapon)
                 {
-                    return new ModelBudget(2000, 3);
+                    return new ModelBudget(6000, 3);
                 }
 
                 if (Group == PropGroup.Hero && ModelBudget.TryGet("SM_" + Name.Replace("_Visual", string.Empty), out ModelBudget hero))
@@ -146,8 +146,8 @@ namespace Blackout.Editor
             Model("CureCase_Visual", PropGroup.Pickup, PropPivot.BaseCentre, 0.42f, 0.28f, 0.24f, 1, "Glass case with three cyan vials; spins and bobs by script"),
             Model("Medkit_Visual", PropGroup.Pickup, PropPivot.BaseCentre, 0.42f, 0.33f, 0.28f, 3, "White case, red cross, carry handle"),
             Model("Weapon_Smg_Visual", PropGroup.Weapon, PropPivot.Grip, 0.65f, 0.53f, 0.77f, 1, "MP-9 with hands; muzzle along +Z"),
-            Model("Weapon_Sniper_Visual", PropGroup.Weapon, PropPivot.Grip, 0.65f, 0.55f, 1.29f, 1, "R-700 with hands; the bolt handle moves"),
-            Model("Weapon_Knife_Visual", PropGroup.Weapon, PropPivot.Grip, 0.32f, 0.58f, 0.66f, 1, "Combat knife with hand; the whole hand swings"),
+            Model("Weapon_Sniper_Visual", PropGroup.Weapon, PropPivot.Grip, 0.65f, 0.55f, 1.29f, 1, "R-700 bolt-action rifle with two hands; the bolt handle is part of the mesh, the BoltHandle empty marks its pivot"),
+            Model("Weapon_Knife_Visual", PropGroup.Weapon, PropPivot.Grip, 0.32f, 0.58f, 0.66f, 1, "Tactical combat knife (blackened drop point, G10 handle) with a gripping hand; the whole hand swings"),
             Model("Generator_Visual", PropGroup.Hero, PropPivot.BaseCentre, 6.96f, 4.10f, 2.90f, 1, "Hero model 1 (step C2)"),
             Model("SecurityRobot_Visual", PropGroup.Hero, PropPivot.BaseCentre, 1.07f, 2.38f, 0.64f, 2, "Hero model 2 (step C3)"),
 

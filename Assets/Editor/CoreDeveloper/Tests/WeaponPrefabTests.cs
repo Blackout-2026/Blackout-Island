@@ -127,12 +127,51 @@ namespace Blackout.Editor.Tests
 
             Transform bolt = RobotRig.FindDeep(sniper.transform, WeaponDefinitions.BoltHandle);
             Assert.IsNotNull(bolt);
-            Assert.AreEqual(2, bolt.childCount); // shaft and knob
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PropCatalog.Find("Weapon_Sniper_Visual").FbxPath) == null)
+            {
+                Assert.AreEqual(2, bolt.childCount); // shaft and knob
+            }
+
             Assert.AreEqual(new Vector3(0.03f, 0.01f, -0.08f), bolt.localPosition); // weapons.js: (0.03, 0.01, 0.08), z flipped
 
             Transform hand = RobotRig.FindDeep(knife.transform, WeaponDefinitions.Hand);
             Assert.IsNotNull(hand);
-            Assert.Greater(hand.GetComponentsInChildren<MeshFilter>().Length, 8, "the whole knife and its arm hang off the swinging hand");
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PropCatalog.Find("Weapon_Knife_Visual").FbxPath) == null)
+            {
+                Assert.Greater(hand.GetComponentsInChildren<MeshFilter>().Length, 8, "the whole knife and its arm hang off the swinging hand");
+            }
+            else
+            {
+                // The Blender knife is one imported model under "Model"; the swap puts it under the Player prefab's own Hand.
+                Assert.Greater(knife.GetComponentsInChildren<MeshFilter>().Length, 0, "the Blender knife and its hand are meshes");
+            }
+        }
+
+        [Test]
+        public void TheBlenderKnife_PointsAlongPlusZAndUsesAtMostThreeWeaponMaterials()
+        {
+            PropEntry real = PropCatalog.Find("Weapon_Knife_Visual");
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(real.FbxPath) == null)
+            {
+                Assert.Ignore("SM_Weapon_Knife.fbx is not in the project yet (Art/Blender/Scripts/build_knife.py makes it).");
+            }
+
+            GameObject knife = Build(real);
+            Bounds bounds = PropStats.LocalBounds(knife);
+            Assert.AreEqual(0.226f, bounds.max.z, 0.02f, "the blade tip is the frontmost point of the model");
+            Assert.Greater(knife.GetComponentsInChildren<Renderer>().Length, 0, "it has meshes");
+
+            var used = new HashSet<Material>();
+            foreach (Renderer renderer in knife.GetComponentsInChildren<Renderer>())
+            {
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    used.Add(material);
+                    StringAssert.StartsWith(WeaponMaterialBuilder.Prefix, material.name);
+                }
+            }
+
+            Assert.LessOrEqual(used.Count, 3, "art-pipeline.md section 6: a viewmodel uses at most 3 material slots");
         }
 
         [Test]
@@ -153,7 +192,7 @@ namespace Blackout.Editor.Tests
             foreach (PropEntry entry in Weapons())
             {
                 int triangles = PropStats.Triangles(Build(entry));
-                Assert.LessOrEqual(triangles, entry.Budget.TargetTriangles, $"{entry.Name}: {triangles} triangles"); // art-pipeline.md section 6: 2,000
+                Assert.LessOrEqual(triangles, entry.Budget.TargetTriangles, $"{entry.Name}: {triangles} triangles"); // art-pipeline.md section 6: 6,000
             }
         }
 

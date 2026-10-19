@@ -26,11 +26,13 @@ namespace Blackout.Editor.Tests
         public void Prop_UsesTheLargePropLimit()
         {
             Assert.That(ModelBudget.TryGet("SM_Prop_LabBench", out ModelBudget budget), Is.True);
-            Assert.That(budget.MaxTriangles, Is.EqualTo(2250));
+            Assert.That(budget.MaxTriangles, Is.EqualTo(4500));
         }
 
         [TestCase("SM_Char_Patrol", 4500)]
-        [TestCase("SM_Weapon_Smg", 3000)]
+        [TestCase("SM_Weapon_Smg", 9000)]
+        [TestCase("SM_Weapon_Knife", 9000)]
+        [TestCase("SM_Weapon_Sniper", 9000)]
         public void Categories_GetTheirOwnMaximum(string assetName, int expectedMax)
         {
             Assert.That(ModelBudget.TryGet(assetName, out ModelBudget budget), Is.True);

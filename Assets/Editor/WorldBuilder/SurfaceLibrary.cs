@@ -71,7 +71,7 @@ namespace Blackout.Editor
     }
 
     /// <summary>
-    /// The twelve environment surfaces that Build Material Library turns into Env_&lt;Name&gt; materials.
+    /// The twelve environment surfaces of the reference, plus the grating floor, that Build Material Library turns into Env_&lt;Name&gt; materials.
     /// RepeatsPerMetre is the prototype's world-UV scale for that surface (geometry.js worldUV, and the terrain shader
     /// for the four outdoor ones), so it assumes UVs in metres, which Apply Materials gives the blockout.
     /// </summary>
@@ -95,6 +95,9 @@ namespace Blackout.Editor
             // The reference tints a neutral fabric texture with the sandbag colour; a CC0 fabric is already coloured,
             // so the sandbag colour is used flat and the texture is not tinted.
             new SurfaceSpec("Fabric", "sandbag / rope (fabric)", "#7D7158", "#7D7158", "#FFFFFF", 1f, 0f, 1f),
+            // Not in the reference: the generator-room floor (step C7), a welded steel grating over dark holes. The texture tile
+            // is 1 m (Art/Blender/Scripts/make_metal_grating.py), so it repeats once per metre.
+            new SurfaceSpec("MetalGrating", "generator-room floor grating (C7)", "#2B2E30", "#6F7479", "#FFFFFF", 0.55f, 0.8f, 1f),
         };
 
         public static SurfaceSpec Find(string name)

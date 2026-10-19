@@ -35,6 +35,7 @@ namespace Blackout.Editor
             new Rule("BunkerEntranceRamp", "Floor", "MetalPlate"), // diamondPlate: ramp floor
             new Rule("GeneratorRoom", "Wall_", "MetalPlate"), // wallGen: industrial panels
             new Rule("GeneratorRoom", "Lintel_", "MetalPlate"),
+            new Rule("GeneratorRoom", "Floor", "MetalGrating"), // step C7: welded steel grating over dark holes, not the oil-stained concrete
             new Rule(AnyRoom, "Floor", "ConcreteStained"), // floorConcrete (oil): security, corridor, lobby, generator
             new Rule(AnyRoom, "Ceiling", "Concrete"), // ceiling
             new Rule(AnyRoom, "Wall_", "Concrete"), // wallPanel / wallSec: corridor, lobby, ramp, security
