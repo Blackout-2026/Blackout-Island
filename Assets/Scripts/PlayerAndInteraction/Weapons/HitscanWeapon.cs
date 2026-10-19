@@ -62,8 +62,12 @@ namespace Blackout.Weapons
         private void FirePellet(Vector3 origin, Vector3 direction)
         {
             Vector3 end = origin + direction * data.range;
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, data.range, context.HitMask,
-                    QueryTriggerInteraction.Ignore) && !context.IsOwn(hit.collider))
+            bool hitSomething = Physics.Raycast(origin, direction, out RaycastHit hit, data.range, context.HitMask,
+                QueryTriggerInteraction.Ignore);
+            context.PelletTraced?.Invoke(new PelletTrace(new Ray(origin, direction), data.range,
+                hitSomething ? hit.collider : null, hitSomething ? hit.distance : data.range));
+
+            if (hitSomething && !context.IsOwn(hit.collider))
             {
                 end = hit.point;
                 var target = hit.collider.GetComponentInParent<IDamageable>();

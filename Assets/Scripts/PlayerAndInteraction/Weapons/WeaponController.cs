@@ -35,8 +35,9 @@ namespace Blackout.Weapons
         [SerializeField] private NoiseEventChannel noiseChannel;
         [SerializeField] private TracerPool tracers;
         [SerializeField] private ImpactEffects impacts;
-        [Tooltip("Layers bullets and the knife can hit. Leave the Player layer out.")]
-        [SerializeField] private LayerMask hitMask = ~0;
+        [Tooltip("Layers bullets and the knife can hit: PhysicsLayers.PlayerShots (docs/reference/systems-engineer.md " +
+                 "section 12). Leave the Player layer out.")]
+        [SerializeField] private LayerMask hitMask = PhysicsLayers.PlayerShots;
         [Tooltip("Index of the weapon held at the start, in slot order.")]
         [SerializeField, Min(0)] private int startIndex;
 
@@ -53,6 +54,25 @@ namespace Blackout.Weapons
         public event Action<bool> HitConfirmed;
         /// <summary>The held weapon changed (the HUD's slot highlight, Y4).</summary>
         public event Action<WeaponData> WeaponChanged;
+
+        /// <summary>Debug: every pellet's ray and what it hit (the Stress Test). Subscribe after Awake.</summary>
+        public event Action<PelletTrace> PelletTraced
+        {
+            add
+            {
+                if (context != null)
+                {
+                    context.PelletTraced += value;
+                }
+            }
+            remove
+            {
+                if (context != null)
+                {
+                    context.PelletTraced -= value;
+                }
+            }
+        }
 
         public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 ? weapons[switcher.ActiveIndex].Data : null;
         public bool IsSwitching => switcher != null && !switcher.IsReady;
@@ -126,6 +146,31 @@ namespace Blackout.Weapons
             }
 
             UpdateHolderPose(dt);
+        }
+
+        /// <summary>Debug and the Stress Test: holds the weapon in this slot at once, without the switch animation.</summary>
+        public bool DebugEquip(int slot)
+        {
+            int index = weapons != null ? IndexOfSlot(slot) : -1;
+            if (index < 0)
+            {
+                return false;
+            }
+
+            switcher = new WeaponSwitcher(weapons.Length, index);
+            ShowOnly(index);
+            WeaponChanged?.Invoke(ActiveWeapon);
+            return true;
+        }
+
+        /// <summary>Debug and the Stress Test: fires the held weapon now, skipping input, the cooldown and the
+        /// sprint rule. Recoil and noise happen as for a real shot.</summary>
+        public void DebugFire()
+        {
+            if (weapons != null)
+            {
+                Fire(weapons[switcher.ActiveIndex]);
+            }
         }
 
         private void HandleSwitchInput()

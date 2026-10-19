@@ -41,6 +41,9 @@ namespace Blackout.Weapons
         public float MoveFraction { get; set; }
         public bool Grounded { get; set; } = true;
 
+        /// <summary>Debug: told about every pellet (the Stress Test's missed-hit check). Null in normal play.</summary>
+        public Action<PelletTrace> PelletTraced { get; set; }
+
         /// <summary>True if the collider belongs to the shooter, so a weapon never hurts its owner.</summary>
         public bool IsOwn(Collider collider)
         {
