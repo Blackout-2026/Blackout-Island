@@ -11,7 +11,8 @@ namespace Blackout.Editor
     /// Adds the three weapons to the Player prefab: the WeaponData assets (SMG, rifle, knife), placeholder
     /// viewmodels made of primitives, the WeaponController on the WeaponHolder, and the pooled effects.
     /// Re-runnable: existing assets are left untouched, and a prefab that already has a WeaponController is not
-    /// changed. To rebuild the weapons, delete the WeaponHolder's children and its WeaponController, then run again.
+    /// changed, except that a hit mask still set to the Y3 value is moved to PhysicsLayers.PlayerShots (Y7).
+    /// To rebuild the weapons, delete the WeaponHolder's children and its WeaponController, then run again.
     /// </summary>
     public static class PlayerWeaponsBuilder
     {
@@ -69,9 +70,22 @@ namespace Blackout.Editor
                     return;
                 }
 
-                if (holder.GetComponent<WeaponController>() != null)
+                var existing = holder.GetComponent<WeaponController>();
+                if (existing != null)
                 {
-                    Debug.Log("[Blackout] Player prefab already has a WeaponController; left unchanged.");
+                    if (UpgradeHitMask(existing))
+                    {
+                        PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabBuilder.PrefabPath, out bool upgraded);
+                        Debug.Log(upgraded
+                            ? "[Blackout] Player prefab already has a WeaponController; moved its hit mask to " +
+                              "PhysicsLayers.PlayerShots."
+                            : $"[Blackout] Could not save {PlayerPrefabBuilder.PrefabPath}.");
+                    }
+                    else
+                    {
+                        Debug.Log("[Blackout] Player prefab already has a WeaponController; left unchanged.");
+                    }
+
                     return;
                 }
 
@@ -257,19 +271,31 @@ namespace Blackout.Editor
             PlayerPrefabBuilder.SetLayerRecursively(root.transform, root.layer);
         }
 
-        /// <summary>Everything except the player itself, ragdolls and Ignore Raycast.</summary>
+        /// <summary>The world, agents, doors and hitboxes only (docs/reference/systems-engineer.md section 12).</summary>
         private static void SetHitMask(WeaponController controller)
         {
-            int excluded = 1 << LayerMask.NameToLayer("Player") | 1 << LayerMask.NameToLayer("Ignore Raycast");
-            int ragdoll = LayerMask.NameToLayer("Ragdoll");
-            if (ragdoll >= 0)
+            var serialized = new SerializedObject(controller);
+            serialized.FindProperty("hitMask").intValue = PhysicsLayers.PlayerShots;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Moves a hit mask this tool generated before Y7 ("everything except Player, Ignore Raycast and Ragdoll") or
+        /// the old class default (everything) to PlayerShots. Any other mask was set by hand and is kept.
+        /// </summary>
+        private static bool UpgradeHitMask(WeaponController controller)
+        {
+            const int y3Mask = ~(1 << PhysicsLayers.Player | 1 << PhysicsLayers.IgnoreRaycast | 1 << PhysicsLayers.Ragdoll);
+            var serialized = new SerializedObject(controller);
+            SerializedProperty mask = serialized.FindProperty("hitMask");
+            if (mask.intValue != y3Mask && mask.intValue != ~0)
             {
-                excluded |= 1 << ragdoll;
+                return false;
             }
 
-            var serialized = new SerializedObject(controller);
-            serialized.FindProperty("hitMask").intValue = ~excluded;
+            mask.intValue = PhysicsLayers.PlayerShots;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+            return true;
         }
 
         private static Light CreateFlashLight(Transform holder)

@@ -6,7 +6,8 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 **weapons** (Y3, from `weapons/weapon_system.js`, `models/weapons.js` and `world/effects.js`), sections
 8–9 **death, respawn and the HUD** (Y4, from `player/player.js`, `game/mission.js`, `ui/hud.js` and
 `ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
-and `physics/crate.js`), and section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`).
+and `physics/crate.js`), section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`), and
+section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -357,7 +358,7 @@ the page (the whole mission starts again).
   0. Restart sets the time scale back to 1 and reloads `Bootstrap.unity`.
 - **Bootstrap:** `Bootstrap.unity` holds the Player (inactive until the level has loaded), the MissionDirector, the
   Mission Complete screen and the UI EventSystem. It loads Environment, Interactables and Agents additively, skips a
-  scene that is not in Build Settings (Agents does not exist yet), makes **Environment the active scene** (fog,
+  scene that is not in Build Settings (Agents.unity was added in Y7), makes **Environment the active scene** (fog,
   skybox and ambient light), and then places the player at `PlayerStart`. A black LOADING screen covers the wait.
 - **Debug jumps** (`Blackout/Debug/Mission`, Play mode): the player goes to the phase's start and the mission
   jumps there. The starts are:
@@ -369,3 +370,118 @@ the page (the whole mission starts again).
   Jumping to Lab or later turns the generator off, and to Escape or later takes the cure. Both go through the real
   objects, so the blackout, the lab door and the alert happen as in play.
 - **Not ported:** the start screen and pause menu, phase-change and power-failure toasts, the compass.
+
+---
+
+## 12. Physics hygiene (`physics/collision.js`, `weapons/weapon_system.js`)
+
+### What the prototype does
+
+- **No physics engine.** Static colliders are boxes, vertical cylinders and one ramp, stored in a 2D spatial hash with
+  **4 m cells**. A raycast walks the cells along the ray (2D DDA, at most 400 cells), so bullets and line-of-sight
+  checks only test colliders near the ray. Terrain is tested analytically.
+- **Per-collider flags instead of layers:** `sight` (blocks line of sight), `bullets` (stops bullets) and `wall` (stops
+  sound). A raycast has a `mode` (`bullet`, `sight` or `sound`) and skips colliders without that flag.
+  - The dock railings have `bullets: false` and `sight: false`: bullets and eyes pass through them.
+  - The boat's fence panel has `sight: false` only: it stops bullets but not eyes.
+- **Hitscan** (`Combat.hitscan`): first the world ray (`mode: 'bullet'`), then:
+  - The **player's** shots test every living agent's hitbox: a capsule of radius **0.3 m** and a head sphere of
+    **0.14 m** (0.17 m for the big agents). The agent closer than the world hit wins.
+  - An **agent's** shots test only the player's capsule (radius **0.34 m**, from 0.25 m over the feet to 0.2 m under the
+    head). Agents never hit each other: there is no friendly fire.
+- Nothing in the prototype is simulated with forces except the crate (section 10) and the death fall.
+
+### Unity mapping
+
+**Layers (P0, verified in Y7).** The playbook's six layers are defined at the indices teammates already use.
+`Blackout.Shared.PhysicsLayers` holds them as constants, and EditMode tests fail if `ProjectSettings` stops matching.
+
+| Layer | Index | At the start of Y7 | After Y7 | Meant for |
+| --- | --- | --- | --- | --- |
+| Default | 0 | All of Environment.unity's colliders (337 at runtime) | **no colliders**; renderers without colliders stay here | — |
+| Ignore Raycast | 2 | nothing | the **18 dock railings** | colliders no query should see |
+| UI | 5 | the HUD and the Bootstrap canvas (no colliders) | same | — |
+| Player | 6 | the Player prefab (one CharacterController) | same | the player |
+| Enemy | 7 | AgentBase and its four variants (one capsule each) | same | agent bodies |
+| Level | 8 | nothing | **319 colliders**: the level (318) and the generator's body | static level geometry |
+| Interactable | 9 | doors, generator console, cure, health pickups, crate | same | things the player uses |
+| Hit | 10 | nothing | nothing yet | hitboxes that only queries see (heads) |
+| Ragdoll | 11 | nothing | nothing yet | ragdoll limbs |
+
+**Collision matrix (P0, verified in Y7).** As found, it matched the playbook exactly:
+
+- Enemy × Enemy is off, so agents never push each other (the NavMesh avoidance handles crowds).
+- Ragdoll collides only with Level, so a falling body never pushes the player, agents, doors or another ragdoll.
+- Every other pair is on.
+
+That was 11 of the 66 pairs between the 11 named layers. After Y7, Hit collides with nothing (finding 2), so
+**21 of 66** are off.
+
+**Findings.** Reported to the team first (playbook Y7). The team then agreed, and all four were changed in Y7:
+
+1. **Level was empty.** The World Builder's colliders were all on Default. Ragdoll collides with Level only, so a
+   ragdoll would have fallen through the terrain and the bunker floors. The Tactical Guard's sight check counts only
+   Level as blocking, so **guards could see through every wall**.
+   *Changed:* every solid collider in Environment.unity moved to Level (318), and so did the nested generator body in
+   `Generator.prefab`. Ragdoll × Default stays off.
+2. **Hit collided with everything.** A head hitbox on Hit would push and be pushed by the player, the doors and the
+   other agents' bodies. *Changed:* Hit collides with nothing; rays still hit it.
+3. **Agent shots could hit agents.** `AgentShooter.hitMask` was everything, and the prototype has no friendly fire.
+   *Changed:* it is `PhysicsLayers.AgentShots`, both as the default in `AgentShooter.cs` and in `AgentBase.prefab`.
+4. **The dock railings stopped bullets.** In the prototype they have `bullets: false` and `sight: false`.
+   *Changed:* the 18 `Dock_Rail_*` colliders are on Ignore Raycast. The player still bumps into them, while bullets
+   and guards' eyes pass through.
+
+The scene and prefab changes are made by **`Blackout/Systems/Assign Physics Layers`**:
+- It moves only objects still on Default, and it skips triggers and objects with a Rigidbody, so a layer set by hand
+  is kept.
+- A second run changes nothing.
+- **Re-run it after a World Builder tool rebuilds part of the level**, because new objects are created on Default.
+- The Stress Test's PlayMode test fails if any collider is left on Default, and its report names each one.
+
+**Weapon masks [GUESS].** The weapons now list the layers they hit instead of leaving some out:
+
+- `PlayerShots` = Default, Level, Enemy, Interactable, Hit. These are the world, the agents, the doors and the crate,
+  and the hitboxes. It leaves out Player (the shooter), Ragdoll (dead bodies), UI, Water, TransparentFX, Ignore Raycast
+  and the 20 unnamed layers. Before Y7 the mask was "everything except Player, Ignore Raycast and Ragdoll", which
+  also let UI, Water, TransparentFX and any future layer stop bullets.
+- `AgentShots` = Default, Level, Player, Interactable, used by `AgentShooter` (finding 3).
+- All weapon queries pass `QueryTriggerInteraction.Ignore`, so the triggers (pickups, doorway, cure) never stop
+  bullets, whatever "Queries Hit Triggers" says in the project settings.
+- The knife's overlap sphere and line-of-sight check use the same mask as the guns.
+- The player's ground probe (`PlayerMotor`'s 0.35 m snap) uses `PhysicsLayers.CollisionMask(Player)` minus Player:
+  the layers the capsule collides with, read from the matrix. Before, it used "everything except Player", so after
+  Hit stopped colliding it could snap the player onto a head hitbox or a ragdoll the capsule passes through.
+
+**Physics settings (`DynamicsManager`, `TimeManager`), checked and kept:**
+
+| Setting | Value | Why it stays |
+| --- | --- | --- |
+| Fixed Timestep | 0.02 s (50 Hz) | Only the crate and door bodies are simulated; the player and agents move in `Update` |
+| Maximum Allowed Timestep | 0.333 s | Unity default; a hitch runs at most 16 physics steps |
+| Solver iterations / velocity iterations | 6 / 1 | The crate is the only stacked body |
+| Auto Sync Transforms | off | Unity 6 default; queries see transforms as of the last simulation or `SyncTransforms` |
+| Reuse Collision Callbacks | on | No allocation per collision callback |
+| Queries Hit Triggers | on | Every query in our code says what it wants explicitly |
+| Contact pairs mode / broadphase | default / Sweep and Prune | Almost every collider is static and never moves, so Sweep and Prune has little to re-sort |
+
+**Stress Test (`Blackout/Debug/Stress Test`, Play mode in Bootstrap) [GUESS].** A scripted run, not in the prototype:
+
+- The player is made invulnerable for the run.
+- At each phase start (the Y6 debug jumps, Beach to Escape) it puts a target dummy in front of the player. The dummy
+  is a 1.8 m capsule on Enemy, with a head box on Hit and a Health.
+- It fires 30 SMG shots, 5 rifle shots and 5 knife swings through the real WeaponController. It ends with the jump
+  to Complete.
+- **Missed hits:**
+  - Every pellet is checked against the dummy's colliders alone. A pellet whose ray passes through the dummy, but whose
+    weapon hit nothing or something farther away, is a missed hit (the mask left the dummy's layer out).
+  - A pellet stopped by the player's own collider is counted separately.
+  - A knife swing at a dummy 1.2 m ahead must land.
+- **Null references:** every exception or error logged during the run is counted, null references by name.
+- **Numbers:**
+  - colliders and rigidbodies per layer in the loaded scenes
+  - pellets per layer they hit
+  - microseconds per raycast with `PlayerShots` and with every layer (2,000 rays from each start)
+  - bytes allocated by the firing calls
+- **Output:** a summary in the Console and a report file in `Application.temporaryCachePath`. A PlayMode test runs the
+  same script and fails on any null reference, exception or missed hit.

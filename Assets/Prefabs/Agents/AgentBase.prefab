@@ -184,7 +184,7 @@ MonoBehaviour:
   eyeHeight: 1.62
   hitMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 833
   gunfireChannel: {fileID: 0}
   tracerPool: {fileID: 0}
 --- !u!114 &787380512139723401

@@ -18,7 +18,9 @@ namespace Blackout.Agents
         [Tooltip("Where shots originate. Empty uses this transform plus Eye Height.")]
         [SerializeField] private Transform muzzle;
         [Min(0f)] [SerializeField] private float eyeHeight = 1.62f;
-        [SerializeField] private LayerMask hitMask = ~0;
+        [Tooltip("Layers shots can hit: PhysicsLayers.AgentShots (the world, the player, doors). Not Enemy, so " +
+                 "there is no friendly fire, as in the prototype.")]
+        [SerializeField] private LayerMask hitMask = PhysicsLayers.AgentShots;
         [Tooltip("Optional: raises a Gunshot NoiseEvent on every shot.")]
         [SerializeField] private NoiseEventChannel gunfireChannel;
         [Tooltip("Optional: shows a pooled tracer line on every shot.")]

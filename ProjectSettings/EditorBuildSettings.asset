@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Interactables.unity
     guid: f497c913442eb46b88bc45c186500159
   - enabled: 1
+    path: Assets/Scenes/Agents.unity
+    guid: 6fb3ea0e5f553b545b1757a87be402a8
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

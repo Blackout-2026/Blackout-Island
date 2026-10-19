@@ -7980,7 +7980,7 @@ MonoBehaviour:
   impacts: {fileID: 2352064708922340224}
   hitMask:
     serializedVersion: 2
-    m_Bits: 4294965179
+    m_Bits: 1921
   startIndex: 0
 --- !u!1 &3583269892362011452
 GameObject:

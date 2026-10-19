@@ -162,6 +162,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Generator_Visual
       objectReference: {fileID: 0}
+    - target: {fileID: 5647880672105538930, guid: 53d697f21cf336b4ab863e269a090d1d, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
