@@ -85,8 +85,10 @@ namespace Blackout.Editor
             }
 
             NavMeshSurface surface = EnsureSurface(scene);
-            NavMeshData data = SaveData(built);
+            // CopySerialized replaces native tile data. Unregister the old instance first; removing it
+            // after replacement can crash Unity when the new geometry changes the tile layout.
             surface.RemoveData();
+            NavMeshData data = SaveData(built);
             surface.navMeshData = data;
             surface.AddData();
 

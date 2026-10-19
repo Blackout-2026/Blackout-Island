@@ -126,10 +126,9 @@ byte-identical. It rebuilds only the parts it generated (named `<Room>_...`); an
 | Materials | One per room, in `Assets/Materials/Environment/Greybox`, using palette colours: `Greybox_Bunker_BunkerEntranceLobby` #86857D, `..._BunkerEntranceRamp` #A27B1D, `..._SecurityArea` #AEB9C4, `..._Corridor` #6C6E6A, `..._GeneratorRoom` #6A7350, `..._Laboratory` #E9EEEF. Build Bunker Blockout still assigns them; Apply Materials (W5) then replaces them |
 | Barricade crate space | Corridor, 1.5 m cube at (0.7, 2.5, 95). Nothing is built there, and no marker is within 0.4 m of it |
 
-**Known issues** (fixed in the entrance-building step):
-- The lobby floor and the D-Bunker sill are at y 10.0, exactly the plateau's height, so they can flicker against
-  the terrain.
-- The ramp's side walls and roof stick out of the plateau between z 52.4 and 62.
+**W13 entrance fix:** the entrance exterior now covers the ramp's exposed side walls/roof, and a terrain cut
+under the lobby floor and D-Bunker sill removes their overlap with the plateau. See "Entrance exterior and
+retaining wall (W13, fix 2)" below. Build Terrain retains the lobby cut as well as its original ramp cut.
 
 ## Gameplay markers (W3)
 
@@ -1360,6 +1359,48 @@ Logs are outside the repo: `%TEMP%/blackout-w13-fix1-fence.log` and `blackout-w1
 Before committing, inspect the fence from both sides, walk through the open gate, and check that shots pass
 through the fence. Entrance exterior, retaining wall, booth and compound dressing remain separate fixes.
 
+## Entrance exterior and retaining wall (W13, fix 2)
+
+**Blackout/World/Build Entrance Exterior** (`Assets/Editor/WorldBuilder/EntranceExteriorBuilder.cs`) builds
+only `BunkerExterior/EntranceExterior`, preserving the fence and existing bunker interior. It reuses its named
+generated boxes; other children are retained. No supplied assets or other owners' scene/prefab changes are needed.
+
+- Facade: x ±6.4, z 47.8…48.0, with a 1.4 × 2.3 m gap aligned with the existing D-Bunker socket at z48.2.
+  The facade face is offset from the existing lobby wall so their visible surfaces cannot coincide.
+- Side walls: x −6.4…−6 and 6…6.4, z47.8…62, y7…14. They wrap outside W3's lobby walls and hide the exposed ramp.
+- Roof: x ±6.8, z47.4…62.5, y14…14.5; front/side parapets reach y15. The door canopy sits 0.25 m above the door.
+  Hazard-coloured trim, two side vent grilles and two retaining-wall drains provide the reference's basic detailing.
+- Apron: x ±7, z40…47.8, top y10.04. Its 4 cm step is below the player step limit and covers the terrain cut's
+  rounded-out front edge. Lobby and ramp floors, markers, doors and their opening sizes are unchanged.
+- Retaining wall: x ±24, z62…63.4, y7…15.2; six pilasters at x ±9/±15/±21 and a cap at y15.2…15.45.
+  The middle x ±2.6 is open below y9.7, clearing the existing sloping ramp roof beneath it.
+- Terrain: only cells overlapping the lobby/sill footprint (x ±6, z48…52.4) are additionally cut. Existing holes
+  and all heights, splats and vegetation are preserved. TerrainBuilder also calls the same cut helper after
+  regenerating its ramp hole, preventing the floor overlap from returning on a terrain rebuild.
+- Existing Concrete, ConcreteStained, MetalPlate and HazardStripe materials are reused with world-space box UVs.
+  Generated colliders use the existing Level layer, with the existing fixed-environment static flags.
+
+After building, run **Bake NavMesh**, then **Validate Layout**. The batch method
+`Blackout.Editor.EntranceExteriorBuilder.BuildAndVerify` additionally builds twice to check byte-identical scene
+and terrain output, and checks a player-sized volume along the lobby/ramp centreline before rebaking navigation.
+NavMeshBaker now unregisters its old data before overwriting the asset in place: replacing registered native
+tiles before removing them caused a Unity crash during this fix's first navigation check. The corrected order
+retains the asset GUID and allows rebaking after geometry changes.
+
+Verified on 2026-10-19 in Unity 6000.3.25f1: 40 generated boxes, scene/terrain byte-identical on repeat, 1.8 m
+capsule clearance through the lobby/ramp, and final build exit 0. The original flat-box clearance probe caught
+the sloping floor; it was replaced by a capsule. The terrain cut initially adds 108 cells and adds none on repeat.
+Navigation rebake: 196 colliders plus 604 tree/rock capsules, 8,414 triangles, 153,890 m²; Validate Layout PASS66/66.
+Existing NavMeshBakerTests and IslandBoundaryTests pass 21/21, exit 0. Direct3D11 capture exits 0 with the scene
+unchanged; the entrance image shows the facade, canopy, roof and retaining-wall wings. Final logs contain no
+C# compiler errors/warnings. Scene block comparison finds no removed blocks and only the exterior root's child
+reference changed among existing blocks. Logs/results are outside the repo: `%TEMP%/blackout-w13-fix2-entrance.log`,
+`blackout-w13-fix2-capture.log`, `blackout-w13-fix2-tests.log` and `blackout-w13-fix2-tests.xml`.
+
+Inspect the exterior from the yard and both sides, then walk from the apron through the doorway and down the ramp.
+Check for terrain in the lobby floor, exposed ramp geometry, a blocked doorway, or new Console errors.
+The guard booth, mast, truck, compound props and signage remain separate world-completion work.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1373,7 +1414,7 @@ through the fence. Entrance exterior, retaining wall, booth and compound dressin
 | Ramp 20 m at 20.6° → 17.2 m at 23.6° | Still under the default 45° CharacterController and NavMesh slope limits | — |
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
-| Terrain hole over the ramp top (W2) | The ramp is open from above at z 52.4 … 60.2 until the entrance building (later W step) covers it | World Builder (later step) |
+| Terrain hole over the ramp top (W2, covered in W13) | The W13 entrance exterior covers the exposed ramp; an additional lobby/sill terrain cut removes surface overlap | World Builder |
 | Invisible boundary walls (W2) | On the Level layer since Y7, like every solid collider in Environment (`Blackout/Systems/Assign Physics Layers`; the dock railings are on Ignore Raycast). They stop raycasts, but they are all offshore. Re-run that tool after rebuilding level geometry, because new objects are created on Default | Systems Engineer (layers) |
 | Corridor points at x ±1.2 move to ±0.9 (W3) | Applied to CoverPoint_17 … 19 and HealthPickup_Corridor, clear of the pillars | Agent Controller and Systems Engineer, for information |
 | Patrol-3's ping-pong route stored as a 4-point loop (W3) | Every route is a loop: walk the waypoints in id order and wrap | Agent Controller |
