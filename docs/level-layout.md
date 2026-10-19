@@ -1174,7 +1174,8 @@ they do not guarantee a 1.2 m aisle between every pair of furniture pieces or ac
 
 ### Saved output and missing kit pieces
 
-The current scene contains **61 linked instances** from 70 rows. Existing art and its materials are reused;
+The W10 dressing container contains **61 linked instances** from 70 rows. W13 places an additional linked
+containment chamber separately under `Props/LabContainment`. Existing art and its materials are reused;
 no new art placeholders were needed. Nine rows are skipped because these exact prefab paths are absent:
 
 | Missing prefab under `Assets/Prefabs/Props/` | Placements | Purpose |
@@ -1442,6 +1443,39 @@ Before committing, walk the route through Bootstrap and collect the catwalk heal
 inspect railing gaps and confirm agents stay downstairs. The automated movement probe
 checks the saved world collision, not the actual pickup collection or complete player-input/agent behaviour.
 
+## Laboratory containment chamber (W13, fix 4)
+
+**Blackout/World/Place Lab Containment Chamber** (`Assets/Editor/WorldBuilder/LabContainmentBuilder.cs`) places
+the Core Developer's existing `Assets/Prefabs/Props/Prop_ContainmentChamber.prefab` under
+`Props/LabContainment/LabContainment_Chamber`. The linked instance uses the existing CureSocket position
+**(0, 2.5, 135)** and yaw **180°**, turning its +Z opening south toward the D-Lab door. Re-running reuses it;
+an existing object with a different prefab source is rejected rather than replaced.
+
+- Source size is 3.8 × 2.88 × 3.8 m: top y5.38 leaves 0.12 m below the lab's y5.5 ceiling.
+- The 0.25 m floor plate and sixteen glass-wall colliders remain. The south opening permits player entry.
+- The gameplay CurePickup already supplies a pedestal and case. Only the chamber instance's `Pedestal` and
+  `PedestalPlate` visuals and matching central capsule collider are disabled, avoiding a duplicate pedestal.
+  The source chamber prefab, CurePickup prefab, player settings and Interactables scene are unchanged.
+- Fixed opaque parts use environment static flags; glass uses Occludee/Batching flags; cyan emissive parts
+  stay out of static lighting. Instance layers are Level so the chamber blocks movement and world queries.
+- The chamber's CureAnchor remains unused: the existing gameplay pickup retains its authored placement and
+  animations. Environment-only screenshots show the chamber without that pickup; use Bootstrap to view both.
+
+The batch entry `Blackout.Editor.LabContainmentBuilder.BuildAndVerify` checks scene repeatability and ceiling
+clearance. It temporarily instantiates the unchanged cure prefab with behaviours disabled, then walks a
+CharacterController using the saved player settings through the opening, onto the plate, into overlap with
+the pickup trigger and back out. The probe and temporary cure copy are destroyed before any scene save;
+no gameplay events are raised. It rebakes navigation, validates the mission route and checks protected owner
+files byte-for-byte. This verifies physical access; actual cure collection/events remain an integrated Play-mode check.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: build exit0, scene identical on repeat, ceiling/player/trigger checks
+passed and protected files unchanged. Bake: 264 colliders plus604 tree/rock capsules, 8,483 triangles,
+153,870 m². Validate Layout PASS66/66. Direct3D11 capture exits0 with Environment unchanged; the lab image
+shows the linked chamber, its open south side and cyan ring. No C# compiler errors/warnings in final runs.
+Logs: `%TEMP%/blackout-w13-fix4-chamber.log` and `blackout-w13-fix4-capture.log`.
+Before committing, play through Bootstrap, trigger the blackout, enter the lab and walk through the south opening
+to take the cure. Check ceiling clearance, glass visibility, a single pedestal and the Console.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1450,7 +1484,7 @@ checks the saved world collision, not the actual pickup collection or complete p
 | Corridor pillars become 0.3 m deep (x ±1.2 … ±1.5) | Corridor cover points at x ±1.2 fall inside pillars; use x ±0.9 | Agent Controller (cover points) |
 | Corridor narrower | Pushable crate (1.5 m) at x 0.95 would hit the wall; use x ≈ 0.7 | Systems Engineer (crate) |
 | All doors 1.4 × 2.3 | Door prefabs and door colliders get smaller | Systems Engineer (doors) |
-| Lab ceiling 4.0 → 3.0 | The containment chamber must be under 2.9 m including its base (it was 3.25 m) | World Builder (later step) |
+| Lab ceiling 4.0 → 3.0 | W13 places the existing 2.88 m chamber prefab with 0.12 m ceiling clearance; its duplicate pedestal is hidden on the scene instance | Core Developer and Systems Engineer, for information |
 | Lobby redesigned as 11.2 × 3.6 m | The prototype's lobby desk and lockers were hidden behind the back wall; they move into the lobby | World Builder (later step) |
 | Ramp 20 m at 20.6° → 17.2 m at 23.6° | Still under the default 45° CharacterController and NavMesh slope limits | — |
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
