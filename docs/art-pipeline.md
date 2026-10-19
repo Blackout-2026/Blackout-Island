@@ -70,7 +70,7 @@ exporter convert and keep these settings fixed.
 | Transform | Forward | **-Z Forward** |
 | Transform | Up | **Y Up** |
 | Transform | Apply Unit | on |
-| Transform | Apply Transform | **off** (experimental, can rotate children) |
+| Transform | Apply Transform | **on for static meshes with no hierarchy** (the generator): the Z-up to Y-up rotation is baked into the vertices and Unity gets rotation 0. **Off** for anything with a joint hierarchy (the robot): it is experimental and can rotate children |
 | Geometry | Smoothing | Normals Only |
 | Geometry | Apply Modifiers | on |
 | Geometry | Tangent Space | off (Unity calculates it) |
@@ -82,25 +82,28 @@ exporter convert and keep these settings fixed.
 Why: *Apply Scalings = FBX Units Scale* with *Apply Unit* writes a file that Unity reads as exactly metres, and
 *-Z Forward / Y Up* is the pair that gives a clean root transform with Unity's *Bake Axis Conversion*.
 
-### Expected orientation (confirm once, step 0 of the checklist)
+### Measured orientation (step C6, replaces the earlier guess)
 
-| | Blender | Unity (expected) |
+Measured on the generator with Blender 5.2, these export settings and Unity 6000.3.25f1: the energy core modelled at
+x = +1.5 arrived at Unity x = +1.5, and the louvre bank modelled on the +z side arrived on the +z side (1,172 vertices on
++z against 56 on -z in the prefab's world space). The rule is a plain axis swap:
+
+    Unity (x, y, z) = Blender (x, z, y)        so       Blender (x, y, z) = Unity (x, z, y)
+
+| | Blender | Unity |
 | --- | --- | --- |
 | Up | +Z | +Y |
-| Front of the model (what the player or camera sees first) | **-Y** (the face you see in front view, numpad 1) | **+Z** |
-| Character's right-hand side | -X | +X |
-| Character's left-hand side | +X | -X |
+| Along the machine / to the right | +X | +X |
+| Forward, the direction a character faces | **+Y** (the back view, `Ctrl+Numpad 1`) | **+Z** |
+| Character's right-hand side | +X | +X |
 
-The prototype rules in `core-developer.md` section 0 describe the **Unity** result (robot faces +Z, its weapon
-pod on its right arm, generator control face at Unity +X, which is Blender -X). I derived the Blender column
-from the exporter's axis conversion but could not run Blender, so it is **unconfirmed**:
+What this means for the next models: **model the front of the robot facing Blender +Y, not -Y**, and put its weapon pod
+(Unity +X, the robot's right arm) on Blender +X. The earlier table in this section said front = Blender -Y and right =
+Blender -X. That was derived without running anything and is wrong; the generator (control face at Unity +X) is what
+proved it. The swap flips handedness, so models are not mirrored in Unity and text reads the right way round.
 
-1. In Blender make `SM_AxisTest`: a 1 m cube with a 0.5 m cone on its -Y face (front) and a small cube on
-   its -X face, plus an Empty named `Marker`. Export with the settings above into `Assets/Models/Custom`.
-2. In Unity, drag it into a scene. The cone must point along the blue (Z) axis, the small cube sits on +X,
-   the root has rotation (0, 0, 0) and scale (1, 1, 1), and the Console line shows 1.00 x 1.00 x 1.50 m or similar.
-3. If the cone points to -Z, change **Forward** in the exporter (not the model, not Unity), repeat, and correct
-   the table above. Delete `SM_AxisTest.fbx` and its `.meta` from Unity afterwards. Do not commit it.
+`build_generator.py` does this conversion in one function (`B()` in `Art/Blender/Scripts/gen_parts.py`), so a part is
+written in the same Unity-frame metres as the prefab sockets.
 
 ## 5. Pivots and origins
 
@@ -376,8 +379,8 @@ emission peaks at about 2 and is my reading of section 8.2, so tune it by eye.
 
 | What | Where | Status |
 | --- | --- | --- |
-| `SM_Generator.fbx` (+ `Art/Blender/SM_Generator.blend`) | `Assets/Models/Custom` | not made yet, placeholder in use |
-| `T_Generator_*` textures (4 maps) | `Assets/Textures/Models` | not made yet, flat colours in use |
+| `SM_Generator.fbx` (+ `Art/Blender/SM_Generator.blend`) | `Assets/Models/Custom` | done in step C6, see section 15 |
+| `T_Generator_*` textures (4 maps) | `Assets/Textures/Models` | done in step C6, see section 15 |
 | Looping generator hum (CC0 or recorded), 5 to 10 s | the `Clip` of `HumAudioSource` | none; credit it in `docs/credits/core-developer.md` |
 
 ## 13. Security robot prefab (step C3)
@@ -582,3 +585,40 @@ The original 18 sign PNGs and 19 materials remain as source assets; do not delet
 | CC0 pipes, cable tray, vent, extinguisher, flask, jar as prefabs | `Assets/Prefabs/Props/Prop_<Name>.prefab` (names in `PropCatalog`) | slots are empty, the palette shows them as Missing |
 | Free low-poly SMG, rifle and knife meshes with hands | `Assets/Models/Custom/SM_Weapon_<Name>.fbx` | not downloaded yet, placeholders in use |
 | Credits rows for everything third-party | `docs/credits/core-developer.md` | template written |
+
+## 15. Realistic generator (step C6)
+
+`SM_Generator.fbx` replaces the placeholder behind `Generator_Visual.prefab`. Size, origin, sockets, material names and
+the +X control face are exactly the ones in section 12; only the look changed. Brief and reference images:
+`docs/reference/generator-realistic-brief.md`, `Art/Reference/Generator/`.
+
+### 15.1 How it is built (all scripts in `Art/Blender/Scripts`, run in Blender batch mode)
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `build_generator.py` (uses `gen_parts.py`) | Builds 171 bevelled parts in Unity-frame metres, merges them, removes faces nobody can see (ray test), triangulates only the n-gons, unwraps UV0 at equal texel density, writes `Art/Blender/SM_Generator.blend`. Prints a warning if the size drifts from 6.96 x 4.10 x 2.90 m |
+| 2 | `bake_generator.py` (uses `export_generator.py`) | Bakes an edge and cavity mask, builds the procedural paint, rust and grime from it, bakes the four 2048 maps, rebuilds the Blender materials to read them, exports the FBX |
+| 3 | `preview_generator.py` | Review renders from four cameras (optional) |
+| 4 | Unity: **Blackout > Art > Build Generator Visual Prefab** | Replaces only the `Model` child. Materials and textures are wired by the existing builder |
+
+```
+"D:\Blender\blender.exe" -b -P Art/Blender/Scripts/build_generator.py
+"D:\Blender\blender.exe" -b Art/Blender/SM_Generator.blend -P Art/Blender/Scripts/bake_generator.py -- 48
+```
+
+The last number is the sample count of the wear pass (48 takes about 2 minutes on the CPU). Close the Unity Editor before
+a batch run that touches `Assets`.
+
+### 15.2 Measured result
+
+| Item | Value |
+| --- | --- |
+| Size in Unity | 6.96 x 4.10 x 2.90 m, the importer line confirms it |
+| Triangles | 7,376 (Generator 6,752, EnergyCore 528, GlassTube 96); target 10,000, maximum 15,000 |
+| Materials | 5: `M_Generator_Body`, `_Metal`, `_Details`, `_Glass`, `_Core` |
+| UV | UV0 only, 0 to 1, no overlap; average 131 px/m at 2048 (dials and labels 3x to 3.5x denser) |
+| Maps | `T_Generator_BaseColor`, `_Normal`, `_MetalSmooth` (R metallic, A smoothness), `_Emission`, 2048 x 2048 |
+| Prefab node transforms | rotation 0, scale 1 (Apply Transform on, section 4) |
+
+The textures are procedural, so there is no Substance or hand painting: `docs/viva/core-developer-generator.md` explains
+the method and its limits.

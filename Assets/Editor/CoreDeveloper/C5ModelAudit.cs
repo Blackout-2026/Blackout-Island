@@ -22,7 +22,7 @@ namespace Blackout.Editor
             var report = new StringBuilder();
             report.AppendLine("## Measured model inventory");
             report.AppendLine();
-            report.AppendLine("Measured by Blackout > Art > Model Report. Prefab rows include placeholder geometry; they are not imported FBX models.");
+            report.AppendLine("Measured by Blackout > Art > Model Report. FBX rows are imported Blender models; prefab rows without an FBX behind them are still primitive placeholders.");
             report.AppendLine();
             report.AppendLine("| Source | Asset | Triangles | Renderers | Materials | UV channels | Texture sizes |");
             report.AppendLine("| --- | --- | ---: | ---: | ---: | --- | --- |");

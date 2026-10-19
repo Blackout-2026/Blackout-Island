@@ -61,3 +61,16 @@ font is used, so there is nothing to credit.
 
 None. Every material in `Assets/Materials/Models` uses the prototype's flat colours. If a CC0 texture is added later, list it
 here with the surface it is used on, its source asset, URL, licence and author, as in `docs/credits/world-builder.md`.
+
+## Reference images (not shipped in the game)
+
+Used only as visual reference for the realistic generator (step C6). They live in `Art/Reference/Generator/`, outside
+`Assets`, are never imported into Unity and are not part of the build. The model, textures and decals are made by me.
+
+| File | What it is | Author | URL | Licence |
+| --- | --- | --- | --- | --- |
+| `ref_01_front_three_quarter.png` | Render of an orange "mini electrical generator" prop (carries a company logo that is not reused) | TODO: author name | TODO: page URL | TODO: check before publishing the repo |
+| `ref_02_front_face_gauges.png` | Marmoset Toolbag presentation of the same model (3,407 polygons, PBR maps) | TODO: author name | TODO: page URL | TODO: check before publishing the repo |
+
+Fill the three TODO cells from the page where the images were found. If the author does not allow reuse of their images in a
+public repository, delete the two PNG files from `Art/Reference/Generator/` and keep only this row.

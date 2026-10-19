@@ -3,11 +3,11 @@
 <!-- C5 MODEL INVENTORY BEGIN -->
 ## Measured model inventory
 
-Measured by Blackout > Art > Model Report. Prefab rows include placeholder geometry; they are not imported FBX models.
+Measured by Blackout > Art > Model Report. FBX rows are imported Blender models; prefab rows without an FBX behind them are still primitive placeholders.
 
 | Source | Asset | Triangles | Renderers | Materials | UV channels | Texture sizes |
 | --- | --- | ---: | ---: | ---: | --- | --- |
-| FBX | None imported in `Assets/Models/Custom` | — | — | — | — | — |
+| FBX | `Assets/Models/Custom/SM_Generator.fbx` | 7376 | 3 | 5 | UV0 | none |
 | Prefab | `Assets/Prefabs/Props/Prop_ContainmentChamber.prefab` | 812 | 45 | 4 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Props/Prop_LabBench.prefab` | 24 | 2 | 2 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Props/Prop_Analyser.prefab` | 92 | 2 | 2 | UV0, UV1 | none |
@@ -33,7 +33,7 @@ Measured by Blackout > Art > Model Report. Prefab rows include placeholder geome
 | Prefab | `Assets/Prefabs/Models/Weapon_Smg_Visual.prefab` | 758 | 26 | 8 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Models/Weapon_Sniper_Visual.prefab` | 1134 | 29 | 8 | UV0, UV1 | none |
 | Prefab | `Assets/Prefabs/Models/Weapon_Knife_Visual.prefab` | 632 | 13 | 5 | UV0, UV1 | none |
-| Prefab | `Assets/Prefabs/Models/Generator_Visual.prefab` | 516 | 9 | 4 | UV0, UV1 | none |
+| Prefab | `Assets/Prefabs/Models/Generator_Visual.prefab` | 7376 | 3 | 5 | UV0 | T_Generator_BaseColor 2048x2048, T_Generator_Emission 2048x2048, T_Generator_MetalSmooth 2048x2048, T_Generator_Normal 2048x2048 |
 | Prefab LOD0 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 7140 | 81 | 5 | UV0, UV1 | none |
 | Prefab LOD1 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 4884 | 53 | 4 | UV0, UV1 | none |
 | Prefab LOD2 | `Assets/Prefabs/Models/SecurityRobot_Visual.prefab` | 512 | 20 | 3 | UV0, UV1 | none |
