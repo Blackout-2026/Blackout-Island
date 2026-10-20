@@ -9,8 +9,8 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 and `physics/crate.js`), section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`), and
 section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`). Section 13 starts the
 **Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`), section 14 covers its **hearing**
-(H2, from `agents/perception.js` and `physics/collision.js`), and section 15 its **tree** (H3, from
-`agents/hunter_bt.js` and `agents/perception.js`).
+(H2, from `agents/perception.js` and `physics/collision.js`), section 15 its **tree** (H3, from
+`agents/hunter_bt.js` and `agents/perception.js`), and section 16 its **debug view** (H4, from `ui/debug_overlay.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -774,3 +774,52 @@ run changes nothing.
 
 - `AgentBase`'s `AgentShooter` has no gunfire channel assigned, so agents' shots make no noise yet: the Hunter hears
   the player's gunfire, not other agents'. Assigning `Noise.asset` there is the Agent Controller's change.
+
+---
+
+## 16. Hunter debug view (`ui/debug_overlay.js`)
+
+### What the prototype does
+
+The F1 overlay draws, for every agent:
+
+- **A vision cone on the floor**, the agent's field of view and range, coloured by state: calm **#40FF80** (green),
+  suspicious **#FFB030** (orange: investigate, search, gunfire, footsteps, cover, orders), combat **#FF3020** (red:
+  attack, pursue, engage). Grey when dead.
+- **A label** above the head: `name [BT] state` and, for the Hunter, its **active branch**: the running path built from
+  the tree trace each tick, for example `Root > ReactToFootsteps > SneakToNoise`.
+- **Noise rings:** every noise of the last **2 s** grows to its propagation radius (in a third of that time) and fades.
+  Gunfire **#FF5030**, generator and alarm **#FF30FF**, everything else (footsteps) **#FFD040**.
+- A side panel with the Blackboard and an event log.
+
+### Unity mapping
+
+**Debug text (`IDebugInfo`).** `HunterBrain.GetDebugText()`, which `AgentRoot` publishes to the squad Blackboard every
+0.5 s (the Commander's debug text lists it):
+
+```
+Hunter [BT] Investigate > Ambush
+eyes: sees no, detected no, awareness 0.42, last seen 3.1 s ago
+ears: Sprint 0.31 heard 2.1 s ago through 1 wall
+order: none
+```
+
+- Line 1 is the running path, root excluded, so it stays short in the Commander's list: from each composite the
+  child that is Running (a Selector's winner, a Sequence's current child). A branch that just finished shows only its
+  name.
+- Rebuilt at most once per brain tick and only when asked, like the Tactical Guard's.
+
+**Gizmos (Scene view, agent selected) [GUESS: prototype colours, Unity shapes].**
+
+| Gizmo | Shows | Drawn by |
+| --- | --- | --- |
+| Vision cone | 115° fan of the sight range (× the alert), coloured calm / suspicious / combat as above | `HunterBrain` |
+| Current target | a line to the move target (dark blue walking, light blue running) and a red line to the look target while aiming | `HunterBrain` |
+| Last sighting | a yellow cube where the player was last seen, while it is still searchable | `HunterBrain` |
+| Route | the Hunter's waypoints, joined in route order (cyan) | `HunterBrain` |
+| Noise radii | each noise heard in the last 8 s: a ring of its radius in the prototype's colour, and a second ring at the distance it could be heard through the walls counted; a line to the Hunter, green if it was remembered | `HearingSystem` |
+
+- `HearingSystem` keeps the last **8** noises it was told about (position, radius, type, time, perceived loudness,
+  walls, remembered or not) in a fixed array, so recording one allocates nothing.
+- The data behind each gizmo is a public query, so EditMode tests check it; the drawing code only reads it.
+- Gizmos are drawn when the Hunter is selected (`OnDrawGizmosSelected`), so two Hunters do not clutter the scene.
