@@ -8,8 +8,9 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 `ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
 and `physics/crate.js`), section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`), and
 section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`). Section 13 starts the
-**Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`), and section 14 covers its **hearing**
-(H2, from `agents/perception.js` and `physics/collision.js`).
+**Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`), section 14 covers its **hearing**
+(H2, from `agents/perception.js` and `physics/collision.js`), and section 15 its **tree** (H3, from
+`agents/hunter_bt.js` and `agents/perception.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -666,3 +667,110 @@ and decay it", instead of the prototype's list:
 
 **Cost [GUESS].** The raycast is skipped when the open-space value is already ≤ the threshold or cannot beat the
 current memory, so far-away noises cost a distance check only.
+
+---
+
+## 15. The Hunter's tree (`agents/hunter_bt.js`, `agents/perception.js`)
+
+### What the prototype does
+
+The tree is in section 13. Its leaves and numbers:
+
+| Leaf | Behaviour |
+| --- | --- |
+| Engage | `[SeesPlayer: detected and seen in the last 0.6 s]` then `Shoot` or `CloseIn` |
+| Shoot / AimAndFire | `[InRange: distance < 32 m × rangeMul and can see]`: stand, aim, fire, look at the player's chest; crouch beyond 14 m. Running while it can see |
+| CloseIn | run to the player (arrive 6 m), aim, do not fire |
+| HuntLastSeen / StalkToLastSeen | `[seen in the last 10 s, cannot see now]`: run to the last seen position (arrive 1.8 m), aim; then forget the sighting |
+| ReactToGunfire | `[gunfire, generator or alarm in the last 6 s, loudness > 0.06]`: within 16 m take cover (a tree within 12 m, 0.9 m behind it from the threat), crouch, aim at the noise, hold 2.5 s; else run to a flank point 12 m to the side, then walk in (arrive 4 m) |
+| ReactToFootsteps | `[footstep, sprint, jump, land, door, crate or melee in the last 5 s, loudness > 0.04]`: crouch and sneak (1.15 m/s) to the noise (arrive 3 m), then ambush: stand, aim at it for 4 s, then forget the noises |
+| FollowOrders | `[has a Commander directive]`: converge and search run, regroup walks (arrive 2.5 m) |
+| Prowl | next of its 6 forest waypoints (advance 1 or 2 at random), walk (arrive 2 m), look around 2–4 s |
+| Every move | fails after 25 s or when the path fails 3 times |
+
+**Vision** (Hunter: full cone **2.0 rad** (115°), range **25 m**, eyes at **1.6 m**):
+
+- Sees the player if within range and inside the cone (or within **2.2 m**, any direction), and a ray from its eyes
+  reaches the player's head or chest (`height × 0.55`) without hitting a wall, trunk or door.
+- **Awareness** fills while it sees the player:
+  `+= 2.2 × max(0.15, 1.25 − distance / range) × visibility × (detected ? 3 : 1) × dt`, capped at **1.5**.
+  **Detected** at 1. Unseen, it falls **0.35/s** (**0.25/s** once detected). Detection is lost **6 s** after the
+  player was last seen. Each detection writes a sighting to the squad Blackboard.
+- **Visibility** of the player: crouching ×0.55, sprinting ×1.25, flashlight on ×1.6, outdoors without a flashlight
+  ×0.8, multiplied together.
+- **Alert** (Commander): vision range ×1.4.
+- **Camouflage:** only the Hunter's ghillie model. There is no camouflage number.
+
+### Unity mapping
+
+**The brief's six branches, in its order, plus the Commander's orders** (`docs/viva/commander.md` asks every brain
+to implement `IDirectiveReceiver` and `IAlertReceiver`):
+
+```
+Root ?
+├─ → Attack            [SeesPlayer] [InRange] AimAndFire
+├─ → Pursue            [SeesPlayer] CloseIn
+├─ → Investigate       [HeardPreyNoise] MoveToNoise  Ambush
+├─ → CautiousApproach  [HeardGunfire] ? ( → [GunfireClose] TakeCover | AdvanceByCover )
+├─ → Search            [SawRecently] GoToLastSeen  LookAround(3 s)
+├─ → FollowOrders      [HasOrder] MoveToOrder
+└─ → Roam              NextWaypoint  WalkTo  LookAround(2–4 s)
+```
+
+- The brief puts **Investigate and CautiousApproach before Search**: a fresh noise outranks an old sighting. The
+  prototype hunts the last sighting first. I follow the brief.
+- **Attack and Pursue** are the prototype's `Shoot` and `CloseIn`, split into two branches as the brief names them.
+- **Reaction delay and aim error** are already in the Agent Controller's `AgentShooter` (A4): the Hunter's
+  `reactionDelay` 0.7 s and `spread` 0.024 come from `DifficultyConfig`. The brain only sets `aim`, `fire` and the
+  look target, as every brain does; it does not repeat them.
+
+**Different reactions by noise type [GUESS where marked].** The H2 hearing remembers one noise and its type:
+
+| Heard | Branch | Move | Then |
+| --- | --- | --- | --- |
+| Gunshot, Generator, Alarm (loudness > 0.06, last 6 s) | CautiousApproach | within 16 m: run to cover, hold 2.5 s aiming at the noise; else **walk** from cover to cover towards it [GUESS] | marks the noise handled |
+| Footstep, Door, Crate, Melee (> 0.04, last 5 s) | Investigate | **walk** to it (the prototype sneaks; Unity has no sneak speed) | ambush 4 s, aiming at it |
+| Sprint (> 0.04, last 5 s) | Investigate | **run** to it: the prey is fleeing [GUESS] | ambush 2 s [GUESS] |
+
+- **Cover for the advance [GUESS]:** `CoverPoint` markers and the terrain's trees, rocks and bushes, read once at
+  start. Bushes are terrain *details* (W6), not trees: every 0.78 m detail cell holding one is a cover position, read
+  once per terrain for both Hunters. On the island: 657 trees and rocks and 371 bush cells (376 bushes).
+  The next cover is one within 15 m of the Hunter that is at least 4 m nearer the noise; the Hunter waits 1.5 s
+  there, then moves on. With no such cover it walks straight in. Within 16 m of the noise the take-cover rule wins,
+  which ends the advance. This replaces the prototype's flank point, so the brief's "advance using cover/bushes,
+  slower" is literal.
+- **Handled noises:** instead of clearing the hearing, the tree records the time of the noise it finished with,
+  and ignores noises heard before it.
+
+**Camouflage [GUESS: the playbook's own rule].** When the player **stands still** (speed under **0.3 m/s**), the
+Hunter's awareness fills **× 0.5** as fast (`HunterConfig.camouflageMultiplier`). Read as: a motionless player
+blends into the forest, which is what the ghillie-wearing Hunter itself relies on.
+
+**Visibility in Unity [GUESS].** The player has no crouch or flashlight yet (Y2), and the Hunter only knows the
+player's Transform. Visibility comes from the player's speed, measured between brain ticks: still → camouflage,
+sprinting (over **5.5 m/s**) → ×1.25, otherwise ×1.
+
+**Not portable now:** crouching and the sneak speed (`AgentIntent` has neither; flagged by the Agent Controller in
+A0), the outdoor ×0.8 and flashlight ×1.6 factors, and the flank point.
+
+**Architecture.**
+
+- `HunterBrain` (on the Hunter, beside `HearingSystem`) senses once per think tick (10 Hz, from `AgentRoot`), writes
+  the facts to the tree's `LocalBlackboard`, ticks the tree, and returns the `AgentIntent` the leaves wrote.
+- **The tree reads only the blackboard.** Tests fill a blackboard by hand (the brief's "fake blackboard") and check
+  the intent each branch returns, with no scene, no physics and no player.
+- `HunterVision` is the awareness meter as plain C#; line of sight is one `Physics.Linecast` against Level and
+  Interactable (walls and doors), behind an interface so tests fake it.
+- Sightings go to the squad Blackboard (`lastKnownPlayerPos`, `lastKnownPlayerTime`), as in the prototype.
+- Orders: Converge runs to the point and completes on arrival; SearchZone runs to 3 points inside the radius, then
+  completes [GUESS]; Regroup walks and completes on arrival. A higher branch interrupts an order without clearing it.
+
+**Wiring (with the Agent Controller's permission).** `Blackout/Systems/Build Hunter Config` creates
+`HearingConfig.asset` and `HunterConfig.asset` in `Assets/Scripts/AI/Hunter/Config`, and adds a `HearingSystem`
+(HearingConfig, `Noise.asset`) and a `HunterBrain` (HunterConfig, that HearingSystem) to the root of
+`Assets/Prefabs/Agents/Hunter.prefab`, a variant of `AgentBase`. `AgentRoot` finds the brain, so the spawner no longer
+gives Hunters its placeholder walker. The tool only adds what is missing and fills empty fields; run twice, the second
+run changes nothing.
+
+- `AgentBase`'s `AgentShooter` has no gunfire channel assigned, so agents' shots make no noise yet: the Hunter hears
+  the player's gunfire, not other agents'. Assigning `Noise.asset` there is the Agent Controller's change.

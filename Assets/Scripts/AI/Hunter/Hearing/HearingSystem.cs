@@ -53,6 +53,8 @@ namespace Blackout.AI.Hunter
         public float TimeSinceNoise => Memory.TimeSince(clock());
 
         public bool HasNoise => Memory.HasNoise(clock());
+        /// <summary>How loud the remembered noise was when heard (after walls, before fading).</summary>
+        public float HeardLoudness => Memory.HeardLoudness;
         public Vector3 NoisePosition => Memory.Position;
         public NoiseType NoiseType => Memory.Type;
 
