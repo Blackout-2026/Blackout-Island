@@ -249,6 +249,11 @@ namespace Blackout.Editor
             {
                 Object.DestroyImmediate(flicker);
             }
+            if (spec.Group == LightFixtureLayout.OutdoorGroup && spec.Name == "BoatLantern")
+            {
+                Transform torch = BoatTorchBuilder.FindTorch(container.gameObject.scene);
+                if (torch != null) BoatTorchBuilder.ConfigureLight(torch);
+            }
         }
 
         // The lamp mesh hangs 0.25 m over its light; a high-bay also gets a rod up to the ceiling.

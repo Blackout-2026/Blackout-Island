@@ -114,11 +114,14 @@ namespace Blackout.Editor
             EditorSceneManager.SaveScene(scene);
             Debug.Log($"[World] Beach dressed: {dock.Count} shore/dock parts and {fittings.Count} boat parts; "
                 + "4 linked prefabs, 7 rope coils, 2 mooring lines; central1.2m route reserved; lantern uses existing flicker light. "
-                + (RowboatPlacement.IsPlaced(boat) ? "Rowboat retained; legacy boat fittings disabled except lantern." : "Legacy boat retained."));
+                + (RowboatPlacement.IsPlaced(boat) ? "Rowboat/fire torch retained; legacy boat fittings disabled." : "Legacy boat retained."));
         }
 
-        internal static Renderer FindLantern(Scene scene) => WorldSceneSkeleton.FindRoot(scene, "Beach")?.transform
-            .Find(LanternPath)?.GetComponent<Renderer>();
+        internal static Renderer FindLantern(Scene scene)
+        {
+            Renderer ember = BoatTorchBuilder.FindEmber(scene);
+            return ember != null ? ember : WorldSceneSkeleton.FindRoot(scene, "Beach")?.transform.Find(LanternPath)?.GetComponent<Renderer>();
+        }
 
         private static Material LoadMaterial(string path) => AssetDatabase.LoadAssetAtPath<Material>(path)
             ?? throw new InvalidOperationException("Missing environment material: " + path);
