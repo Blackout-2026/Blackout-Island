@@ -5,7 +5,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Blackout.Shared",
-        "Blackout.PlayerAndInteraction"
+        "Blackout.PlayerAndInteraction",
+        "Blackout.AI.Hunter",
+        "Blackout.Agents"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
