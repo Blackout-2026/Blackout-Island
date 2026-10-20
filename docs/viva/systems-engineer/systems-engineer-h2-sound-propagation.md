@@ -73,10 +73,12 @@ current   = perceived × max(0, 1 − age / 8 s)
   | Corridor → GeneratorRoom, solid wall | 4.5 m | 1 | 0.389 | 0.531 |
   | SecurityArea → Corridor, D-Security closed | 10.0 m | 1 | 0.137 | 0.453 |
   | Same, door collider off | 10.0 m | 0 | — | 1.295 |
-  | GeneratorRoom → Laboratory | 16.0 m | 2 | out of range | 0.129 |
+  | GeneratorRoom → Laboratory | 14.0 m | 2 | out of range | 0.139 |
 
   Each real wall counts once (the bunker's 0.4 m wall bands are single boxes), a closed door is one wall and an
-  open doorway none. A sprint is heard through the closed door at 10 m, but not from the next room 16 m away.
+  open doorway none. A sprint is heard through the closed door at 10 m, but not from the next room 14 m away.
+  (H4: the generator-to-lab line moved to x −2.4, clear of the catwalk stairs the World Builder added in W13;
+  across the stairs a solid step counts as a third wall.)
 - **Allocation:** 1000 heard noises, each with a real raycast through two walls: **0 bytes**.
 - **Tests:** 57 new (HearingMath 22, HearingSystem 14, NoiseMemory 11, real level 6, HearingConfig 4); Hunter
   132/132.

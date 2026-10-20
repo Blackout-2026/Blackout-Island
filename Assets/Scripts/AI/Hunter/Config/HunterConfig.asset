@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a125da02f4d4e9e853ad852542355a, type: 3}
+  m_Name: HunterConfig
+  m_EditorClassIdentifier: Blackout.AI.Hunter::Blackout.AI.Hunter.HunterConfig
+  fieldOfViewDegrees: 114.6
+  sightRange: 25
+  closeSenseRange: 2.2
+  eyeHeight: 1.6
+  playerHeadHeight: 1.63
+  playerChestHeight: 0.96
+  sightBlockers:
+    serializedVersion: 2
+    m_Bits: 768
+  awarenessRate: 2.2
+  minNearFactor: 0.15
+  nearOffset: 1.25
+  detectedRateMultiplier: 3
+  awarenessCap: 1.5
+  detectThreshold: 1
+  awarenessDecay: 0.35
+  awarenessDecayDetected: 0.25
+  awarenessDecayPlayerDead: 1
+  loseDetectionSeconds: 6
+  camouflageMultiplier: 0.5
+  stillSpeed: 0.3
+  sprintSpeed: 5.5
+  sprintVisibility: 1.25
+  seenRecentlySeconds: 0.6
+  attackRange: 32
+  closeInDistance: 6
+  aimHeight: 1.05
+  searchMemorySeconds: 10
+  searchArriveDistance: 1.8
+  searchLookAroundSeconds: 3
+  preyNoiseSeconds: 5
+  preyNoiseThreshold: 0.04
+  investigateArriveDistance: 3
+  ambushSeconds: 4
+  sprintAmbushSeconds: 2
+  gunfireSeconds: 6
+  gunfireThreshold: 0.06
+  gunfireCloseDistance: 16
+  coverSearchRadius: 12
+  coverOffset: 0.9
+  holdCoverSeconds: 2.5
+  advanceCoverRange: 15
+  advanceMinGain: 4
+  advancePauseSeconds: 1.5
+  coverArriveDistance: 1
+  orderArriveDistance: 2.5
+  searchZonePoints: 3
+  waypointArriveDistance: 2
+  lookAroundMinSeconds: 2
+  lookAroundMaxSeconds: 4
+  moveTimeoutSeconds: 25

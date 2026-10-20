@@ -65,7 +65,9 @@ namespace Blackout.AI.Hunter.Tests
         [TestCase("O-RampBottom, open passage", 0f, 2.5f, 74f, 0f, 4.07f, 66f, 0)]
         [TestCase("Corridor to GeneratorRoom, solid wall", 0.5f, 2.5f, 101f, -4f, 2.5f, 101f, 1)]
         [TestCase("SecurityArea to Corridor, D-Security closed", 0f, 2.5f, 78f, 0f, 2.5f, 88f, 1)]
-        [TestCase("GeneratorRoom to Laboratory", -5f, 2.5f, 112f, -5f, 2.5f, 128f, 2)]
+        // x -2.4: between the catwalk stairs (they end at x -2.9) and the generator room's east wall (x -1.9), so the
+        // line crosses only the two room walls. The catwalk (W13) fills z 113.6 to 116 everywhere west of the stairs.
+        [TestCase("GeneratorRoom to Laboratory", -2.4f, 2.5f, 112f, -2.4f, 2.5f, 126f, 2)]
         public void RealLevel_CountsTheWallsAPlayerWouldSee(string name, float nx, float ny, float nz,
             float hx, float hy, float hz, int expectedWalls)
         {
