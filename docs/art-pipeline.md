@@ -726,3 +726,40 @@ the shots would then start at eye height instead of the barrels. `AgentSetupBuil
 re-wire it by hand: open `TacticalGuard.prefab`, select the root, drag `Visual/SecurityRobot_Visual/Model/.../Hand_R/MuzzlePoint`
 into the `Muzzle` field of `AgentShooter`, save. This file belongs to the Agent Controller: tell them, or ask them to do it.
 The animator only raises the right arm and bends the left forearm to aim (no arm swing while walking, `ProceduralRobotAnimator`).
+
+
+## 17. Heavy sniper rifle (step C9)
+
+`SM_Weapon_SniperHeavy.fbx` is a stand-alone model of a heavy anti-materiel rifle, built in Blender from the owner's reference
+photo (a .50 calibre rifle with a fluted barrel and a slotted box muzzle brake). It is **new**: the R-700 viewmodel of section 14.6
+(`SM_Weapon_Sniper`, with hands) is untouched, and the new model is **not wired into the Player prefab yet**.
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `build_sniper_heavy.py` (uses the shared `build_smg.py` kit and `weapon_kit.py`) | Builds the rounded receiver with lightening holes and an ejection port (boolean cuts), the top rail, the fluted barrel, the slotted muzzle brake, the scope with rings and turrets, the magazine, grip, a sloped skeletal stock (two side plates with slots) and the deployed bipod. Three palette slots, UV0, writes `Art/Blender/SM_Weapon_SniperHeavy.blend` and the first FBX |
+| 2 | `bake_sniper_heavy.py` (uses `bake_smg.py`) | Bakes edge wear and cavity dirt, builds a parkerised-steel material for the receiver (plus the SMG's steel and polymer), bakes one 2048 atlas and collapses the three slots into `M_Weapon_SniperHeavy` |
+| 3 | `preview_sniper_heavy.py` | Eight review renders on a white backdrop (optional) |
+
+```
+"D:\Blenderlender.exe" -b --factory-startup -P Art/Blender/Scripts/build_sniper_heavy.py
+"D:\Blenderlender.exe" -b Art/Blender/SM_Weapon_SniperHeavy.blend -P Art/Blender/Scripts/bake_sniper_heavy.py -- 32
+```
+
+Always run the build before the bake. Frame: the weapon frame of section 14 (origin at the receiver centre, x right, y up, +z
+the muzzle). Measured result: 1.463 m long (muzzle brake at z = 0.810, the same muzzle distance as the R-700), 5,220 triangles
+(target 6,000, maximum 9,000), 1 material, textures `T_WeaponSniperHeavy_BaseColor/Normal/MetalSmooth`, root rotation 0, one mesh
+(Apply Transform on, section 4). `SniperHeavyFbxTests` checks the muzzle distance, the length, the budget and the material.
+To use it in the game it would replace the R-700 viewmodel: it needs two hands (`hand_kit.py`), a `MuzzlePoint` and a held
+position in `WeaponDefinitions` (Systems Engineer), so that is a separate step.
+
+### 17.1 The in-game rifle restyled (step C9b)
+
+At the owner's request the **R-700 viewmodel itself** (`SM_Weapon_Sniper`, the one in the Player prefab) was restyled to the same
+photo: a rounded receiver with lightening holes, a fluted barrel, the big slotted muzzle brake, a flat-top rail with a larger scope,
+a box magazine, a short sloped skeletal stock, a forend sleeve for the left hand and a folded bipod. The black grip, the two gloved
+hands and the camouflage sleeves are kept. `build_sniper.py` and `bake_sniper.py` were changed in place; nothing else was renamed:
+the muzzle is still at z = 0.810, the pistol grip and forend are where the hands expect them, the butt ends at z -0.416 so it stays
+out of the camera, and the file keeps its 3 materials (`M_Weapon_Sniper`, `M_Weapon_Glove`, `M_Weapon_Camo`) and the same
+`T_WeaponSniper_*` texture names. So `Weapon_Sniper_Visual.prefab` and the Player prefab pick the new mesh up from the FBX with no
+change. Measured: 5,756 triangles (target 6,000), root rotation 0. The tan polymer stock is gone: the TAN palette slot is now the
+parkerised grey receiver. The stand-alone `SM_Weapon_SniperHeavy` of section 17 is the full-size rifle without hands.
