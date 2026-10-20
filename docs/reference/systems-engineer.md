@@ -762,3 +762,13 @@ A0), the outdoor ×0.8 and flashlight ×1.6 factors, and the flank point.
 - Sightings go to the squad Blackboard (`lastKnownPlayerPos`, `lastKnownPlayerTime`), as in the prototype.
 - Orders: Converge runs to the point and completes on arrival; SearchZone runs to 3 points inside the radius, then
   completes [GUESS]; Regroup walks and completes on arrival. A higher branch interrupts an order without clearing it.
+
+**Wiring (with the Agent Controller's permission).** `Blackout/Systems/Build Hunter Config` creates
+`HearingConfig.asset` and `HunterConfig.asset` in `Assets/Scripts/AI/Hunter/Config`, and adds a `HearingSystem`
+(HearingConfig, `Noise.asset`) and a `HunterBrain` (HunterConfig, that HearingSystem) to the root of
+`Assets/Prefabs/Agents/Hunter.prefab`, a variant of `AgentBase`. `AgentRoot` finds the brain, so the spawner no longer
+gives Hunters its placeholder walker. The tool only adds what is missing and fills empty fields; run twice, the second
+run changes nothing.
+
+- `AgentBase`'s `AgentShooter` has no gunfire channel assigned, so agents' shots make no noise yet: the Hunter hears
+  the player's gunfire, not other agents'. Assigning `Noise.asset` there is the Agent Controller's change.
