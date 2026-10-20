@@ -1,65 +1,63 @@
-# Security Patrol structure, perception and viva notes (S1-S2)
+# Security Patrol states, setup and viva notes (S1-S3)
 
-Owner: World Builder, as assigned in the [build playbook](../UNITY_BUILD_PLAYBOOK.md),
-section 2. Reference: [Agent Controller notes](../reference/agent-controller.md),
-sections 3, 4, 5 and 6.1. Runtime code is in
-`Assets/Scripts/AI/SecurityPatrol`, namespace and assembly
-`Blackout.AI.SecurityPatrol`. Its only explicit assembly dependency is `Blackout.Shared`.
+Owner: World Builder (Security Patrol AI), under section 2 of the
+[build playbook](../UNITY_BUILD_PLAYBOOK.md). Behaviour and numbers come from the
+[Agent Controller reference](../reference/agent-controller.md), sections 3, 5,
+6.1 and 8; waypoint positions follow the [level layout](../level-layout.md).
+The user reported Agent Controller approval for the S3 executor and prefab edits.
 
-S1 establishes the FSM structure and intent templates. S2 adds testable vision
-and hearing as separate C# objects. Automatic patrol/combat/search behaviour
-and brain integration follow in S3; overlay text, gizmos and tuning are S4.
+S3 connects the five-state FSM to sensing, waypoints, combat and world alerts,
+and wires the existing Security Patrol prefab. Overlay text, gizmos and further
+tuning remain S4. The existing humanoid capsule is still a visual placeholder.
 
-## How a tick works
+## Decision and execution boundary
 
-`SecurityPatrolBrain` is a `MonoBehaviour` implementing `IAgentBrain`. The host
-initializes it with an `IAgentContext`, then calls `Tick(deltaTime)` at its think
-rate. The existing `AgentRoot` defaults to 0.1 seconds (10 Hz); this brain has no
-`Update` method or independent clock.
+[SecurityPatrolBrain](../../Assets/Scripts/AI/SecurityPatrol/SecurityPatrolBrain.cs)
+implements `IAgentBrain` and `IAlertReceiver`. Its runtime assembly,
+`Blackout.AI.SecurityPatrol`, references only `Blackout.Shared`. It has no
+`Update` method: the existing `AgentRoot` calls `Tick(deltaTime)` at its default
+10 Hz think rate, then passes the returned `AgentIntent` to movement, facing,
+animation and shooting executors. The brain never moves a Transform or fires a shot.
 
-1. `Initialize` validates the context and its Self Transform, creates five state
-   objects on first use, and enters Patrol. Reinitializing exits the old state,
-   clears pending work and reuses the state objects.
-2. `TryRequestTransition(trigger, target)` checks the single legal-transition
-   table. It copies the supplied world target and queues the destination state.
-   The first accepted request wins until the next tick. Invalid requests do not
-   occupy that slot. S3 must check higher-priority conditions first.
-3. `Tick` exits the old state, enters the queued state, and returns the active
-   state's `AgentIntent`. At most one transition occurs per tick.
-4. The host passes that intent to separate movement, facing, animation and
-   shooting components. The brain never executes those actions.
+1. `Initialize(context)` caches five state objects and the agent's waypoint
+   route, creates the sensing host, and enters Patrol. Reinitialization resets
+   route progress, timers, pending requests and player memory.
+2. Each runtime tick refreshes alert range, samples sight and pending noise,
+   and passes a value-type `PatrolPerceptionInput` to `Tick(dt, input)`.
+3. Confirmed sight outranks noise and state completion. The brain advances the
+   current state's timer, evaluates guards, applies at most one transition,
+   and returns that state's intent. A confirmed sighting also publishes the
+   player's feet position and `Time.time` to the shared Blackboard.
+4. `TryRequestTransition(trigger, target)` remains an explicit test/control seam:
+   the first legal request queues a copied world position and takes priority
+   over automatic transitions on the next tick. An accepted request alone does
+   not authorize firing; sight and range are still required.
 
-Before initialization, with a destroyed Self, or with a supplied Health that is
-dead, `Tick` returns idle. `CurrentState` is null before initialization. A queued
-request is not applied while the brain returns idle for a dead agent.
+Each cached state has `Enter`, `Advance`, `Tick` and `Exit`. State changes reuse
+objects; they do not allocate a new state. `Tick` returns idle before initialization,
+while disabled, with a destroyed Self, or after the agent dies. Tests can inject
+an `IPerceptionRaycast` at initialization or supply `Tick(dt, input)` directly;
+the latter deliberately bypasses sensor validation.
 
-`State` is an abstract C# class with `Enter`, `Tick` and `Exit`. Enter stores the
-target, Tick returns an intent, and Exit clears the target. Each brain owns its
-five cached state instances. Keep the `SecurityPatrolState` enum order aligned
-with the state array in `Initialize` when extending the code.
+## State behaviour and transition guards
 
-## Current state outputs (S1-S2)
+| State | Intent and completion |
+| --- | --- |
+| Patrol | Walk the owned waypoint loop. Within 0.9 m, stop and sweep the look target for 2.2 s before advancing. No route means idle. Audible noise starts Investigate; sight starts Pursue or Attack. |
+| Investigate | Walk to the copied noise position. Within 1.5 m, stop and look for 3.5 s; leaving that radius resets the look timer. Complete to Patrol when calm, or Search at the noise position during a cure/Blackboard alarm. Sight interrupts either case. |
+| Pursue | Run to the last confirmed player feet position, updating it only while visible. When unseen, enter Search on arrival within 1.5 m, or when sight has been lost for more than 2.5 s and Pursue has lasted at least 4 s. |
+| Attack | Stop, aim at feet plus the 1.116 m chest offset, and request fire only with current sight and distance within attackRange. Lost sight stops fire immediately; after 1 s it returns to Pursue. A visible player beyond attackRange times 1.15 also causes Pursue. |
+| Search | Walk and aim toward the last known position; within 1.2 m, stop and sweep the look target. Give up to Patrol after searchTime, measured from entry including travel. Sight interrupts the timeout. |
 
-| State | Movement intent | Look / aim / fire |
-| --- | --- | --- |
-| Patrol | Stop | No look target, no aim, no fire; waypoint behaviour follows in S3. |
-| Investigate | Walk to the supplied target | No explicit look target, no aim, no fire. |
-| Pursue | Run to the supplied target | No explicit look target, no aim, no fire. |
-| Attack | Stop | Look at the supplied target, aim, fire false. |
-| Search | Walk to the supplied target | Look at the target, aim, fire false. |
+Visible players within engagement range enter Attack directly; more distant
+visible players enter Pursue. Between attackRange and its 1.15 exit boundary,
+Attack holds its state but withholds fire. Hidden live player positions and
+noises do not redirect a pursuit. A later noise does not retarget an existing
+investigation. Search always finishes after its selected duration, including
+while an alarm remains active; this is the requested bounded search loop.
 
-All five states still keep fire false. A `CanAttack` request is a structural
-signal, not proof of visibility or range. S3 must add line-of-sight, range and
-reaction guards before enabling the fire intent. The brain does not yet read
-the S2 perception objects. Waypoint routes, arrival handling, search timers,
-strafe selection, alert multipliers and Commander directive handling remain
-later work. Config values are not read by these state templates yet.
-
-## The current transition table
-
-This matches `SecurityPatrolTransitions.cs`. The table records legal edges;
-perception conditions and timers will generate the triggers in S3. Table row
-order does not establish perception priority.
+The single [transition table](../../Assets/Scripts/AI/SecurityPatrol/SecurityPatrolTransitions.cs)
+contains these 13 legal edges. Row order does not establish sensing priority.
 
 | From | Trigger | To |
 | --- | --- | --- |
@@ -69,6 +67,7 @@ order does not establish perception priority.
 | Investigate | DetectedPlayer | Pursue |
 | Investigate | CanAttack | Attack |
 | Investigate | InvestigationComplete | Patrol |
+| Investigate | InvestigationAlerted | Search |
 | Pursue | CanAttack | Attack |
 | Pursue | LostPlayer | Search |
 | Attack | CannotAttack | Pursue |
@@ -76,213 +75,196 @@ order does not establish perception priority.
 | Search | CanAttack | Attack |
 | Search | SearchComplete | Patrol |
 
-Any unlisted pair, unknown trigger, uninitialized request or second pending
-request returns false. Accepted requests change state at the next Tick, not
-inside `TryRequestTransition`. The target is copied by value; it does not track
-the player automatically. S3 will extend the table and state data for the
-reference's alert and directive paths.
+Unknown/unlisted triggers, uninitialized/dead/disabled requests and a second
+pending request are rejected. Keep the state enum order aligned with the cached
+state array when extending this implementation.
 
-## Configuration defaults and units
+Routes use `Waypoint` markers with Owner exactly equal to the initialized
+agent's name, such as `Patrol-1`. Sort by ordinal marker Id, using padded names
+such as `Waypoint_Patrol-1_01`, and wrap to the first point. Patrol-3's return
+leg is already encoded as a four-point loop in the layout. Route progress
+survives a temporary investigation/chase; a replaced marker list or changed
+count rebuilds the cache and restarts it. In-place owner/Id edits with the same
+list/count require reinitialization. Use metres, +Y up and +Z north; prototype
+`(x,y,z)` maps to Unity `(x,y,-z)`, with yaw negated. Player inputs use feet/root
+positions; sensor and aim heights are applied separately.
 
-`SecurityPatrolConfig` defines the tuning type. S1-S2 do not create a saved config
-asset or attach this brain to the existing agent prefab. A host passes its
-perception fields to the `Perception` constructor; the initialization example
-below shows the mapping.
+## Saved tuning and shooting
 
-| Field | Default | Source and purpose for later steps |
+The saved [config asset](../../Assets/Scripts/AI/SecurityPatrol/Config/SecurityPatrolConfig.asset)
+uses these defaults from the reference unless a Unity choice is identified.
+
+| Field | Default | Meaning |
 | --- | --- | --- |
-| visionRange | 22 m | Reference patrol vision range. |
-| visionAngle | About 111.73 degrees, full cone | Reference 1.95 radians converted with `Mathf.Rad2Deg`; a half-angle cone check must halve this value. |
-| hearingRange | 65 m | Unity listener distance cap, chosen from the largest listed noise radius (sniper). The prototype instead uses each event's radius and a patrol hearing multiplier of 1.0; the cap is an explicit Unity simplification. |
-| hearingThreshold | 0.04 | Normalized perceived loudness must be strictly greater than this prototype threshold. |
-| attackRange | 22 m | Reference FSM engagement distance; weapon maximum range is separately 34 m. |
-| walkSpeed | 1.55 m/s | Reference patrol walk speed. |
-| runSpeed | 4.1 m/s | Reference patrol run speed. |
-| searchTime | 14 s | Reference calm search duration; alert search is 30 s and follows in S3. |
-| reactionDelay | 0.6 s | Reference engagement delay before shooting. |
-| aimError | 0.034 radians | Reference base weapon spread, about 1.95 degrees, before contextual modifiers. |
+| eyeHeight | 1.62 m | Agent sight-ray origin above feet. |
+| playerSightHeight | 1.62 m | Player sight-ray target above feet; one eye-to-eye ray. |
+| visionRange | 22 m | Calm sight distance. |
+| visionAngle | 111.726776 degrees | Full cone: reference 1.95 radians converted to degrees. |
+| hearingRange | 65 m | Unity cap chosen from the largest reference noise radius, the sniper. |
+| hearingThreshold | 0.04 | Perceived loudness must be strictly greater than this value. |
+| attackRange | 22 m | FSM engagement range, separate from the weapon's 34 m maximum. |
+| walkSpeed | 1.55 m/s | Baseline executor walk speed. |
+| runSpeed | 4.1 m/s | Baseline executor run speed. |
+| searchTime | 14 s | Calm search, including travel. |
+| alertSearchTime | 30 s | Cure/Blackboard alarm search, including travel. |
+| aimHeight | 1.116 m | Reference player height 1.8 m times chest fraction 0.62. |
+| reactionDelay | 0.6 s | Applied by the shared shooter once per engagement. |
+| aimError | 0.034 radians | Base shot spread, about 1.95 degrees. |
 
-The Inspector range/minimum attributes guide editing. `Perception` validates
-its constructor settings: finite nonnegative ranges, full angle 0..360 degrees,
-threshold 0..1, and a supplied raycast. Its settings are cached at construction;
-later edits to the config do not retune an existing perception object. S3 must
-handle alert tuning explicitly. `AgentIntent` carries a Walk/Run enum,
-not a numeric speed or spread. Existing `AgentStatsApplier` configures movement
-and weapon executors separately. Changing this config does not currently change
-those executors, and S3 integration must keep their tuning consistent without
-applying the reaction delay twice.
+The brain emits Walk/Run enums, aim/fire booleans and targets. Movement speed,
+reaction delay and spread are executor settings. The setup tool copies their
+baseline values to the prefab; runtime spawning still applies `DifficultyConfig`.
+If changing those four config fields, keep the Security Patrol difficulty row
+consistent and rerun setup for manually placed prefabs. Existing asset tuning
+is preserved by setup. Sensor distances, cone, hearing settings and heights are
+cached when sensing is initialized; restart Play Mode after editing them.
 
-Use metres, +Y up and +Z north. The [level layout](../level-layout.md) supersedes
-prototype route coordinates: prototype `(x,y,z)` becomes Unity `(x,y,-z)`.
-Keep targets in Unity world coordinates.
+The existing [AgentShooter](../../Assets/Scripts/Agents/AgentShooter.cs) waits
+0.6 s before its first shot, checks facing/range, and applies randomized aim
+error. It resets engagement when fire becomes false. The patrol brain adds
+neither a second reaction timer nor another random aim offset. The baseline
+weapon uses range 34 m, bursts of 3, interval 0.12 s and pause 1.05 s.
+`ShotMath` scales spread with distance and early engagement; the shared shooter
+also applies the heightened aim-error multiplier. Player speed/crouch spread
+terms from the prototype are not implemented by that executor.
 
-## Perception outputs (S2)
+## Sensing, alerts and lifetime
 
-`Perception` is a plain C# class, with no `MonoBehaviour`, Transform, clock or
-scene search. Tests pass positions and a fake `IPerceptionRaycast`; runtime can
-use `PhysicsPerceptionRaycast`. The existing brain remains independent until S3
-connects these outputs to its transition requests.
+[PatrolSensing](../../Assets/Scripts/AI/SecurityPatrol/PatrolSensing.cs) owns Unity
+queries and the disposable noise listener. The underlying `Perception` remains
+a plain C# object taking positions and an injected raycast. Vision checks 3D
+range, the horizontal half-cone dot product, then at most one finite ray.
+Range/cone boundaries are inclusive. The prefab geometry mask is Default,
+Level and Interactable (769), excluding Enemy/Player; triggers are ignored.
+Actual occlusion depends on colliders and layers, including closed doors.
 
-| Output | Meaning |
-| --- | --- |
-| CanSeePlayer | Result of the most recent `UpdateVision` call, refreshed every call. |
-| HasLastKnownPosition | Distinguishes no observation from a valid position at the world origin. |
-| LastKnownPosition | Last confirmed sight point, or a remembered noise position when the player is not currently visible. A sound gives an investigation target, not proof the player is there. |
-| HeardNoise | A pending audible noise exists since the last `ClearHeardNoise`. |
-| NoisePosition | Position of the strongest pending noise; newest wins equal strength. |
-| NoiseLoudness | Normalized perceived loudness of that pending noise. |
+`NoiseEvent.loudness` means radius in metres. Hearing uses
+`perceived = max(0, 1 - distance / radius)`, requires distance at most 65 m and
+perceived loudness strictly above 0.04. For a 10 m radius, 9.5 m yields 0.05 and
+is heard; 9.7 m yields 0.03 and is ignored. Invalid/nonpositive radii are ignored.
+The strongest pending noise wins, newest breaks ties, and own-root/child sources
+are ignored. `FollowOwnerPosition` reads the cached owner's current position
+when the event arrives. The sensing host reads and then clears pending noise
+every think tick, including while seeing the player.
 
-`ClearHeardNoise()` clears the pending flag, noise position and noise loudness,
-while retaining the last-known position. `Forget()` also clears sight and all
-last-known-position memory, for a reset or respawn. Neither method changes any
-scene object or executes an intent.
+`Perception` exposes current sight, a last-known-position validity flag and
+position, plus pending noise flag/position/loudness. Losing sight retains its
+last confirmed position; a sound may update that memory only when not seeing.
+The FSM separately retains confirmed player feet positions for chase/search.
+`ClearHeardNoise` clears pending sound, `ClearVision` clears current sight, and
+`Forget` clears all sensor memory.
 
-### Vision and geometry
-
-`UpdateVision(eyePosition, forward, playerPosition)` performs these checks:
-
-1. Test the full 3D eye-to-target distance against the vision range.
-2. Project facing and target direction onto XZ and compare their normalized dot
-   product with `cos(fullAngle / 2)`. Facing need not be normalized. A zero
-   horizontal forward cannot see; zero range disables sight.
-3. Ask `IPerceptionRaycast.IsBlocked(eyePosition, playerPosition)` only for a
-   candidate inside the range and cone. A clear ray updates the sight result
-   and last-known position. A failed check preserves the earlier position.
-
-Range and cone boundaries are inclusive. Range squared and the half-angle
-cosine are cached. The Unity adapter casts at most one ray to the supplied
-target point, with a caller-supplied mask and `QueryTriggerInteraction.Ignore`.
-Use Level and Interactable for blocking walls and closed doors, excluding Player
-and Enemy. A wall beyond the target cannot block the finite ray. Actual
-occlusion depends on colliders and their assigned layers; the adapter does not
-inspect visual transparency. Supply an eye origin outside blocking colliders.
-
-The host chooses the player's sight point and the agent eye height; the class
-does not add height offsets itself. S2 keeps the prototype's horizontal cone
-and 3D range, but uses immediate visibility of one supplied point. Its awareness
-meter, head/chest fallback and 2.2 m cone bypass are not implemented in this slice.
-
-### Hearing formula and memory
-
-The Systems Engineer's existing `NoiseEvent.loudness` contract already means
-**radius in metres**. It is not a normalized volume or a value in decibels.
-`HearNoise(listenerPosition, noise)` uses 3D distance and this formula:
-
-```text
-perceived = max(0, 1 - distance / noise.loudness)
-audible   = hearingRange > 0
-            and distance <= hearingRange
-            and perceived > hearingThreshold
-```
-
-Zero, negative or nonfinite event radii are ignored. At radius 10 m, a noise
-9.5 m away has perceived loudness 0.05 and is heard; at 9.7 m it is 0.03 and is
-ignored by the default 0.04 threshold. The 65 m listener cap is separate from
-each event's radius: a very loud event beyond the cap is still ignored. A quiet
-event cannot reach 65 m merely because the listener cap permits that distance.
-
-The strongest audible noise since the last clear wins. Equal strength replaces
-the old noise with the newer position. `HearNoise` returns true when it stores
-that event, false for an inaudible or weaker event. Hearing never changes
-`CanSeePlayer`. A current sighting keeps priority for `LastKnownPosition`, while
-the noise remains separately available through `NoisePosition`.
-
-This S2 hearing uses open-space distance falloff with the patrol multiplier 1.0.
-It has no wall attenuation, path flood, timestamps, decay or eight-second noise
-history. Pending noise persists until explicitly cleared; the host must clear
-it after every decision, including ticks when the player is visible.
-
-### Channel lifetime and S3 integration
-
-`PerceptionNoiseListener` subscribes to `NoiseEventChannel.OnRaised` once in its
-constructor and forwards events using its supplied `Position`. With an owner
-GameObject, it ignores that root and child sources, including its own weapon.
-Null-source world noises are allowed. It caches the callback and owner Transform;
-`Dispose()` unsubscribes and is safe to call repeatedly.
-
-Initialization sketch for the future S3 host, whose config, channel, root and
-world position are supplied here. Construct these outside the tick loop:
-
-```csharp
-var raycast = new PhysicsPerceptionRaycast(LayerMask.GetMask("Level", "Interactable"));
-var senses = new Perception(config.visionRange, config.visionAngle, raycast,
-    config.hearingRange, config.hearingThreshold);
-var listener = new PerceptionNoiseListener(senses, noiseChannel, agentPosition, agentRoot);
-```
-
-The host must then:
-
-1. Keep `listener.Position` current as the agent moves; it is a supplied world
-   position, not a live Transform binding. Hearing uses the latest supplied value.
-2. Refresh vision before choosing a transition. Prefer a current sighting;
-   otherwise use `NoisePosition` for a pending noise and retain
-   `LastKnownPosition` for later search behaviour.
-3. Read the result and call `ClearHeardNoise()` after each decision, including
-   ticks spent seeing the player. Clearing before reading loses pending events.
-4. Dispose the listener on disable/death and before replacing it. Use `Forget()`
-   for sensing resets/respawns and create a fresh listener when listening resumes.
-
-The constructor needs a perception object and a channel. Supply the existing
-`Assets/ScriptableObjects/Events/Noise.asset`; this step creates no replacement
-channel, scene component or prefab wiring. Startup/subscription can allocate;
-vision checks, event delivery and noise clearing are the measured hot paths.
-
-## Verification and Editor checks
-
-The EditMode assembly is `Blackout.AI.SecurityPatrol.Tests`:
-
-| Fixture | Passed | Coverage |
+| Blackboard situation | Executor/detection effect | Search duration |
 | --- | --- | --- |
-| SecurityPatrolBrainTests | 12 | S1 initialization, intent isolation, request timing/rejection, reset, death and warmed transitions. |
-| PerceptionVisionTests | 13 | Inside/outside the cone, range boundary, horizontal facing/3D range, blocked memory, disabled vision and warmed checks. |
-| PhysicsPerceptionRaycastTests | 3 | Real Level wall moved out of the ray, ignored triggers/layers and walls beyond the target. |
-| PerceptionHearingTests | 16 | Below/above/exact threshold, event radius, listener cap, invalid settings, strongest noise, sight priority and reset. |
-| PerceptionNoiseListenerTests | 7 | Initial/updated position, own-source filtering, unsubscribe, independent listeners and warmed channel events. |
+| Calm | Base settings. | 14 s. |
+| generatorDisabled only | Security Patrol/Tactical Guard: speed times 1.25, vision and engagement range times 1.4, aim error times 0.9. | 14 s. |
+| cureTaken | Same buffs for all living agent kinds, even without a living Commander. | 30 s. |
+| Configured alert broadcast | Its absolute multipliers take precedence over the flag fallback. A positive alertLevel also selects alarm search. | 30 s if cureTaken or alertLevel is positive; otherwise 14 s. |
 
-Verified with Unity 6000.3.25f1 on 2026-10-20: batch exit 0, **51 passed, 0 failed,
-0 skipped**, duration 0.4413188 s, and no C# compiler errors or warnings. Tests use
-position inputs, fake contexts/queries and temporary GameObjects/channel
-instances; no gameplay scene or prefab is saved. All eight new S2 `.meta` files
-were generated by Unity batch imports.
+[AgentRoot](../../Assets/Scripts/Agents/AgentRoot.cs) synchronizes executor buffs
+before thinking and during initialization, then notifies `IAlertReceiver`.
+Assignments are absolute and identical updates are cached: generator, cure and
+broadcast buffs do not stack. The patrol also reads Blackboard flags directly
+for its range fallback. Thus 22 m becomes 30.8 m; the cone angle is unchanged.
+A local fallback does not synthesize a global broadcast or Commander orders.
+Spawner entries assign agent Kind; other manually placed type prefabs need
+their correct Kind configured. The Security Patrol setup sets its Kind explicitly.
 
-After warm-up, each of these measured zero managed bytes on the calling thread:
-128 FSM cycles containing 1,152 accepted transitions; 1,024 vision checks with a
-fake raycast; and 1,024 channel raise/clear cycles. These measurements exclude
-startup/subscription, Unity physics internals and movement/weapon executors.
+Disable/death disposes sensing and clears pending transitions/player memory.
+Re-enable binds fresh sensing when the brain can think. The existing
+`PlayerRespawned` channel resets the FSM to Patrol and clears sensing, retaining
+route progress and alert settings. Player replacement, loss or death clears
+old chase memory; cached Health is looked up only when the player Transform
+changes. Blackboard `playerNeutralized` also prevents sight/fire.
 
-Latest evidence is outside Git at
-`%TEMP%/blackout-s2-hearing-tests-20261020-212625.log` and matching `.xml`.
-The earlier vision chunk passed 28/28 at
-`%TEMP%/blackout-s2-vision-tests-approved-20261020-210858.log` and matching `.xml`.
-Its initial sandboxed run could not maintain the licence-client connection;
-that task's batch process was stopped and the approved retry passed. Successful
-runs still logged an unavailable licensing access token. These are focused
-EditMode results; integrated gameplay and the whole-project suite were not run.
+Deliberate reference simplifications: immediate single-ray sight without an
+awareness meter, head/chest fallback or close-range cone bypass; distance-only
+hearing without wall attenuation or eight-second history; no attack strafing
+or urgent/retargeted investigation; fixed-position bounded search instead of
+random wandering and repeated alarm searches. There is no unreachable-target
+recovery: Investigate can remain travelling indefinitely. Commander directives
+and S4 debug overlay/gizmos are not implemented here.
+
+## Prefab setup and Editor checks
+
+Run **Blackout > World > Setup Security Patrol**. The
+[setup tool](../../Assets/Editor/WorldBuilder/SecurityPatrolSetup.cs) reuses or
+creates the owned config, selects exactly one FSM on the existing
+`Assets/Prefabs/Agents/SecurityPatrol.prefab` variant, binds existing Noise and
+PlayerRespawned channels, sets Kind and matches executor baselines. It rejects
+conflicting brains/assets rather than deleting content. It never saves scenes.
+Batch entry `Blackout.Editor.SecurityPatrolSetup.BuildAndVerify` runs setup
+twice and checks identical output plus eight protected-file hashes.
 
 Before opening the PR:
 
-1. Open **Window > General > Test Runner**, select **EditMode**, and run
-   `Blackout.AI.SecurityPatrol.Tests`; expect 51 passes, including all four
-   perception fixtures above.
-2. Check that **Assets > Create > Blackout > Security Patrol Config** exists.
-   Inspect a temporary config's Vision Range 22, Vision Angle about 111.73,
-   Hearing Range 65 and Hearing Threshold 0.04; do not commit that temporary asset.
-3. In an unsaved scene, add **Security Patrol Brain** to a temporary empty
-   GameObject and inspect its Config field. Discard the scene afterward. The
-   component alone does not initialize, move or shoot.
-4. Confirm the Console has no new C# errors and the staged files belong to this
-   step. Shared contracts, agent prefabs/scenes, project settings and prototype
-   remain outside this change.
+1. Inspect the SecurityPatrol prefab: one enabled SecurityPatrolBrain, saved
+   Config, Noise and PlayerRespawned fields, correct geometry mask, and AgentRoot
+   Kind SecurityPatrol with that brain selected. Confirm movement and shooter
+   values match the table; the existing `Visual/PLACEHOLDER_Humanoid` capsule
+   still needs a character model/rig and animation clips for finished visuals.
+2. Open **Window > General > Test Runner > EditMode** and run the
+   `Blackout.AI.SecurityPatrol.Tests` and `Blackout.Agents.Tests` assemblies;
+   expect 121 and 267 passes respectively.
+3. Play from Bootstrap with Environment and Agents loaded. Watch patrols loop
+   their owned routes and pause. Create an audible noise while hidden, then
+   expose the player: investigation should yield to pursuit/attack. Check the
+   first-shot delay and miss variation; use a wall to stop fire, then wait for
+   the last-position search to expire and patrol to resume.
+4. Use the existing generator/cure interactions to check faster movement and
+   wider detection, including cure heightening without a living Commander.
+   Generator-only search remains 14 s; cure search is 30 s and still gives up.
+5. Check disable/re-enable, agent death and player respawn for stale chasing,
+   firing or duplicate noise callbacks. Keep the Console clear. These live
+   Play Mode and visual checks have not been performed by the batch runs.
 
-No textures, models, audio or replacement placeholders are required for S1-S2.
-For later integration, ask the Agent Controller: "After S3, wire
-SecurityPatrolBrain into Assets/Prefabs/Agents/SecurityPatrol.prefab using your
-AgentRoot host; coordinate the owned config and executor movement/weapon tuning."
+## Recorded verification
+
+Unity 6000.3.25f1, 2026-10-21: combined EditMode run exited 0 with **388 passed,
+0 failed, 0 skipped**, duration **1.4877973 s**. This covers the two named
+assemblies; it is not a whole-project test result.
+
+| Patrol fixture | Passed | Main coverage |
+| --- | --- | --- |
+| SecurityPatrolBrainTests | 12 | Initialization, explicit transitions, reset/death and intent isolation. |
+| SecurityPatrolStateBehaviourTests | 13 | Owned routes, arrival/pause, investigate/search completion and automatic edges. |
+| SecurityPatrolCombatTests | 19 | Pursuit/attack guards, sight priority, hysteresis, actual shooter delay/reset and perturbed hit. |
+| SecurityPatrolSensingTests | 29 | Live sensing adapter, flags, shared executor integration, lifecycle memory and warmed ticks. |
+| SecurityPatrolSetupTests | 5 | Saved variant/config/channels/executors/difficulty and actual scene spawner reference. |
+| PerceptionVisionTests | 17 | Cone/range boundaries, occlusion memory and absolute range multipliers. |
+| PhysicsPerceptionRaycastTests | 3 | Real wall, trigger/layer exclusions and finite ray length. |
+| PerceptionHearingTests | 16 | Threshold/radius/cap, strongest noise, sight priority and reset. |
+| PerceptionNoiseListenerTests | 7 | Position, own-source filtering, unsubscribe and independent listeners. |
+
+Patrol total: **121**. The **267 Agent Controller tests** include world-flag
+eligibility, nonstacking configured alerts, Commander death, late initialization,
+spawning and replacement-brain replay. Tests use fake perception/context inputs;
+selected integrations also exercise real physics, noise channels and shooting.
+The randomized-hit test fixes seed 17 and restores Unity's previous random state.
+EditMode lifecycle tests invoke managed callbacks through reflection; they do
+not prove Unity's live Play Mode callback ordering.
+
+Allocation assertions pass after warm-up: 128 automatic patrol/combat/sensing
+cycles and 128 alerted host think ticks allocate zero managed bytes on the
+calling thread; earlier 1,024 vision and 1,024 channel cycles remain covered.
+Initialization, route cache rebuilds, physics internals and other executors are
+outside those measurements.
+
+Setup verification exited 0: the second prefab/config/config-meta output was
+byte-identical. The existing prefab GUID, base/other agent prefabs, placeholder
+material, Environment and Agents scenes remained unchanged (eight protected
+files). Unity generated four new metadata files. Both setup and test logs had
+zero C# compiler errors/warnings; the existing licensing access-token message
+persisted without preventing success.
+
+Evidence is outside Git at `%TEMP%/blackout-s3-prefab-setup.log`,
+`%TEMP%/blackout-s3-prefab-tests.log` and matching `.xml`. No integrated gameplay,
+rendered appearance or real Play Mode lifecycle validation is claimed.
 
 ## Five-line viva summary
 
-1. Does: supplies an intent-only patrol FSM plus testable vision, geometry occlusion and channel-based hearing.
-2. Design: position inputs, an injected raycast and a disposable listener separate sensing from action execution.
-3. Alternative: rejected querying Transforms, Physics and the noise channel separately inside every state, which would duplicate sensing and complicate tests.
-4. Number: 0.04 is the prototype's strict normalized hearing threshold; a 10 m-radius noise at 9.5 m yields 0.05 and is heard.
-5. Weakness: one-ray vision and distance-only hearing simplify the prototype; S3 must still connect sensing to automatic transitions and manage its lifecycle.
+1. Does: patrols owned waypoints, investigates sound, pursues/attacks visible players, then searches and returns to patrol.
+2. Design: cached FSM states consume value snapshots and return intents; separate sensing and executors own Unity queries and actions.
+3. Alternative: rejected a second brain-side reaction timer and random aim offset because the shared shooter already applies both.
+4. Number: the reference 1.4 alert range multiplier raises 22 m detection/engagement to 30.8 m without stacking or widening the cone.
+5. Weakness: investigation has no unreachable-target timeout; distance-only hearing also allows sound through walls.
