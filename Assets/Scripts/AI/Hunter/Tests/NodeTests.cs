@@ -63,6 +63,12 @@ namespace Blackout.AI.Hunter.Tests
         }
 
         [Test]
+        public void IsGuard_IsFalseByDefault()
+        {
+            Assert.IsFalse(new FixedNode().IsGuard);
+        }
+
+        [Test]
         public void Tick_WithoutAContext_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new FixedNode().Tick(null));

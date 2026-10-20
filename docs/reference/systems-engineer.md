@@ -537,7 +537,7 @@ All in `Assets/Scripts/AI/Hunter`, assembly `Blackout.AI.Hunter` (references `Bl
 | `SUCCESS` / `FAILURE` / `RUNNING` | `NodeStatus` enum | |
 | `Node.run` / `tick` / `reset` | `Node.Tick(BtContext)`, `Node.Reset()` | `Tick` also stores `LastStatus`, for the H4 debug text without a per-tick trace list |
 | `Selector` | `Selector` | Same rules: reactive, resets the interrupted child |
-| `Sequence` | `Sequence` | Same rules: keeps its place, re-checks `Condition`s before the running child |
+| `Sequence` | `Sequence` | Same rules: keeps its place, re-checks the guards before the running child. A guard is a `Condition` or an `Inverter` of one (`Node.IsGuard`), so "not seen" checks are re-checked too [GUESS] |
 | `Condition` | `Condition` | `Func<BtContext, bool>` |
 | `Action` | `ActionNode` | `Func<BtContext, NodeStatus>` plus an optional reset callback. Named `ActionNode` because `Action` is `System.Action` |
 | (none) | `Inverter` [GUESS] | Swaps `SUCCESS` and `FAILURE`; `RUNNING` passes through |

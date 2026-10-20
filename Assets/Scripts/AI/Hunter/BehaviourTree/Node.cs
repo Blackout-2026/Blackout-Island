@@ -21,6 +21,12 @@ namespace Blackout.AI.Hunter
         /// <summary>The status of the last tick, or null if the node has not been ticked since it was last reset.</summary>
         public NodeStatus? LastStatus { get; private set; }
 
+        /// <summary>
+        /// True for a check with no side effects (a <see cref="Condition"/>, or an <see cref="Inverter"/> of one). A
+        /// <see cref="Sequence"/> re-checks its guards before the running child every tick.
+        /// </summary>
+        public virtual bool IsGuard => false;
+
         public NodeStatus Tick(BtContext context)
         {
             if (context == null)
