@@ -107,7 +107,7 @@ namespace Blackout.AI.SecurityPatrol.Tests
         }
 
         [Test]
-        public void Attack_ChangesAtTickBoundaryAndCannotFireWithoutS3Guards()
+        public void Attack_ChangesAtTickBoundaryAndCannotFireWithoutConfirmedSight()
         {
             brain.Initialize(context);
             Vector3 target = new Vector3(5f, 3.5f, 78f);
@@ -119,7 +119,7 @@ namespace Blackout.AI.SecurityPatrol.Tests
             Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Attack));
             Assert.That(attack.moveSpeed, Is.EqualTo(MoveSpeed.Stop));
             Assert.That(attack.hasLookTarget, Is.True);
-            Assert.That(attack.lookTarget, Is.EqualTo(target));
+            Assert.That(attack.lookTarget, Is.EqualTo(target + Vector3.up * (1.8f * 0.62f)));
             Assert.That(attack.aim, Is.True);
             Assert.That(attack.fire, Is.False);
 

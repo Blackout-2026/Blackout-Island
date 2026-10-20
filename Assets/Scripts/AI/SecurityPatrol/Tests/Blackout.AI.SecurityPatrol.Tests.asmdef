@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Blackout.AI.SecurityPatrol",
-        "Blackout.Shared"
+        "Blackout.Shared",
+        "Blackout.Agents"
     ],
     "includePlatforms": [
         "Editor"

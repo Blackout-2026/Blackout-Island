@@ -24,10 +24,18 @@ namespace Blackout.AI.SecurityPatrol
         private IReadOnlyList<Marker> sourceMarkers;
         private Marker[] route = Array.Empty<Marker>();
         private int sourceCount;
+        private bool hasSeenPlayer;
+        private Vector3 lastSeenPosition;
+        private float timeSinceSeen;
+        private bool canFire;
 
         internal Vector3 Position => context.Self.position;
         internal Marker[] Route => route;
         internal float SearchTime => config != null ? config.searchTime : 14f;
+        internal float AimHeight => config != null ? config.aimHeight : 1.8f * 0.62f;
+        internal bool CanFire => canFire;
+        private float AttackRange => config != null ? config.attackRange : 22f;
+        private Vector3 LastSeenPosition => hasSeenPlayer ? lastSeenPosition : current.Target;
 
         public SecurityPatrolConfig Config => config;
         public bool IsInitialized => current != null;
@@ -57,6 +65,10 @@ namespace Blackout.AI.SecurityPatrol
             context = newContext;
             pending = null;
             pendingTarget = default;
+            hasSeenPlayer = false;
+            lastSeenPosition = default;
+            timeSinceSeen = 0f;
+            canFire = false;
             markerOwner = context.Self.name;
             sourceMarkers = null;
             sourceCount = 0;
@@ -98,19 +110,56 @@ namespace Blackout.AI.SecurityPatrol
                 throw new ArgumentOutOfRangeException(nameof(deltaTime));
 
             RefreshRoute();
+            if (input.canSeePlayer)
+            {
+                hasSeenPlayer = true;
+                lastSeenPosition = input.playerPosition;
+                timeSinceSeen = 0f;
+            }
+            else
+                timeSinceSeen += deltaTime;
+
             bool hadRequest = pending != null;
             ApplyPendingTransition();
+            if (input.canSeePlayer &&
+                (current.Id == SecurityPatrolState.Pursue || current.Id == SecurityPatrolState.Attack))
+                current.Retarget(input.playerPosition);
             current.Advance(deltaTime);
             if (!hadRequest)
                 EvaluateTransitions(input);
             ApplyPendingTransition();
 
+            // fire requests engagement; the separate shooter owns reaction time and random aim error.
+            // Clear fire immediately on lost sight, even during Attack's one-second transition grace.
+            canFire = current.Id == SecurityPatrolState.Attack && input.canSeePlayer &&
+                IsNear(input.playerPosition, AttackRange);
             return current.Tick(deltaTime);
         }
 
         private void EvaluateTransitions(in PatrolPerceptionInput input)
         {
-            if (current.Id == SecurityPatrolState.Patrol && input.heardNoise)
+            // Confirmed sight outranks noise, investigation completion and a search timeout.
+            if (input.canSeePlayer && current.Id != SecurityPatrolState.Attack)
+            {
+                if (IsNear(input.playerPosition, AttackRange))
+                    TryRequestTransition(SecurityPatrolTrigger.CanAttack, input.playerPosition);
+                else if (current.Id != SecurityPatrolState.Pursue)
+                    TryRequestTransition(SecurityPatrolTrigger.DetectedPlayer, input.playerPosition);
+                return;
+            }
+
+            if (current.Id == SecurityPatrolState.Attack)
+            {
+                if ((!input.canSeePlayer && timeSinceSeen >= 1f) ||
+                    (input.canSeePlayer && !IsNear(input.playerPosition, AttackRange * 1.15f)))
+                    TryRequestTransition(SecurityPatrolTrigger.CannotAttack, LastSeenPosition);
+            }
+            else if (current.Id == SecurityPatrolState.Pursue && !input.canSeePlayer)
+            {
+                if (IsNear(LastSeenPosition, 1.5f) || (timeSinceSeen > 2.5f && current.TimeInState >= 4f))
+                    TryRequestTransition(SecurityPatrolTrigger.LostPlayer, LastSeenPosition);
+            }
+            else if (current.Id == SecurityPatrolState.Patrol && input.heardNoise)
                 TryRequestTransition(SecurityPatrolTrigger.HeardNoise, input.noisePosition);
             else if (current is InvestigateState investigate && investigate.IsComplete)
                 TryRequestTransition(SecurityPatrolTrigger.InvestigationComplete, Position);

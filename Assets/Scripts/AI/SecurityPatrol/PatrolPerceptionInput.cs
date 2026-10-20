@@ -7,6 +7,7 @@ namespace Blackout.AI.SecurityPatrol
     public struct PatrolPerceptionInput
     {
         public bool canSeePlayer;
+        /// <summary>Player feet/root position; Attack adds the configured chest height for its look target.</summary>
         public Vector3 playerPosition;
         public bool heardNoise;
         public Vector3 noisePosition;

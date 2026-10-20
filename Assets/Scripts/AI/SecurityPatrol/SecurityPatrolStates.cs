@@ -10,7 +10,7 @@ namespace Blackout.AI.SecurityPatrol
         public SecurityPatrolState Id { get; }
         public float TimeInState { get; private set; }
         protected SecurityPatrolBrain Brain { get; }
-        protected Vector3 Target { get; private set; }
+        public Vector3 Target { get; private set; }
 
         protected State(SecurityPatrolState id, SecurityPatrolBrain brain)
         {
@@ -25,6 +25,7 @@ namespace Blackout.AI.SecurityPatrol
         }
 
         public virtual void Advance(float deltaTime) => TimeInState += deltaTime;
+        public void Retarget(Vector3 target) => Target = target;
         public abstract AgentIntent Tick(float deltaTime);
         public virtual void Exit() => Target = default;
     }
@@ -122,11 +123,11 @@ namespace Blackout.AI.SecurityPatrol
         public override AgentIntent Tick(float deltaTime) => new AgentIntent
         {
             moveSpeed = MoveSpeed.Stop,
-            lookTarget = Target,
+            lookTarget = Target + Vector3.up * Brain.AimHeight,
             hasLookTarget = true,
             aim = true,
-            // S1 has no verified LOS or reaction timer. S3 supplies those guards before enabling fire.
-            fire = false
+            // Reaction delay and random spread belong to AgentShooter, once per engagement/shot.
+            fire = Brain.CanFire
         };
     }
 
