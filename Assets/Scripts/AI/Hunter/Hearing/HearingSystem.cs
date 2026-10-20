@@ -61,6 +61,9 @@ namespace Blackout.AI.Hunter
         /// <summary>Walls counted for the last noise that reached the raycast (for the H4 debug text). -1 before any.</summary>
         public int LastWallCount { get; private set; } = -1;
 
+        /// <summary>Walls the remembered noise came through. -1 before any noise is remembered.</summary>
+        public int NoiseWalls { get; private set; } = -1;
+
         public HearingConfig Config
         {
             get
@@ -178,8 +181,13 @@ namespace Blackout.AI.Hunter
             LastWallCount = walls;
 
             float perceived = openSpace * HearingMath.ThroughWalls(walls, values.wallFactor);
-            return HearingMath.IsAudible(perceived, values.threshold)
-                   && Memory.Offer(noise.position, noise.type, perceived, now);
+            if (!HearingMath.IsAudible(perceived, values.threshold) || !Memory.Offer(noise.position, noise.type, perceived, now))
+            {
+                return false;
+            }
+
+            NoiseWalls = walls;
+            return true;
         }
 
         private bool IsOwnNoise(GameObject source)

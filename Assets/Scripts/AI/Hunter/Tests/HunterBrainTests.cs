@@ -241,6 +241,63 @@ namespace Blackout.AI.Hunter.Tests
             Assert.AreEqual(0, GC.GetAllocatedBytesForCurrentThread() - before);
         }
 
+        // ---- debug text (H4) -------------------------------------------------------------------------------------
+
+        [Test]
+        public void DebugText_BeforeTheFirstTick_SaysNotStarted()
+        {
+            var fresh = Hidden("Fresh").AddComponent<HunterBrain>();
+
+            Assert.AreEqual("Hunter [BT] (not started)", fresh.GetDebugText());
+        }
+
+        [Test]
+        public void DebugText_ShowsTheRunningPath_TheEyes_TheEars_AndTheOrder()
+        {
+            sight.Clear = false;
+            hearing.Hear(new NoiseEvent(new Vector3(-6f, 0f, -4f), 13f, NoiseType.Sprint, player));
+            brain.OnDirective(new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 30f), 0f));
+            Step();
+
+            string[] lines = brain.GetDebugText().Split('\n');
+            Assert.AreEqual(4, lines.Length);
+            Assert.AreEqual("Hunter [BT] Investigate > MoveToNoise", lines[0]);
+            Assert.AreEqual("eyes: sees no, detected no, awareness 0.00, never seen", lines[1]);
+            StringAssert.StartsWith("ears: Sprint 0.76 heard 0.10 s ago through 0 walls", lines[2]);
+            Assert.AreEqual("order: Converge (20.00, 30.00)", lines[3]);
+        }
+
+        [Test]
+        public void DebugText_WhileAttacking()
+        {
+            TicksUntilFire(walking: true);
+
+            string text = brain.GetDebugText();
+            StringAssert.StartsWith("Hunter [BT] Attack > AimAndFire\neyes: sees yes, detected yes", text);
+            StringAssert.Contains("last seen 0.00 s ago", text);
+        }
+
+        [Test]
+        public void DebugText_IsRebuiltOncePerTick()
+        {
+            Step();
+            string first = brain.GetDebugText();
+            Assert.AreSame(first, brain.GetDebugText(), "same tick: the same string, nothing allocated");
+
+            Step();
+            Assert.AreNotSame(first, brain.GetDebugText());
+        }
+
+        [Test]
+        public void LastIntent_IsWhatTheTickReturned()
+        {
+            sight.Clear = false;
+            brain.OnDirective(new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 30f), 0f));
+
+            AgentIntent intent = Step();
+            Assert.AreEqual(intent, brain.LastIntent);
+        }
+
         private int TicksUntilFire(bool walking)
         {
             for (int tick = 1; tick <= 50; tick++)
