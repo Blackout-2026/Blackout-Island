@@ -1682,18 +1682,20 @@ is **-0.28 m**, putting the keel slightly below water and floorboard tops at **w
 
 - Exact-name generated hull, cabin, motor, rails, old fenders, deck, jerry cans and rope coils have their
   renderers/colliders disabled. They remain in the hierarchy; no original scene objects are deleted.
-- The existing lantern cage, emissive renderer, light and FlickerLight link remain. Its post extends down
-  toward the new hull. No runtime script or additional light is introduced.
+- The old lantern cage, bulb and post renderers are now disabled. A generated fire torch replaces them;
+  the existing light and FlickerLight are reused, with the torch coals as the emissive renderer.
 - `RowboatCollision` has 25 simple BoxColliders: nine floor strips, three benches, twelve side segments and
   one transom. The net, oars, ropes, cleats and hanging fenders have no collision.
-- `RowboatBoarding` adds two visible wooden planks, 0.9 m wide and 0.07 m thick, with BoxColliders: dock to
-  gunwale, then down to the floor. Total new collision is 27 boxes, on Level; boat parts have no static flags.
+- The user requested removal of the boarding extension. `DockToGunwale` and `GunwaleToFloor` and their
+  colliders are removed through Undo APIs, followed by the empty `RowboatBoarding` root. The cleanup preserves
+  other children/components and refuses to delete a plank with custom content. There is no boarding bridge;
+  total rowboat collision is now 25 boxes on Level. Boat parts have no static flags.
 - Existing mooring mesh endpoints are refitted to the rowboat gunwales. Dock cargo, rails and central route
   stay in place. `BoatExit` remains **(0, 1.3, -124)**.
 - Build Terrain retains an installed `RowboatVisual`; Dress Beach and Boat reapplies the replacement after
   dressing so legacy fittings remain disabled. Those rebuild paths were inspected in code; the rowboat
   replacement entry itself was run repeatedly. No full terrain rebuild was run for this change.
-- The boat and its boarding planks remain under the NavMesh baker's existing Boat exclusion. No NavMesh
+- The boat remains under the NavMesh baker's existing Boat exclusion. No NavMesh
   rebake or changes to Interactables, Agents, Bootstrap, player settings or shared contracts were made.
 
 **Systems handoff:** `MissionZones.IsAtBoat` still checks horizontal distance less than 6 m and player
@@ -1701,32 +1703,83 @@ Y greater than 0.5. The dock at Y 1.3 still qualifies; the rowboat floor at Y 0.
 preserves that mission rule. Systems Engineer: decide whether completion while standing on the lower floor
 should also be supported before changing your `MissionZones.cs`.
 
+### Fire torch and plank correction (W13)
+
+`BoatTorchBuilder.cs` runs as part of **Replace Boat With Rowboat** and **Dress Beach and Boat**. It builds
+`Beach/Boat/BoatTorch`, at boat-local **(-1.25, 0.6, -1.7)**, with 15 wood/iron/coal mesh parts and two particle
+systems. The handle, bands, cup, rim and basket ribs are generated primitives; they have no colliders.
+The original lantern objects remain disabled in the hierarchy. No runtime script or additional light is added.
+
+| Generated asset | Purpose |
+| --- | --- |
+| `Assets/Environment/BoatTorchFlame.asset` | 64 x 128 RGBA flame mask; curved outline, tapered tip and transparent edges |
+| `Assets/Materials/Environment/BoatTorch_Wood.mat` | Dark handle, URP Lit |
+| `Assets/Materials/Environment/BoatTorch_Iron.mat` | Basket and bands, URP Lit, metallic 0.65 |
+| `Assets/Materials/Environment/BoatTorch_Ember.mat` | Coal bed, warm emission 1.25 |
+| `Assets/Materials/Environment/BoatTorch_Fire.mat` | Additive URP Particles/Unlit; warm HDR colour (4, 2, 0.6) |
+
+The flame mask is generated deterministically in the Editor and saved as a Texture2D asset. Its tip fade
+normalises height 0.85…1 with `Mathf.InverseLerp` before `Mathf.SmoothStep(0, 1, t)`; the first version used
+SmoothStep's endpoints as thresholds and made the whole mask too transparent. Brightness is carried by
+the material's HDR colour, with white particle start colour and a yellow-to-red lifetime gradient.
+
+| System | Fixed seed | Rate / second | Lifetime | Maximum particles |
+| --- | --- | --- | --- | --- |
+| Flames | 31 | 24 | 0.45…0.8 s | 48 |
+| Sparks | 32 | 5 | 0.5…0.9 s | 12 |
+
+Both systems loop, prewarm, simulate in local space, shrink/fade with age and use camera-facing billboards.
+The combined cap is **60 particles**. This is a stylised visual effect; no fire damage or heat simulation is
+implemented. It uses Unity's particle simulation and the existing allocation-free FlickerLight.
+
+The existing `Lighting/OutdoorLights/OutdoorLights_BoatLantern` is moved to the torch head, set to realtime,
+colour **#FFAA46**, intensity **3.5**, range **7 m**, without shadows. Flame flicker seed **3** modulates it and
+the coal emission. Setup Lighting reapplies these torch settings after the original reference light spec,
+and Dress Beach and Boat restores the torch emission link. These rebuild hooks were inspected in code;
+the rowboat replacement entry was run repeatedly. A full lighting rebuild was not run for this correction.
+
 ### Capture and verification
 
 **Blackout/World/Capture Rowboat Preview** writes two 1920 x 1080 PNGs to a unique folder under
 `%TEMP%/BlackoutIsland-Rowboat/` and prints each path. It uses the saved Environment lighting, 60-degree FOV,
-and temporary cameras. It refuses dirty scenes/Play mode and restores the previous scene setup without
+and a temporary camera. Torch particles are simulated for two seconds with their fixed seeds and paused
+for the capture. It refuses dirty scenes/Play mode and restores the previous scene setup without
 saving camera changes. Batch entry `Blackout.Editor.RowboatPlacement.BuildAndCapture` first places/saves the
 boat and then captures; use graphics (`-force-d3d11`), not `-nographics`.
 
-Verified in Unity 6000.3.25f1 on 2026-10-20:
+Initial rowboat verification in Unity 6000.3.25f1 on 2026-10-20, before the torch/plank correction:
 
 - Asset builder exited 0 twice; 18 checked asset/scene/settings hashes matched on repeat.
 - Placement/capture exited 0 on repeated runs; 20 checked hashes, including Environment and mooring mesh,
   matched on repeat. Eighteen protected scene/asset/settings files matched their pre-placement bytes.
 - Original scene-block comparison found no removed blocks. Changes to existing blocks were confined to
   Boat's child list, legacy boat renderers/colliders and the lantern-post transform.
-- Unity overview and dock close-up PNGs were inspected. Final capture folder:
+- Unity overview and dock close-up PNGs were inspected. Initial replacement capture folder:
   `%TEMP%/BlackoutIsland-Rowboat/20261020-155949-b91b6886`.
 - Logs: `%TEMP%/blackout-rowboat-assets-approved.log` and `blackout-rowboat-placement.log`. No C# compiler
   warnings/errors in the final runs. No tests were added or run for this replacement.
 
+Torch/plank correction verified on 2026-10-20:
+
+- Batch compile exited 0 with no C# warnings/errors; seven protected scene/NavMesh/settings files unchanged.
+- Final graphics build/capture exited 0. All **32 checked files** matched on repeat, including Environment,
+  flame mask, four materials and metadata. **21 protected files** matched their pre-application bytes,
+  including boat model assets, gameplay scenes, player settings, NavMesh and existing rope assets.
+- Scene-block comparison found only 12 removed blocks: the two generated planks, their components and
+  empty root. Other existing changes were the boat child list, old lamp renderers and the reused light,
+  flicker component and light transform.
+- Final overview and dock close-up PNGs were inspected for the absent planks/bulb and visible warm flames:
+  `%TEMP%/BlackoutIsland-Rowboat/20261020-172337-95e9c053`.
+- Log: `%TEMP%/blackout-boat-torch-apply.log`; initial compile log: `blackout-boat-torch-compile.log`.
+  No C# warnings/errors in final runs. No tests were added or run for this correction.
+
 Before the PR: inspect the linked model/material in Environment, run Replace Boat With Rowboat again and
-check for no new scene/mesh diff, then use Bootstrap to walk onto both planks and back to the dock. Check
-for hull/bench collision, snagging, lantern flicker and LOD changes; complete a cure-carrying escape from the
-dock. **Interactive boarding, shooting and the full mission have not been verified here.** Boat bobbing,
-moving-rope attachment updates and animated water remain separate work. Collision is an approximation of
-the curved hull, and the boarding planks use the existing flat dock-wood material.
+check for no new scene/asset diff. Confirm the planks and bulb/post are absent, then use Bootstrap to check
+flame/ember movement, light/coal flicker, hull/bench collision and LOD changes. Check entry/exit without a
+boarding bridge and complete a cure-carrying escape from the dock. **Interactive entry/exit, shooting,
+Play-mode fire/flicker and the full mission have not been verified here.** Boat bobbing, moving-rope/light
+attachment updates and animated water remain separate work. Collision approximates the curved hull;
+camera-facing flame sprites are stylised and the procedural torch handle lacks a detailed wood texture.
 
 ## Changes from the prototype, and who they affect
 
@@ -1742,7 +1795,7 @@ the curved hull, and the boarding planks use the existing flat dock-wood materia
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
 | Dock cargo moved toward edges (W13) | Crates at x−0.95 and barrel at x0.95 leave at least1.3m between inward collision edges; the player/mission route remains clear | World Builder |
 | Boat walking deck added (W13) | A thin wooden slab raises the top from0.70 to0.77m without replacing the original hull collider; boarding is not validated by the dock route check | Systems Engineer, for information |
-| Cabin boat replaced by a wooden rowboat (W13, later change) | Old deck/cabin collision disabled; floor is now y0.1675 with two boarding planks. BoatExit stays on the dock; existing mission y>0.5 excludes the lower floor | Systems Engineer (mission-height decision); Core Developer (approved visual assets and source retention) |
+| Cabin boat replaced by a wooden rowboat (W13, later change) | Old deck/cabin collision disabled; floor is y0.1675. User-requested follow-up removes boarding planks and replaces the bulb/post with a fire torch. BoatExit stays on the dock; existing mission y>0.5 excludes the lower floor | Systems Engineer (mission-height decision); Core Developer (approved visual assets and source retention) |
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
 | Terrain hole over the ramp top (W2, covered in W13) | The W13 entrance exterior covers the exposed ramp; an additional lobby/sill terrain cut removes surface overlap | World Builder |
 | Invisible boundary walls (W2) | On the Level layer since Y7, like every solid collider in Environment (`Blackout/Systems/Assign Physics Layers`; the dock railings are on Ignore Raycast). They stop raycasts, but they are all offshore. Re-run that tool after rebuilding level geometry, because new objects are created on Default | Systems Engineer (layers) |
