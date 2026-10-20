@@ -7,7 +7,8 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 8–9 **death, respawn and the HUD** (Y4, from `player/player.js`, `game/mission.js`, `ui/hud.js` and
 `ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
 and `physics/crate.js`), section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`), and
-section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`).
+section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`). Section 13 starts the
+**Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -485,3 +486,86 @@ The scene and prefab changes are made by **`Blackout/Systems/Assign Physics Laye
   - bytes allocated by the firing calls
 - **Output:** a summary in the Console and a report file in `Application.temporaryCachePath`. A PlayMode test runs the
   same script and fails on any null reference, exception or missed hit.
+
+---
+
+## 13. Hunter behaviour tree core (`agents/hunter_bt.js`)
+
+### What the prototype does
+
+- **A small tree library written by hand** at the top of `hunter_bt.js`, used only by the Hunter. Every node returns
+  `SUCCESS`, `FAILURE` or `RUNNING`, and has a `reset()`.
+- **Ticked at 10 Hz from the root** (the agent's `think()`), not every frame. The 10 Hz rate is the brain's job (H3).
+- **Selector** (`?`): ticks its children in order and returns the first result that is not `FAILURE`.
+  - It is **reactive**: every tick starts again from the first child, so a higher-priority branch interrupts a lower
+    one that is still `RUNNING`.
+  - When a different child wins than the one that was running, the one that was running is **reset**. If every child
+    fails, the running one is reset too.
+- **Sequence** (`→`): ticks its children in order and **keeps its place** while a child is `RUNNING`.
+  - **Reactive guards:** each tick, the `Condition` children *before* the running child are checked again. If one now
+    fails, the Sequence resets and fails, so a running action stops as soon as its premise is false.
+  - On `FAILURE` of any child, or when the last child succeeds, it resets (back to the first child).
+- **Condition:** a predicate on the agent, `true` → `SUCCESS`, `false` → `FAILURE`. Never `RUNNING`.
+- **Action:** a function `(agent, mem) → status`. `mem` is a per-node scratch object, cleared on `reset()`, plus an
+  optional `onReset` callback. Actions set fields on the agent's intent; they never move the agent themselves.
+- **Wait(min, max):** an Action that returns `RUNNING` until a random time in `[min, max]` s has passed.
+- **Blackboard:** `this.bb = {}` on each Hunter, "the tree's private scratch memory". Conditions write what they found
+  (`bb.noise`, `bb.step`, `bb.prowl`) and later actions in the same branch read it.
+- **Debug:** every node pushes `name:status` into `btTrace` each tick; the overlay shows the running path, for example
+  `Root > ReactToFootsteps > SneakToNoise` (H4).
+- There is **no Inverter and no Cooldown** in the prototype. The playbook asks for both.
+
+The tree itself (H3, for context):
+
+```
+Root ?
+├─ → Engage            [SeesPlayer] ? ( → [InRange] AimAndFire | CloseIn )
+├─ → HuntLastSeen      [SawRecently] StalkToLastSeen
+├─ → ReactToGunfire    [HeardGunfire] ? ( → [GunfireClose] TakeCover | FlankGunfire )
+├─ → ReactToFootsteps  [HeardFootsteps] SneakToNoise  Ambush(4 s)
+├─ → FollowOrders      [HasDirective] MoveToDirective
+└─ → Prowl             PickProwlPoint  WalkTo  LookAround(2–4 s)
+```
+
+### Unity mapping
+
+All in `Assets/Scripts/AI/Hunter`, assembly `Blackout.AI.Hunter` (references `Blackout.Shared` only), namespace
+`Blackout.AI.Hunter`. No packages.
+
+| Prototype | Unity | Notes |
+| --- | --- | --- |
+| `SUCCESS` / `FAILURE` / `RUNNING` | `NodeStatus` enum | |
+| `Node.run` / `tick` / `reset` | `Node.Tick(BtContext)`, `Node.Reset()` | `Tick` also stores `LastStatus`, for the H4 debug text without a per-tick trace list |
+| `Selector` | `Selector` | Same rules: reactive, resets the interrupted child |
+| `Sequence` | `Sequence` | Same rules: keeps its place, re-checks the guards before the running child. A guard is a `Condition` or an `Inverter` of one (`Node.IsGuard`), so "not seen" checks are re-checked too [GUESS] |
+| `Condition` | `Condition` | `Func<BtContext, bool>` |
+| `Action` | `ActionNode` | `Func<BtContext, NodeStatus>` plus an optional reset callback. Named `ActionNode` because `Action` is `System.Action` |
+| (none) | `Inverter` [GUESS] | Swaps `SUCCESS` and `FAILURE`; `RUNNING` passes through |
+| (none) | `Cooldown` [GUESS] | See below |
+| `this.bb = {}` | `LocalBlackboard` | Typed keys; see below |
+| `BI.Engine.time` | `BtContext.Time` | The tree's own clock, advanced by `BehaviourTree.Tick(deltaTime)` |
+| `think()` calling `tree.run` | `BehaviourTree.Tick(deltaTime)` | The 10 Hz throttle is added by `HunterBrain` in H3 |
+
+**Cooldown [GUESS].** A decorator with a duration in seconds:
+
+- While cooling down it returns `FAILURE` and does not tick its child, so a Selector moves on to the next branch.
+- The cooldown starts when the child **finishes** (`SUCCESS` or `FAILURE`), not while it is `RUNNING`.
+- `Reset()` resets the child but **keeps the cooldown**. Otherwise a Selector interrupting the branch would let it fire
+  again straight away, which is what a cooldown exists to stop.
+- Intended use in H3: stop the Hunter re-running a short reaction (for example the 4 s ambush) on every new footstep.
+
+**LocalBlackboard [GUESS].** Per-agent values shared by the nodes of one tree. It is *not* the squad `Blackboard` in
+`Blackout.Shared`, which all agents share.
+
+- Keys are typed objects, `BlackboardKey<T>`, created once when the tree is built. A wrong type is a compile error, not
+  a runtime cast.
+- Values live in one dictionary per value type, so storing a `float` or a `Vector3` does not box. After the first write
+  of a key, writing it again allocates nothing.
+- `TryGet` returns `false` for a key that was never set or was removed, so a condition can tell "no noise heard" from
+  "noise at the origin".
+
+**Clock.** Nodes read `BtContext.Time`, never `Time.time`. EditMode tests can then step the tree by exact amounts,
+and the Hunter's timers pause with the tree.
+
+**Allocation.** Children are stored in arrays and the delegates are created when the tree is built, so a tick of a
+built tree allocates nothing. An EditMode test measures this.

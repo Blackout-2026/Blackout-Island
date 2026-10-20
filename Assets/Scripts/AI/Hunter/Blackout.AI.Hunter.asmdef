@@ -1,0 +1,16 @@
+{
+    "name": "Blackout.AI.Hunter",
+    "rootNamespace": "Blackout.AI.Hunter",
+    "references": [
+        "Blackout.Shared"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
