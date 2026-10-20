@@ -8,7 +8,8 @@ step Y2 because step Y0 had not been done yet. Sections 1–6 cover the **player
 `ui/style.css`), and section 10 the **interactables** (Y5, from `physics/doors.js`, `physics/interactables.js`
 and `physics/crate.js`), section 11 the **mission flow** (Y6, from `game/mission.js` and `ui/menus.js`), and
 section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/weapon_system.js`). Section 13 starts the
-**Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`).
+**Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`), and section 14 covers its **hearing**
+(H2, from `agents/perception.js` and `physics/collision.js`).
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -569,3 +570,99 @@ and the Hunter's timers pause with the tree.
 
 **Allocation.** Children are stored in arrays and the delegates are created when the tree is built, so a tick of a
 built tree allocates nothing. An EditMode test measures this.
+
+---
+
+## 14. Hunter hearing and sound propagation (`agents/perception.js`, `physics/collision.js`)
+
+### What the prototype does
+
+- **Every noise has a radius** in metres (the `NoiseEvent.loudness` field in Unity): the distance at which it can just
+  be heard in open space. Noises are emitted at the source's feet (player, shooter) or at the object (door,
+  generator).
+- **For each agent within the radius** (and not the noise's own source), `BI.Noise.emit` works out a perceived
+  loudness two ways and keeps the larger:
+  - **Path:** `1 − pathDistance / radius`, where `pathDistance` comes from a Dijkstra flood over the nav grid that goes
+    around walls and through open doors only. Sound bends around corners this way.
+  - **Through walls** (only if the path value is ≤ 0.05):
+    `(1 − straightDistance / radius) × 0.35 ^ wallsCrossed`.
+  - The result is multiplied by the agent's **hearing**: Hunter **1.7**, Security Patrol 1.0, Tactical Guard 0.9,
+    Commander 0.9.
+- **Threshold:** a perceived loudness of **0.04** or less is not heard.
+- **Walls crossed** (`Physics.wallsBetween`): a ray from **1.2 m** above the noise to **1.6 m** above the agent's feet.
+  Each hit counts one wall; the ray continues **0.3 m** past it, ignoring that collider. At most **3** walls are
+  counted. The terrain is ignored, and colliders flagged `wall: false` (tables, catwalks, the low platform rims, a
+  pole) do not count. Everything else does, closed doors included.
+- **Memory:** each agent keeps a list of heard noises `{position, loudness, type, time}` and drops any older than
+  **8 s**. `recentNoise(types, maxAge)` returns the loudest noise of the given types heard in the last `maxAge`
+  seconds. The Hunter's tree asks for gunfire in the last 6 s (loudness > 0.06) and footsteps in the last 5 s
+  (> 0.04). The stored loudness never fades; old noises just disappear.
+
+### Noise radii in Unity today
+
+| Source | Radius (m) | Set in |
+| --- | --- | --- |
+| Walk / sprint footstep | 0–4.5 / 13 (speed curve, section 4) | `PlayerMovementSettings` |
+| Jump / landing | 7 / 9 | `PlayerMotor` |
+| SMG / rifle / knife | 42 / 65 / 3 | `Assets/ScriptableObjects/Weapons` |
+| Agent gunfire | 40 | `AgentWeaponConfig` (Agent Controller) |
+| Door | 14 | `Door.prefab` |
+| Generator disabled | 60 | `Generator.prefab` |
+| Cure alarm | 18 | `CurePickup.prefab` |
+| Crate scrape | 11 | `Crate.prefab` |
+
+### Unity mapping
+
+The playbook asks for distance falloff plus a reduction per wall counted with raycasts. That is the prototype's
+through-walls formula, used for every noise:
+
+```
+perceived = max(0, 1 − distance / radius) × wallFactor ^ walls × hearing
+          = max(0, 1 − d / r)             × 0.35 ^ walls       × 1.7
+```
+
+| Constant | Value | Source | Effect |
+| --- | --- | --- | --- |
+| `hearing` | 1.7 | prototype Hunter | a noise right next to the Hunter is perceived at 1.7 |
+| `wallFactor` | 0.35 | prototype | each wall keeps 35 % of the sound |
+| `maxWalls` | 3 | prototype | a 4th wall changes nothing, so 3 raycast hits at most |
+| `threshold` | 0.04 | prototype | quieter than this is not heard |
+| `sourceHeight` / `listenerHeight` | 1.2 / 1.6 m | prototype | ray ends: above the noise / the Hunter's ears |
+| `memorySeconds` | 8 | prototype forget time | how long the remembered noise takes to fade to 0 [GUESS] |
+
+How far a noise is heard (perceived > 0.04) for the Hunter, as a fraction of its radius:
+
+| Walls | Heard up to | Sprint (13 m) | SMG (42 m) | Generator (60 m) |
+| --- | --- | --- | --- | --- |
+| 0 | 0.98 r | 12.7 m | 41 m | 59 m |
+| 1 | 0.93 r | 12.1 m | 39 m | 56 m |
+| 2 | 0.81 r | 10.5 m | 34 m | 48 m |
+| 3 or more | 0.45 r | 5.9 m | 19 m | 27 m |
+
+**Wall counting [GUESS].** One `Physics.RaycastNonAlloc` from the source point to the ear point into a preallocated
+buffer. Unity returns one hit per collider, so each collider counts once (the prototype's "continue 0.3 m past it").
+
+- Layers: **Level** (the bunker and the props, after Y7) and **Interactable** (doors, so a closed door muffles and an
+  open one, slid into the wall, does not). Triggers are ignored.
+- `TerrainCollider` hits are skipped, as in the prototype, so a hill between the two is not a wall.
+- Capped at `maxWalls`.
+- Unlike the prototype, low props on Level (desks, tables) would count if the ray crossed them; at 1.2–1.6 m the ray
+  passes over them.
+
+**Not ported: the path flood.** Sound bending around corners and through open doorways is not modelled; a noise
+heard around a corner is muffled as if it came through the wall. The playbook asks for the raycast model, and the
+flood needs a grid over the whole level.
+
+**One remembered noise [GUESS].** The playbook asks the Hunter to keep "the strongest recent noise with a timestamp
+and decay it", instead of the prototype's list:
+
+- The remembered loudness fades linearly to 0 over `memorySeconds` (8 s, the prototype's forget time):
+  `current = perceived × max(0, 1 − age / 8)`.
+- A new noise replaces it if its perceived loudness is **at least the current faded value**. A sprinting player's
+  steps keep refreshing the position; a distant generator does not mask a footstep that is louder *to the Hunter*.
+- The noise's own source (the Hunter's own gunfire) is ignored.
+- **Exposed** for H3: `PerceivedLoudness` (faded, now), `NoiseDirection` (flat unit vector from the Hunter to the
+  noise), `TimeSinceNoise` (infinity if nothing heard), plus `NoisePosition`, `NoiseType` and `HasNoise`.
+
+**Cost [GUESS].** The raycast is skipped when the open-space value is already ≤ the threshold or cannot beat the
+current memory, so far-away noises cost a distance check only.
