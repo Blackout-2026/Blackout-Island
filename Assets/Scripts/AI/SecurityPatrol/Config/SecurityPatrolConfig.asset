@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b207f622b55031d4aa438dceaa4fb82d, type: 3}
+  m_Name: SecurityPatrolConfig
+  m_EditorClassIdentifier: Blackout.AI.SecurityPatrol::Blackout.AI.SecurityPatrol.SecurityPatrolConfig
+  eyeHeight: 1.62
+  playerSightHeight: 1.62
+  visionRange: 22
+  visionAngle: 111.726776
+  hearingRange: 65
+  hearingThreshold: 0.04
+  attackRange: 22
+  walkSpeed: 1.55
+  runSpeed: 4.1
+  searchTime: 14
+  alertSearchTime: 30
+  aimHeight: 1.1159999
+  reactionDelay: 0.6
+  aimError: 0.034

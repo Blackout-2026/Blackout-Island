@@ -98,6 +98,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: settings.runSpeed
+      value: 4.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: settings.walkSpeed
+      value: 1.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: settings.turnRateDegrees
+      value: 286.4789
+      objectReference: {fileID: 0}
     - target: {fileID: 3816292403067501373, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -138,9 +150,45 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4796979051319052566, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: kind
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4796979051319052566, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: brainBehaviour
+      value: 
+      objectReference: {fileID: 8393982427203553690}
+    - target: {fileID: 5385366064983668318, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: maxHealth
+      value: 80
+      objectReference: {fileID: 0}
     - target: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: m_Name
       value: SecurityPatrol
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.range
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.spread
+      value: 0.034
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: gunfireChannel
+      value: 
+      objectReference: {fileID: 11400000, guid: 98d0adc7da0714458b8d4cd08ad6ef25, type: 2}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.burstPause
+      value: 1.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.burstInterval
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.reactionDelay
+      value: 0.6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -148,10 +196,36 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7690731470318540649}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8393982427203553690}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!4 &4344337338759022809 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
   m_PrefabInstance: {fileID: 4344484393509515253}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6752738798674634218 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 4344484393509515253}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8393982427203553690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6752738798674634218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6d2f6e23dddee04681450e85b5c00ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.AI.SecurityPatrol::Blackout.AI.SecurityPatrol.SecurityPatrolBrain
+  config: {fileID: 11400000, guid: 68bc0ee8ce2475049bc53c4407d0ee9c, type: 2}
+  noiseChannel: {fileID: 11400000, guid: 98d0adc7da0714458b8d4cd08ad6ef25, type: 2}
+  playerRespawned: {fileID: 11400000, guid: 170f53bd4d92e496faef47c3ee794e42, type: 2}
+  geometryMask:
+    serializedVersion: 2
+    m_Bits: 769
