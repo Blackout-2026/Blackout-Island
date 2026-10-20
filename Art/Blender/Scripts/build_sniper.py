@@ -39,9 +39,10 @@ FBX_PATH = os.path.join(REPO, "Assets", "Models", "Custom", "SM_Weapon_Sniper.fb
 S.BLEND_PATH = BLEND_PATH
 S.FBX_PATH = FBX_PATH
 
+S.COLOURS["M_Weapon_Tan"] = ((0.05, 0.052, 0.05, 1), 0.7, 0.5)  # the TAN slot is now the parkerised grey receiver
 G = "Sniper"
-AXIS_Y = 0.008          # the barrel and receiver axis
-SCOPE_Y = 0.074         # the scope axis
+AXIS_Y = 0.0            # the barrel and receiver axis
+SCOPE_Y = 0.086         # the scope axis
 MUZZLE_Z = 0.81         # WeaponDefinitions.Sniper socket, and the frontmost point of the model
 
 
@@ -57,110 +58,135 @@ def cut_cyl(c, axis, r, length, segs, cutters, slot, bevel=0.0):
     S._store(G, boolean_difference(base, cutters), slot, 0.0)
 
 
-# --------------------------------------------------------------------------- action, barrel, brake
+# --------------------------------------------------------------------------- receiver, barrel, brake (heavy rifle style, step C9b)
+# The rifle was restyled on the owner's photo of a .50 calibre anti-materiel rifle: a rounded box receiver with lightening holes, a
+# fluted heavy barrel with a big slotted box muzzle brake, a flat-top rail with a large scope, a box magazine, a short skeletal
+# stock and a folded bipod. The frame is unchanged (muzzle z 0.81, butt about -0.405, pistol grip and forend where the hands are).
+
+def rrect_xy(w, h, r, cs=3):
+    """Rounded-rectangle cross-section (x, y) points: the receiver's soft corners."""
+    pts = []
+    for ox, oy, a0 in ((w / 2 - r, h / 2 - r, 0.0), (-(w / 2 - r), h / 2 - r, 90.0), (-(w / 2 - r), -(h / 2 - r), 180.0), (w / 2 - r, -(h / 2 - r), 270.0)):
+        for k in range(cs + 1):
+            a = math.radians(a0 + 90.0 * k / cs)
+            pts.append((ox + r * math.cos(a), oy + r * math.sin(a)))
+    return pts
+
+
+def prism_z(pts, z0, z1):
+    """A cross-section of (x, y) points extruded along the barrel from z0 to z1."""
+    bm = bmesh.new()
+    a = [bm.verts.new(B((x, y, z0))) for x, y in pts]
+    b = [bm.verts.new(B((x, y, z1))) for x, y in pts]
+    n = len(pts)
+    for i in range(n):
+        bm.faces.new((a[i], a[(i + 1) % n], b[(i + 1) % n], b[i]))
+    bm.faces.new(a)
+    bm.faces.new(list(reversed(b)))
+    return bm
+
+
+def fluted(r_out, r_in, flutes=6):
+    pts = []
+    sector = 2.0 * math.pi / flutes
+    for k in range(flutes):
+        for frac, r in ((0.0, r_out), (0.42, r_out), (0.52, r_in), (0.94, r_in)):
+            a = k * sector + frac * sector
+            pts.append((r * math.cos(a), r * math.sin(a)))
+    return pts
+
 
 def build_action():
-    # barrel: heavy, stepped, crowned
-    S.cyl(G, METAL, (0.0, AXIS_Y, 0.43), 'z', 0.0165, 0.58, segs=16)
-    S.cyl(G, METAL, (0.0, AXIS_Y, 0.715), 'z', 0.0135, 0.07, segs=16)
-    S.cyl(G, METAL, (0.0, AXIS_Y, 0.145), 'z', 0.0225, 0.032, segs=16)          # barrel nut
-    # muzzle brake: a ported cylinder with a bore
-    ports = [S.box_bm((0.0, AXIS_Y, 0.752 + 0.019 * i), (0.060, 0.0100, 0.0085)) for i in range(3)]
-    ports.append(S.box_bm((0.0, AXIS_Y + 0.0205, 0.771), (0.0100, 0.030, 0.0360)))      # one vent on top
-    ports.append(bm_cyl((0.0, AXIS_Y, 0.8125), 'z', 0.0075, 0.04, segs=14))              # the bore
-    cut_cyl((0.0, AXIS_Y, 0.775), 'z', 0.0205, 0.075, 16, ports, METAL, bevel=0.0012)
-
-    # receiver: a round action tube with an ejection port on the right, and a flat bedding block under it
-    port = [S.box_bm((0.0238, AXIS_Y + 0.004, -0.012), (0.020, 0.018, 0.070))]
-    cut_cyl((0.0, AXIS_Y, 0.020), 'z', 0.0238, 0.235, 18, port, METAL, bevel=0.0012)
-    S.box(G, METAL, (0.0, -0.011, 0.0), (0.040, 0.030, 0.20), bevel=0.003)
-    S.box(G, METAL, (0.0, AXIS_Y, -0.012), (0.004, 0.012, 0.050))                   # the bolt face seen through the port
-    # flat-top rail: a base and cross teeth, front to back, left open under the scope rings
-    S.box(G, METAL, (0.0, 0.0345, 0.020), (0.028, 0.006, 0.300), bevel=0.0008)
-    for i in range(12):
-        z = -0.125 + 0.0260 * i
-        S.box(G, METAL, (0.0, 0.0390, z), (0.034, 0.0035, 0.0105))
-    # rear bolt shroud, end cap, safety lever and the bolt handle on the right (the handle is the knob moving back and forth)
-    S.cyl(G, METAL, (0.0, AXIS_Y, -0.128), 'z', 0.0170, 0.072, segs=18)
-    S.cyl(G, POLYMER, (0.0, AXIS_Y, -0.168), 'z', 0.0130, 0.016, segs=14)
-    S.box(G, METAL, (0.0160, AXIS_Y + 0.011, -0.140), (0.016, 0.005, 0.020), bevel=0.001)
-    S.cyl(G, METAL, (0.0290, 0.0100, -0.080), 'x', 0.0050, 0.026, segs=10)         # handle root
-    S.cyl(G, METAL, (0.0450, 0.0060, -0.0815), 'x', 0.0045, 0.040, segs=10)        # handle stem, bent down and back
-    S.cyl(G, POLYMER, (0.0700, 0.0030, -0.083), 'x', 0.0120, 0.030, segs=16, bevel=0.002)   # the knob
-    # receiver screws, the magazine release and the bolt catch
-    for z in (-0.060, 0.080):
-        for sx in (-1, 1):
-            S.cyl(G, METAL, (sx * 0.0200, -0.0060, z), 'x', 0.0038, 0.004, segs=8)
-    S.box(G, METAL, (0.0, -0.034, 0.075), (0.012, 0.010, 0.012), bevel=0.001)
+    # receiver: a rounded tube z -0.30 to 0.22 with two rows of lightening holes in the front section and an ejection port
+    holes = [bm_cyl((0.0, 0.019, 0.030 + 0.034 * i), 'x', 0.0108, 0.12, 10) for i in range(5)]
+    holes += [bm_cyl((0.0, -0.0185, 0.047 + 0.034 * i), 'x', 0.0078, 0.12, 8) for i in range(4)]
+    holes.append(S.box_bm((0.034, 0.012, -0.12), (0.030, 0.030, 0.080)))
+    S._store(G, boolean_difference(prism_z(rrect_xy(0.072, 0.094, 0.017, 2), -0.30, 0.22), holes), TAN, 0.0)
+    S.box(G, METAL, (0.028, 0.012, -0.12), (0.004, 0.020, 0.045))                    # the bolt face inside the port
+    # flat-top rail with cross teeth, rear flip sight, charging handle with its knob, screws
+    S.box(G, TAN, (0.0, 0.0495, -0.04), (0.032, 0.007, 0.50), bevel=0.0012)
+    for i in range(11):
+        S.box(G, TAN, (0.0, 0.0555, -0.27 + 0.0445 * i), (0.040, 0.0035, 0.0115))
+    S.box(G, METAL, (0.0, 0.066, 0.125), (0.012, 0.020, 0.012), bevel=0.0008)
+    S.box(G, METAL, (0.056, 0.020, -0.16), (0.050, 0.010, 0.020), bevel=0.0012)
+    S.cyl(G, POLYMER, (0.087, 0.020, -0.16), 'x', 0.0115, 0.020, segs=12, bevel=0.0015)
+    for z in (-0.24, 0.0, 0.215):
+        S.cyl(G, METAL, (0.0355, -0.030, z), 'x', 0.0045, 0.004, segs=8)
+        S.cyl(G, METAL, (-0.0355, -0.030, z), 'x', 0.0045, 0.004, segs=8)
+    # fluted heavy barrel, its collar, a forend sleeve for the left hand, and the big slotted box muzzle brake
+    S._store(G, prism_z(fluted(0.0195, 0.0163), 0.215, 0.69), METAL, 0.0)
+    S.cyl(G, METAL, (0.0, 0.0, 0.230), 'z', 0.0270, 0.030, segs=14, bevel=0.002)
+    S.cyl(G, TAN, (0.0, 0.0, 0.300), 'z', 0.0340, 0.100, segs=14, bevel=0.003)
+    brake = S.box_bm((0.0, 0.0, 0.745), (0.084, 0.060, 0.130))
+    bevel_bm(brake, 0.009, 2)
+    cutters = [S.box_bm((sx * 0.037, 0.0, z), (0.030, 0.036, 0.034)) for sx in (-1, 1) for z in (0.716, 0.774)]
+    cutters.append(bm_cyl((0.0, 0.0, 0.745), 'z', 0.0098, 0.14, segs=14))
+    S._store(G, boolean_difference(brake, cutters), METAL, 0.0)
 
 
 def build_trigger():
-    S.tube(G, METAL, [(0.0, -0.040, 0.020), (0.0, -0.066, 0.016), (0.0, -0.072, -0.012), (0.0, -0.066, -0.044), (0.0, -0.040, -0.060)],
-           0.0035, 6)
-    S.prism(G, METAL, [(-0.034, -0.040), (-0.026, -0.040), (-0.024, -0.054), (-0.030, -0.064), (-0.036, -0.062)], -0.0032, 0.0032,
-            bevel=0.0008)
-    # the magazine: a short box with a metal floor plate, ribs and a release lip
-    S.box(G, POLYMER, (0.0, -0.067, 0.036), (0.034, 0.080, 0.066), bevel=0.003)
-    S.box(G, METAL, (0.0, -0.1085, 0.036), (0.037, 0.007, 0.069), bevel=0.0012)
+    S.tube(G, METAL, [(0.0, -0.046, -0.045), (0.0, -0.070, -0.050), (0.0, -0.078, -0.075), (0.0, -0.072, -0.098), (0.0, -0.046, -0.103)], 0.0035, 6)
+    S.prism(G, METAL, [(-0.065, -0.046), (-0.058, -0.046), (-0.056, -0.064), (-0.063, -0.072), (-0.069, -0.068)], -0.0032, 0.0032, bevel=0.0008)
+    # 10-round box magazine with side ribs and a floor plate
+    S.box(G, POLYMER, (0.0, -0.133, 0.02), (0.056, 0.176, 0.118), bevel=0.007)
+    S.box(G, METAL, (0.0, -0.2245, 0.02), (0.060, 0.008, 0.122), bevel=0.003)
     for i in range(4):
-        S.box(G, METAL, (0.0171, -0.050 - 0.016 * i, 0.036), (0.0020, 0.0060, 0.050))
-        S.box(G, METAL, (-0.0171, -0.050 - 0.016 * i, 0.036), (0.0020, 0.0060, 0.050))
+        for sx in (-1, 1):
+            S.box(G, METAL, (sx * 0.0285, -0.080 - 0.032 * i, 0.02), (0.003, 0.008, 0.095))
 
 
 # --------------------------------------------------------------------------- scope
 
 def build_scope():
     y = SCOPE_Y
-    S.cyl(G, METAL, (0.0, y, 0.010), 'z', 0.0155, 0.300, segs=16)                    # main tube
-    S.cyl(G, METAL, (0.0, y, 0.175), 'z', 0.0215, 0.045, segs=16)                    # the tube swells into the objective bell
-    S.cyl(G, METAL, (0.0, y, 0.215), 'z', 0.0295, 0.050, segs=16, bevel=0.0008)
-    shade = boolean_difference(bm_cyl((0.0, y, 0.258), 'z', 0.0310, 0.040, segs=16),
-                               [bm_cyl((0.0, y, 0.258), 'z', 0.0287, 0.05, segs=16)])
-    S._store(G, shade, METAL, 0.0)                                                    # sun shade, a thin tube
-    S.cyl(G, POLYMER, (0.0, y, 0.2395), 'z', 0.0278, 0.002, segs=16)                 # objective glass
-    S.cyl(G, METAL, (0.0, y, -0.150), 'z', 0.0185, 0.040, segs=16)                   # eyepiece
-    S.cyl(G, METAL, (0.0, y, -0.178), 'z', 0.0240, 0.020, segs=16)
-    S.cyl(G, POLYMER, (0.0, y, -0.1885), 'z', 0.0190, 0.002, segs=16)                # eyepiece glass
-    # turrets: elevation on top, windage on the right, parallax on the left of the bell
-    S.cyl(G, METAL, (0.0, y + 0.0255, 0.010), 'y', 0.0110, 0.022, segs=16)
-    S.cyl(G, METAL, (0.0, y + 0.0375, 0.010), 'y', 0.0090, 0.012, segs=16)
-    S.cyl(G, METAL, (0.0255, y, 0.010), 'x', 0.0110, 0.022, segs=16)
-    S.cyl(G, METAL, (0.0375, y, 0.010), 'x', 0.0090, 0.012, segs=16)
-    S.cyl(G, METAL, (-0.0300, y, 0.135), 'x', 0.0115, 0.022, segs=16)
-    S.cyl(G, METAL, (-0.0425, y, 0.135), 'x', 0.0120, 0.004, segs=16)
-    # two rings on the rail with clamp screws
-    for z in (-0.060, 0.080):
-        ring = boolean_difference(bm_cyl((0.0, y, z), 'z', 0.0225, 0.022, segs=16), [bm_cyl((0.0, y, z), 'z', 0.0153, 0.04, segs=16)])
+    S.cyl(G, METAL, (0.0, y, -0.02), 'z', 0.0155, 0.300, segs=12)                    # main tube
+    S.cyl(G, METAL, (0.0, y, 0.150), 'z', 0.0250, 0.045, segs=12)                    # the tube swells into the objective bell
+    S.cyl(G, METAL, (0.0, y, 0.2025), 'z', 0.0370, 0.060, segs=14, bevel=0.0008)
+    shade = boolean_difference(bm_cyl((0.0, y, 0.2575), 'z', 0.0385, 0.050, segs=14), [bm_cyl((0.0, y, 0.2575), 'z', 0.0360, 0.06, segs=14)])
+    S._store(G, shade, METAL, 0.0)                                                    # sun shade
+    S.cyl(G, POLYMER, (0.0, y, 0.2300), 'z', 0.0350, 0.002, segs=14)                 # objective glass
+    S.cyl(G, METAL, (0.0, y, -0.190), 'z', 0.0185, 0.040, segs=14)                   # eyepiece
+    S.cyl(G, METAL, (0.0, y, -0.218), 'z', 0.0240, 0.020, segs=14)
+    S.cyl(G, POLYMER, (0.0, y, -0.2285), 'z', 0.0190, 0.002, segs=14)                # eyepiece glass
+    S.cyl(G, METAL, (0.0, y + 0.0255, -0.02), 'y', 0.0115, 0.022, segs=14)           # elevation turret and its dial ring
+    S.cyl(G, METAL, (0.0, y + 0.0375, -0.02), 'y', 0.0095, 0.012, segs=14)
+    S.cyl(G, METAL, (0.0255, y, -0.02), 'x', 0.0115, 0.022, segs=14)                 # windage turret
+    S.cyl(G, METAL, (-0.0390, y, 0.130), 'x', 0.0120, 0.022, segs=14)                # parallax knob
+    for z in (-0.10, 0.07):
+        ring = boolean_difference(bm_cyl((0.0, y, z), 'z', 0.0235, 0.022, segs=12), [bm_cyl((0.0, y, z), 'z', 0.0153, 0.04, segs=12)])
         S._store(G, ring, METAL, 0.0)
-        S.box(G, METAL, (0.0, 0.0555, z), (0.036, 0.026, 0.026), bevel=0.0015)
-        for sy in (-0.012, 0.012):
-            S.cyl(G, METAL, (0.0233, y + sy, z), 'x', 0.0040, 0.008, segs=8)
+        S.box(G, METAL, (0.0, 0.0645, z), (0.040, 0.026, 0.026), bevel=0.0015)
 
 
 # --------------------------------------------------------------------------- stock, grip, butt, bipod
 
-STOCK = [(-0.405, 0.050), (-0.372, 0.064), (-0.310, 0.063), (-0.220, 0.052), (-0.140, 0.030), (-0.095, 0.003),
-         (0.140, 0.003), (0.440, 0.002), (0.452, -0.010), (0.445, -0.045), (0.250, -0.050), (0.130, -0.046), (0.070, -0.043),
-         (-0.120, -0.045), (-0.150, -0.050), (-0.200, -0.055), (-0.300, -0.074), (-0.405, -0.092)]
 GRIP = [(-0.105, -0.036), (-0.125, -0.140), (-0.150, -0.150), (-0.172, -0.145), (-0.150, -0.030), (-0.115, -0.022)]
+STOCK_PLATE = [(-0.26, 0.046), (-0.34, 0.040), (-0.385, 0.018), (-0.408, -0.010), (-0.410, -0.135), (-0.383, -0.144),
+               (-0.366, -0.072), (-0.26, -0.076), (-0.20, -0.076), (-0.20, -0.040), (-0.26, -0.040)]
 
 
 def build_stock():
-    bm = S.prism_bm(STOCK, -0.0260, 0.0260)
-    bevel_bm(bm, 0.0075, 2)
-    holes = [bm_cyl((0.0, 0.004, -0.330), 'x', 0.0135, 0.08, segs=12), bm_cyl((0.0, 0.026, -0.262), 'x', 0.0095, 0.08, segs=10)]
-    S._store(G, boolean_difference(bm, holes), TAN, 0.0)
-    S.prism(G, TAN, GRIP, -0.0175, 0.0175, bevel=0.0045, seg=2)                      # the pistol grip, narrower than the stock
-    S.box(G, POLYMER, (0.0, -0.021, -0.4155), (0.0535, 0.145, 0.022), bevel=0.004)  # rubber butt pad
-    for i in range(3):                                                                # grip panelling on the back strap
-        S.box(G, POLYMER, (0.0, -0.060 - 0.020 * i, -0.1405 - 0.0045 * i), (0.040, 0.007, 0.0050))
+    # a short skeletal stock: two sloping side plates with a slot, a top bridge, a cross bar, and a rubber pad
+    for sx in (-1, 1):
+        plate = S.prism_bm(STOCK_PLATE, sx * 0.024 - 0.006, sx * 0.024 + 0.006)
+        bevel_bm(plate, 0.004, 1)
+        S._store(G, boolean_difference(plate, [S.box_bm((sx * 0.024, -0.012, -0.315), (0.030, 0.030, 0.070))]), TAN, 0.0)
+    S.box(G, TAN, (0.0, 0.043, -0.335), (0.048, 0.010, 0.140), bevel=0.003)
+    S.box(G, TAN, (0.0, -0.140, -0.396), (0.048, 0.012, 0.016), bevel=0.003)
+    S.box(G, POLYMER, (0.0, -0.0645, -0.4155), (0.0535, 0.145, 0.022), bevel=0.006)            # rubber butt pad
+    S.prism(G, POLYMER, GRIP, -0.0175, 0.0175, bevel=0.0045, seg=2)                                     # the pistol grip
+    for i in range(3):                                                                                   # grip panelling on the back strap
+        S.box(G, METAL, (0.0, -0.060 - 0.020 * i, -0.1405 - 0.0045 * i), (0.040, 0.007, 0.0050))
 
 
 def build_bipod():
-    S.box(G, METAL, (0.0, -0.057, 0.370), (0.046, 0.016, 0.040), bevel=0.002)
+    # folded under the barrel: a clamp round it, a hinge block and two legs lying forward with foot pads
+    clamp = boolean_difference(bm_cyl((0.0, 0.0, 0.365), 'z', 0.0290, 0.034, segs=14), [bm_cyl((0.0, 0.0, 0.365), 'z', 0.0195, 0.05, segs=14)])
+    S._store(G, clamp, METAL, 0.0)
+    S.box(G, METAL, (0.0, -0.040, 0.365), (0.046, 0.026, 0.040), bevel=0.002)
     for sx in (-1, 1):
-        S.box(G, METAL, (sx * 0.018, -0.062, 0.480), (0.008, 0.008, 0.200), bevel=0.0012)
-        S.box(G, POLYMER, (sx * 0.018, -0.0635, 0.586), (0.011, 0.011, 0.018), bevel=0.002)
+        S.box(G, METAL, (sx * 0.020, -0.056, 0.490), (0.009, 0.009, 0.210), bevel=0.0012)
+        S.box(G, POLYMER, (sx * 0.020, -0.056, 0.598), (0.013, 0.013, 0.022), bevel=0.002)
 
 
 # --------------------------------------------------------------------------- hands

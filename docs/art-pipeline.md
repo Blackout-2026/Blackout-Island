@@ -70,7 +70,7 @@ exporter convert and keep these settings fixed.
 | Transform | Forward | **-Z Forward** |
 | Transform | Up | **Y Up** |
 | Transform | Apply Unit | on |
-| Transform | Apply Transform | **on for static meshes with no hierarchy** (the generator): the Z-up to Y-up rotation is baked into the vertices and Unity gets rotation 0. **Off** for anything with a joint hierarchy (the robot): it is experimental and can rotate children |
+| Transform | Apply Transform | **on for static meshes with no hierarchy** (the generator): the Z-up to Y-up rotation is baked into the vertices and Unity gets rotation 0. **Off** for anything with a joint hierarchy (the robot): it is experimental and can rotate children. Measured in step C8: with it on, the third level of a chain (`Shin_L`) came out rotated 270 degrees. With it off the root comes in rotated 90 degrees, which section 16.2 cancels in Blender |
 | Geometry | Smoothing | Normals Only |
 | Geometry | Apply Modifiers | on |
 | Geometry | Tangent Space | off (Unity calculates it) |
@@ -440,8 +440,8 @@ tint to white. `Eye` and `Cells` stay flat.
 
 | What | Where | Status |
 | --- | --- | --- |
-| `SM_SecurityRobot.fbx` (+ `Art/Blender/SM_SecurityRobot.blend`) with the names of section 11 | `Assets/Models/Custom` | not made yet, placeholder in use |
-| `T_SecurityRobot_*` textures (3 maps) | `Assets/Textures/Models` | not made yet, flat colours in use |
+| `SM_SecurityRobot.fbx` (+ `Art/Blender/SM_SecurityRobot.blend`) with the names of section 11 | `Assets/Models/Custom` | done in step C8, see section 16 |
+| `T_SecurityRobot_*` textures (3 maps) | `Assets/Textures/Models` | done in step C8, see section 16 |
 
 Budget reminder (section 6): 5,000 triangles target, 7,500 hard maximum, 4 materials. The placeholder is about 7,000
 triangles because Unity's spheres and cylinders are heavy; it is not subject to the budget.
@@ -654,3 +654,112 @@ a batch run that touches `Assets`.
 
 The textures are procedural, so there is no Substance or hand painting: `docs/viva/core-developer-generator.md` explains
 the method and its limits.
+
+## 16. Security robot model (step C8)
+
+`SM_SecurityRobot.fbx` replaces the primitive placeholder behind `SecurityRobot_Visual.prefab`. The joint names, offsets,
+rest pose, sockets and material names are exactly those of sections 11 and 13; only the look changed. Style: bulky tactical
+armour with big round shoulder pauldrons, heavy greaves and a back pack, kept to the prototype's joint layout and size
+(section 3 of `docs/reference/core-developer.md`). The shapes are my own. **Colour change, at the owner's request:** the armour
+is now WHITE (paint #dcdfe2 to #eceef0, chipping to dark bare metal) with a black vest, black visor, black joints and hands,
+styled on a white tactical humanoid reference photo. The prototype's grey-blue body paint (#3a3f44 to #4f565c) is no longer
+used. The yellow stays only on the three chest hazard bars and the belt buckle.
+
+**Weapon change, at the owner's request:** the prototype's twin-barrel weapon pod on the right arm is replaced by a compact
+white carbine held in a black glove (styled on the same reference photo: white body, black rail, optic, grip, magazine and
+muzzle brake). `Hand_R` carries the gun and the glove, `ForeArm_R` is now an ordinary armoured forearm like the left one.
+The gun is modelled so that its barrel runs down the hand's -Y axis and its top is the hand's +Z, which makes it point forward
+when the animator raises the arm (-1.5 rad), and its muzzle brake ends exactly 0.33 m below the wrist: that is
+`RobotRig.MuzzleOffset`, so `MuzzlePoint` sits on the barrel tip. `RobotModelFbxTests` checks this (barrel tip at wrist y - 0.33).
+The primitive placeholder (`RobotPlaceholder`) still has the old pod; it is only a stand-in until the FBX is imported.
+
+### 16.1 How it is built (all scripts in `Art/Blender/Scripts`, run in Blender batch mode)
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `build_robot.py` (uses `gen_parts.py` for the axis swap) | Builds 132 parts in Unity-frame metres, local to their joint (lofted rounded shells, bevelled boxes, cylinders, hoses). Merges them, removes faces hidden inside their own joint, triangulates, unwraps and packs ONE atlas, then splits the mesh into 16 joint objects plus `ScannerDot`, parents them as in section 11.1 under one Empty and writes `Art/Blender/SM_SecurityRobot.blend`. Prints the size and the triangles per joint |
+| 2 | `bake_robot.py` (uses `bake_smg.py` helpers and `export_robot.py`) | Joins a copy of the parts for the bake, bakes edge wear and cavity dirt, builds the procedural paint, steel, hazard stripes and joint metal, bakes three 2048 maps, rebuilds the Blender materials to read them, exports the FBX |
+| 3 | `preview_robot.py` | Review renders from seven cameras. `ROBOT_POSE=aim` rotates the joints like the animator does (optional) |
+| 4 | Unity: **Blackout > Art > Build Security Robot Visual Prefab** | Replaces only the `Model` child and creates the sockets under `Hand_R` |
+
+```
+"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_robot.py
+"D:\Blender\blender.exe" -b Art/Blender/SM_SecurityRobot.blend -P Art/Blender/Scripts/bake_robot.py -- 24
+```
+
+Always run `build_robot.py` before `bake_robot.py`: the bake needs the face-corner colour `Mask` that the build writes (it
+marks yellow, steel and hazard stripes) and removes it before the export. Close the Unity Editor before a batch run that touches `Assets`.
+
+### 16.2 Why the Blender file is built this way (measured, not guessed)
+
+The animator needs every joint at rotation (0, 0, 0) with the offsets of `RobotRig.Joints`. A scratch Unity project with the
+project's import settings showed that neither FBX export mode gives that for a hierarchy (section 4). The fix:
+
+- The root is an **Empty** `SecurityRobot`, rotated +90 degrees about X. The exporter's own axis conversion turns that into
+  rotation 0. Everything below it is modelled in that rotated frame: `local = (unity x, unity y, -unity z)`, and the world
+  frame is still the axis swap of section 4. The Empty is needed because Unity merges a lone top-level mesh into the model
+  root, which would leave no object called `Pelvis` and lift the whole robot 1.05 m.
+- `Pelvis` is therefore a direct child of the model, and every other joint sits under its parent at exactly the table offset.
+- The test `RobotModelFbxTests` repeats this check on the real FBX (offsets, rotation 0, X axis, size, budget, aim pose).
+
+### 16.3 Measured result
+
+| Item | Value |
+| --- | --- |
+| Size in Unity | 1.068 x 2.370 x 0.635 m (x -0.528 to 0.540, y 0.008 to 2.378, z -0.375 to 0.260); catalog 1.07 x 2.38 x 0.64 |
+| Triangles | 4,740 in 17 meshes; target 5,000, maximum 7,500 |
+| Materials | 4: `M_SecurityRobot_Body` (white armour, yellow bars and bare steel, all from the atlas), `_Joint` (black vest, visor, joints and hands), `_Eye`, `_Cells` |
+| UV | UV0 only, 0 to 1, no overlap; 518 px/m at 2048 |
+| Maps | `T_SecurityRobot_BaseColor`, `_Normal`, `_MetalSmooth` (R metallic, A smoothness), 2048 x 2048 |
+| Rest pose | every joint rotation 0, scale 1; offsets equal `RobotRig.Joints` |
+| Sockets | not in the FBX; `RobotPrefabBuilder` creates `WeaponSocket` and `MuzzlePoint` under `Hand_R` |
+
+`M_SecurityRobot_Accent` stays in Unity but is unused by the FBX (the yellow lives in the Body atlas).
+`RobotLODBuilder` makes no LODs for an imported FBX (it prints a warning and removes the placeholder's LODGroup), so the
+robot has one level at 4,740 triangles. A reduced LOD mesh is still to do.
+
+### 16.4 After swapping the placeholder for the FBX (read before the demo)
+
+`TacticalGuard.prefab` (the Agent Controller's, `Assets/Prefabs/Agents`) points its `AgentShooter.muzzle` at the placeholder's
+`MuzzlePoint`. **Blackout > Art > Build Security Robot Visual Prefab** replaces that object, so the link can go empty, and
+the shots would then start at eye height instead of the barrels. `AgentSetupBuilder` does not rebuild an existing prefab, so
+re-wire it by hand: open `TacticalGuard.prefab`, select the root, drag `Visual/SecurityRobot_Visual/Model/.../Hand_R/MuzzlePoint`
+into the `Muzzle` field of `AgentShooter`, save. This file belongs to the Agent Controller: tell them, or ask them to do it.
+The animator only raises the right arm and bends the left forearm to aim (no arm swing while walking, `ProceduralRobotAnimator`).
+
+
+## 17. Heavy sniper rifle (step C9)
+
+`SM_Weapon_SniperHeavy.fbx` is a stand-alone model of a heavy anti-materiel rifle, built in Blender from the owner's reference
+photo (a .50 calibre rifle with a fluted barrel and a slotted box muzzle brake). It is **new**: the R-700 viewmodel of section 14.6
+(`SM_Weapon_Sniper`, with hands) is untouched, and the new model is **not wired into the Player prefab yet**.
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `build_sniper_heavy.py` (uses the shared `build_smg.py` kit and `weapon_kit.py`) | Builds the rounded receiver with lightening holes and an ejection port (boolean cuts), the top rail, the fluted barrel, the slotted muzzle brake, the scope with rings and turrets, the magazine, grip, a sloped skeletal stock (two side plates with slots) and the deployed bipod. Three palette slots, UV0, writes `Art/Blender/SM_Weapon_SniperHeavy.blend` and the first FBX |
+| 2 | `bake_sniper_heavy.py` (uses `bake_smg.py`) | Bakes edge wear and cavity dirt, builds a parkerised-steel material for the receiver (plus the SMG's steel and polymer), bakes one 2048 atlas and collapses the three slots into `M_Weapon_SniperHeavy` |
+| 3 | `preview_sniper_heavy.py` | Eight review renders on a white backdrop (optional) |
+
+```
+"D:\Blenderlender.exe" -b --factory-startup -P Art/Blender/Scripts/build_sniper_heavy.py
+"D:\Blenderlender.exe" -b Art/Blender/SM_Weapon_SniperHeavy.blend -P Art/Blender/Scripts/bake_sniper_heavy.py -- 32
+```
+
+Always run the build before the bake. Frame: the weapon frame of section 14 (origin at the receiver centre, x right, y up, +z
+the muzzle). Measured result: 1.463 m long (muzzle brake at z = 0.810, the same muzzle distance as the R-700), 5,220 triangles
+(target 6,000, maximum 9,000), 1 material, textures `T_WeaponSniperHeavy_BaseColor/Normal/MetalSmooth`, root rotation 0, one mesh
+(Apply Transform on, section 4). `SniperHeavyFbxTests` checks the muzzle distance, the length, the budget and the material.
+To use it in the game it would replace the R-700 viewmodel: it needs two hands (`hand_kit.py`), a `MuzzlePoint` and a held
+position in `WeaponDefinitions` (Systems Engineer), so that is a separate step.
+
+### 17.1 The in-game rifle restyled (step C9b)
+
+At the owner's request the **R-700 viewmodel itself** (`SM_Weapon_Sniper`, the one in the Player prefab) was restyled to the same
+photo: a rounded receiver with lightening holes, a fluted barrel, the big slotted muzzle brake, a flat-top rail with a larger scope,
+a box magazine, a short sloped skeletal stock, a forend sleeve for the left hand and a folded bipod. The black grip, the two gloved
+hands and the camouflage sleeves are kept. `build_sniper.py` and `bake_sniper.py` were changed in place; nothing else was renamed:
+the muzzle is still at z = 0.810, the pistol grip and forend are where the hands expect them, the butt ends at z -0.416 so it stays
+out of the camera, and the file keeps its 3 materials (`M_Weapon_Sniper`, `M_Weapon_Glove`, `M_Weapon_Camo`) and the same
+`T_WeaponSniper_*` texture names. So `Weapon_Sniper_Visual.prefab` and the Player prefab pick the new mesh up from the FBX with no
+change. Measured: 5,756 triangles (target 6,000), root rotation 0. The tan polymer stock is gone: the TAN palette slot is now the
+parkerised grey receiver. The stand-alone `SM_Weapon_SniperHeavy` of section 17 is the full-size rifle without hands.
