@@ -60,6 +60,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 5690076580438074305}
   m_SourcePrefab: {fileID: 100100000, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
+--- !u!4 &4757073997158368046 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6403790983501064391, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
+  m_PrefabInstance: {fileID: 1934947363855625193}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5222106688461688828 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5954592402030339093, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
@@ -98,11 +103,6 @@ MonoBehaviour:
   aimUpperArmRRadians: -1.5
   aimForeArmLRadians: -1.1
   aimForeArmRRadians: -0.08
---- !u!4 &8913312973670734922 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6403790983501064391, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
-  m_PrefabInstance: {fileID: 1934947363855625193}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2941488188713358633
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -158,7 +158,7 @@ PrefabInstance:
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: muzzle
       value: 
-      objectReference: {fileID: 8913312973670734922}
+      objectReference: {fileID: 4757073997158368046}
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: eyeHeight
       value: 1.95
@@ -169,10 +169,34 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5222106688461688828}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5361864929894076062}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!4 &2941652853295034885 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
   m_PrefabInstance: {fileID: 2941488188713358633}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &5273286684893994806 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 2941488188713358633}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5361864929894076062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5273286684893994806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e365ade33267a4cb27bef8e54fcbf4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.AI.TacticalGuard::Blackout.AI.TacticalGuard.TacticalGuardBrain
+  config: {fileID: 11400000, guid: 3512e4c364642c94ebded1e397175550, type: 2}
+  sightBlockers:
+    serializedVersion: 2
+    m_Bits: 0
