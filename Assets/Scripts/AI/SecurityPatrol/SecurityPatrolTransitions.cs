@@ -19,7 +19,8 @@ namespace Blackout.AI.SecurityPatrol
         InvestigationComplete,
         LostPlayer,
         CannotAttack,
-        SearchComplete
+        SearchComplete,
+        InvestigationAlerted
     }
 
     internal static class SecurityPatrolTransitions
@@ -48,6 +49,7 @@ namespace Blackout.AI.SecurityPatrol
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.DetectedPlayer, SecurityPatrolState.Pursue),
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.CanAttack, SecurityPatrolState.Attack),
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.InvestigationComplete, SecurityPatrolState.Patrol),
+            new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.InvestigationAlerted, SecurityPatrolState.Search),
             new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.CanAttack, SecurityPatrolState.Attack),
             new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.LostPlayer, SecurityPatrolState.Search),
             new Transition(SecurityPatrolState.Attack, SecurityPatrolTrigger.CannotAttack, SecurityPatrolState.Pursue),

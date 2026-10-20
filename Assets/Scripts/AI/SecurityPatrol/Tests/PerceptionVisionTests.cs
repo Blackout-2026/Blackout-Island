@@ -63,6 +63,29 @@ namespace Blackout.AI.SecurityPatrol.Tests
         }
 
         [Test]
+        public void RangeMultiplier_IsAbsoluteAndDoesNotModifyTheBaseRange()
+        {
+            Vector3 target = Eye + Vector3.forward * 25f;
+            perception.UpdateVision(Eye, Vector3.forward, target, 1.4f);
+            Assert.That(perception.CanSeePlayer, Is.True);
+            perception.UpdateVision(Eye, Vector3.forward, target, 1.4f);
+            Assert.That(perception.CanSeePlayer, Is.True);
+            perception.UpdateVision(Eye, Vector3.forward, Eye + Vector3.forward * 31f, 1.4f);
+            Assert.That(perception.CanSeePlayer, Is.False);
+            perception.UpdateVision(Eye, Vector3.forward, target);
+            Assert.That(perception.CanSeePlayer, Is.False);
+        }
+
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        public void InvalidRangeMultiplier_IsRejected(float multiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                perception.UpdateVision(Eye, Vector3.forward, Eye + Vector3.forward, multiplier));
+        }
+
+        [Test]
         public void HorizontalCone_UsesFull3DDistanceAndTheSuppliedSightPoints()
         {
             Vector3 target = Eye + new Vector3(0f, 8f, 6f);

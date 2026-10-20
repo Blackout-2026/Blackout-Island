@@ -12,6 +12,9 @@ namespace Blackout.AI.SecurityPatrol
     public sealed class SecurityPatrolConfig : ScriptableObject
     {
         [Header("Perception (S2)")]
+        [Min(0f)] public float eyeHeight = 1.62f;
+        [Tooltip("Sight point above the player's feet; one ray to eye height, as in the existing S2 sensor.")]
+        [Min(0f)] public float playerSightHeight = 1.62f;
         [Min(0f)] public float visionRange = 22f;
 
         [Tooltip("Full vision cone in degrees. Prototype: 1.95 radians (about 111.73 degrees).")]
@@ -32,6 +35,8 @@ namespace Blackout.AI.SecurityPatrol
 
         [Tooltip("Calm search duration. The reference uses 30 seconds while alert.")]
         [Min(0f)] public float searchTime = 14f;
+        [Tooltip("Search duration during a cure alarm or Blackboard alert; generator-only heightening keeps the calm duration.")]
+        [Min(0f)] public float alertSearchTime = 30f;
 
         [Header("Combat tuning (S3)")]
         [Tooltip("Player chest height above the supplied feet position. Reference: 1.8 m player height times 0.62.")]

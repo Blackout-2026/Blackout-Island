@@ -10,10 +10,15 @@ namespace Blackout.AI.SecurityPatrol
     /// The agent host calls Initialize once and Tick at its think rate (normally 10 Hz).
     /// States return intents; movement, animation and weapon execution belong to the agent host.
     /// </summary>
-    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain
+    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain, IAlertReceiver
     {
         [Tooltip("Perception, state and executor reference tuning for this patrol.")]
         [SerializeField] private SecurityPatrolConfig config;
+        [SerializeField] private NoiseEventChannel noiseChannel;
+        [SerializeField] private VoidEventChannel playerRespawned;
+        [Tooltip("World geometry and doors; exclude Enemy, Player and trigger volumes.")]
+        [SerializeField] private LayerMask geometryMask =
+            (1 << PhysicsLayers.Default) | (1 << PhysicsLayers.Level) | (1 << PhysicsLayers.Interactable);
 
         private IAgentContext context;
         private State[] states;
@@ -28,25 +33,42 @@ namespace Blackout.AI.SecurityPatrol
         private Vector3 lastSeenPosition;
         private float timeSinceSeen;
         private bool canFire;
+        private PatrolSensing senses;
+        private IPerceptionRaycast sightRaycast;
+        private Health boundHealth;
+        private VoidEventChannel boundRespawn;
+        private float rangeMultiplier = 1f;
 
         internal Vector3 Position => context.Self.position;
         internal Marker[] Route => route;
-        internal float SearchTime => config != null ? config.searchTime : 14f;
+        private bool IsAlert => context.Blackboard != null &&
+            (context.Blackboard.cureTaken || context.Blackboard.alertLevel > 0);
+        internal float SearchTime => IsAlert ? (config != null ? config.alertSearchTime : 30f) :
+            (config != null ? config.searchTime : 14f);
         internal float AimHeight => config != null ? config.aimHeight : 1.8f * 0.62f;
         internal bool CanFire => canFire;
-        private float AttackRange => config != null ? config.attackRange : 22f;
+        private float AttackRange => (config != null ? config.attackRange : 22f) * rangeMultiplier;
         private Vector3 LastSeenPosition => hasSeenPlayer ? lastSeenPosition : current.Target;
+        private bool CanThink => current != null && isActiveAndEnabled && context.Self != null &&
+            (context.Health == null || context.Health.IsAlive);
 
         public SecurityPatrolConfig Config => config;
         public bool IsInitialized => current != null;
+        public float VisionRangeMultiplier => rangeMultiplier;
         public SecurityPatrolState? CurrentState => current == null ? (SecurityPatrolState?)null : current.Id;
 
-        public void Initialize(IAgentContext newContext)
+        public void Initialize(IAgentContext newContext) =>
+            Initialize(newContext, new PhysicsPerceptionRaycast(geometryMask));
+
+        /// <summary>Raycast injection keeps the full sensing-to-state path testable without scene geometry.</summary>
+        public void Initialize(IAgentContext newContext, IPerceptionRaycast raycast)
         {
             if (newContext == null)
                 throw new ArgumentNullException(nameof(newContext));
             if (newContext.Self == null)
                 throw new ArgumentException("A patrol brain needs its own Transform.", nameof(newContext));
+            if (raycast == null)
+                throw new ArgumentNullException(nameof(raycast));
 
             // Enum order matches this array. Allocate only on first initialization, never on a state change.
             if (states == null)
@@ -61,8 +83,12 @@ namespace Blackout.AI.SecurityPatrol
                 };
             }
 
+            UnbindSensing();
             current?.Exit();
             context = newContext;
+            sightRaycast = raycast;
+            rangeMultiplier = 1f;
+            RefreshAlertRange();
             pending = null;
             pendingTarget = default;
             hasSeenPlayer = false;
@@ -77,6 +103,7 @@ namespace Blackout.AI.SecurityPatrol
             RefreshRoute();
             current = states[(int)SecurityPatrolState.Patrol];
             current.Enter(context.Self.position);
+            BindSensing();
         }
 
         /// <summary>
@@ -86,7 +113,7 @@ namespace Blackout.AI.SecurityPatrol
         /// </summary>
         public bool TryRequestTransition(SecurityPatrolTrigger trigger, Vector3 target)
         {
-            if (current == null || pending != null || context.Self == null)
+            if (!CanThink || pending != null)
                 return false;
 
             if (!SecurityPatrolTransitions.TryGetNext(current.Id, trigger, out SecurityPatrolState next))
@@ -97,24 +124,40 @@ namespace Blackout.AI.SecurityPatrol
             return true;
         }
 
-        // Runtime sensing is connected in the integration chunk. Explicit input keeps decisions testable.
-        public AgentIntent Tick(float deltaTime) => Tick(deltaTime, default);
+        public AgentIntent Tick(float deltaTime)
+        {
+            if (!CanThink) return AgentIntent.Idle;
+            if (!(deltaTime >= 0f) || float.IsInfinity(deltaTime))
+                throw new ArgumentOutOfRangeException(nameof(deltaTime));
+
+            BindSensing();
+            RefreshAlertRange();
+            PatrolPerceptionInput input = senses.Read(rangeMultiplier);
+            if (senses.PlayerChanged || senses.PlayerIsDead) ResetPlayerMemory();
+            if (senses.PlayerIsDead) input = default;
+            return Tick(deltaTime, input);
+        }
 
         public AgentIntent Tick(float deltaTime, in PatrolPerceptionInput input)
         {
-            if (current == null || context.Self == null ||
-                (context.Health != null && !context.Health.IsAlive))
+            if (!CanThink)
                 return AgentIntent.Idle;
 
             if (!(deltaTime >= 0f) || float.IsInfinity(deltaTime))
                 throw new ArgumentOutOfRangeException(nameof(deltaTime));
 
+            RefreshAlertRange();
             RefreshRoute();
             if (input.canSeePlayer)
             {
                 hasSeenPlayer = true;
                 lastSeenPosition = input.playerPosition;
                 timeSinceSeen = 0f;
+                if (context.Blackboard != null)
+                {
+                    context.Blackboard.lastKnownPlayerPos = input.playerPosition;
+                    context.Blackboard.lastKnownPlayerTime = Time.time;
+                }
             }
             else
                 timeSinceSeen += deltaTime;
@@ -162,9 +205,72 @@ namespace Blackout.AI.SecurityPatrol
             else if (current.Id == SecurityPatrolState.Patrol && input.heardNoise)
                 TryRequestTransition(SecurityPatrolTrigger.HeardNoise, input.noisePosition);
             else if (current is InvestigateState investigate && investigate.IsComplete)
-                TryRequestTransition(SecurityPatrolTrigger.InvestigationComplete, Position);
+                TryRequestTransition(IsAlert ? SecurityPatrolTrigger.InvestigationAlerted :
+                    SecurityPatrolTrigger.InvestigationComplete, IsAlert ? current.Target : Position);
             else if (current.Id == SecurityPatrolState.Search && current.TimeInState >= SearchTime)
                 TryRequestTransition(SecurityPatrolTrigger.SearchComplete, Position);
+        }
+
+        /// <summary>Absolute multiplier shared with the executors; never multiply an already-buffed range.</summary>
+        public void OnAlert(AgentAlert alert) => rangeMultiplier = alert.visionMultiplier;
+
+        private void RefreshAlertRange()
+        {
+            Blackboard board = context.Blackboard;
+            if (board == null) return;
+            if (board.HasAlertBuff) rangeMultiplier = board.Alert.visionMultiplier;
+            else if (board.generatorDisabled || board.cureTaken) rangeMultiplier = 1.4f;
+        }
+
+        private void OnEnable() => BindSensing();
+
+        private void OnDisable()
+        {
+            UnbindSensing();
+            ResetPlayerMemory();
+        }
+
+        private void OnDestroy() => UnbindSensing();
+
+        private void BindSensing()
+        {
+            if (senses != null || !CanThink) return;
+            senses = new PatrolSensing(context, config, sightRaycast, noiseChannel);
+            boundHealth = context.Health;
+            if (boundHealth != null) boundHealth.OnDied += HandleOwnDeath;
+            boundRespawn = playerRespawned;
+            if (boundRespawn != null) boundRespawn.OnRaised += ResetPlayerMemory;
+        }
+
+        private void UnbindSensing()
+        {
+            senses?.Dispose();
+            senses = null;
+            if (boundHealth != null) boundHealth.OnDied -= HandleOwnDeath;
+            if (boundRespawn != null) boundRespawn.OnRaised -= ResetPlayerMemory;
+            boundHealth = null;
+            boundRespawn = null;
+        }
+
+        private void HandleOwnDeath()
+        {
+            UnbindSensing();
+            ResetPlayerMemory();
+        }
+
+        private void ResetPlayerMemory()
+        {
+            senses?.Forget();
+            pending = null;
+            pendingTarget = default;
+            hasSeenPlayer = false;
+            lastSeenPosition = default;
+            timeSinceSeen = 0f;
+            canFire = false;
+            if (current == null || context.Self == null) return;
+            current.Exit();
+            current = states[(int)SecurityPatrolState.Patrol];
+            current.Enter(Position);
         }
 
         private void ApplyPendingTransition()

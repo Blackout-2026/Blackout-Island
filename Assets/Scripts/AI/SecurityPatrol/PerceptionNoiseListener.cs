@@ -20,6 +20,8 @@ namespace Blackout.AI.SecurityPatrol
         private bool disposed;
 
         public Vector3 Position { get; set; }
+        /// <summary>Read the cached owner Transform on each event, including movement between think ticks.</summary>
+        public bool FollowOwnerPosition { get; set; }
 
         public PerceptionNoiseListener(Perception perception, NoiseEventChannel channel,
             Vector3 position, GameObject owner = null)
@@ -38,11 +40,13 @@ namespace Blackout.AI.SecurityPatrol
 
         private void OnNoise(NoiseEvent noise)
         {
+            if (disposed) return;
             if (owner != null && noise.source != null &&
                 (noise.source == owner || noise.source.transform.IsChildOf(ownerTransform)))
                 return;
 
-            perception.HearNoise(Position, noise);
+            Vector3 position = FollowOwnerPosition && ownerTransform != null ? ownerTransform.position : Position;
+            perception.HearNoise(position, noise);
         }
 
         public void Dispose()
