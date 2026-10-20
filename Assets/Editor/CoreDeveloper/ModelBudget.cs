@@ -25,6 +25,8 @@ namespace Blackout.Editor
         private static readonly ModelBudget Generator = new ModelBudget(10000, 6);
         private static readonly ModelBudget Robot = new ModelBudget(5000, 4);
         private static readonly ModelBudget Character = new ModelBudget(3000, 3);
+        // The Commander is the one realistic hero character (sculpted face, hair cards, a detailed uniform): docs/art-pipeline.md section 18.2.
+        private static readonly ModelBudget CommanderHero = new ModelBudget(14000, 3);
         private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
         private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
@@ -45,6 +47,10 @@ namespace Blackout.Editor
             else if (Matches(assetName, "SM_SecurityRobot"))
             {
                 budget = Robot;
+            }
+            else if (Matches(assetName, "SM_Char_Commander"))
+            {
+                budget = CommanderHero;
             }
             else if (assetName.StartsWith("SM_Char_", StringComparison.Ordinal))
             {

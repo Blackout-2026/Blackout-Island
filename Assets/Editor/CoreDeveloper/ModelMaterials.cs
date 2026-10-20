@@ -15,9 +15,11 @@ namespace Blackout.Editor
         public readonly Color Emission;
         public readonly bool Textured;
         public readonly bool EmissionMask;
+        public readonly bool AlphaClip;    // cut-out transparency (hair cards): where the base map's alpha is below 0.45 nothing is drawn
+        public readonly bool DoubleSided;  // draw both faces (single-sided cards)
 
         public ModelMaterialSpec(string name, string hex, float metallic, float smoothness, float alpha = 1f,
-            Color emission = default, bool textured = false, bool emissionMask = false)
+            Color emission = default, bool textured = false, bool emissionMask = false, bool alphaClip = false, bool doubleSided = false)
         {
             Name = name;
             Hex = hex;
@@ -27,6 +29,8 @@ namespace Blackout.Editor
             Emission = emission;
             Textured = textured;
             EmissionMask = emissionMask;
+            AlphaClip = alphaClip;
+            DoubleSided = doubleSided;
         }
 
         public bool HasEmission => Emission.maxColorComponent > 0f;
@@ -88,6 +92,17 @@ namespace Blackout.Editor
                 material.SetFloat("_Surface", 1f); // Transparent
                 material.SetFloat("_Blend", 0f); // Alpha
                 material.SetFloat("_Cull", 0f); // The glass tube is seen from both sides
+            }
+
+            if (spec.AlphaClip)
+            {
+                material.SetFloat("_AlphaClip", 1f);
+                material.SetFloat("_Cutoff", 0.45f);
+            }
+
+            if (spec.DoubleSided)
+            {
+                material.SetFloat("_Cull", 0f);
             }
 
             // HDR colour: values above 1 are intentional, they feed the bloom. URP only turns the _EMISSION keyword
