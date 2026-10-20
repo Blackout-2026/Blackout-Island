@@ -17,8 +17,11 @@ namespace Blackout.AI.SecurityPatrol
         [Tooltip("Full vision cone in degrees. Prototype: 1.95 radians (about 111.73 degrees).")]
         [Range(0f, 360f)] public float visionAngle = 1.95f * Mathf.Rad2Deg;
 
-        [Tooltip("Provisional Unity hearing cap, not a prototype patrol stat. 65 m is the largest listed noise radius (sniper); prototype hearing uses each event's radius and a 1.0 multiplier. Revisit in S2.")]
+        [Tooltip("Unity listener distance cap. 65 m covers the largest reference noise radius (sniper). NoiseEvent.loudness remains the event's own radius in metres; falloff uses that radius, not this cap.")]
         [Min(0f)] public float hearingRange = 65f;
+
+        [Tooltip("Hear when max(0, 1 - distance / noise radius) is strictly above this value. Prototype patrol hearing multiplier: 1.0; threshold: 0.04.")]
+        [Range(0f, 1f)] public float hearingThreshold = 0.04f;
 
         [Header("Movement and states (S3)")]
         [Tooltip("FSM engagement distance, distinct from the weapon's 34 m maximum range.")]
