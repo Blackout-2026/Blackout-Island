@@ -188,18 +188,11 @@ namespace Blackout.Editor
             var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(WhiteTexturePath);
             if (existing != null)
             {
+                if (TerrainColourCorrection.RemoveFallbackAlpha(existing)) EditorUtility.SetDirty(existing);
                 return existing;
             }
 
-            var white = new Texture2D(4, 4, TextureFormat.RGBA32, false, false) { name = "TerrainLayerWhite" };
-            var pixels = new Color32[16];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                pixels[i] = new Color32(255, 255, 255, 255);
-            }
-
-            white.SetPixels32(pixels);
-            white.Apply(false);
+            Texture2D white = TerrainColourCorrection.CreateWhiteTexture();
             AssetDatabase.CreateAsset(white, WhiteTexturePath);
             return white;
         }
