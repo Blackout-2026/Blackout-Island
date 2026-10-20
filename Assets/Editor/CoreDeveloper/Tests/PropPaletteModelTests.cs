@@ -118,11 +118,11 @@ namespace Blackout.Editor.Tests
                 {
                     Entry = TestEntry("Prop_TestSmall", PropSource.Blender, new Vector3(0.4f, 0.4f, 0.4f)),
                     Prefab = instance,
-                    Materials = 3,
+                    Materials = 5,
                 };
 
-                Assert.IsTrue(row.MaterialsOverLimit);
-                row.Materials = 2;
+                Assert.IsTrue(row.MaterialsOverLimit); // the limit is 4
+                row.Materials = 4;
                 Assert.IsFalse(row.MaterialsOverLimit);
             }
             finally

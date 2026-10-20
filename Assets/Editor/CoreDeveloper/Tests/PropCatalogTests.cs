@@ -87,7 +87,7 @@ namespace Blackout.Editor.Tests
             Assert.AreEqual(PropSize.Large, PropCatalog.Find("Prop_Locker").SizeClass); // 2.0 m tall
             Assert.AreEqual(PropSize.Medium, PropCatalog.Find("Prop_Crate").SizeClass);
             Assert.AreEqual(PropSize.Small, PropCatalog.Find("Medkit_Visual").SizeClass);
-            Assert.AreEqual(1500, PropCatalog.Find("Prop_LabBench").Budget.TargetTriangles);
+            Assert.AreEqual(3000, PropCatalog.Find("Prop_LabBench").Budget.TargetTriangles); // 3.5 m long: a Large prop
             Assert.AreEqual(6000, PropCatalog.Find("Weapon_Smg_Visual").Budget.TargetTriangles);
             Assert.AreEqual(10000, PropCatalog.Find("Generator_Visual").Budget.TargetTriangles);
             Assert.AreEqual(5000, PropCatalog.Find("SecurityRobot_Visual").Budget.TargetTriangles);

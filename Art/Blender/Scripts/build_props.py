@@ -57,6 +57,12 @@ def bx(mat, c, s, bevel=0.0, seg=1, tilt=None):
     S.box(OBJ, MAT[mat], c, s, bevel=bevel, seg=seg, tilt=tilt)
 
 
+def bx_part(part, mat, c, s, bevel=0.0, seg=1, tilt=None):
+    """A box in its OWN object called `part` ("Screen", "Foot"). The World Builder finds a monitor's glowing screen by this name
+    (PowerStateLighting dims it at the blackout, BunkerDresser keeps it out of the lightmap), as the old placeholder had it."""
+    S.box(part, MAT[mat], c, s, bevel=bevel, seg=seg, tilt=tilt)
+
+
 def cyl_y(mat, c, r, h, segs=16, r2=None, bevel=0.0):
     S.cyl(OBJ, MAT[mat], c, 'y', r, h, segs=segs, r2=r2, bevel=bevel)
 
@@ -221,13 +227,13 @@ def meeting_table():
 
 def monitor():
     """A flat-panel monitor: an oval foot, a hinged neck, a thin panel with a glowing screen, a back housing and a power LED."""
-    bx("PlasticDark", (0, 0.01, 0), (0.3, 0.02, 0.2), bevel=0.008, seg=2)  # foot
+    bx_part("Foot", "PlasticDark", (0, 0.01, 0), (0.3, 0.02, 0.2), bevel=0.008, seg=2)  # foot (its own part, like the placeholder)
     prism_side("MetalDark", [(-0.065, 0.02), (-0.02, 0.02), (-0.03, 0.3), (-0.075, 0.3)], 0.02, bevel=0.003)  # neck
     cyl_x("MetalDark", (0, 0.3, -0.058), 0.022, 0.08, 12)  # hinge
     bx("PlasticDark", (0, 0.52, -0.03), (0.7, 0.44, 0.025), bevel=0.008, seg=2)  # panel
     bx("PlasticDark", (0, 0.5, -0.075), (0.4, 0.3, 0.06), bevel=0.012, seg=2)  # back housing
-    bx("GlowScreen", (0, 0.525, -0.0165), (0.66, 0.39, 0.003))  # screen
-    bx("GlowGreen", (0.3, 0.31, -0.0175), (0.008, 0.008, 0.002))  # power LED
+    bx_part("Screen", "GlowScreen", (0, 0.525, -0.0165), (0.66, 0.39, 0.003))  # screen (its own part: it dims at the blackout)
+    bx_part("Screen", "GlowGreen", (0.3, 0.31, -0.0175), (0.008, 0.008, 0.002))  # power LED, with the screen
 
 
 def wall_monitor():
@@ -235,8 +241,8 @@ def wall_monitor():
     bx("MetalDark", (0, 0, 0.015), (0.4, 0.25, 0.03), bevel=0.004)  # wall bracket
     bx("PlasticDark", (0, 0, 0.05), (1.16, 0.68, 0.04), bevel=0.01, seg=2)  # panel
     bx("PlasticDark", (0, 0, 0.033), (0.7, 0.4, 0.012), bevel=0.003)  # rear housing step
-    bx("GlowScreen", (0, 0.01, 0.0705), (1.10, 0.6, 0.003))  # screen
-    bx("GlowGreen", (0.5, -0.315, 0.0705), (0.01, 0.01, 0.002))  # power LED
+    bx_part("Screen", "GlowScreen", (0, 0.01, 0.0705), (1.10, 0.6, 0.003))  # screen (its own part: it dims at the blackout)
+    bx_part("Screen", "GlowGreen", (0.5, -0.315, 0.0705), (0.01, 0.01, 0.002))  # power LED, with the screen
 
 
 def office_chair():
@@ -371,15 +377,16 @@ def make_materials():
     return mats
 
 
-def unity_bounds(ob):
-    pts = [S._to_unity(v.co) for v in ob.data.vertices]
+def unity_bounds(obs):
+    obs = obs if isinstance(obs, (list, tuple)) else [obs]
+    pts = [S._to_unity(v.co) for ob in obs for v in ob.data.vertices]
     lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     return lo, hi
 
 
-def check(name, ob, pivot, size):
-    lo, hi = unity_bounds(ob)
+def check(name, obs, pivot, size):
+    lo, hi = unity_bounds(obs)
     sz = hi - lo
     c = (lo + hi) / 2.0
     problems = []
@@ -391,15 +398,16 @@ def check(name, ob, pivot, size):
         problems.append(f"pivot: centre ({c.x:.3f}, {c.y:.3f}, {c.z:.3f})")
     if pivot == "WallFace" and (abs(lo.z) > 0.05 or abs(c.x) > 0.05 or abs(c.y) > 0.05):
         problems.append(f"pivot: back z {lo.z:.3f}, centre ({c.x:.3f}, {c.y:.3f})")
-    print(f"[Props] {name}: {sum(len(p.vertices) - 2 for p in ob.data.polygons)} triangles, "
-          f"{len(ob.data.materials)} materials, bounds {sz.x:.2f} x {sz.y:.2f} x {sz.z:.2f}"
+    used = {m.name for ob in obs for m in ob.data.materials}
+    print(f"[Props] {name}: {sum(len(p.vertices) - 2 for ob in obs for p in ob.data.polygons)} triangles, "
+          f"{len(used)} materials, bounds {sz.x:.2f} x {sz.y:.2f} x {sz.z:.2f}"
           + ("  WARNING: " + "; ".join(problems) if problems else "  ok"))
 
 
-def export(ob, path):
+def export(obs, path):
     for o in bpy.data.objects:
-        o.select_set(o == ob)
-    bpy.context.view_layer.objects.active = ob
+        o.select_set(o in obs)
+    bpy.context.view_layer.objects.active = obs[0]
     bpy.ops.export_scene.fbx(
         filepath=path, use_selection=True, object_types={'MESH'}, global_scale=1.0, apply_unit_scale=True,
         apply_scale_options='FBX_SCALE_UNITS', axis_forward='-Z', axis_up='Y', bake_space_transform=True,
@@ -433,13 +441,20 @@ def main():
         stem, builder, pivot, size = BUILDERS[key]
         S.OBJECTS.clear()
         builder()
-        ob = S.create_object(OBJ, mats, 40.0)
-        ob.name = stem
-        ob.data.name = stem
-        world_uv(ob)
-        check(key, ob, pivot, size)
-        export(ob, os.path.join(OUT_DIR, stem + ".fbx"))
-        built.append((key, ob, size))
+        names = [OBJ] + [n for n in S.OBJECTS if n != OBJ]            # the prop itself, then its named parts ("Foot", "Screen")
+        obs = []
+        for n in names:
+            o = S.create_object(n, mats, 40.0)
+            o.name = stem if n == OBJ else n                          # the FBX node names: SM_Prop_Monitor, Foot, Screen
+            o.data.name = o.name
+            world_uv(o)
+            obs.append(o)
+        check(key, obs, pivot, size)
+        export(obs, os.path.join(OUT_DIR, stem + ".fbx"))
+        for o in obs[1:]:                                             # a unique name again, so the next prop's "Screen" stays "Screen"
+            o.name = f"{o.name}__{key}"
+            o.data.name = o.name
+        built.append((key, obs, size))
     if preview:
         render_sheet(built, preview)
 
@@ -473,10 +488,11 @@ def render_sheet(built, folder):
     sc.collection.objects.link(cam)
     sc.camera = cam
     cam.data.lens = 35
-    for key, ob, size in built:
+    for key, obs, size in built:
         for other in built:
-            other[1].hide_render = other[1] != ob
-        lo, hi = unity_bounds(ob)
+            for o in other[1]:
+                o.hide_render = other[1] is not obs
+        lo, hi = unity_bounds(obs)
         centre = S.B((lo + hi) / 2.0)
         # a pivot-centred prop would sit half below the floor; lift the floor to the bottom of the model
         floor.location.z = lo.y - 0.0 if lo.y > -10 else 0.0
