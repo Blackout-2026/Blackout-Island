@@ -100,7 +100,7 @@ MonoBehaviour:
   aimForeArmRRadians: -0.08
 --- !u!4 &8913312973670734922 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7018898006467884963, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6403790983501064391, guid: a6edc560301f605498e50b6f448b6faf, type: 3}
   m_PrefabInstance: {fileID: 1934947363855625193}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2941488188713358633

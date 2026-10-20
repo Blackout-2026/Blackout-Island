@@ -54,3 +54,51 @@ drive the robot from `RobotGaitMath`, which is directly testable.
   animator; the robot stands a little straighter than in the screenshots.
 - The tests that import real assets write to a `_Test` folder and delete it afterwards, so an interrupted run can leave
   `Assets/Materials/Models/_Test` or `Assets/Textures/Models/_Test` behind. Delete those folders if you see them.
+
+---
+
+# Viva notes: the real robot model (Core Developer, step C8)
+
+## What I built
+
+- `SM_SecurityRobot.fbx` and `Art/Blender/SM_SecurityRobot.blend`: 17 meshes (16 joints and the scanner dot), 4,740 triangles,
+  4 materials, 1.068 x 2.370 x 0.635 m, one 2048 texture set. It replaces the primitive placeholder; the joint names,
+  offsets and material names did not change, so the Agent Controller edited nothing.
+- Five Blender scripts in `Art/Blender/Scripts`: `build_robot.py`, `bake_robot.py`, `export_robot.py`, `preview_robot.py`
+  (plus the shared `gen_parts.py` and the `bake_smg.py` helpers). `RobotModelFbxTests` checks the real FBX.
+
+## Why this design
+
+- **I read the animator first.** `ProceduralRobotAnimator` finds 12 joints by exact name with a depth-first search, saves each
+  joint's rest rotation, and then sets `rest * AngleAxis(angle, Vector3.right)`. It moves `Pelvis` by its local position. So
+  the model needs exact names, unique names, rest rotation 0, local X as the left-right axis, and `Pelvis` directly under the model.
+- **The export problem was measured, not assumed.** I built a scratch Unity project with the same import settings and
+  exported a 4-level test chain both ways. Apply Transform ON broke the third level (`Shin_L` rotated 270 degrees). OFF left
+  a 90 degree rotation on the root. Cancelling that rotation in Blender (an Empty rotated +90 about X, children modelled in
+  that frame with z mirrored) gave rotation 0 and the exact `RobotRig` offsets on all four levels.
+- **A second probe caught a bug in my first fix.** With `Pelvis` as the only top-level node, Unity merged it into the model
+  root, so no object was called `Pelvis` and the robot sat 1.05 m too high. A plain Empty above it fixed that.
+- **One atlas, one build for all parts.** The parts are merged for UV unwrapping and baking (so ambient occlusion sees the
+  neighbouring parts and every part has the same texel density), then split back into joints. Yellow, steel and hazard stripes
+  are painted into the Body atlas through a face-corner colour, which is how the model stays inside 4 material slots.
+- **Hidden faces are removed per joint.** A face is only deleted if the same joint's other parts cover it, because parts of
+  other joints move away from it.
+
+## One number and why
+
+- **-90 / +90 degrees.** The only rotation in the whole file is +90 about X on the root Empty. It is exactly the opposite of
+  what the FBX exporter adds for Z-up to Y-up, so the net is 0 and every joint is clean in Unity.
+- **4,740 triangles** against a target of 5,000: the hidden-face pass removed about 500 faces, and I spent the saving on rounder armour (big round pauldrons, a smooth helmet) and trimmed small hidden details (hip balls, chin guard, hoses) to stay under target.
+- **White, not grey.** The look was changed to white armour with a black vest on request, after a first grey version; only the build script and the bake colours changed, the joints, size and names did not. Before/after images: `Desktop/Tactical_Guard_Previews/comparison_*.png`.
+
+## Known weaknesses
+
+- Only one level of detail. `RobotLODBuilder` makes LODs for the placeholder only; the FBX needs its own reduced mesh.
+- The textures are procedural (edge wear, grime, paint chips), not hand painted. At 487 px/m small details such as the
+  vent slats are modelled, not painted.
+- The first import must be checked in the Editor: run **Blackout > Art > Build Security Robot Visual Prefab** and
+  `RobotModelFbxTests`. I measured the import in a scratch project, not in your open project.
+- The scanner dot shares the red eye material (as before), so the amber idle colour is still not shown.
+- **The weapon is a white carbine, not the prototype's twin-barrel pod** (my change, from a reference photo). It is built in the hand's own axes so that
+  the barrel points down -Y (the way the arm hangs) and the animator's -1.5 rad aim swing turns it forward. Its muzzle brake ends
+  at -0.33 m below the wrist, which is where `MuzzlePoint` is created, so the shooter's ray starts at the barrel. The test measures it.
