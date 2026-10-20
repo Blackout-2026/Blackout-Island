@@ -126,10 +126,9 @@ byte-identical. It rebuilds only the parts it generated (named `<Room>_...`); an
 | Materials | One per room, in `Assets/Materials/Environment/Greybox`, using palette colours: `Greybox_Bunker_BunkerEntranceLobby` #86857D, `..._BunkerEntranceRamp` #A27B1D, `..._SecurityArea` #AEB9C4, `..._Corridor` #6C6E6A, `..._GeneratorRoom` #6A7350, `..._Laboratory` #E9EEEF. Build Bunker Blockout still assigns them; Apply Materials (W5) then replaces them |
 | Barricade crate space | Corridor, 1.5 m cube at (0.7, 2.5, 95). Nothing is built there, and no marker is within 0.4 m of it |
 
-**Known issues** (fixed in the entrance-building step):
-- The lobby floor and the D-Bunker sill are at y 10.0, exactly the plateau's height, so they can flicker against
-  the terrain.
-- The ramp's side walls and roof stick out of the plateau between z 52.4 and 62.
+**W13 entrance fix:** the entrance exterior now covers the ramp's exposed side walls/roof, and a terrain cut
+under the lobby floor and D-Bunker sill removes their overlap with the plateau. See "Entrance exterior and
+retaining wall (W13, fix 2)" below. Build Terrain retains the lobby cut as well as its original ramp cut.
 
 ## Gameplay markers (W3)
 
@@ -160,7 +159,7 @@ waypoints by id.
 | CureSocket | (0, 2.5, 135) | 180 | Floor level, at the centre of the containment chamber; the opening faces D-Lab |
 | HealthPickup_Security | (6.5, 2.5, 80.5) | 0 | |
 | HealthPickup_Corridor | (0.9, 2.5, 119) | 0 | x 1.2 → 0.9 (corridor pillars) |
-| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | Catwalk deck height. Still out of reach: W10's dressing does not build a catwalk |
+| HealthPickup_Catwalk | (−18.5, 5.5, 114.5) | 0 | On the W13 catwalk; reached by the ten steps at the room's north-east corner |
 | BoatExit | (0, 1.3, −124) | 0 | Centre of the 6 m exit zone |
 | DoorSocket_D-Bunker | (0, 10, 48.2) | 0 | Gap 1.4 × 2.3 m. Sliding, unlocked |
 | DoorSocket_D-Security | (0, 2.5, 82.2) | 0 | Sliding, unlocked |
@@ -371,9 +370,59 @@ its colour, in this order.
 - Layers are `Assets/Environment/Terrain/Layers/TL_<Surface>.terrainlayer`. A layer uses its surface's W5 BaseColor and
   Normal textures when they exist. Until then it is a white texture times the flat colour (#847860, #2C3A1D, #32281A,
   #43423D), stored in linear space because URP Terrain Lit multiplies by it as it is. Smoothness and metallic are the
-  surface's constants; no mask maps.
+  surface's constants for the RGB24 fallback; no mask maps. See the W13 roughness correction below.
 - The splat map is 512² (0.78 m per texel, like the heightmap). Share of the land above water: Sand 6.3 %, Grass 61.1 %,
   ForestFloor 23.1 %, Rock 9.4 %.
+
+### Terrain roughness correction (W13)
+
+The pale blue, icy ground was caused by the generated white fallback texture's alpha channel.
+`TerrainLayerWhite.asset` was RGBA32 with alpha 1. URP Terrain Lit's `SplatmapMix` reads diffuse alpha as
+smoothness when that channel exists, so it rendered fully smooth ground despite the layers' rough settings.
+The blue sky reflection then dominated the sand, grass and soil colours.
+
+The shared **4 × 4 white texture is now RGB24, with no alpha**. Terrain Lit uses the existing layer constants:
+smoothness **0.08** for Sand, Grass and ForestFloor, and **0.20** for Rock. Existing colour remaps, tiling,
+metallic values, lighting, fog and sky remain unchanged. The texture's GUID is preserved; its pixel payload
+changes from 64 to 48 bytes. No terrain repaint, vegetation rebuild or NavMesh rebake is required.
+
+`Assets/Editor/WorldBuilder/TerrainColourCorrection.cs` provides:
+
+- **Blackout/World/Correct Terrain Colours**: converts only the generated shared white fallback in place.
+  Re-running reports "already corrected" and leaves the file byte-identical. A customised RGBA fallback is
+  rejected for inspection. Supplied albedo textures are not modified.
+- **Blackout/World/Preview Terrain Colour Correction**: captures Beach and Forest before/after using temporary
+  terrain/layer/texture copies and the same lighting. Save or close unsaved scenes first. PNGs go outside the repo
+  under `%TEMP%/BlackoutIsland-TerrainColour/<timestamp>-<suffix>`; the Console prints the folder.
+
+`TerrainPainter.cs` uses the same RGB24 helper when creating the fallback and corrects the old generated RGBA32
+version when reusing it, so **Paint Terrain And Forest** retains the fix. That painting tool still overwrites
+hand painting as described above; use **Correct Terrain Colours** to repair the texture without repainting.
+Authored textures with alpha still need suitable smoothness data; this repair targets the generated fallback.
+
+**Verified on 2026-10-20, Unity 6000.3.25f1:**
+
+- Direct3D11 preview exit 0; seven protected scene/terrain/NavMesh/layer files unchanged. Changing albedo colours
+  while retaining RGBA did not solve the reflection; switching the shared white copy to RGB24 did. Beach and
+  forest before/after images were inspected with lighting unchanged.
+- `Blackout.Editor.TerrainColourCorrection.ApplyAndVerify` exit 0; repeated application byte-identical;
+  fourteen protected scene/data/layer/meta files unchanged, including the fallback metadata/GUID.
+- A fresh saved-scene capture exits 0 with Environment unchanged. Beach and forest images show rough, muted
+  ground with the icy reflection removed. Only the shared texture asset changed; no other roles' files changed.
+- No C# compiler errors/warnings. No unit or PlayMode tests were added/run for this correction, and no full
+  gameplay run or lightmap/occlusion bake is claimed.
+
+Evidence outside the repo:
+
+- Preview: `%TEMP%/BlackoutIsland-TerrainColour/20261020-060235-304c702d`.
+- Saved scene: `%TEMP%/BlackoutIsland-Screenshots/20261020-074344-f8f1b6e9`.
+- Logs: `%TEMP%/blackout-w13-terrain-preview.log`, `blackout-w13-terrain-apply.log` and
+  `blackout-w13-terrain-saved-capture.log`.
+
+Before opening the PR, open Environment and inspect the beach, forest trail and steep rocky banks. Run
+**Correct Terrain Colours** again and confirm "already corrected" without a new asset diff. In Bootstrap,
+check ground readability during movement and the Console. The terrain still uses flat placeholder colours;
+detailed sand, soil, grass and rock texture sets remain separate art work.
 
 ### Vegetation
 
@@ -1175,7 +1224,8 @@ they do not guarantee a 1.2 m aisle between every pair of furniture pieces or ac
 
 ### Saved output and missing kit pieces
 
-The current scene contains **61 linked instances** from 70 rows. Existing art and its materials are reused;
+The W10 dressing container contains **61 linked instances** from 70 rows. W13 places an additional linked
+containment chamber separately under `Props/LabContainment`. Existing art and its materials are reused;
 no new art placeholders were needed. Nine rows are skipped because these exact prefab paths are absent:
 
 | Missing prefab under `Assets/Prefabs/Props/` | Placements | Purpose |
@@ -1213,8 +1263,8 @@ Keep **all static flags clear** on moving or collectible objects and their affec
 
 Only Environment's fixed dressing flags are authored here. Door, barricade, pickup, player and agent assets were
 not edited or validated by the saved-scene tests. Their owners must retain dynamic flags and closed-door navigation
-blocking. The catwalk, its stairs, outdoor dressing and the generator plinth remain deferred; the catwalk health
-marker is still unreachable. A future catwalk build must keep agents off its stairs as specified in the reference.
+blocking. W13 now adds the player-only catwalk/stairs and supports the existing health marker (see fix 3 below).
+Outdoor dressing and the generator plinth remain pending.
 
 ### Verification and final lighting bake
 
@@ -1327,6 +1377,410 @@ team's integrated scene setup. Lightmap/reflection/occlusion bakes and deferred 
 limitations; W12 does not complete them. The user explicitly dropped the missing `docs/playtest-log.md` task,
 so W12 claims no fixes from that log.
 
+## Compound fence and open gate (W13, fix 1)
+
+**Blackout/World/Build Compound Fence** (`Assets/Editor/WorldBuilder/CompoundFenceBuilder.cs`) adds
+`BunkerExterior/CompoundFence`. It reuses its named generated children and retains other exterior content.
+Run **Blackout/World/Bake NavMesh** after changing the fence, then **Validate Layout**.
+
+- Four fence runs: west/east at x ±22, z 28…61; south at z 28, x −22…−3.2 and 3.2…22. These match the
+  prototype's fence endpoints after negating Z. The northern retaining wall is a separate pending fix.
+- 36 chain-link panels, each at most 3 m wide and 3 m high, with posts, upper/lower rails and coiled top wire.
+  Bases follow `IslandHeightField`; the mesh is generated once in the Editor with two material submeshes.
+- Two 3 × 2.6 m gate leaves are fixed open by 1.9 radians (108.9°), leaving the 6.4 m passage clear.
+  A raised 5.6 m barrier arm and its housing stand beside the gate. These are static scenery, not interactive doors.
+- Broad fence/leaf colliders use the existing **Ignore Raycast** layer: the player collides with them, while
+  the shared weapon masks exclude them, matching the prototype's shoot-through fence. The existing Systems
+  Engineer layer assigner preserves non-Default layers. The owned NavMesh must be rebaked around these blockers;
+  their thin tops are narrower than the 0.8 m agent diameter.
+- Static flags are Occludee and Batching only: chain link must not become a solid occluder or lightmap surface.
+- Generated assets: `Assets/Environment/CompoundFence.asset`, `Assets/Materials/Environment/CompoundFence.mat`,
+  `Assets/Textures/Environment/CompoundFence_ChainLink.png`. Steel reuses `Env_MetalPlate.mat`.
+  The chain texture is a generated 64 px cutout tile; no supplied asset is required. Mipmaps are off to retain
+  thin wires, so distant shimmer needs visual review. The top wire is a simple helix without individual barbs.
+
+The batch entry `Blackout.Editor.CompoundFenceBuilder.BuildAndVerify` builds twice and checks that the scene,
+mesh, material and texture are byte-identical, checks gate clearance and the player/fence collision setting,
+then rebakes the owned NavMesh and runs the existing mission/marker/door-gap layout validation.
+Verified with Unity 6000.3.25f1 on 2026-10-19: batch exit 0, 10,992 generated triangles, repeat outputs
+byte-identical, gate-clearance and collision checks passed. The rebake uses 156 colliders plus 604 tree/rock
+capsules and produces 8,342 triangles; Validate Layout passes 66/66. Direct3D11 capture also exits 0 with
+Environment unchanged; its entrance image shows the new side fences. No C# compiler errors/warnings were logged.
+Logs are outside the repo: `%TEMP%/blackout-w13-fix1-fence.log` and `blackout-w13-fix1-capture.log`.
+Before committing, inspect the fence from both sides, walk through the open gate, and check that shots pass
+through the fence. Entrance exterior, retaining wall, booth and compound dressing remain separate fixes.
+
+## Entrance exterior and retaining wall (W13, fix 2)
+
+**Blackout/World/Build Entrance Exterior** (`Assets/Editor/WorldBuilder/EntranceExteriorBuilder.cs`) builds
+only `BunkerExterior/EntranceExterior`, preserving the fence and existing bunker interior. It reuses its named
+generated boxes; other children are retained. No supplied assets or other owners' scene/prefab changes are needed.
+
+- Facade: x ±6.4, z 47.8…48.0, with a 1.4 × 2.3 m gap aligned with the existing D-Bunker socket at z48.2.
+  The facade face is offset from the existing lobby wall so their visible surfaces cannot coincide.
+- Side walls: x −6.4…−6 and 6…6.4, z47.8…62, y7…14. They wrap outside W3's lobby walls and hide the exposed ramp.
+- Roof: x ±6.8, z47.4…62.5, y14…14.5; front/side parapets reach y15. The door canopy sits 0.25 m above the door.
+  Hazard-coloured trim, two side vent grilles and two retaining-wall drains provide the reference's basic detailing.
+- Apron: x ±7, z40…47.8, top y10.04. Its 4 cm step is below the player step limit and covers the terrain cut's
+  rounded-out front edge. Lobby and ramp floors, markers, doors and their opening sizes are unchanged.
+- Retaining wall: x ±24, z62…63.4, y7…15.2; six pilasters at x ±9/±15/±21 and a cap at y15.2…15.45.
+  The middle x ±2.6 is open below y9.7, clearing the existing sloping ramp roof beneath it.
+- Terrain: only cells overlapping the lobby/sill footprint (x ±6, z48…52.4) are additionally cut. Existing holes
+  and all heights, splats and vegetation are preserved. TerrainBuilder also calls the same cut helper after
+  regenerating its ramp hole, preventing the floor overlap from returning on a terrain rebuild.
+- Existing Concrete, ConcreteStained, MetalPlate and HazardStripe materials are reused with world-space box UVs.
+  Generated colliders use the existing Level layer, with the existing fixed-environment static flags.
+
+After building, run **Bake NavMesh**, then **Validate Layout**. The batch method
+`Blackout.Editor.EntranceExteriorBuilder.BuildAndVerify` additionally builds twice to check byte-identical scene
+and terrain output, and checks a player-sized volume along the lobby/ramp centreline before rebaking navigation.
+NavMeshBaker now unregisters its old data before overwriting the asset in place: replacing registered native
+tiles before removing them caused a Unity crash during this fix's first navigation check. The corrected order
+retains the asset GUID and allows rebaking after geometry changes.
+
+Verified on 2026-10-19 in Unity 6000.3.25f1: 40 generated boxes, scene/terrain byte-identical on repeat, 1.8 m
+capsule clearance through the lobby/ramp, and final build exit 0. The original flat-box clearance probe caught
+the sloping floor; it was replaced by a capsule. The terrain cut initially adds 108 cells and adds none on repeat.
+Navigation rebake: 196 colliders plus 604 tree/rock capsules, 8,414 triangles, 153,890 m²; Validate Layout PASS66/66.
+Existing NavMeshBakerTests and IslandBoundaryTests pass 21/21, exit 0. Direct3D11 capture exits 0 with the scene
+unchanged; the entrance image shows the facade, canopy, roof and retaining-wall wings. Final logs contain no
+C# compiler errors/warnings. Scene block comparison finds no removed blocks and only the exterior root's child
+reference changed among existing blocks. Logs/results are outside the repo: `%TEMP%/blackout-w13-fix2-entrance.log`,
+`blackout-w13-fix2-capture.log`, `blackout-w13-fix2-tests.log` and `blackout-w13-fix2-tests.xml`.
+
+Inspect the exterior from the yard and both sides, then walk from the apron through the doorway and down the ramp.
+Check for terrain in the lobby floor, exposed ramp geometry, a blocked doorway, or new Console errors.
+The guard booth, mast, truck, compound props and signage remain separate world-completion work.
+
+## Generator catwalk and stairs (W13, fix 3)
+
+**Blackout/World/Build Generator Catwalk** (`Assets/Editor/WorldBuilder/GeneratorCatwalkBuilder.cs`) adds
+`Bunker/GeneratorRoom/GeneratorCatwalk`. It reuses 51 named generated parts and preserves other room content.
+The existing health marker and Systems Engineer's pickup are not moved or edited.
+
+| Item | Placement / dimensions |
+| --- | --- |
+| Deck | x −19.6…−6, z113.6…116; 13.6 × 2.4 m, top y5.5, slab 0.15 m |
+| Stairs | x −6…−2.9, z114.6…116; 10 risers × 0.3 m, 0.31 m run, 1.4 m width; floor y2.5 to deck y5.5 |
+| Guard rails | Front/west/east deck edges, with the east stair connection left open; sloping rail beside stairs; top rail 1 m above its local walking surface |
+| Supports | Columns/crossbeams at x−16, −13, −10, −7; westernmost prototype column omitted because it intersects the placed second fuel tank |
+| Health marker | Existing (−18.5, 5.5, 114.5), now supported by the deck |
+
+The existing MetalPlate material and world-space box UVs are used. The surface is a continuous metal placeholder
+for the reference's textured grating; no new texture/model asset is required. Real boxes provide deck/stair
+collision on Level. Thin rail geometry and broad movement guards use Ignore Raycast, allowing shots through
+the open railings. Fixed rendered parts use the existing environment static flags; invisible guards have none.
+
+**Player only:** NavMeshBaker marks this container's collision geometry Not Walkable during collection. It remains
+in the bake as obstruction, so agents avoid columns and cannot climb the stairs or stand on the deck. This is
+explicit because 0.3 m risers are below the agent's 0.4 m step height. The rest of the generator-room floor stays
+available. Run **Bake NavMesh** and **Validate Layout** after rebuilding the catwalk.
+
+`Blackout.Editor.GeneratorCatwalkBuilder.BuildAndVerify` builds twice and checks a byte-identical scene. It then
+uses a temporary CharacterController configured from the saved player movement settings to walk from the floor,
+up the stairs, to the health marker, back to the stairs and down to the floor. It destroys the probe before saving,
+rebakes navigation, and checks for absent agent NavMesh at 26 deck positions and all ten stair treads.
+
+Verified in Unity 6000.3.25f1 on 2026-10-19: build exit0; repeat scene identical; full CharacterController route
+passed using saved height1.75, radius0.35, stepOffset0.45 and slopeLimit49. These current gameplay settings differ
+from the 1.8 m design target; they were read, not changed. Rebake: 247 colliders plus 604 tree/rock capsules,
+8,455 triangles, 153,880 m². No agent NavMesh at checked deck/stair positions; Validate Layout PASS66/66.
+Direct3D11 capture also exits0, with Environment unchanged; the powered and blackout images show the new deck,
+rails and supports. No C# compiler errors/warnings were logged. Scene-block comparison finds no removed existing
+blocks, with only the generator-room child reference changed among existing blocks.
+Logs: `%TEMP%/blackout-w13-fix3-catwalk.log` and `blackout-w13-fix3-capture.log`.
+Before committing, walk the route through Bootstrap and collect the catwalk health pickup while injured;
+inspect railing gaps and confirm agents stay downstairs. The automated movement probe
+checks the saved world collision, not the actual pickup collection or complete player-input/agent behaviour.
+
+## Laboratory containment chamber (W13, fix 4)
+
+**Blackout/World/Place Lab Containment Chamber** (`Assets/Editor/WorldBuilder/LabContainmentBuilder.cs`) places
+the Core Developer's existing `Assets/Prefabs/Props/Prop_ContainmentChamber.prefab` under
+`Props/LabContainment/LabContainment_Chamber`. The linked instance uses the existing CureSocket position
+**(0, 2.5, 135)** and yaw **180°**, turning its +Z opening south toward the D-Lab door. Re-running reuses it;
+an existing object with a different prefab source is rejected rather than replaced.
+
+- Source size is 3.8 × 2.88 × 3.8 m: top y5.38 leaves 0.12 m below the lab's y5.5 ceiling.
+- The 0.25 m floor plate and sixteen glass-wall colliders remain. The south opening permits player entry.
+- The gameplay CurePickup already supplies a pedestal and case. Only the chamber instance's `Pedestal` and
+  `PedestalPlate` visuals and matching central capsule collider are disabled, avoiding a duplicate pedestal.
+  The source chamber prefab, CurePickup prefab, player settings and Interactables scene are unchanged.
+- Fixed opaque parts use environment static flags; glass uses Occludee/Batching flags; cyan emissive parts
+  stay out of static lighting. Instance layers are Level so the chamber blocks movement and world queries.
+- The chamber's CureAnchor remains unused: the existing gameplay pickup retains its authored placement and
+  animations. Environment-only screenshots show the chamber without that pickup; use Bootstrap to view both.
+
+The batch entry `Blackout.Editor.LabContainmentBuilder.BuildAndVerify` checks scene repeatability and ceiling
+clearance. It temporarily instantiates the unchanged cure prefab with behaviours disabled, then walks a
+CharacterController using the saved player settings through the opening, onto the plate, into overlap with
+the pickup trigger and back out. The probe and temporary cure copy are destroyed before any scene save;
+no gameplay events are raised. It rebakes navigation, validates the mission route and checks protected owner
+files byte-for-byte. This verifies physical access; actual cure collection/events remain an integrated Play-mode check.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: build exit0, scene identical on repeat, ceiling/player/trigger checks
+passed and protected files unchanged. Bake: 264 colliders plus604 tree/rock capsules, 8,483 triangles,
+153,870 m². Validate Layout PASS66/66. Direct3D11 capture exits0 with Environment unchanged; the lab image
+shows the linked chamber, its open south side and cyan ring. No C# compiler errors/warnings in final runs.
+Logs: `%TEMP%/blackout-w13-fix4-chamber.log` and `blackout-w13-fix4-capture.log`.
+Before committing, play through Bootstrap, trigger the blackout, enter the lab and walk through the south opening
+to take the cure. Check ceiling clearance, glass visibility, a single pedestal and the Console.
+
+## Security and corridor details (W13, fix 5)
+
+**Blackout/World/Build Security and Corridor Details** (`Assets/Editor/WorldBuilder/SecurityCorridorBuilder.cs`)
+generates `Props/SecurityCorridorDetails/SecurityDetails` and `CorridorDetails`. It reuses named parts and
+removes only stale children with its generated prefix. Existing W10 dressing, markers and other owners'
+prefabs/scenes are preserved. Positions below are world metres, +Z north.
+
+| Detail | Placement / dimensions |
+| --- | --- |
+| Security wainscot | Six 1 m high wall skins, leaving the 3 m ramp mouth and 1.4 m D-Security opening clear |
+| Security partition | x4.35…4.50, z72…78; solid base to y3.45, glass to y4.8, top trim at y4.86 and three posts; open at both ends |
+| Detector frame | Posts at x±1.05, z80.8, each 0.24 m wide; 1.86 m clear passage, header underside y4.85; decorative, no detector gameplay |
+| Checkpoint counter | x−4.2…−1.8, z80.9…81.6; 1.1 m high |
+| Security overhead | 14 m cross-room tray and four cables at z76, ceiling grille near (−5.4, 5.45, 70.9), box camera placeholder at (−7.6, 5.08, 81.6) |
+| Corridor pillars | Five pairs at z88/94/100/112/118; x±1.2…±1.5, 0.64 m along Z, hazard feet 0.68 m along Z; 2.4 m clear between each pair |
+| Floor lines | 0.1 m wide at x±1.1, z82.4…123.6, surface y2.506 |
+| Overhead services | East main/rust pipes, west yellow branch and cable tray with five cables; fourteen east brackets; all below the y5.5 ceiling, lowest pipe underside y4.88 |
+| Wall fittings | Hose cabinet placeholder on east wall at z91.1; fuse boxes west at z97/115; low east grilles at z90/110 |
+| Puddles | Three thin, non-colliding ellipses around (0.4,92), (−0.5,103.5), (0.4,115); maximum width 1.7 m to fit the narrowed corridor |
+
+Existing environment materials are reused. The new owned `Assets/Materials/Environment/CorridorPuddle.mat`
+uses URP Lit, smoothness 0.92 and metallic 0.1; it is a flat wet-floor placeholder, without ripple animation.
+Boxes use world-metre UVs; pipes use built-in cylinder UVs. Solid partitions, posts, counter, pillars, wall boxes
+and trays have Level colliders. Thin wall/floor skins, grilles, overhead cylinders and puddles have disabled
+primitive colliders. Glass uses see-through static flags without shadow casting; puddles do not occlude or
+contribute GI. Other fixed parts use the environment static flags. No runtime scripts or input changes are added.
+
+The batch entry `Blackout.Editor.SecurityCorridorBuilder.BuildAndVerify` rebuilds twice to compare scene/material
+bytes, walks a temporary CharacterController using the saved player settings from the ramp mouth around the
+partition's north end to the security health marker, through the detector to the lab door and back, then removes
+the probe, rebakes navigation and runs Validate Layout. It checks the saved player settings and both gameplay
+scenes remain unchanged. This does not exercise moving agents, the pushable crate or door gameplay.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: final batch exit0, 30 security parts and 82 corridor parts;
+scene/material byte-identical on repeat, including fresh generation; player route passed; protected files
+unchanged. Rebake: 328 colliders plus604 tree/rock capsules, 8,548 triangles, 153,852 m²; layout PASS66/66.
+The initial repeat check caught URP synchronising the new material's legacy `_Color` after first import.
+The builder now runs URP material validation before the first asset write; fresh and subsequent runs pass.
+No final C# compiler errors/warnings. Logs: `%TEMP%/blackout-w13-fix5-details.log` and
+`blackout-w13-fix5-fresh.log`. A scene-block comparison found no removed original objects: only the Props
+root's child reference changed among pre-existing blocks.
+Direct3D11 capture also exits0 with Environment unchanged. The corridor image shows the pillars, floor lines,
+pipes, wall fittings and flat puddle placeholders. Images: `%TEMP%/BlackoutIsland-Screenshots/20261020-050903-72da319b`;
+log: `%TEMP%/blackout-w13-fix5-capture.log`. Security visuals still need the interactive check below.
+
+Before committing, run the menu again and confirm no new scene/material diff. In Bootstrap, walk both ends of
+the partition, reach the security health pickup, pass through the detector and corridor, and inspect pillars,
+grilles, pipes and wet-floor patches. Check doors, the crate and the Console with the gameplay scenes loaded.
+
+Remaining reference details are separate work: security east-side chairs, wall weapon rack, facility map and
+additional signage, live camera feed, corridor leaking-pipe particles, and generator/lab dressing gaps. The
+camera and hose cabinet are explicitly named `PH_` box placeholders; replace their generated geometry in this
+builder when detailed visuals are available. W10's optional missing pipe/tray/vent prefabs are still skipped;
+coordinate their eventual placement with these generated services to avoid duplicates. No asset supply is
+required to run this builder.
+
+## Beach and boat dressing (W13, fix 6)
+
+The measurements and verification below describe the original cabin boat. The later **Weathered rowboat
+replacement (W13)** section supersedes its hull, deck, cabin and small boat fittings; dock dressing and the
+existing lantern remain.
+
+**Blackout/World/Dress Beach and Boat** (`Assets/Editor/WorldBuilder/BeachDressingBuilder.cs`) adds named
+generated content under `Beach/BeachDressing` and `Beach/Boat/BoatDressing`. It preserves the W2 hull, dock,
+rails, cabin, terrain, markers and gameplay scenes. Matching prefab instances and mesh assets are reused;
+only stale children with this builder's generated prefix are removed. Source prefabs are never edited.
+
+| Detail | Placement / dimensions |
+| --- | --- |
+| Dock cargo | Linked `Prop_CrateSmall` instances, scales0.6/0.45, at (−0.95,1.6,−100) and (−0.95,2.125,−100.1); top yaw−22.92°. Linked `Prop_Barrel` at (0.95,1.3,−101) |
+| Route clearance | Cargo shifted from reference x−0.6/−0.55/+0.85 toward x−0.95/−0.95/+0.95, leaving at least1.3m between their inward edges. The top crate sits on the bottom crate rather than intersecting it |
+| Warning sign | Linked `Prop_Sign_PrivateIsland` at x−2.6,z−95.6, board centre2.05m above sampled saved terrain; yaw165.6° faces the approaching dock; 2.4m pole |
+| Dock ropes | Four stacked coils at (−0.7,1.35…1.53,−112); cleats at (1.15,1.35,−125/−120); two sagging mooring lines to the boat's west side |
+| Boat deck | Local x±1.3,z−2.6…4.1, top0.62 (world y0.77). A thin added collider supports the new deck; original hull collision is unchanged |
+| Boat fittings | Two dark side windows, two gunwale caps, twelve rail posts and two top rails; two `PH_JerryCan` boxes with handles, three stern rope coils |
+| Lantern | Emissive outer cylinder and six cage/cap/base parts around the existing lantern at boat-local (−1.2,2.45,−1.7). Existing W7 light, intensity and flame seed3 retained |
+
+All boat coordinates are local metres with +Z toward the stern; the existing boat position/yaw are preserved.
+Boat additions have no static flags. Fixed shore/cargo parts use the existing environment static flags; ropes
+use Occludee/Batching without GI or solid occlusion. Ropes and small visual fittings have no active colliders.
+Cargo, pole and deck use Level collision. Existing dock movement-only rail layers remain unchanged.
+
+`BeachRopeMesh.cs` builds six-sided tubes in the Editor: one shared16-span coil mesh, instantiated seven times,
+and one mesh for the two10-span mooring curves. Assets are `Assets/Environment/BeachRopeCoil.asset` and
+`BeachMooringRopes.asset`. The existing Fabric, MetalPlate and greybox boat/wood materials are reused.
+`Assets/Materials/Environment/BeachLantern.mat` supplies warm emission (#FFB050, intensity4, reference linear
+colour conversion). Its renderer is assigned to the existing FlickerLight; Setup Lighting also restores this
+reference when rerun. No new light, runtime script or per-frame mesh generation is added.
+
+The batch entry `Blackout.Editor.BeachDressingBuilder.BuildAndVerify` builds twice and compares scene, mesh and
+material bytes. It uses a temporary CharacterController with the saved player settings to walk from PlayerStart
+past the cargo to the dock landing and back to BoatExit, removes the probe, rebakes navigation and runs Validate
+Layout. It protects source prefab dependencies/metadata, player settings and both gameplay scenes byte-for-byte.
+Actual mission completion, agent movement and boat boarding are not exercised by that movement probe.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: batch exit0; 12 shore/dock parts and33 boat parts; scene, both mesh
+assets and lantern material byte-identical on repeat. PlayerStart→landing→BoatExit movement passed with saved
+player dimensions; 21 protected files unchanged. Rebake: 332 colliders plus604 tree/rock capsules, 8,566 triangles,
+153,850m²; layout PASS66/66. No original scene blocks removed; only Beach/Boat child lists and the existing
+lantern's lamp reference changed among original blocks. No C# compiler errors/warnings. Log:
+`%TEMP%/blackout-w13-fix6-beach.log`. Direct3D11 capture exits0 with Environment unchanged; beach PNG inspected
+for the coil, sign and cargo. Images: `%TEMP%/BlackoutIsland-Screenshots/20261020-053034-9b580b8b`;
+log: `%TEMP%/blackout-w13-fix6-capture.log`. The fixed beach pose does not show every boat fitting or the lantern.
+
+Before committing, rerun **Dress Beach and Boat** and check for no new scene/asset diff. In Bootstrap, walk
+from the start along the dock and back into the exit zone; inspect the warning sign from the dock, stacked cargo,
+rope coils, moorings, boat fittings and lantern flicker. Check the Console and the cure-carrying win condition.
+
+The existing hull shape and flat greybox wood/boat materials remain. Boat bobbing, rope attachment updates for a
+moving boat, animated ocean/foam, wind sway, beach ambient audio and detailed jerry-can models remain separate
+world-completion work. The `PH_JerryCan0/1` bodies/handles are the explicit model placeholders to replace in this
+builder when supplied; no external assets are required to run it.
+
+## Weathered rowboat replacement (W13)
+
+The user requested an original wooden rowboat based on their supplied image and approved additions in the
+Core Developer's model, texture, material and visual-prefab folders. `Environment.unity` now contains this
+linked visual at `Beach/Boat/RowboatVisual`. It replaces the cabin motorboat's appearance with a curved plank
+hull, teal interior, three benches, two oars, open fishing net, ropes, six round fenders and a red/cream lifebuoy.
+The prototype stays read-only; this appearance is an intentional departure from its cabin boat.
+
+### Assets and distance levels
+
+| Asset | Purpose |
+| --- | --- |
+| `Assets/Models/Custom/SM_Rowboat.fbx` | Two UV-mapped meshes; Unity imports LOD0 at 26,224 triangles and LOD1 at 7,329 |
+| `Assets/Textures/Models/T_Rowboat_BaseColor.png` | 2048 x 2048 baked colour/weathering atlas; sRGB, no smoothness alpha |
+| `Assets/Textures/Models/T_Rowboat_MetalSmooth.png` | 1024 x 1024 linear atlas; metallic in red, smoothness in alpha |
+| `Assets/Materials/Models/M_Rowboat_Weathered.mat` | One URP Lit material shared by both LODs |
+| `Assets/Prefabs/Models/Rowboat_Visual.prefab` | Visuals only: no colliders, Rigidbody or gameplay components |
+
+Imported bounds, including ropes/fenders, are **3.660 x 1.433 x 8.910 m** in Unity X/Y/Z. The hull was modelled
+at approximately 2.9 m beam and 8.8 m length, bow toward Blender -Y / Unity -Z. The export pivot is at zero;
+the presentation's 8 m Blender offset is removed. LODGroup screen-height thresholds are 0.16 and 0.025;
+LOD1 has about 72% fewer triangles. The final level culls below 0.025. No performance benchmark is claimed.
+
+**Blackout/World/Build Rowboat Visual Assets** (`RowboatAssets.cs`) configures the two texture importers,
+material and prefab without changing a game scene. It uses the existing FBX import rules. The generated
+material/prefab carry the `BlackoutGeneratedRowboat` label; the builder refuses to overwrite unlabelled assets
+or an unexpected Model source. Blender procedural colours are baked into PNGs; no Blender installation is
+needed to import the FBX on another teammate's machine. The procedural bump detail was not exported as a
+normal map.
+
+Editable Blender source and its export working copy are currently outside Git at
+`%TEMP%/BlackoutIsland-Boat/Weathered_Rowboat.blend` and `Weathered_Rowboat_GameExport.blend`. The Core Developer
+must retain the source and companion PNGs in permanent source-art storage; TEMP is not an archive. No source
+file has been added under `Art/Blender` in this change.
+
+### Scene placement and collision
+
+**Blackout/World/Replace Boat With Rowboat** (`RowboatPlacement.cs`) retains the original `Beach/Boat`
+position **(3.7, 0.15, -122.5)**, yaw approximately -2.9 degrees, and scale. The linked visual's local Y offset
+is **-0.28 m**, putting the keel slightly below water and floorboard tops at **world Y 0.1675 m**.
+
+- Exact-name generated hull, cabin, motor, rails, old fenders, deck, jerry cans and rope coils have their
+  renderers/colliders disabled. They remain in the hierarchy; no original scene objects are deleted.
+- The old lantern cage, bulb and post renderers are now disabled. A generated fire torch replaces them;
+  the existing light and FlickerLight are reused, with the torch coals as the emissive renderer.
+- `RowboatCollision` has 25 simple BoxColliders: nine floor strips, three benches, twelve side segments and
+  one transom. The net, oars, ropes, cleats and hanging fenders have no collision.
+- The user requested removal of the boarding extension. `DockToGunwale` and `GunwaleToFloor` and their
+  colliders are removed through Undo APIs, followed by the empty `RowboatBoarding` root. The cleanup preserves
+  other children/components and refuses to delete a plank with custom content. There is no boarding bridge;
+  total rowboat collision is now 25 boxes on Level. Boat parts have no static flags.
+- Existing mooring mesh endpoints are refitted to the rowboat gunwales. Dock cargo, rails and central route
+  stay in place. `BoatExit` remains **(0, 1.3, -124)**.
+- Build Terrain retains an installed `RowboatVisual`; Dress Beach and Boat reapplies the replacement after
+  dressing so legacy fittings remain disabled. Those rebuild paths were inspected in code; the rowboat
+  replacement entry itself was run repeatedly. No full terrain rebuild was run for this change.
+- The boat remains under the NavMesh baker's existing Boat exclusion. No NavMesh
+  rebake or changes to Interactables, Agents, Bootstrap, player settings or shared contracts were made.
+
+**Systems handoff:** `MissionZones.IsAtBoat` still checks horizontal distance less than 6 m and player
+Y greater than 0.5. The dock at Y 1.3 still qualifies; the rowboat floor at Y 0.1675 does not. This change
+preserves that mission rule. Systems Engineer: decide whether completion while standing on the lower floor
+should also be supported before changing your `MissionZones.cs`.
+
+### Fire torch and plank correction (W13)
+
+`BoatTorchBuilder.cs` runs as part of **Replace Boat With Rowboat** and **Dress Beach and Boat**. It builds
+`Beach/Boat/BoatTorch`, at boat-local **(-1.25, 0.6, -1.7)**, with 15 wood/iron/coal mesh parts and two particle
+systems. The handle, bands, cup, rim and basket ribs are generated primitives; they have no colliders.
+The original lantern objects remain disabled in the hierarchy. No runtime script or additional light is added.
+
+| Generated asset | Purpose |
+| --- | --- |
+| `Assets/Environment/BoatTorchFlame.asset` | 64 x 128 RGBA flame mask; curved outline, tapered tip and transparent edges |
+| `Assets/Materials/Environment/BoatTorch_Wood.mat` | Dark handle, URP Lit |
+| `Assets/Materials/Environment/BoatTorch_Iron.mat` | Basket and bands, URP Lit, metallic 0.65 |
+| `Assets/Materials/Environment/BoatTorch_Ember.mat` | Coal bed, warm emission 1.25 |
+| `Assets/Materials/Environment/BoatTorch_Fire.mat` | Additive URP Particles/Unlit; warm HDR colour (4, 2, 0.6) |
+
+The flame mask is generated deterministically in the Editor and saved as a Texture2D asset. Its tip fade
+normalises height 0.85…1 with `Mathf.InverseLerp` before `Mathf.SmoothStep(0, 1, t)`; the first version used
+SmoothStep's endpoints as thresholds and made the whole mask too transparent. Brightness is carried by
+the material's HDR colour, with white particle start colour and a yellow-to-red lifetime gradient.
+
+| System | Fixed seed | Rate / second | Lifetime | Maximum particles |
+| --- | --- | --- | --- | --- |
+| Flames | 31 | 24 | 0.45…0.8 s | 48 |
+| Sparks | 32 | 5 | 0.5…0.9 s | 12 |
+
+Both systems loop, prewarm, simulate in local space, shrink/fade with age and use camera-facing billboards.
+The combined cap is **60 particles**. This is a stylised visual effect; no fire damage or heat simulation is
+implemented. It uses Unity's particle simulation and the existing allocation-free FlickerLight.
+
+The existing `Lighting/OutdoorLights/OutdoorLights_BoatLantern` is moved to the torch head, set to realtime,
+colour **#FFAA46**, intensity **3.5**, range **7 m**, without shadows. Flame flicker seed **3** modulates it and
+the coal emission. Setup Lighting reapplies these torch settings after the original reference light spec,
+and Dress Beach and Boat restores the torch emission link. These rebuild hooks were inspected in code;
+the rowboat replacement entry was run repeatedly. A full lighting rebuild was not run for this correction.
+
+### Capture and verification
+
+**Blackout/World/Capture Rowboat Preview** writes two 1920 x 1080 PNGs to a unique folder under
+`%TEMP%/BlackoutIsland-Rowboat/` and prints each path. It uses the saved Environment lighting, 60-degree FOV,
+and a temporary camera. Torch particles are simulated for two seconds with their fixed seeds and paused
+for the capture. It refuses dirty scenes/Play mode and restores the previous scene setup without
+saving camera changes. Batch entry `Blackout.Editor.RowboatPlacement.BuildAndCapture` first places/saves the
+boat and then captures; use graphics (`-force-d3d11`), not `-nographics`.
+
+Initial rowboat verification in Unity 6000.3.25f1 on 2026-10-20, before the torch/plank correction:
+
+- Asset builder exited 0 twice; 18 checked asset/scene/settings hashes matched on repeat.
+- Placement/capture exited 0 on repeated runs; 20 checked hashes, including Environment and mooring mesh,
+  matched on repeat. Eighteen protected scene/asset/settings files matched their pre-placement bytes.
+- Original scene-block comparison found no removed blocks. Changes to existing blocks were confined to
+  Boat's child list, legacy boat renderers/colliders and the lantern-post transform.
+- Unity overview and dock close-up PNGs were inspected. Initial replacement capture folder:
+  `%TEMP%/BlackoutIsland-Rowboat/20261020-155949-b91b6886`.
+- Logs: `%TEMP%/blackout-rowboat-assets-approved.log` and `blackout-rowboat-placement.log`. No C# compiler
+  warnings/errors in the final runs. No tests were added or run for this replacement.
+
+Torch/plank correction verified on 2026-10-20:
+
+- Batch compile exited 0 with no C# warnings/errors; seven protected scene/NavMesh/settings files unchanged.
+- Final graphics build/capture exited 0. All **32 checked files** matched on repeat, including Environment,
+  flame mask, four materials and metadata. **21 protected files** matched their pre-application bytes,
+  including boat model assets, gameplay scenes, player settings, NavMesh and existing rope assets.
+- Scene-block comparison found only 12 removed blocks: the two generated planks, their components and
+  empty root. Other existing changes were the boat child list, old lamp renderers and the reused light,
+  flicker component and light transform.
+- Final overview and dock close-up PNGs were inspected for the absent planks/bulb and visible warm flames:
+  `%TEMP%/BlackoutIsland-Rowboat/20261020-172337-95e9c053`.
+- Log: `%TEMP%/blackout-boat-torch-apply.log`; initial compile log: `blackout-boat-torch-compile.log`.
+  No C# warnings/errors in final runs. No tests were added or run for this correction.
+
+Before the PR: inspect the linked model/material in Environment, run Replace Boat With Rowboat again and
+check for no new scene/asset diff. Confirm the planks and bulb/post are absent, then use Bootstrap to check
+flame/ember movement, light/coal flicker, hull/bench collision and LOD changes. Check entry/exit without a
+boarding bridge and complete a cure-carrying escape from the dock. **Interactive entry/exit, shooting,
+Play-mode fire/flicker and the full mission have not been verified here.** Boat bobbing, moving-rope/light
+attachment updates and animated water remain separate work. Collision approximates the curved hull;
+camera-facing flame sprites are stylised and the procedural torch handle lacks a detailed wood texture.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1335,19 +1789,22 @@ so W12 claims no fixes from that log.
 | Corridor pillars become 0.3 m deep (x ±1.2 … ±1.5) | Corridor cover points at x ±1.2 fall inside pillars; use x ±0.9 | Agent Controller (cover points) |
 | Corridor narrower | Pushable crate (1.5 m) at x 0.95 would hit the wall; use x ≈ 0.7 | Systems Engineer (crate) |
 | All doors 1.4 × 2.3 | Door prefabs and door colliders get smaller | Systems Engineer (doors) |
-| Lab ceiling 4.0 → 3.0 | The containment chamber must be under 2.9 m including its base (it was 3.25 m) | World Builder (later step) |
+| Lab ceiling 4.0 → 3.0 | W13 places the existing 2.88 m chamber prefab with 0.12 m ceiling clearance; its duplicate pedestal is hidden on the scene instance | Core Developer and Systems Engineer, for information |
 | Lobby redesigned as 11.2 × 3.6 m | The prototype's lobby desk and lockers were hidden behind the back wall; they move into the lobby | World Builder (later step) |
 | Ramp 20 m at 20.6° → 17.2 m at 23.6° | Still under the default 45° CharacterController and NavMesh slope limits | — |
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
+| Dock cargo moved toward edges (W13) | Crates at x−0.95 and barrel at x0.95 leave at least1.3m between inward collision edges; the player/mission route remains clear | World Builder |
+| Boat walking deck added (W13) | A thin wooden slab raises the top from0.70 to0.77m without replacing the original hull collider; boarding is not validated by the dock route check | Systems Engineer, for information |
+| Cabin boat replaced by a wooden rowboat (W13, later change) | Old deck/cabin collision disabled; floor is y0.1675. User-requested follow-up removes boarding planks and replaces the bulb/post with a fire torch. BoatExit stays on the dock; existing mission y>0.5 excludes the lower floor | Systems Engineer (mission-height decision); Core Developer (approved visual assets and source retention) |
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
-| Terrain hole over the ramp top (W2) | The ramp is open from above at z 52.4 … 60.2 until the entrance building (later W step) covers it | World Builder (later step) |
+| Terrain hole over the ramp top (W2, covered in W13) | The W13 entrance exterior covers the exposed ramp; an additional lobby/sill terrain cut removes surface overlap | World Builder |
 | Invisible boundary walls (W2) | On the Level layer since Y7, like every solid collider in Environment (`Blackout/Systems/Assign Physics Layers`; the dock railings are on Ignore Raycast). They stop raycasts, but they are all offshore. Re-run that tool after rebuilding level geometry, because new objects are created on Default | Systems Engineer (layers) |
 | Corridor points at x ±1.2 move to ±0.9 (W3) | Applied to CoverPoint_17 … 19 and HealthPickup_Corridor, clear of the pillars | Agent Controller and Systems Engineer, for information |
 | Patrol-3's ping-pong route stored as a 4-point loop (W3) | Every route is a loop: walk the waypoints in id order and wrap | Agent Controller |
 | Generator plinth not built yet (W3) | GeneratorSocket is at floor level (y 2.5); the reference's generator origin sits on a 0.3 m plinth at y 2.8 | Systems Engineer and Core Developer (generator prefab) |
 | Agent size set by the bake tool, not Project Settings (W4) | The baked data uses 0.4 / 1.8 / 0.4 / 40 on agent type 0, while Humanoid in Project Settings > Navigation still shows 0.5 / 2 / 0.75 / 45 | Systems Engineer (optional: set Humanoid to match, so the NavMeshSurface Inspector shows the same size); Agent Controller, for information |
 | NavMesh runs through the door gaps (W4) | Doors are in another scene, so agents would path through a closed or locked door, for example D-Lab before the blackout | Systems Engineer (doors): block agents while a door is shut, for example with a carving NavMeshObstacle |
-| Step height 0.4 m (W4) | The catwalk stairs' 0.3 m risers would be climbable by agents, but the reference says agents cannot climb them | World Builder (W10: mark the stairs not walkable when the catwalk is built) |
+| Player-only catwalk (W13) | NavMeshBaker marks its collision geometry Not Walkable, even though 0.3 m risers are below the agent's 0.4 m step limit | Agent Controller, for information |
 | One material per surface, not a tint per room (W5) | The reference tints the same wall panel per room (security #AEB9C4, generator #9A968A). The library has one material per surface, so rooms differ by surface instead: Concrete walls in most rooms, MetalPlate in the GeneratorRoom, Tile in the Laboratory | — |
 | Door sills are HazardStripe (W5) | A yellow 0.4 m strip runs across the floor under every door and ramp passage, where the door leaf will stand | Systems Engineer (doors), for information |
 | Trees and boulders cut out of the NavMesh (W6) | 494 pines and palms and 110 boulders are Not Walkable capsules, so agents path round them. Hunters' routes keep 6 m clearings at every waypoint | Agent Controller, for information |

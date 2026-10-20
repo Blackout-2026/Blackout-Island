@@ -72,7 +72,7 @@ namespace Blackout.Editor
             P(-0.9f, 92.5f), P(0.9f, 110f), P(-0.9f, 117f),
         };
 
-        private const float CatwalkDeckY = 5.5f; // generator room catwalk, built with the set dressing (W10)
+        private const float CatwalkDeckY = 5.5f; // generator room catwalk, built by GeneratorCatwalkBuilder (W13)
 
         public static List<MarkerSpec> Build(BunkerLayout layout)
         {

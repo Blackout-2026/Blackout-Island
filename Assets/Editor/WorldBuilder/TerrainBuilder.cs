@@ -72,6 +72,7 @@ namespace Blackout.Editor
             TerrainData data = LoadOrCreateTerrainData();
             data.SetHeights(0, 0, BuildHeights(out float minY, out float maxY));
             data.SetHoles(0, 0, BuildHoles(data.holesResolution, hole, out int holeCells));
+            EntranceExteriorBuilder.CutLobbyTerrain(data, layout); // W13: keep terrain below the lobby floor/sill cut away.
             EditorUtility.SetDirty(data);
 
             Transform root = WorldSceneSkeleton.FindRoot(scene, TerrainRootName).transform;

@@ -121,6 +121,11 @@ namespace Blackout.Editor
             Transform boat = GeneratedObjects.FindOrCreateChild(beachRoot, "Boat", UndoLabel);
             boat.SetPositionAndRotation(IslandLayout.BoatPosition, Quaternion.Euler(0f, IslandLayout.BoatYaw, 0f));
             boat.localScale = Vector3.one;
+            if (RowboatPlacement.IsPlaced(boat))
+            {
+                RowboatPlacement.Apply(boat);
+                return boat.childCount;
+            }
             var built = new HashSet<string>();
 
             // Hull from the stern (z 4.2) to the bow; the bow is a box turned 45 degrees so it comes to a point.

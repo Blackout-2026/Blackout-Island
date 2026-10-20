@@ -232,6 +232,8 @@ namespace Blackout.Editor
             urp.ApplyModifiedPropertiesWithoutUndo();
 
             Renderer lamp = BuildLamp(go.transform, spec);
+            if (spec.Group == LightFixtureLayout.OutdoorGroup && spec.Name == "BoatLantern")
+                lamp = BeachDressingBuilder.FindLantern(container.gameObject.scene);
             var flicker = go.GetComponent<FlickerLight>();
             if (spec.Flickers)
             {
@@ -246,6 +248,11 @@ namespace Blackout.Editor
             else if (flicker != null)
             {
                 Object.DestroyImmediate(flicker);
+            }
+            if (spec.Group == LightFixtureLayout.OutdoorGroup && spec.Name == "BoatLantern")
+            {
+                Transform torch = BoatTorchBuilder.FindTorch(container.gameObject.scene);
+                if (torch != null) BoatTorchBuilder.ConfigureLight(torch);
             }
         }
 
