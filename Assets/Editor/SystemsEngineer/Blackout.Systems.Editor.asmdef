@@ -4,6 +4,7 @@
     "references": [
         "Blackout.Shared",
         "Blackout.PlayerAndInteraction",
+        "Blackout.AI.Hunter",
         "UnityEngine.UI",
         "Unity.InputSystem"
     ],
