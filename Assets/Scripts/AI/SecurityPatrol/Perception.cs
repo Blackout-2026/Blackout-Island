@@ -54,11 +54,14 @@ namespace Blackout.AI.SecurityPatrol
         /// Range and cone boundaries are inclusive. A failed check keeps the last confirmed position.
         /// Forward need not be normalized; a zero horizontal forward cannot see.
         /// </summary>
-        public void UpdateVision(Vector3 eyePosition, Vector3 forward, Vector3 playerPosition)
+        public void UpdateVision(Vector3 eyePosition, Vector3 forward, Vector3 playerPosition, float rangeMultiplier = 1f)
         {
+            if (float.IsNaN(rangeMultiplier) || float.IsInfinity(rangeMultiplier) || rangeMultiplier < 0f)
+                throw new ArgumentOutOfRangeException(nameof(rangeMultiplier));
             CanSeePlayer = false;
             Vector3 offset = playerPosition - eyePosition;
-            if (visionRangeSquared <= 0f || offset.sqrMagnitude > visionRangeSquared)
+            float effectiveRangeSquared = visionRangeSquared * rangeMultiplier * rangeMultiplier;
+            if (effectiveRangeSquared <= 0f || offset.sqrMagnitude > effectiveRangeSquared)
                 return;
 
             forward.y = 0f;
@@ -122,6 +125,9 @@ namespace Blackout.AI.SecurityPatrol
             NoisePosition = default;
             NoiseLoudness = 0f;
         }
+
+        /// <summary>No living target this tick; keep memory until the host decides to forget it.</summary>
+        public void ClearVision() => CanSeePlayer = false;
 
         /// <summary>Clear all sensing memory when resetting or respawning the listener.</summary>
         public void Forget()

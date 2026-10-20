@@ -16,6 +16,8 @@ namespace Blackout.Agents
     {
         [Tooltip("Unique name such as Patrol-1. Used on the Blackboard and as the Owner of this agent's markers. Empty uses the object name.")]
         [SerializeField] private string agentName;
+        [Tooltip("Agent type for generator alert eligibility. AgentSpawner sets this from its spawn entry.")]
+        [SerializeField] private AgentKind kind;
         [Tooltip("A component implementing IAgentBrain (FSM, behaviour tree, utility or GOAP). Empty means the agent stands still.")]
         [SerializeField] private MonoBehaviour brainBehaviour;
         [Tooltip("Seconds between brain decisions. The prototype thinks at 10 Hz.")]
@@ -33,18 +35,25 @@ namespace Blackout.Agents
         private Blackboard alertBoard;
         private PathFollower pathFollower;
         private AgentShooter agentShooter;
+        private static readonly AgentAlert WorldAlert = new AgentAlert(1.25f, 1.4f, 0.9f);
+        private AgentAlert appliedAlert;
+        private bool hasAppliedAlert;
 
         private float thinkTimer;
         private float thinkElapsed;
         private float stateTimer;
 
         public string AgentName => string.IsNullOrEmpty(agentName) ? name : agentName;
+        public AgentKind Kind => kind;
         public Transform Transform => transform;
         public bool IsAlive => health != null && health.IsAlive;
         public IDirectiveReceiver DirectiveReceiver => brain as IDirectiveReceiver;
         public float VisionRangeMultiplier { get; private set; } = 1f;
         /// <summary>The intent most recently applied, for gizmos and the debug overlay.</summary>
         public AgentIntent LastIntent { get; private set; }
+
+        /// <summary>Set the type before initialization; spawns use the entry even without difficulty data.</summary>
+        public void SetKind(AgentKind value) => kind = value;
 
         private void Awake()
         {
@@ -89,6 +98,7 @@ namespace Blackout.Agents
             shooter = newShooter;
             pathFollower = newMover as PathFollower;
             agentShooter = newShooter as AgentShooter;
+            hasAppliedAlert = false;
             health.OnDamaged += HandleDamaged;
             health.OnDied += HandleDied;
             if (registry != null)
@@ -111,6 +121,7 @@ namespace Blackout.Agents
 
             registry.Register(this);
             brain?.Initialize(registry.CreateContext(transform, health));
+            hasAppliedAlert = false;
             BindAlert();
         }
 
@@ -125,7 +136,8 @@ namespace Blackout.Agents
             {
                 registry.Register(this); // refresh the Blackboard's receiver without duplicating the agent
                 brain?.Initialize(registry.CreateContext(transform, health));
-                if (registry.Blackboard.HasAlertBuff) ApplyAlert(registry.Blackboard.Alert);
+                hasAppliedAlert = false;
+                SyncWorldAlert();
                 var members = registry.Blackboard.Agents;
                 for (int i = 0; i < members.Count; i++)
                     if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
@@ -140,7 +152,7 @@ namespace Blackout.Agents
                 return;
             alertBoard = registry.Blackboard;
             alertBoard.AlertChanged += ApplyAlert;
-            if (alertBoard.HasAlertBuff) ApplyAlert(alertBoard.Alert);
+            SyncWorldAlert();
         }
 
         private void UnbindAlert()
@@ -153,6 +165,11 @@ namespace Blackout.Agents
         private void ApplyAlert(AgentAlert alert)
         {
             if (!IsAlive) return;
+            if (hasAppliedAlert && appliedAlert.speedMultiplier == alert.speedMultiplier &&
+                appliedAlert.visionMultiplier == alert.visionMultiplier &&
+                appliedAlert.aimErrorMultiplier == alert.aimErrorMultiplier)
+                return;
+
             VisionRangeMultiplier = alert.visionMultiplier;
             if (pathFollower != null) pathFollower.SpeedMultiplier = alert.speedMultiplier;
             if (agentShooter != null)
@@ -161,6 +178,21 @@ namespace Blackout.Agents
                 agentShooter.HeightenedAimErrorMultiplier = alert.aimErrorMultiplier;
             }
             if (brain is IAlertReceiver receiver) receiver.OnAlert(alert);
+            appliedAlert = alert;
+            hasAppliedAlert = true;
+        }
+
+        private void SyncWorldAlert()
+        {
+            if (!isActiveAndEnabled || !IsAlive || registry == null) return;
+            Blackboard board = registry.Blackboard;
+            // A configured squad broadcast takes precedence over the reference's fallback buff.
+            // Assignment is absolute: generator + cure + broadcast must never multiply one another.
+            if (board.HasAlertBuff)
+                ApplyAlert(board.Alert);
+            else if (board.cureTaken || (board.generatorDisabled &&
+                (kind == AgentKind.SecurityPatrol || kind == AgentKind.TacticalGuard)))
+                ApplyAlert(WorldAlert);
         }
 
         private void Update()
@@ -191,6 +223,7 @@ namespace Blackout.Agents
         /// <summary>One decision: ask the brain for an intent and apply it. Without a brain the agent stands still.</summary>
         public void Think(float deltaTime)
         {
+            SyncWorldAlert();
             ApplyIntent(brain != null ? brain.Tick(deltaTime) : AgentIntent.Idle);
         }
 

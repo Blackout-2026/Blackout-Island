@@ -176,6 +176,22 @@ namespace Blackout.Agents.Tests
             Assert.AreEqual(12f, Find("Hunter-2").GetComponent<AgentShooter>().Config.damage);
             Assert.AreEqual(5f, Find("Commander").GetComponent<AgentShooter>().Config.damage);
             Assert.AreEqual(4.5f, Find("Hunter-1").GetComponent<PathFollower>().Settings.runSpeed);
+            Assert.That(Find("Hunter-1").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.Hunter));
+            Assert.That(Find("Patrol-1").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.SecurityPatrol));
+            Assert.That(Find("TG-01").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.TacticalGuard));
+            Assert.That(Find("Commander").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.Commander));
+        }
+
+        [Test]
+        public void SpawnAll_SetsTheKindEvenWithoutDifficultyData()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Patrol-1", Vector3.zero);
+            spawner.Configure(registry, null, new[] { Entry(AgentKind.SecurityPatrol, prefab, "Patrol-") });
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("no DifficultyConfig"));
+
+            spawner.SpawnAll();
+
+            Assert.That(Find("Patrol-1").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.SecurityPatrol));
         }
 
         [Test]

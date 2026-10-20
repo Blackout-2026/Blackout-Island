@@ -3,6 +3,8 @@
     "rootNamespace": "Blackout.Editor",
     "references": [
         "Blackout.Shared",
+        "Blackout.Agents",
+        "Blackout.AI.SecurityPatrol",
         "Blackout.World.Layout",
         "Blackout.Environment",
         "Unity.AI.Navigation",

@@ -10,7 +10,7 @@ namespace Blackout.AI.SecurityPatrol
         Search
     }
 
-    /// <summary>Decision signals, not raw sensor readings. Perception and guards follow in S2/S3.</summary>
+    /// <summary>Decision signals after the brain evaluates sensing, ranges and state timers.</summary>
     public enum SecurityPatrolTrigger
     {
         HeardNoise,
@@ -19,7 +19,8 @@ namespace Blackout.AI.SecurityPatrol
         InvestigationComplete,
         LostPlayer,
         CannotAttack,
-        SearchComplete
+        SearchComplete,
+        InvestigationAlerted
     }
 
     internal static class SecurityPatrolTransitions
@@ -39,7 +40,7 @@ namespace Blackout.AI.SecurityPatrol
         }
 
         // The only transition table. States return intents; they never switch states themselves.
-        // S3 will evaluate the reference's conditions/timers before requesting these transitions.
+        // The brain evaluates conditions/timers before requesting these transitions.
         private static readonly Transition[] Table =
         {
             new Transition(SecurityPatrolState.Patrol, SecurityPatrolTrigger.HeardNoise, SecurityPatrolState.Investigate),
@@ -48,6 +49,7 @@ namespace Blackout.AI.SecurityPatrol
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.DetectedPlayer, SecurityPatrolState.Pursue),
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.CanAttack, SecurityPatrolState.Attack),
             new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.InvestigationComplete, SecurityPatrolState.Patrol),
+            new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.InvestigationAlerted, SecurityPatrolState.Search),
             new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.CanAttack, SecurityPatrolState.Attack),
             new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.LostPlayer, SecurityPatrolState.Search),
             new Transition(SecurityPatrolState.Attack, SecurityPatrolTrigger.CannotAttack, SecurityPatrolState.Pursue),
