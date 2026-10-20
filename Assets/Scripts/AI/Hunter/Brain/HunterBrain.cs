@@ -253,6 +253,65 @@ namespace Blackout.AI.Hunter
             }
         }
 
+        /// <summary>
+        /// Selected Hunter only (docs/reference/systems-engineer.md section 16): the vision cone coloured by state, the
+        /// current target (move target, and the look target while aiming), the last sighting and the route. Drawn only
+        /// once the brain has started; the noise rings are drawn by the <see cref="HearingSystem"/>.
+        /// </summary>
+        private void OnDrawGizmosSelected()
+        {
+            if (vision == null || context == null || context.Self == null)
+            {
+                return;
+            }
+
+            Transform self = context.Self;
+            Vector3 floor = self.position + Vector3.up * 0.1f;
+            Vector3 eye = self.position + Vector3.up * config.eyeHeight;
+
+            // Vision cone: the two edges and the arc at the sight range, in the state colour.
+            Gizmos.color = HunterGizmos.ForBranch(ActiveBranch);
+            float half = config.fieldOfViewDegrees * 0.5f * Mathf.Deg2Rad;
+            float facing = Mathf.Atan2(self.forward.x, self.forward.z);
+            Gizmos.DrawLine(floor, floor + HunterGizmos.Direction(facing - half) * vision.Range);
+            Gizmos.DrawLine(floor, floor + HunterGizmos.Direction(facing + half) * vision.Range);
+            HunterGizmos.Arc(floor, self.forward, config.fieldOfViewDegrees, vision.Range);
+            HunterGizmos.Circle(floor, config.closeSenseRange);
+
+            // Current target.
+            AgentIntent intent = LastIntent;
+            if (intent.moveSpeed != MoveSpeed.Stop)
+            {
+                Gizmos.color = intent.moveSpeed == MoveSpeed.Run ? HunterGizmos.Running : HunterGizmos.Walking;
+                Gizmos.DrawLine(floor, intent.moveTarget + Vector3.up * 0.1f);
+                Gizmos.DrawWireSphere(intent.moveTarget, 0.3f);
+            }
+
+            if (intent.aim && intent.hasLookTarget)
+            {
+                Gizmos.color = HunterGizmos.Combat;
+                Gizmos.DrawLine(eye, intent.lookTarget);
+                Gizmos.DrawWireSphere(intent.lookTarget, 0.15f);
+            }
+
+            // Last sighting, while it is still searchable.
+            if (vision.HasSighting && clock() - vision.LastSeenTime < config.searchMemorySeconds)
+            {
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawWireCube(vision.LastSeenPosition + Vector3.up * 0.9f, new Vector3(0.5f, 1.8f, 0.5f));
+            }
+
+            // Route, in order and closed.
+            int count = world != null ? world.WaypointCount : 0;
+            Gizmos.color = HunterGizmos.Route;
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 from = world.GetWaypoint(i) + Vector3.up * 0.2f;
+                Gizmos.DrawLine(from, world.GetWaypoint((i + 1) % count) + Vector3.up * 0.2f);
+                Gizmos.DrawWireSphere(from, 0.25f);
+            }
+        }
+
         private void OnDestroy()
         {
             if (fallbackConfig == null)
