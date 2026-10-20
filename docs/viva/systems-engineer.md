@@ -16,6 +16,7 @@ This file covers the three topics step Y7 asks for. Each earlier step has its ow
 | Y5 | [systems-engineer-y5-interactables.md](systems-engineer/systems-engineer-y5-interactables.md) | Doors, generator, cure, health pickups, crate, Interactables scene |
 | Y6 | [systems-engineer-y6-mission-flow.md](systems-engineer/systems-engineer-y6-mission-flow.md) | Mission state machine, director, Bootstrap scene, Mission Complete screen, debug jumps |
 | Y7 | this file, section 3 | Layer audit, weapon masks, Stress Test, physics numbers |
+| H1 | [systems-engineer-h1-behaviour-tree.md](systems-engineer/systems-engineer-h1-behaviour-tree.md) | Hunter behaviour tree core: Selector, Sequence, Condition, Action, Inverter, Cooldown, local blackboard |
 
 ---
 
