@@ -115,6 +115,7 @@ namespace Blackout.Agents
             Quaternion rotation = Quaternion.Euler(0f, marker.transform.eulerAngles.y, 0f); // upright, facing as the marker does
             GameObject agent = Instantiate(entry.prefab, position, rotation);
             agent.name = marker.Owner;
+            agent.GetComponent<AgentRoot>()?.SetKind(entry.kind);
 
             if (difficulty != null)
             {

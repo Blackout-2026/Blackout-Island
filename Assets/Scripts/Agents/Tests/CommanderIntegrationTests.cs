@@ -137,7 +137,7 @@ namespace Blackout.Agents.Tests
         }
 
         [Test]
-        public void CommanderKilledBeforeCure_DoesNotSendOrdersOrActivateBuff()
+        public void CommanderKilledBeforeCure_LeavesOrdersSilentButSurvivorsApplyTheWorldBuff()
         {
             Kill(commanderHealth);
 
@@ -147,6 +147,12 @@ namespace Blackout.Agents.Tests
             Assert.That(registry.Blackboard.HasAlertBuff, Is.False);
             Assert.That(units[0].Orders, Is.Zero);
             Assert.That(registry.Blackboard.Agents.Count, Is.EqualTo(3));
+            foreach (AgentRoot root in roots)
+            {
+                root.Think(0.1f);
+                Assert.That(root.GetComponent<PathFollower>().SpeedMultiplier, Is.EqualTo(1.25f));
+                Assert.That(root.VisionRangeMultiplier, Is.EqualTo(1.4f));
+            }
         }
 
         [Test]

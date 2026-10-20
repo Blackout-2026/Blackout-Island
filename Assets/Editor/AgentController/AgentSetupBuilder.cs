@@ -101,6 +101,7 @@ namespace Blackout.Editor
             try
             {
                 instance.name = type.prefabName;
+                instance.GetComponent<AgentRoot>().SetKind(type.kind);
                 Transform visualParent = instance.transform.Find(AgentBasePrefabBuilder.VisualChildName);
                 Transform muzzle = null;
 
