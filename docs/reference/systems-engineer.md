@@ -734,8 +734,9 @@ Root ?
 
 - **Cover for the advance [GUESS]:** `CoverPoint` markers and the terrain's trees and bushes, read once at start.
   The next cover is one within 15 m of the Hunter that is at least 4 m nearer the noise; the Hunter waits 1.5 s
-  there, then moves on. With no such cover it walks straight in. It stops 8 m from the noise. This replaces the
-  prototype's flank point, so the brief's "advance using cover/bushes, slower" is literal.
+  there, then moves on. With no such cover it walks straight in. Within 16 m of the noise the take-cover rule wins,
+  which ends the advance. This replaces the prototype's flank point, so the brief's "advance using cover/bushes,
+  slower" is literal.
 - **Handled noises:** instead of clearing the hearing, the tree records the time of the noise it finished with,
   and ignores noises heard before it.
 

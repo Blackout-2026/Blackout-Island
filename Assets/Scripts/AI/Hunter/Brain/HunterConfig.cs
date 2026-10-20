@@ -101,10 +101,11 @@ namespace Blackout.AI.Hunter
         [Min(0f)] public float advanceCoverRange = 15f;
         [Tooltip("[GUESS] ...and at least this much nearer the noise.")]
         [Min(0f)] public float advanceMinGain = 4f;
-        [Tooltip("[GUESS] Wait at each cover on the advance.")]
+        [Tooltip("[GUESS] Wait at each cover on the advance. Within Gunfire Close Distance the Hunter takes cover " +
+                 "instead, which ends the advance.")]
         [Min(0f)] public float advancePauseSeconds = 1.5f;
-        [Tooltip("[GUESS] The advance ends this far from the noise.")]
-        [Min(0f)] public float advanceStopDistance = 8f;
+        [Tooltip("Arrival distance at a cover point.")]
+        [Min(0f)] public float coverArriveDistance = 1f;
 
         [Header("Commander orders")]
         [Min(0f)] public float orderArriveDistance = 2.5f;
