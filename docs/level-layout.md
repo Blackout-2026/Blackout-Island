@@ -370,9 +370,59 @@ its colour, in this order.
 - Layers are `Assets/Environment/Terrain/Layers/TL_<Surface>.terrainlayer`. A layer uses its surface's W5 BaseColor and
   Normal textures when they exist. Until then it is a white texture times the flat colour (#847860, #2C3A1D, #32281A,
   #43423D), stored in linear space because URP Terrain Lit multiplies by it as it is. Smoothness and metallic are the
-  surface's constants; no mask maps.
+  surface's constants for the RGB24 fallback; no mask maps. See the W13 roughness correction below.
 - The splat map is 512² (0.78 m per texel, like the heightmap). Share of the land above water: Sand 6.3 %, Grass 61.1 %,
   ForestFloor 23.1 %, Rock 9.4 %.
+
+### Terrain roughness correction (W13)
+
+The pale blue, icy ground was caused by the generated white fallback texture's alpha channel.
+`TerrainLayerWhite.asset` was RGBA32 with alpha 1. URP Terrain Lit's `SplatmapMix` reads diffuse alpha as
+smoothness when that channel exists, so it rendered fully smooth ground despite the layers' rough settings.
+The blue sky reflection then dominated the sand, grass and soil colours.
+
+The shared **4 × 4 white texture is now RGB24, with no alpha**. Terrain Lit uses the existing layer constants:
+smoothness **0.08** for Sand, Grass and ForestFloor, and **0.20** for Rock. Existing colour remaps, tiling,
+metallic values, lighting, fog and sky remain unchanged. The texture's GUID is preserved; its pixel payload
+changes from 64 to 48 bytes. No terrain repaint, vegetation rebuild or NavMesh rebake is required.
+
+`Assets/Editor/WorldBuilder/TerrainColourCorrection.cs` provides:
+
+- **Blackout/World/Correct Terrain Colours**: converts only the generated shared white fallback in place.
+  Re-running reports "already corrected" and leaves the file byte-identical. A customised RGBA fallback is
+  rejected for inspection. Supplied albedo textures are not modified.
+- **Blackout/World/Preview Terrain Colour Correction**: captures Beach and Forest before/after using temporary
+  terrain/layer/texture copies and the same lighting. Save or close unsaved scenes first. PNGs go outside the repo
+  under `%TEMP%/BlackoutIsland-TerrainColour/<timestamp>-<suffix>`; the Console prints the folder.
+
+`TerrainPainter.cs` uses the same RGB24 helper when creating the fallback and corrects the old generated RGBA32
+version when reusing it, so **Paint Terrain And Forest** retains the fix. That painting tool still overwrites
+hand painting as described above; use **Correct Terrain Colours** to repair the texture without repainting.
+Authored textures with alpha still need suitable smoothness data; this repair targets the generated fallback.
+
+**Verified on 2026-10-20, Unity 6000.3.25f1:**
+
+- Direct3D11 preview exit 0; seven protected scene/terrain/NavMesh/layer files unchanged. Changing albedo colours
+  while retaining RGBA did not solve the reflection; switching the shared white copy to RGB24 did. Beach and
+  forest before/after images were inspected with lighting unchanged.
+- `Blackout.Editor.TerrainColourCorrection.ApplyAndVerify` exit 0; repeated application byte-identical;
+  fourteen protected scene/data/layer/meta files unchanged, including the fallback metadata/GUID.
+- A fresh saved-scene capture exits 0 with Environment unchanged. Beach and forest images show rough, muted
+  ground with the icy reflection removed. Only the shared texture asset changed; no other roles' files changed.
+- No C# compiler errors/warnings. No unit or PlayMode tests were added/run for this correction, and no full
+  gameplay run or lightmap/occlusion bake is claimed.
+
+Evidence outside the repo:
+
+- Preview: `%TEMP%/BlackoutIsland-TerrainColour/20261020-060235-304c702d`.
+- Saved scene: `%TEMP%/BlackoutIsland-Screenshots/20261020-074344-f8f1b6e9`.
+- Logs: `%TEMP%/blackout-w13-terrain-preview.log`, `blackout-w13-terrain-apply.log` and
+  `blackout-w13-terrain-saved-capture.log`.
+
+Before opening the PR, open Environment and inspect the beach, forest trail and steep rocky banks. Run
+**Correct Terrain Colours** again and confirm "already corrected" without a new asset diff. In Bootstrap,
+check ground readability during movement and the Console. The terrain still uses flat placeholder colours;
+detailed sand, soil, grass and rock texture sets remain separate art work.
 
 ### Vegetation
 
