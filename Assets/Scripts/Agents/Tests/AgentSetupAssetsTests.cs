@@ -46,15 +46,24 @@ namespace Blackout.Agents.Tests
             Assert.AreEqual(LayerMask.NameToLayer("Enemy"), prefab.layer);
         }
 
-        [TestCase("Hunter")]
-        [TestCase("SecurityPatrol")]
-        [TestCase("Commander")]
-        public void HumanoidPrefabs_HaveAClearlyNamedPlaceholder_WithoutACollider(string name)
+        // Until its model exists a humanoid stands in with PLACEHOLDER_Humanoid; after Blackout > Art > Use Character Models In Agents the
+        // Core Developer's Char_<Name>_Visual is nested in the same Visual slot instead (the way the Tactical Guard nests its robot).
+        [TestCase("Hunter", "Char_Hunter_Visual")]
+        [TestCase("SecurityPatrol", "Char_Patrol_Visual")]
+        [TestCase("Commander", "Char_Commander_Visual")]
+        public void HumanoidPrefabs_HaveABody_WithoutACollider(string name, string modelName)
         {
-            Transform placeholder = Prefab(name).transform.Find("Visual/PLACEHOLDER_Humanoid");
+            Transform visual = Prefab(name).transform.Find("Visual");
+            Assert.IsNotNull(visual, "the empty Visual child the body nests in");
 
-            Assert.IsNotNull(placeholder, "the model is not in the project yet, so a placeholder stands in");
-            Assert.IsNull(placeholder.GetComponent<Collider>(), "the agent's own capsule is the collider");
+            Transform body = visual.Find("PLACEHOLDER_Humanoid");
+            if (body == null)
+            {
+                body = visual.Find(modelName);
+            }
+
+            Assert.IsNotNull(body, $"a PLACEHOLDER_Humanoid or the {modelName} model stands in the Visual slot");
+            Assert.AreEqual(0, body.GetComponentsInChildren<Collider>(true).Length, "the agent's own capsule is the collider");
         }
 
         [Test]
