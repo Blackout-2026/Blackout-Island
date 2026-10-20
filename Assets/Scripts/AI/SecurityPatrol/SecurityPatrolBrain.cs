@@ -10,7 +10,7 @@ namespace Blackout.AI.SecurityPatrol
     /// The agent host calls Initialize once and Tick at its think rate (normally 10 Hz).
     /// States return intents; movement, animation and weapon execution belong to the agent host.
     /// </summary>
-    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain, IAlertReceiver
+    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain, IAlertReceiver, IDebugInfo
     {
         [Tooltip("Perception, state and executor reference tuning for this patrol.")]
         [SerializeField] private SecurityPatrolConfig config;
@@ -25,6 +25,8 @@ namespace Blackout.AI.SecurityPatrol
         private State current;
         private State pending;
         private Vector3 pendingTarget;
+        private string pendingDebugText;
+        private string debugText = "Security Patrol [FSM] Uninitialized | last transition: none";
         private string markerOwner;
         private IReadOnlyList<Marker> sourceMarkers;
         private Marker[] route = Array.Empty<Marker>();
@@ -56,6 +58,18 @@ namespace Blackout.AI.SecurityPatrol
         public bool IsInitialized => current != null;
         public float VisionRangeMultiplier => rangeMultiplier;
         public SecurityPatrolState? CurrentState => current == null ? (SecurityPatrolState?)null : current.Id;
+
+        // Read-only diagnostics. Active gizmos use the sensor's cached settings, even if config is edited live.
+        public Transform AgentTransform => context == null ? transform : context.Self;
+        public IReadOnlyList<Marker> Waypoints => route;
+        public float VisionEyeHeight => senses != null ? senses.EyeHeight : (config != null ? config.eyeHeight : 1.62f);
+        public float EffectiveVisionRange => rangeMultiplier *
+            (senses != null ? senses.VisionRange : (config != null ? config.visionRange : 22f));
+        public float VisionAngle => senses != null ? senses.VisionAngle :
+            (config != null ? config.visionAngle : 1.95f * Mathf.Rad2Deg);
+
+        /// <summary>The shared host publishes this cached state and reason to the debug Blackboard.</summary>
+        public string GetDebugText() => debugText;
 
         public void Initialize(IAgentContext newContext) =>
             Initialize(newContext, new PhysicsPerceptionRaycast(geometryMask));
@@ -91,6 +105,7 @@ namespace Blackout.AI.SecurityPatrol
             RefreshAlertRange();
             pending = null;
             pendingTarget = default;
+            pendingDebugText = null;
             hasSeenPlayer = false;
             lastSeenPosition = default;
             timeSinceSeen = 0f;
@@ -103,6 +118,7 @@ namespace Blackout.AI.SecurityPatrol
             RefreshRoute();
             current = states[(int)SecurityPatrolState.Patrol];
             current.Enter(context.Self.position);
+            debugText = "Security Patrol [FSM] Patrol | last transition: Initialized";
             BindSensing();
         }
 
@@ -116,11 +132,13 @@ namespace Blackout.AI.SecurityPatrol
             if (!CanThink || pending != null)
                 return false;
 
-            if (!SecurityPatrolTransitions.TryGetNext(current.Id, trigger, out SecurityPatrolState next))
+            if (!SecurityPatrolTransitions.TryGetNext(current.Id, trigger, out SecurityPatrolState next,
+                out string nextDebugText))
                 return false;
 
             pending = states[(int)next];
             pendingTarget = target;
+            pendingDebugText = nextDebugText;
             return true;
         }
 
@@ -227,7 +245,7 @@ namespace Blackout.AI.SecurityPatrol
         private void OnDisable()
         {
             UnbindSensing();
-            ResetPlayerMemory();
+            ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Disabled; memory cleared");
         }
 
         private void OnDestroy() => UnbindSensing();
@@ -255,14 +273,18 @@ namespace Blackout.AI.SecurityPatrol
         private void HandleOwnDeath()
         {
             UnbindSensing();
-            ResetPlayerMemory();
+            ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Agent died; memory cleared");
         }
 
-        private void ResetPlayerMemory()
+        private void ResetPlayerMemory() =>
+            ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Player memory reset");
+
+        private void ResetPlayerMemory(string resetDebugText)
         {
             senses?.Forget();
             pending = null;
             pendingTarget = default;
+            pendingDebugText = null;
             hasSeenPlayer = false;
             lastSeenPosition = default;
             timeSinceSeen = 0f;
@@ -271,6 +293,7 @@ namespace Blackout.AI.SecurityPatrol
             current.Exit();
             current = states[(int)SecurityPatrolState.Patrol];
             current.Enter(Position);
+            debugText = resetDebugText;
         }
 
         private void ApplyPendingTransition()
@@ -282,6 +305,8 @@ namespace Blackout.AI.SecurityPatrol
                 pending = null;
                 current.Enter(pendingTarget);
                 pendingTarget = default;
+                debugText = pendingDebugText;
+                pendingDebugText = null;
             }
         }
 

@@ -30,12 +30,15 @@ namespace Blackout.AI.SecurityPatrol
             public readonly SecurityPatrolState From;
             public readonly SecurityPatrolTrigger Trigger;
             public readonly SecurityPatrolState To;
+            public readonly string DebugText;
 
             public Transition(SecurityPatrolState from, SecurityPatrolTrigger trigger, SecurityPatrolState to)
             {
                 From = from;
                 Trigger = trigger;
                 To = to;
+                // Built once with the static table, never formatted in a think tick or overlay read.
+                DebugText = $"Security Patrol [FSM] {to} | last transition: {from} -> {to} ({trigger})";
             }
         }
 
@@ -59,7 +62,7 @@ namespace Blackout.AI.SecurityPatrol
         };
 
         public static bool TryGetNext(SecurityPatrolState from, SecurityPatrolTrigger trigger,
-            out SecurityPatrolState next)
+            out SecurityPatrolState next, out string debugText)
         {
             for (int i = 0; i < Table.Length; i++)
             {
@@ -67,11 +70,13 @@ namespace Blackout.AI.SecurityPatrol
                 if (transition.From == from && transition.Trigger == trigger)
                 {
                     next = transition.To;
+                    debugText = transition.DebugText;
                     return true;
                 }
             }
 
             next = from;
+            debugText = null;
             return false;
         }
     }

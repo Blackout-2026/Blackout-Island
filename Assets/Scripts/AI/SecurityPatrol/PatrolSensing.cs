@@ -11,22 +11,25 @@ namespace Blackout.AI.SecurityPatrol
         private readonly IAgentContext context;
         private readonly Perception perception;
         private readonly PerceptionNoiseListener noiseListener;
-        private readonly float eyeHeight;
         private readonly float playerSightHeight;
         private Transform trackedPlayer;
         private Health playerHealth;
 
         public bool PlayerChanged { get; private set; }
         public bool PlayerIsDead { get; private set; }
+        public float EyeHeight { get; }
+        public float VisionRange { get; }
+        public float VisionAngle { get; }
 
         public PatrolSensing(IAgentContext context, SecurityPatrolConfig config,
             IPerceptionRaycast raycast, NoiseEventChannel noiseChannel)
         {
             this.context = context;
-            eyeHeight = config != null ? config.eyeHeight : 1.62f;
+            EyeHeight = config != null ? config.eyeHeight : 1.62f;
+            VisionRange = config != null ? config.visionRange : 22f;
+            VisionAngle = config != null ? config.visionAngle : 1.95f * Mathf.Rad2Deg;
             playerSightHeight = config != null ? config.playerSightHeight : 1.62f;
-            perception = new Perception(config != null ? config.visionRange : 22f,
-                config != null ? config.visionAngle : 1.95f * Mathf.Rad2Deg, raycast,
+            perception = new Perception(VisionRange, VisionAngle, raycast,
                 config != null ? config.hearingRange : 65f, config != null ? config.hearingThreshold : 0.04f);
             if (noiseChannel != null)
                 noiseListener = new PerceptionNoiseListener(perception, noiseChannel,
@@ -47,7 +50,7 @@ namespace Blackout.AI.SecurityPatrol
 
             Vector3 feet = player != null ? player.position : default;
             if (player != null && !PlayerIsDead)
-                perception.UpdateVision(context.Self.position + Vector3.up * eyeHeight, context.Self.forward,
+                perception.UpdateVision(context.Self.position + Vector3.up * EyeHeight, context.Self.forward,
                     feet + Vector3.up * playerSightHeight, rangeMultiplier);
             else
                 perception.ClearVision();
