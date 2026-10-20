@@ -1584,6 +1584,10 @@ required to run this builder.
 
 ## Beach and boat dressing (W13, fix 6)
 
+The measurements and verification below describe the original cabin boat. The later **Weathered rowboat
+replacement (W13)** section supersedes its hull, deck, cabin and small boat fittings; dock dressing and the
+existing lantern remain.
+
 **Blackout/World/Dress Beach and Boat** (`Assets/Editor/WorldBuilder/BeachDressingBuilder.cs`) adds named
 generated content under `Beach/BeachDressing` and `Beach/Boat/BoatDressing`. It preserves the W2 hull, dock,
 rails, cabin, terrain, markers and gameplay scenes. Matching prefab instances and mesh assets are reused;
@@ -1635,6 +1639,95 @@ moving boat, animated ocean/foam, wind sway, beach ambient audio and detailed je
 world-completion work. The `PH_JerryCan0/1` bodies/handles are the explicit model placeholders to replace in this
 builder when supplied; no external assets are required to run it.
 
+## Weathered rowboat replacement (W13)
+
+The user requested an original wooden rowboat based on their supplied image and approved additions in the
+Core Developer's model, texture, material and visual-prefab folders. `Environment.unity` now contains this
+linked visual at `Beach/Boat/RowboatVisual`. It replaces the cabin motorboat's appearance with a curved plank
+hull, teal interior, three benches, two oars, open fishing net, ropes, six round fenders and a red/cream lifebuoy.
+The prototype stays read-only; this appearance is an intentional departure from its cabin boat.
+
+### Assets and distance levels
+
+| Asset | Purpose |
+| --- | --- |
+| `Assets/Models/Custom/SM_Rowboat.fbx` | Two UV-mapped meshes; Unity imports LOD0 at 26,224 triangles and LOD1 at 7,329 |
+| `Assets/Textures/Models/T_Rowboat_BaseColor.png` | 2048 x 2048 baked colour/weathering atlas; sRGB, no smoothness alpha |
+| `Assets/Textures/Models/T_Rowboat_MetalSmooth.png` | 1024 x 1024 linear atlas; metallic in red, smoothness in alpha |
+| `Assets/Materials/Models/M_Rowboat_Weathered.mat` | One URP Lit material shared by both LODs |
+| `Assets/Prefabs/Models/Rowboat_Visual.prefab` | Visuals only: no colliders, Rigidbody or gameplay components |
+
+Imported bounds, including ropes/fenders, are **3.660 x 1.433 x 8.910 m** in Unity X/Y/Z. The hull was modelled
+at approximately 2.9 m beam and 8.8 m length, bow toward Blender -Y / Unity -Z. The export pivot is at zero;
+the presentation's 8 m Blender offset is removed. LODGroup screen-height thresholds are 0.16 and 0.025;
+LOD1 has about 72% fewer triangles. The final level culls below 0.025. No performance benchmark is claimed.
+
+**Blackout/World/Build Rowboat Visual Assets** (`RowboatAssets.cs`) configures the two texture importers,
+material and prefab without changing a game scene. It uses the existing FBX import rules. The generated
+material/prefab carry the `BlackoutGeneratedRowboat` label; the builder refuses to overwrite unlabelled assets
+or an unexpected Model source. Blender procedural colours are baked into PNGs; no Blender installation is
+needed to import the FBX on another teammate's machine. The procedural bump detail was not exported as a
+normal map.
+
+Editable Blender source and its export working copy are currently outside Git at
+`%TEMP%/BlackoutIsland-Boat/Weathered_Rowboat.blend` and `Weathered_Rowboat_GameExport.blend`. The Core Developer
+must retain the source and companion PNGs in permanent source-art storage; TEMP is not an archive. No source
+file has been added under `Art/Blender` in this change.
+
+### Scene placement and collision
+
+**Blackout/World/Replace Boat With Rowboat** (`RowboatPlacement.cs`) retains the original `Beach/Boat`
+position **(3.7, 0.15, -122.5)**, yaw approximately -2.9 degrees, and scale. The linked visual's local Y offset
+is **-0.28 m**, putting the keel slightly below water and floorboard tops at **world Y 0.1675 m**.
+
+- Exact-name generated hull, cabin, motor, rails, old fenders, deck, jerry cans and rope coils have their
+  renderers/colliders disabled. They remain in the hierarchy; no original scene objects are deleted.
+- The existing lantern cage, emissive renderer, light and FlickerLight link remain. Its post extends down
+  toward the new hull. No runtime script or additional light is introduced.
+- `RowboatCollision` has 25 simple BoxColliders: nine floor strips, three benches, twelve side segments and
+  one transom. The net, oars, ropes, cleats and hanging fenders have no collision.
+- `RowboatBoarding` adds two visible wooden planks, 0.9 m wide and 0.07 m thick, with BoxColliders: dock to
+  gunwale, then down to the floor. Total new collision is 27 boxes, on Level; boat parts have no static flags.
+- Existing mooring mesh endpoints are refitted to the rowboat gunwales. Dock cargo, rails and central route
+  stay in place. `BoatExit` remains **(0, 1.3, -124)**.
+- Build Terrain retains an installed `RowboatVisual`; Dress Beach and Boat reapplies the replacement after
+  dressing so legacy fittings remain disabled. Those rebuild paths were inspected in code; the rowboat
+  replacement entry itself was run repeatedly. No full terrain rebuild was run for this change.
+- The boat and its boarding planks remain under the NavMesh baker's existing Boat exclusion. No NavMesh
+  rebake or changes to Interactables, Agents, Bootstrap, player settings or shared contracts were made.
+
+**Systems handoff:** `MissionZones.IsAtBoat` still checks horizontal distance less than 6 m and player
+Y greater than 0.5. The dock at Y 1.3 still qualifies; the rowboat floor at Y 0.1675 does not. This change
+preserves that mission rule. Systems Engineer: decide whether completion while standing on the lower floor
+should also be supported before changing your `MissionZones.cs`.
+
+### Capture and verification
+
+**Blackout/World/Capture Rowboat Preview** writes two 1920 x 1080 PNGs to a unique folder under
+`%TEMP%/BlackoutIsland-Rowboat/` and prints each path. It uses the saved Environment lighting, 60-degree FOV,
+and temporary cameras. It refuses dirty scenes/Play mode and restores the previous scene setup without
+saving camera changes. Batch entry `Blackout.Editor.RowboatPlacement.BuildAndCapture` first places/saves the
+boat and then captures; use graphics (`-force-d3d11`), not `-nographics`.
+
+Verified in Unity 6000.3.25f1 on 2026-10-20:
+
+- Asset builder exited 0 twice; 18 checked asset/scene/settings hashes matched on repeat.
+- Placement/capture exited 0 on repeated runs; 20 checked hashes, including Environment and mooring mesh,
+  matched on repeat. Eighteen protected scene/asset/settings files matched their pre-placement bytes.
+- Original scene-block comparison found no removed blocks. Changes to existing blocks were confined to
+  Boat's child list, legacy boat renderers/colliders and the lantern-post transform.
+- Unity overview and dock close-up PNGs were inspected. Final capture folder:
+  `%TEMP%/BlackoutIsland-Rowboat/20261020-155949-b91b6886`.
+- Logs: `%TEMP%/blackout-rowboat-assets-approved.log` and `blackout-rowboat-placement.log`. No C# compiler
+  warnings/errors in the final runs. No tests were added or run for this replacement.
+
+Before the PR: inspect the linked model/material in Environment, run Replace Boat With Rowboat again and
+check for no new scene/mesh diff, then use Bootstrap to walk onto both planks and back to the dock. Check
+for hull/bench collision, snagging, lantern flicker and LOD changes; complete a cure-carrying escape from the
+dock. **Interactive boarding, shooting and the full mission have not been verified here.** Boat bobbing,
+moving-rope attachment updates and animated water remain separate work. Collision is an approximation of
+the curved hull, and the boarding planks use the existing flat dock-wood material.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1649,6 +1742,7 @@ builder when supplied; no external assets are required to run it.
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
 | Dock cargo moved toward edges (W13) | Crates at x−0.95 and barrel at x0.95 leave at least1.3m between inward collision edges; the player/mission route remains clear | World Builder |
 | Boat walking deck added (W13) | A thin wooden slab raises the top from0.70 to0.77m without replacing the original hull collider; boarding is not validated by the dock route check | Systems Engineer, for information |
+| Cabin boat replaced by a wooden rowboat (W13, later change) | Old deck/cabin collision disabled; floor is now y0.1675 with two boarding planks. BoatExit stays on the dock; existing mission y>0.5 excludes the lower floor | Systems Engineer (mission-height decision); Core Developer (approved visual assets and source retention) |
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
 | Terrain hole over the ramp top (W2, covered in W13) | The W13 entrance exterior covers the exposed ramp; an additional lobby/sill terrain cut removes surface overlap | World Builder |
 | Invisible boundary walls (W2) | On the Level layer since Y7, like every solid collider in Environment (`Blackout/Systems/Assign Physics Layers`; the dock railings are on Ignore Raycast). They stop raycasts, but they are all offshore. Re-run that tool after rebuilding level geometry, because new objects are created on Default | Systems Engineer (layers) |
