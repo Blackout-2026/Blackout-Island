@@ -32,7 +32,7 @@ namespace Blackout.Editor
             Material wood = Material("Wood", "#382218");
             Material iron = Material("Iron", "#292725", 0.65f);
             Material ember = Material("Ember", "#351207");
-            ember.SetColor("_EmissionColor", LightingLayout.FromLinearHex("#FF6B18", 2.5f));
+            ember.SetColor("_EmissionColor", LightingLayout.FromLinearHex("#FF6B18", 1.25f));
             BaseShaderGUI.SetMaterialKeywords(ember);
             EditorUtility.SetDirty(ember);
             AssetDatabase.SaveAssetIfDirty(ember);
@@ -127,7 +127,8 @@ namespace Blackout.Editor
                     float centre = 0.5f + 0.1f * Mathf.Sin(v * 8f) + 0.035f * Mathf.Sin(v * 19f);
                     float radius = 0.28f * Mathf.Pow(1f - v, 0.8f) + 0.015f;
                     float edge = Mathf.Clamp01(1f - Mathf.Pow((u - centre) / radius, 2f));
-                    float alpha = edge * edge * Mathf.SmoothStep(0f, 1f, v * 12f) * (1f - Mathf.SmoothStep(0.85f, 1f, v));
+                    float tipFade = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.85f, 1f, v));
+                    float alpha = edge * edge * Mathf.SmoothStep(0f, 1f, v * 12f) * tipFade;
                     pixels[y * 64 + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
                 }
             mask.SetPixels32(pixels);
@@ -145,7 +146,8 @@ namespace Blackout.Editor
                 AssetDatabase.CreateAsset(mat, path);
             }
             mat.SetTexture("_BaseMap", mask);
-            mat.SetColor("_BaseColor", Color.white);
+            // Particle vertex colours are clamped; put fire brightness in the HDR material colour.
+            mat.SetColor("_BaseColor", new Color(4f, 2f, 0.6f, 1f));
             mat.SetFloat("_Surface", 1f);
             mat.SetFloat("_Blend", 2f); // Additive: flame colour brightens the background.
             mat.SetFloat("_ColorMode", 0f);
@@ -180,7 +182,7 @@ namespace Blackout.Editor
             main.startSizeX = sparks ? new ParticleSystem.MinMaxCurve(0.012f, 0.022f) : new ParticleSystem.MinMaxCurve(0.18f, 0.3f);
             main.startSizeY = sparks ? new ParticleSystem.MinMaxCurve(0.035f, 0.065f) : new ParticleSystem.MinMaxCurve(0.32f, 0.55f);
             main.startSizeZ = 1f;
-            main.startColor = new Color(2.5f, 1.15f, 0.25f, 1f);
+            main.startColor = Color.white;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.Local;
             var emission = system.emission;
