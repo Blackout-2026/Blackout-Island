@@ -241,6 +241,173 @@ namespace Blackout.AI.Hunter.Tests
             Assert.AreEqual(0, GC.GetAllocatedBytesForCurrentThread() - before);
         }
 
+        // ---- debug text (H4) -------------------------------------------------------------------------------------
+
+        [Test]
+        public void DebugText_BeforeTheFirstTick_SaysNotStarted()
+        {
+            var fresh = Hidden("Fresh").AddComponent<HunterBrain>();
+
+            Assert.AreEqual("Hunter [BT] (not started)", fresh.GetDebugText());
+        }
+
+        [Test]
+        public void DebugText_ShowsTheRunningPath_TheEyes_TheEars_AndTheOrder()
+        {
+            sight.Clear = false;
+            hearing.Hear(new NoiseEvent(new Vector3(-6f, 0f, -4f), 13f, NoiseType.Sprint, player));
+            brain.OnDirective(new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 30f), 0f));
+            Step();
+
+            string[] lines = brain.GetDebugText().Split('\n');
+            Assert.AreEqual(4, lines.Length);
+            Assert.AreEqual("Hunter [BT] Investigate > MoveToNoise", lines[0]);
+            Assert.AreEqual("eyes: sees no, detected no, awareness 0.00, never seen", lines[1]);
+            StringAssert.StartsWith("ears: Sprint 0.76 heard 0.10 s ago through 0 walls", lines[2]);
+            Assert.AreEqual("order: Converge (20.00, 30.00)", lines[3]);
+        }
+
+        [Test]
+        public void DebugText_WhileAttacking()
+        {
+            TicksUntilFire(walking: true);
+
+            string text = brain.GetDebugText();
+            StringAssert.StartsWith("Hunter [BT] Attack > AimAndFire\neyes: sees yes, detected yes", text);
+            StringAssert.Contains("last seen 0.00 s ago", text);
+        }
+
+        [Test]
+        public void DebugText_IsRebuiltOncePerTick()
+        {
+            Step();
+            string first = brain.GetDebugText();
+            Assert.AreSame(first, brain.GetDebugText(), "same tick: the same string, nothing allocated");
+
+            Step();
+            Assert.AreNotSame(first, brain.GetDebugText());
+        }
+
+        [Test]
+        public void LastIntent_IsWhatTheTickReturned()
+        {
+            sight.Clear = false;
+            brain.OnDirective(new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 30f), 0f));
+
+            AgentIntent intent = Step();
+            Assert.AreEqual(intent, brain.LastIntent);
+        }
+
+        // ---- gizmos (H4) -------------------------------------------------------------------------------------------
+
+        private sealed class RouteWorld : IHunterWorld
+        {
+            public int WaypointCount => 3;
+            public Vector3 GetWaypoint(int index) => new Vector3(index * 10f, 0f, 30f);
+
+            public bool TryFindCover(Vector3 self, Vector3 threat, float radius, out Vector3 point)
+            {
+                point = self;
+                return false;
+            }
+
+            public bool TryFindAdvanceCover(Vector3 self, Vector3 target, float range, float minGain, out Vector3 point)
+            {
+                point = self;
+                return false;
+            }
+
+            public float Random01() => 0.25f;
+        }
+
+        /// <summary>Records what would be drawn, since Unity's Gizmos only work inside OnDrawGizmos*.</summary>
+        private sealed class RecordingPainter : IGizmoPainter
+        {
+            public readonly List<(Vector3 from, Vector3 to, Color colour)> Lines = new List<(Vector3, Vector3, Color)>();
+            public readonly List<(Vector3 centre, Color colour)> Spheres = new List<(Vector3, Color)>();
+            public readonly List<(Vector3 centre, Color colour)> Cubes = new List<(Vector3, Color)>();
+
+            public Color Color { get; set; }
+            public void Line(Vector3 from, Vector3 to) => Lines.Add((from, to, Color));
+            public void WireSphere(Vector3 centre, float radius) => Spheres.Add((centre, Color));
+            public void WireCube(Vector3 centre, Vector3 size) => Cubes.Add((centre, Color));
+
+            public int CountLines(Color rgb) => Lines.FindAll(l => SameHue(l.colour, rgb)).Count;
+        }
+
+        private static bool SameHue(Color a, Color b)
+        {
+            return Mathf.Approximately(a.r, b.r) && Mathf.Approximately(a.g, b.g) && Mathf.Approximately(a.b, b.b);
+        }
+
+        [Test]
+        public void Gizmos_DrawNothing_UntilThereIsSomethingToShow()
+        {
+            var painter = new RecordingPainter();
+            Hidden("Fresh").AddComponent<HunterBrain>().DrawGizmos(painter);
+            hearing.DrawGizmos(painter);
+
+            Assert.AreEqual(0, painter.Lines.Count + painter.Spheres.Count + painter.Cubes.Count);
+        }
+
+        /// <summary>
+        /// The brain's gizmos while attacking: the vision cone in combat red, a red line from the eyes to the aim
+        /// point, a yellow box at the last sighting, and the route as a closed cyan loop.
+        /// </summary>
+        [Test]
+        public void BrainGizmos_ShowTheConeTheAimTheSightingAndTheRoute()
+        {
+            brain.SetWorld(new RouteWorld());
+            brain.Initialize(context);
+            TicksUntilFire(walking: true);
+            var painter = new RecordingPainter();
+            brain.DrawGizmos(painter);
+
+            Vector3 eye = brain.transform.position + Vector3.up * brain.Config.eyeHeight;
+            Assert.IsTrue(painter.Lines.Exists(l => l.from == eye && l.to == brain.LastIntent.lookTarget
+                                                    && SameHue(l.colour, HunterGizmos.Combat)), "aim line");
+            Assert.Greater(painter.CountLines(HunterGizmos.Combat), 2, "cone (and aim) in combat red");
+            Assert.AreEqual(1, painter.Cubes.Count);
+            Assert.AreEqual(brain.Vision.LastSeenPosition + Vector3.up * 0.9f, painter.Cubes[0].centre);
+            Assert.AreEqual(3, painter.CountLines(HunterGizmos.Route), "route: 3 waypoints, closed");
+            Assert.IsTrue(painter.Lines.Exists(l => SameHue(l.colour, HunterGizmos.Route)
+                                                    && l.to == new Vector3(0f, 0.2f, 30f)), "the loop closes");
+        }
+
+        [Test]
+        public void BrainGizmos_ShowTheMoveTarget_InTheSpeedsColour()
+        {
+            sight.Clear = false;
+            brain.OnDirective(new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 30f), 0f));
+            Step();
+            var painter = new RecordingPainter();
+            brain.DrawGizmos(painter);
+
+            Assert.IsTrue(painter.Lines.Exists(l => l.to == new Vector3(20f, 0.1f, 30f)
+                                                    && SameHue(l.colour, HunterGizmos.Running)), "running: light blue");
+            Assert.AreEqual(0, painter.CountLines(HunterGizmos.Combat), "not aiming: no red line");
+            Assert.Greater(painter.CountLines(HunterGizmos.Suspicious), 2, "following an order: orange cone");
+        }
+
+        /// <summary>
+        /// The ears' gizmos: a ring per noise at its radius, a second ring for the one that was counted through walls,
+        /// and a line to the ears, green for the remembered noise and grey for the two that were not.
+        /// </summary>
+        [Test]
+        public void HearingGizmos_ShowTheNoiseRadii_AndWhatWasRemembered()
+        {
+            hearing.Hear(new NoiseEvent(new Vector3(-6f, 0f, -4f), 13f, NoiseType.Sprint, player));
+            hearing.Hear(new NoiseEvent(new Vector3(0f, 0f, -60f), 13f, NoiseType.Footstep, player));
+            hearing.Hear(new NoiseEvent(new Vector3(0f, 0f, -30f), 42f, NoiseType.Gunshot, null));
+            var painter = new RecordingPainter();
+            hearing.DrawGizmos(painter);
+
+            Assert.AreEqual(1, painter.CountLines(HunterGizmos.Heard));
+            Assert.AreEqual(2, painter.CountLines(HunterGizmos.NotHeard));
+            Assert.AreEqual(48 * 3, painter.CountLines(HunterGizmos.Footsteps), "sprint: radius and heard rings; footstep: radius");
+            Assert.AreEqual(48, painter.CountLines(HunterGizmos.Gunfire), "gunshot: radius only (raycast skipped)");
+        }
+
         private int TicksUntilFire(bool walking)
         {
             for (int tick = 1; tick <= 50; tick++)

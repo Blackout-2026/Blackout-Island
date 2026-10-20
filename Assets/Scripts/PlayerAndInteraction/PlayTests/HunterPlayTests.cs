@@ -79,12 +79,19 @@ namespace Blackout.Diagnostics.PlayTests
             }
 
             yield return WaitSeconds(RoamSeconds);
+            var registry = Object.FindFirstObjectByType<AgentRegistry>();
+            Assert.IsNotNull(registry, "the Agents scene has an AgentRegistry");
             for (int i = 0; i < hunters.Length; i++)
             {
                 float moved = CoverMath.FlatDistance(start[i], hunters[i].transform.position);
                 Debug.Log($"[Blackout] Hunter play test: {hunters[i].name} walked {moved:0.0} m in {RoamSeconds} s " +
                           $"({hunters[i].ActiveBranch})");
                 Assert.Greater(moved, 2f, $"{hunters[i].name} walks its route (1.6 m/s)");
+
+                // H4: AgentRoot publishes the brain's debug text (IDebugInfo) to the squad Blackboard every 0.5 s.
+                string state = PublishedState(registry, hunters[i]);
+                Debug.Log($"[Blackout] Hunter play test: {hunters[i].name} published \"{FirstLine(state)}\"");
+                StringAssert.StartsWith("Hunter [BT] Roam", state, $"{hunters[i].name}'s published state");
             }
 
             // The player, standing still, 5 m in front of the first Hunter and facing it.
@@ -125,7 +132,42 @@ namespace Blackout.Diagnostics.PlayTests
                       $"appeared 5 m in front, standing still; first shot {waited:0.00} s later " +
                       $"({shooter.ShotsFired} shots)");
             Assert.Greater(shooter.ShotsFired, 0, "the shooter fires after its reaction delay");
+
+            // The published state follows within one publish interval (0.5 s).
+            string attacking = null;
+            waited = 0f;
+            while (waited < 1.5f)
+            {
+                attacking = PublishedState(registry, target);
+                if (attacking != null && attacking.StartsWith("Hunter [BT] Attack"))
+                {
+                    break;
+                }
+
+                yield return null;
+                waited += Time.unscaledDeltaTime;
+            }
+
+            Debug.Log($"[Blackout] Hunter play test: {target.name} published \"{FirstLine(attacking)}\" while attacking");
+            StringAssert.StartsWith("Hunter [BT] Attack", attacking);
             Assert.AreEqual(0, exceptions, firstException);
+        }
+
+        private static string PublishedState(AgentRegistry registry, HunterBrain hunter)
+        {
+            string agentName = hunter.GetComponent<AgentRoot>().AgentName;
+            return registry.Blackboard.AgentStates.TryGetValue(agentName, out string state) ? state : null;
+        }
+
+        private static string FirstLine(string text)
+        {
+            if (text == null)
+            {
+                return "(nothing)";
+            }
+
+            int end = text.IndexOf('\n');
+            return end < 0 ? text : text.Substring(0, end);
         }
 
         private static bool AllThinking(HunterBrain[] hunters)
