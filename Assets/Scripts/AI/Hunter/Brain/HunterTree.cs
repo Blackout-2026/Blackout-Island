@@ -43,6 +43,8 @@ namespace Blackout.AI.Hunter
             public Vector3 Target;
             public int Step;
             public float Angle;
+            /// <summary>The order this leg is working on (its OrderReceivedAt), so a newer order starts over.</summary>
+            public float Stamp = float.NegativeInfinity;
 
             public void Clear()
             {
@@ -50,6 +52,7 @@ namespace Blackout.AI.Hunter
                 WaitUntil = -1f;
                 HasTarget = false;
                 Step = 0;
+                Stamp = float.NegativeInfinity;
             }
         }
 
@@ -337,6 +340,14 @@ namespace Blackout.AI.Hunter
         private NodeStatus MoveToOrder(BtContext c, Leg leg)
         {
             Directive order = facts.Get(HunterFacts.Order);
+            float receivedAt = facts.Get(HunterFacts.OrderReceivedAt, float.NegativeInfinity);
+            if (leg.Stamp != receivedAt)
+            {
+                // A newer order (a moved target, a new search area) starts over instead of mixing with the old one.
+                leg.Clear();
+                leg.Stamp = receivedAt;
+            }
+
             if (order.type != DirectiveType.SearchZone)
             {
                 MoveSpeed speed = order.type == DirectiveType.Regroup ? MoveSpeed.Walk : MoveSpeed.Run;
