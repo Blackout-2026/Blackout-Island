@@ -1,0 +1,16 @@
+{
+    "name": "Blackout.AI.SecurityPatrol",
+    "rootNamespace": "Blackout.AI.SecurityPatrol",
+    "references": [
+        "Blackout.Shared"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
