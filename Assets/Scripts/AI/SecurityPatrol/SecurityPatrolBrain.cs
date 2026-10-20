@@ -59,6 +59,15 @@ namespace Blackout.AI.SecurityPatrol
         public float VisionRangeMultiplier => rangeMultiplier;
         public SecurityPatrolState? CurrentState => current == null ? (SecurityPatrolState?)null : current.Id;
 
+        // Read-only diagnostics. Active gizmos use the sensor's cached settings, even if config is edited live.
+        public Transform AgentTransform => context == null ? transform : context.Self;
+        public IReadOnlyList<Marker> Waypoints => route;
+        public float VisionEyeHeight => senses != null ? senses.EyeHeight : (config != null ? config.eyeHeight : 1.62f);
+        public float EffectiveVisionRange => rangeMultiplier *
+            (senses != null ? senses.VisionRange : (config != null ? config.visionRange : 22f));
+        public float VisionAngle => senses != null ? senses.VisionAngle :
+            (config != null ? config.visionAngle : 1.95f * Mathf.Rad2Deg);
+
         /// <summary>The shared host publishes this cached state and reason to the debug Blackboard.</summary>
         public string GetDebugText() => debugText;
 
