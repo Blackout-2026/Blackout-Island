@@ -30,6 +30,7 @@ namespace Blackout.Editor.Tests
         }
 
         [TestCase("SM_Char_Patrol", 4500)]
+        [TestCase("SM_Char_Commander", 21000)]
         [TestCase("SM_Weapon_Smg", 9000)]
         [TestCase("SM_Weapon_Knife", 9000)]
         [TestCase("SM_Weapon_Sniper", 9000)]

@@ -763,3 +763,216 @@ out of the camera, and the file keeps its 3 materials (`M_Weapon_Sniper`, `M_Wea
 `T_WeaponSniper_*` texture names. So `Weapon_Sniper_Visual.prefab` and the Player prefab pick the new mesh up from the FBX with no
 change. Measured: 5,756 triangles (target 6,000), root rotation 0. The tan polymer stock is gone: the TAN palette slot is now the
 parkerised grey receiver. The stand-alone `SM_Weapon_SniperHeavy` of section 17 is the full-size rifle without hands.
+
+## 18. The three humanoid agents (step C10)
+
+`SM_Char_Patrol`, `SM_Char_Hunter` and `SM_Char_Commander` replace the blue capsules that stand in for the Security Patrol (x3 in the
+level), the Hunter (x2) and the Commander (x1). All three share one body and one skeleton (`docs/reference/core-developer.md` section 4)
+and differ in clothes, head gear and weapon. The look comes from three reference photos the owner supplied (a police-style tactical
+operator, a camouflaged field soldier, a white-uniformed officer); the shapes are my own, no one's likeness, and there is no text or insignia.
+
+| | Security Patrol | Hunter | Commander |
+| --- | --- | --- | --- |
+| Look | navy uniform, black plate-carrier vest with front plate, 3 pouches, radio, shoulder straps, belt pouches, cargo pockets, helmet with side rails, night-vision mount, dark visor, ear cups, knee and elbow pads, holstered pistol | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
+| Weapon | assault rifle with an optic, a weapon light and sling straps | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
+| Muzzle | `MuzzlePoint` 0.74 m ahead of the Gun socket | 0.74 m | 0.22 m |
+| Triangles (target 3,000; the Commander 14,000) | 2,548 | 2,819 | 13,038 |
+| Materials | `M_Char_Patrol_Cloth`, `_Gear`, `_Metal` | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
+
+### 18.1 How they are built (scripts in `Art/Blender/Scripts`)
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `build_humans.py` (uses `build_robot.py`'s kit) | One shared body (hips, torso, head with jaw, nose and ears, tapered limbs, hands, boots) plus the costume and weapon of each character. Merges the parts, removes faces hidden inside their joint, triangulates, unwraps UV0, splits back into 18 joint objects under one Empty root and exports `Assets/Models/Custom/SM_Char_<Name>.fbx` and `Art/Blender/SM_Char_<Name>.blend`. `-- Hunter` builds one character |
+| 2 | `preview_humans.py` | Review renders (optional) |
+| 3 | Unity: **Blackout > Art > Use Character Models In Agents** | Builds the 9 flat materials and the 3 `Char_*_Visual.prefab` files, then replaces the capsule in the Agent Controller's SecurityPatrol, Hunter and Commander prefabs with the matching model and points `AgentShooter.muzzle` at its `MuzzlePoint` |
+
+```
+"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_humans.py
+```
+
+**Rig:** the robot's method (section 16.2): rigid parts on pivots, every joint at rotation 0, rotation about the joint's local X, one
+Empty root cancelling the exporter's axis rotation. Joints (heights in metres): `Hips` 0.98 (root), `Spine` 1.08, `Chest` 1.28, `Neck` 1.55,
+`Head` 1.65, `UpperArm_L/R` 1.48, `ForeArm_L/R` 1.19, `Hand_L/R` 0.93, `Thigh_L/R` 0.92, `Shin_L/R` 0.48, `Foot_L/R` 0.06 and `Gun`
+(1.40, at x -0.04, z +0.20) with the Empty `MuzzlePoint` below it. 1.87 m tall, feet on y 0, facing +Z. `CharacterFbxTests`
+checks all of it for the three files.
+
+### 18.2 The realistic Commander (step C10b)
+
+The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service dress, so he is no longer
+built by `build_humans.py` (rigid boxes, flat colours). He has his own pipeline; the other two humans are untouched. The face, hair and insignia are
+generic: no one's likeness, and the name tag says COMMANDER, not a name.
+
+| Script | Does |
+| --- | --- |
+| `commander_atlas.py` | The texture layout shared by Blender and the painter (swatches, decals, the face's planar projection), plus the head scale. |
+| `make_commander_textures.py` (Python + Pillow, like `make_skin_texture.py`) | Paints `T_CharCommanderUniform_BaseColor` and `_MetalSmooth` (1024: white cloth, gold with metallic, black leather, shoulder boards with a star and three stripes, a 3 x 3 ribbon rack, name tag, warfare pin, cap visor with gold leaves, cap device), `T_CharCommanderSkin_BaseColor` (1024: the face with eyes, brows, lashes, lips, freckles, plus a freckled tile for arms and hands) and `T_CharCommanderHair_BaseColor` (512, RGBA: an opaque strand texture for the cap and a lock card with alpha). Fixed seeds. |
+| `build_commander.py` | The framework (sweeps, shells, decals, per-joint split, custom normals, FBX export) and the body: torso with a bust, tucked shirt, belt, holster, trousers with a pressed crease, shoes, sleeves, bent arms, hands with fingers, watch. `commander_head.py` builds the head, and `commander_uniform.py` the collar, V-neck, buttons, boards, ribbons, name tag, pocket and cap. |
+| `preview_humans.py` | Review renders; new views `face`, `face34`, `profile`, `upper`. |
+| Unity: **Blackout > Art > Use Character Models In Agents** | Same tool as the other two: builds `M_Char_Commander_Uniform/_Skin/_Hair` (the hair one alpha-clipped and double-sided), the prefab, and swaps it into the Agent Controller's Commander prefab. |
+
+```
+python Art/Blender/Scripts/make_commander_textures.py
+"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
+```
+
+How it differs from the rigid-box method: every part is a swept tube (torso, legs, sleeves, fingers), a thin shell (collar, pocket, cap visor) or a flat plate (boards,
+buckle), shaded with **custom normals** computed per part (smoothed by a 38 degree angle) and kept when the mesh is cut into joints, so the cloth is
+round and the plates stay crisp and there is no seam at the waist. The head is built from side-profile, width and skull tables (chin, lips,
+forehead, jaw, temples) with Gaussian features for nose, brows, eye sockets, cheeks and lips, then thinned with Decimate (X symmetry); the
+eyes, brows and lips are painted with the same planar projection (`commander_atlas.head_px`), so they land where the mesh has them. The hair is a ridged
+cap over the skull plus about 60 single-sided lock cards with an alpha strand texture. The arms are modelled bent with the hands clasped in front of
+the belt and the cap worn on the head and both hands on a pistol, but the joints stay where the rig table has them, at rotation 0, so a future animator rotates the
+same joints (a rotated forearm moves its hand, the pistol stays on the Gun socket).
+
+**Budget:** the Commander is the one hero character, so `ModelBudget` gives `SM_Char_Commander` 14,000 triangles (hard maximum 21,000) and 3
+materials; Patrol and Hunter keep 3,000. Measured: 13,038 triangles, 1.884 m tall (cap on), 0.49 m wide, 0.57 m deep with the pistol. **What the exported FBX was
+checked against:** it was re-imported into Blender and all 18 joints were at the table's heights with the table's parents, every mesh has UV0 and
+custom normals, and the materials are the three names above. It has NOT been imported into Unity or run through `CharacterFbxTests` yet (the Editor was open).
+
+**Limits:** it is a low-poly game character, not a scan: the face is stylised realism, there are no facial blend shapes, no cloth simulation, and no
+animation (same as the other humans). Hair cards use alpha clipping, so strands can shimmer at a distance without MSAA. The pistol is part of the Gun joint, held by hands that belong to the forearms, so a future
+animator must rotate both together; the hair under the cap is trimmed to what shows (sides and nape).
+
+**Not done, on purpose:** the models have no skin and no clips. The Agent Controller's humanoids are meant to use an Animator with free
+humanoid animations; these rigid-part models cannot play those, so the humans currently stand upright and slide along their path
+until a procedural humanoid animator (like `ProceduralRobotAnimator`, driving these joint names) is added. Materials of the Patrol are flat
+colours; the Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
+owners' work: the agents keep the placeholder walker until then.
+
+## 19. Realistic trees (step C11)
+
+`SM_Tree_Pine.fbx` and `SM_Tree_Palm.fbx` replace the World Builder's generated placeholder trees (a stack of cones and a cylinder with flat
+colours). The World Builder's `VegetationLibrary` says "your own prefab wins": `Assets/Environment/Vegetation/Pine.prefab` and `Palm.prefab`
+are used instead of `Placeholder/Pine_Placeholder.prefab` and `Palm_Placeholder.prefab`, so no World Builder code was changed.
+
+| | Pine | Palm |
+| --- | --- | --- |
+| Height | 10.5 m (crown 7.4 m wide) | 8.1 m including the fronds (crown 7.6 m wide) |
+| LOD0 / LOD1 / LOD2 triangles | 2,336 / 584 / 138 | 1,004 / 288 / 52 |
+| Trunk | root flare, slight sway, a rough outline, bark texture with a normal map, 14 sides | curved with a swollen base, scar rings, bark texture with a normal map, 10 sides |
+| Foliage | 13 whorls of 3 to 5 drooping branches (thin tubes), each with 4 alpha-cut needle cards, a leader spire, dead branch stubs low on the trunk | 15 fronds, each a V-folded pair of strips with a pinnate frond texture, a crown knob and 5 coconuts |
+| Materials | `M_Tree_PineBark`, `M_Tree_PineNeedles` | `M_Tree_PalmBark`, `M_Tree_PalmFrond` |
+
+Textures (`make_tree_textures.py`, numpy and Pillow, no photos, in `Assets/Textures/Models`): `T_PineBark_BaseColor/_Normal`,
+`T_PineNeedles_BaseColor` (RGBA), `T_PalmBark_BaseColor/_Normal`, `T_PalmFrond_BaseColor` (RGBA). The bark is a height field of tileable
+noise, coloured by height, with the normal map taken from its gradient. The needle spray and the frond are drawn line by line at 4x size and
+shrunk; the colour under the transparent pixels is leaf green, so there is no dark halo at the cut-out edge.
+
+**Why they look right in the light:** the foliage cards are alpha-clipped (cut out), so their shadows are cut out too and fall as the
+dappled shadow of real needles. Their vertex normals point away from the crown's centre and slightly up ("ball shading"), the usual trick
+that lights flat cards like a soft volume instead of like paper. The bark has a normal map, the foliage material is two-sided and the
+cut-out textures keep their coverage in the small mip levels (`mipMapsPreserveCoverage`), so a tree does not thin out at a distance.
+
+### 19.1 How they are built
+
+| Order | Script | Does |
+| --- | --- | --- |
+| 1 | `make_tree_textures.py` (plain Python) | The six textures |
+| 2 | `build_trees.py` (Blender) | Builds both trees with three LODs each, saves `Art/Blender/SM_Tree_<Name>.blend` and exports `Assets/Models/Custom/SM_Tree_<Name>.fbx` (Apply Transform on, three mesh objects `<Name>_LOD0..2`, two material slots) |
+| 3 | `preview_trees.py` | Review renders in sun and sky light (optional) |
+| 4 | Unity: **Blackout > Art > Build Realistic Trees** | Builds the four `M_Tree_*` materials (alpha clip and two-sided for the foliage) and `Pine.prefab`, `Palm.prefab`: the FBX, a LODGroup at the placeholders' screen heights (0.25 / 0.10 / 0.02, the palm 0.25 / 0.15 / 0.02) and the placeholders' CapsuleCollider |
+| 5 | Unity: **Blackout > World > Paint Terrain And Forest** | The World Builder's tool plants the new prefabs (it asks before it overwrites hand painting) |
+
+```
+python Art/Blender/Scripts/make_tree_textures.py
+"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_trees.py
+```
+
+**Limits, honestly:** these are card-and-mesh trees, not SpeedTree-quality, and there is no wind sway. Bushes, grass and rocks are still the
+World Builder's placeholders. `TreeFbxTests` checks the heights, the three falling LODs, the UVs and the material slots. The World Builder's
+visible-triangle budget (250,000) should be rechecked in the report that Paint Terrain And Forest prints.
+
+### 19.2 Eight shapes, mixed over the island
+
+One pine and one palm repeated over the whole island looks like a stamp, so each kind has four variants built from the same textures:
+`build_trees.py` takes the shape from a parameter table (`PINE_VARIANTS`, `PALM_VARIANTS`: height, reach, droop, whorl spacing, lean, frond
+count, tint), so the original `Pine` and `Palm` are unchanged.
+
+| Variant | Shape | Height | LOD0 triangles |
+| --- | --- | --- | --- |
+| Pine | classic cone | 10.5 m | 2,512 |
+| PineB | tall narrow dark spruce, short upswept branches | 12.8 m | 3,596 |
+| PineC | broad old crooked pine, light yellow-green, long bare trunk and dead stubs | 9.0 m | 1,944 |
+| PineD | young, small, bushy to the ground | 5.4 m | 1,648 |
+| Palm | the original | 8.1 m | 1,080 |
+| PalmB | tall slender palm with a strong curve and a short crown | 10.0 m | 1,032 |
+| PalmC | young short palm with upright fronds | 5.8 m | 816 |
+| PalmD | leaning palm with a long sweep of trunk | 8.9 m | 1,100 |
+
+The tint of each variant multiplies the shared needle or frond texture (`_BaseColor` in Unity, a Multiply node in the Blender previews), which is
+how one texture gives dark blue-green and light yellow-green trees. Each variant has its own materials (`M_Tree_PineNeedles_B` and so on) and
+prefab (`PineB.prefab`, `PalmD.prefab`, ...), built by **Blackout > Art > Build Realistic Trees**.
+
+The World Builder plants one prototype per kind, so **Blackout > Art > Diversify Forest** (`TreeDiversifier`) runs after Paint Terrain And Forest.
+It appends the variants as extra tree prototypes on `IslandTerrainData` and gives every pine and palm one of them by a fixed hash of its
+position (pine 34 / 26 / 24 / 16 %, palm 34 / 26 / 18 / 22 %). Positions, scales and yaw are not changed, the result is the same on every run and
+machine, and no World Builder code is edited. A repaint resets the island to one pine and one palm, so run Diversify Forest again after every
+repaint. Tests: `TreeDiversifierTests` (stable choice, the mix follows the weights) and `TreeFbxTests` (all eight FBX files).
+
+### 19.3 A more realistic coconut palm, and the start beach's other trees
+
+The first palm had every frond as one flat card, which read as broad paddles. The palm is rebuilt, and two more species are added for the
+start beach, which the World Builder plants as palms only (low ground south of z = -60, plus 18 % palm patches inland to z = -35).
+
+**Coconut palm (`Palm`, `PalmB`, `PalmC`, `PalmD`).** LOD0 builds every frond from real parts: a curved rachis (a 3-sided tube) with 11 to 12
+leaflet groups on each side. A group is a narrow card with four pointed blades hanging down in a V and bending at the tip, so the crown has
+the feathery, hanging look and the shadow breaks up. A crown has 15 to 17 fronds from upright young ones to drooping old ones, a crown knob
+and a cluster of coconuts. The trunk is pale grey-tan with scar rings, a swollen base and a normal map. LOD1 and LOD2 keep the whole-frond
+cards (the left 80 % of `T_PalmFrond_BaseColor.png`, which is an atlas: the right 20 % is the leaflet group). LOD0 is about 2,700 to 3,300
+triangles per palm (the first palm was 1,080), LOD1 about 270 and LOD2 about 50, so a palm only costs that much close up.
+
+**Sea almond (`Almond`, `AlmondB`).** A broadleaf shade tree: the tiered umbrella of a tropical almond (`Almond`, 8.0 m, five tiers of
+near-horizontal branches) and a rounder one with arching limbs (`AlmondB`, 6.9 m). Branches are tubes; at the end of each branch there are
+three crossing cards that carry rosettes of large veined leaves (`T_BroadLeaves_BaseColor.png`, drawn procedurally). Bark:
+`T_AlmondBark_BaseColor/_Normal.png`. 1,800 to 2,050 triangles at LOD0.
+
+**Banana plant (`Banana`, `BananaB`).** A fat green pseudo-stem (`T_BananaStem_*`, with a normal map), a crown of 7 to 9 big arching leaves
+folded along the midrib (`T_BananaLeaf_BaseColor.png`, with parallel veins and torn edges), and on the full-grown plant a hanging bunch of
+bananas (4 hands of 5). 3.3 m and 2.4 m tall, 1,036 and 544 triangles at LOD0.
+
+**Where they go.** **Blackout > Art > Diversify Forest** gives about 38 % of the planted palms (`TreeDiversifier.BeachShare`) a sea almond
+or a banana plant instead (34 / 26 / 22 / 18 % of those) and mixes the rest of the palms and all the pines as in 19.2. It is the same fixed
+hash of the position, so the beach is a mixed grove and the result does not change between runs. No World Builder code is changed.
+
+### 19.4 Realism pass 3: pines
+
+Each main pine branch now also carries two side branchlets (one each side, 52 degrees off the branch) with their own small crossing cards, so a
+branch is a three-dimensional spray and not a flat feather. The needle texture has 8 to 12 needles per fascicle (it was 6 to 9) and lighter new
+growth toward the twig tips. Pine LOD0 is now 2,864 / PineB 4,140 / PineC 2,176 / PineD 1,696 triangles (the test limit for a tree seen up
+close is 5,000); LOD1 and LOD2 are unchanged. The sea almond's bare branch now ends inside its leaves.
+
+## 20. Footbridge dock (step C12)
+
+The dock (`Beach/Dock`, built by the World Builder's `BeachGreyboxBuilder`: a 2.8 x 31 m deck at y 1.3, posts every 3 m and rails of plain
+boxes) is dressed as a wooden footbridge after a reference photo: a flat pale-grey deck with joints, white-painted railings, a wide flat
+top board over a beam, white uprights, grey diagonal braces in bays and round wooden piles. Nothing in the World Builder is changed.
+
+| Piece | Model | Triangles | What it is |
+| --- | --- | --- | --- |
+| Deck | `SM_Dock_Deck.fbx` | 180 | 2.8 x 31 m, top at y 0: a 1 m segment and ten 3 m concrete slabs with 2 cm joints (aligned with the posts), two kerbs, two stringers |
+| Rail panel | `SM_Dock_RailPanel.fbx` | 96 | 3 m of railing: top board, beam, lower rail, two uprights, three bays of alternating diagonal braces |
+| Rail post | `SM_Dock_RailPost.fbx` | 56 | A white upright with a flat cap on a round pile that runs 1.4 m down |
+
+Textures (`make_bridge_textures.py`, tileable, 1 m per tile, in `Assets/Textures/Models`): `T_BridgeDeck_*` (rough concrete), `T_DockPaint_*`
+(old white paint worn through to grey boards), `T_DockWood_*` (weathered boards). Each has a normal map. `build_bridge.py` maps every board with
+metre-sized UVs and the long side along u, so the grain follows the board and the textures have the same scale on every piece.
+
+```
+python Art/Blender/Scripts/make_bridge_textures.py
+"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_bridge.py
+"D:\Blender\blender.exe" -b Art/Blender/SM_Dock_Footbridge.blend -P Art/Blender/Scripts/preview_bridge.py -- <folder> 40
+```
+
+**In Unity** (open the Environment scene, or Bootstrap with the Environment scene loaded):
+1. **Blackout > Art > Build Dock Footbridge Prefabs**: the materials `M_Dock_Deck/Paint/Wood` and `Assets/Prefabs/Models/Dock_Deck`, `Dock_RailPanel`, `Dock_RailPost`.
+2. **Blackout > Art > Dress Dock As Footbridge**: `DockFootbridgePlan` reads the dock's own boxes in the scene (the deck, every `Post_*` and `Rail_*`
+   renderer's bounds), so no World Builder constant is needed. It places the deck and one panel on every rail box (the east side's gap where the boat is moored is
+   kept; the end rail becomes a panel turned 90 degrees) and a post on every tall post (the two short mooring bollards beside the boat keep their
+   greybox look), under `Beach/DockFootbridge`, then disables only the **renderers** of the boxes it replaced. **Their colliders stay**, so
+   walking, the rails you cannot pass and the gap at the boat are exactly as before.
+3. **Blackout > Art > Restore Greybox Dock** undoes it. If the World Builder rebuilds the dock, run Dress Dock As Footbridge again.
+
+Limits, honestly: the new pieces are not baked into the lightmaps (they are not static), so they are lit by the real-time light and the probes; the
+piles stand 1.4 m under the deck and are only seen above the water; the Unity part has been compiled and its plan logic written as tests
+(`DockFootbridgeTests`) but not run in the project; the scene file changes (the pieces and the disabled renderers), so tell the World Builder.
