@@ -10,13 +10,16 @@ namespace Blackout.AI.Hunter
     /// <summary>
     /// The real <see cref="IHunterWorld"/> (docs/reference/systems-engineer.md section 15):
     /// - Waypoints: the Waypoint markers owned by this agent (its name, for example Hunter-1), in Id order.
-    /// - Cover: every CoverPoint marker and every tree or bush on the loaded terrains, gathered once on first use.
-    ///   A cover point is offset behind the cover from the threat and snapped to the NavMesh if one is near.
+    /// - Cover: every CoverPoint marker, every terrain tree (pines, palms, rocks) and every bush (a terrain detail) on
+    ///   the loaded terrains, gathered once on first use. A cover point is offset behind the cover from the threat and
+    ///   snapped to the NavMesh if one is near.
     /// - Randomness: a System.Random seeded from the agent's name, so a run can be repeated.
     /// </summary>
     public sealed class HunterWorld : IHunterWorld
     {
         private const float NavMeshSnapDistance = 1.5f;
+
+        private static readonly Dictionary<TerrainData, Vector3[]> BushCache = new Dictionary<TerrainData, Vector3[]>();
 
         private readonly IAgentContext context;
         private readonly HunterConfig config;
@@ -144,9 +147,70 @@ namespace Blackout.AI.Hunter
                 {
                     covers.Add(origin + Vector3.Scale(tree.position, data.size));
                 }
+
+                covers.AddRange(Bushes(terrain));
             }
 
             return covers;
+        }
+
+        /// <summary>
+        /// The bushes on a terrain. They are terrain details (W6), stored as a count per detail cell, not tree
+        /// instances: every cell of a bush layer with a count above 0 gives one cover position on the ground. Read once
+        /// per terrain and shared by every Hunter, because the layer is a 512 x 512 array.
+        /// </summary>
+        public static IReadOnlyList<Vector3> Bushes(Terrain terrain)
+        {
+            TerrainData data = terrain.terrainData;
+            if (BushCache.TryGetValue(data, out Vector3[] cached))
+            {
+                return cached;
+            }
+
+            var bushes = new List<Vector3>();
+            DetailPrototype[] prototypes = data.detailPrototypes;
+            int width = data.detailWidth;
+            int height = data.detailHeight;
+            Vector3 origin = terrain.transform.position;
+            for (int layer = 0; layer < prototypes.Length; layer++)
+            {
+                if (!IsBush(prototypes[layer]))
+                {
+                    continue;
+                }
+
+                int[,] counts = data.GetDetailLayer(0, 0, width, height, layer);
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (counts[y, x] > 0)
+                        {
+                            Vector3 point = DetailCellCentre(origin, data.size, width, height, x, y);
+                            point.y = origin.y + terrain.SampleHeight(point);
+                            bushes.Add(point);
+                        }
+                    }
+                }
+            }
+
+            cached = bushes.ToArray();
+            BushCache[data] = cached;
+            return cached;
+        }
+
+        /// <summary>A bush layer: its prefab or texture is named like the World Builder's Bush (or Bush_Placeholder).</summary>
+        public static bool IsBush(DetailPrototype prototype)
+        {
+            string name = prototype.prototype != null ? prototype.prototype.name
+                : prototype.prototypeTexture != null ? prototype.prototypeTexture.name : string.Empty;
+            return name.IndexOf("bush", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>The world position (height 0) of the centre of detail cell (x, y) on a terrain at origin.</summary>
+        public static Vector3 DetailCellCentre(Vector3 origin, Vector3 size, int width, int height, int x, int y)
+        {
+            return new Vector3(origin.x + (x + 0.5f) / width * size.x, 0f, origin.z + (y + 0.5f) / height * size.z);
         }
 
         private static Vector3 Snap(Vector3 point)

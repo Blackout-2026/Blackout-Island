@@ -732,7 +732,9 @@ Root ?
 | Footstep, Door, Crate, Melee (> 0.04, last 5 s) | Investigate | **walk** to it (the prototype sneaks; Unity has no sneak speed) | ambush 4 s, aiming at it |
 | Sprint (> 0.04, last 5 s) | Investigate | **run** to it: the prey is fleeing [GUESS] | ambush 2 s [GUESS] |
 
-- **Cover for the advance [GUESS]:** `CoverPoint` markers and the terrain's trees and bushes, read once at start.
+- **Cover for the advance [GUESS]:** `CoverPoint` markers and the terrain's trees, rocks and bushes, read once at
+  start. Bushes are terrain *details* (W6), not trees: every 0.78 m detail cell holding one is a cover position, read
+  once per terrain for both Hunters. On the island: 657 trees and rocks and 371 bush cells (376 bushes).
   The next cover is one within 15 m of the Hunter that is at least 4 m nearer the noise; the Hunter waits 1.5 s
   there, then moves on. With no such cover it walks straight in. Within 16 m of the noise the take-cover rule wins,
   which ends the advance. This replaces the prototype's flank point, so the brief's "advance using cover/bushes,
