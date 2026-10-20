@@ -232,6 +232,8 @@ namespace Blackout.Editor
             urp.ApplyModifiedPropertiesWithoutUndo();
 
             Renderer lamp = BuildLamp(go.transform, spec);
+            if (spec.Group == LightFixtureLayout.OutdoorGroup && spec.Name == "BoatLantern")
+                lamp = BeachDressingBuilder.FindLantern(container.gameObject.scene);
             var flicker = go.GetComponent<FlickerLight>();
             if (spec.Flickers)
             {

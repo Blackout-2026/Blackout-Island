@@ -1532,6 +1532,59 @@ builder when detailed visuals are available. W10's optional missing pipe/tray/ve
 coordinate their eventual placement with these generated services to avoid duplicates. No asset supply is
 required to run this builder.
 
+## Beach and boat dressing (W13, fix 6)
+
+**Blackout/World/Dress Beach and Boat** (`Assets/Editor/WorldBuilder/BeachDressingBuilder.cs`) adds named
+generated content under `Beach/BeachDressing` and `Beach/Boat/BoatDressing`. It preserves the W2 hull, dock,
+rails, cabin, terrain, markers and gameplay scenes. Matching prefab instances and mesh assets are reused;
+only stale children with this builder's generated prefix are removed. Source prefabs are never edited.
+
+| Detail | Placement / dimensions |
+| --- | --- |
+| Dock cargo | Linked `Prop_CrateSmall` instances, scales0.6/0.45, at (−0.95,1.6,−100) and (−0.95,2.125,−100.1); top yaw−22.92°. Linked `Prop_Barrel` at (0.95,1.3,−101) |
+| Route clearance | Cargo shifted from reference x−0.6/−0.55/+0.85 toward x−0.95/−0.95/+0.95, leaving at least1.3m between their inward edges. The top crate sits on the bottom crate rather than intersecting it |
+| Warning sign | Linked `Prop_Sign_PrivateIsland` at x−2.6,z−95.6, board centre2.05m above sampled saved terrain; yaw165.6° faces the approaching dock; 2.4m pole |
+| Dock ropes | Four stacked coils at (−0.7,1.35…1.53,−112); cleats at (1.15,1.35,−125/−120); two sagging mooring lines to the boat's west side |
+| Boat deck | Local x±1.3,z−2.6…4.1, top0.62 (world y0.77). A thin added collider supports the new deck; original hull collision is unchanged |
+| Boat fittings | Two dark side windows, two gunwale caps, twelve rail posts and two top rails; two `PH_JerryCan` boxes with handles, three stern rope coils |
+| Lantern | Emissive outer cylinder and six cage/cap/base parts around the existing lantern at boat-local (−1.2,2.45,−1.7). Existing W7 light, intensity and flame seed3 retained |
+
+All boat coordinates are local metres with +Z toward the stern; the existing boat position/yaw are preserved.
+Boat additions have no static flags. Fixed shore/cargo parts use the existing environment static flags; ropes
+use Occludee/Batching without GI or solid occlusion. Ropes and small visual fittings have no active colliders.
+Cargo, pole and deck use Level collision. Existing dock movement-only rail layers remain unchanged.
+
+`BeachRopeMesh.cs` builds six-sided tubes in the Editor: one shared16-span coil mesh, instantiated seven times,
+and one mesh for the two10-span mooring curves. Assets are `Assets/Environment/BeachRopeCoil.asset` and
+`BeachMooringRopes.asset`. The existing Fabric, MetalPlate and greybox boat/wood materials are reused.
+`Assets/Materials/Environment/BeachLantern.mat` supplies warm emission (#FFB050, intensity4, reference linear
+colour conversion). Its renderer is assigned to the existing FlickerLight; Setup Lighting also restores this
+reference when rerun. No new light, runtime script or per-frame mesh generation is added.
+
+The batch entry `Blackout.Editor.BeachDressingBuilder.BuildAndVerify` builds twice and compares scene, mesh and
+material bytes. It uses a temporary CharacterController with the saved player settings to walk from PlayerStart
+past the cargo to the dock landing and back to BoatExit, removes the probe, rebakes navigation and runs Validate
+Layout. It protects source prefab dependencies/metadata, player settings and both gameplay scenes byte-for-byte.
+Actual mission completion, agent movement and boat boarding are not exercised by that movement probe.
+
+Verified on 2026-10-20 in Unity6000.3.25f1: batch exit0; 12 shore/dock parts and33 boat parts; scene, both mesh
+assets and lantern material byte-identical on repeat. PlayerStart→landing→BoatExit movement passed with saved
+player dimensions; 21 protected files unchanged. Rebake: 332 colliders plus604 tree/rock capsules, 8,566 triangles,
+153,850m²; layout PASS66/66. No original scene blocks removed; only Beach/Boat child lists and the existing
+lantern's lamp reference changed among original blocks. No C# compiler errors/warnings. Log:
+`%TEMP%/blackout-w13-fix6-beach.log`. Direct3D11 capture exits0 with Environment unchanged; beach PNG inspected
+for the coil, sign and cargo. Images: `%TEMP%/BlackoutIsland-Screenshots/20261020-053034-9b580b8b`;
+log: `%TEMP%/blackout-w13-fix6-capture.log`. The fixed beach pose does not show every boat fitting or the lantern.
+
+Before committing, rerun **Dress Beach and Boat** and check for no new scene/asset diff. In Bootstrap, walk
+from the start along the dock and back into the exit zone; inspect the warning sign from the dock, stacked cargo,
+rope coils, moorings, boat fittings and lantern flicker. Check the Console and the cure-carrying win condition.
+
+The existing hull shape and flat greybox wood/boat materials remain. Boat bobbing, rope attachment updates for a
+moving boat, animated ocean/foam, wind sway, beach ambient audio and detailed jerry-can models remain separate
+world-completion work. The `PH_JerryCan0/1` bodies/handles are the explicit model placeholders to replace in this
+builder when supplied; no external assets are required to run it.
+
 ## Changes from the prototype, and who they affect
 
 | Change | Effect | Owner to tell |
@@ -1544,6 +1597,8 @@ required to run this builder.
 | Lobby redesigned as 11.2 × 3.6 m | The prototype's lobby desk and lockers were hidden behind the back wall; they move into the lobby | World Builder (later step) |
 | Ramp 20 m at 20.6° → 17.2 m at 23.6° | Still under the default 45° CharacterController and NavMesh slope limits | — |
 | Sand raised under the dock root (W2) | Stepping between the dock and the beach is ≤ 0.1 m, so the default 0.3 m CharacterController step offset works | Systems Engineer (player controller), for information |
+| Dock cargo moved toward edges (W13) | Crates at x−0.95 and barrel at x0.95 leave at least1.3m between inward collision edges; the player/mission route remains clear | World Builder |
+| Boat walking deck added (W13) | A thin wooden slab raises the top from0.70 to0.77m without replacing the original hull collider; boarding is not validated by the dock route check | Systems Engineer, for information |
 | Berth dredged to −1.5 m (W2) | The boat hull clears the sea bed by at least 0.65 m | — |
 | Terrain hole over the ramp top (W2, covered in W13) | The W13 entrance exterior covers the exposed ramp; an additional lobby/sill terrain cut removes surface overlap | World Builder |
 | Invisible boundary walls (W2) | On the Level layer since Y7, like every solid collider in Environment (`Blackout/Systems/Assign Physics Layers`; the dock railings are on Ignore Raycast). They stop raycasts, but they are all offshore. Re-run that tool after rebuilding level geometry, because new objects are created on Default | Systems Engineer (layers) |
