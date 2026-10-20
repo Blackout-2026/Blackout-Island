@@ -148,6 +148,7 @@ namespace Blackout.Editor.Tests
             Assert.AreEqual("Assets/Models/Custom/SM_Prop_LabBench.fbx", PropCatalog.Find("Prop_LabBench").FbxPath);
             Assert.AreEqual("Assets/Models/Custom/SM_Prop_Medkit.fbx", PropCatalog.Find("Medkit_Visual").FbxPath);
             Assert.AreEqual("Assets/Models/Custom/SM_Weapon_Smg.fbx", PropCatalog.Find("Weapon_Smg_Visual").FbxPath);
+            Assert.AreEqual("Assets/Models/Custom/SM_Weapon_Knife.fbx", PropCatalog.Find("Weapon_Knife_Visual").FbxPath);
         }
     }
 }

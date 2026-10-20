@@ -81,6 +81,8 @@ namespace Blackout.Editor
             d.CylinderX("BoltShaft", 0.03f, 0f, 0f, 0.006f, 0.06f, "Steel", BoltHandle);
             d.Box("BoltKnob", 0.06f, 0f, 0f, 0.022f, 0.022f, 0.022f, "Steel", BoltHandle);
 
+            // The Blender rifle has no empties, so the bolt pivot is also ensured as a socket (the placeholder keeps its pivot).
+            d.Socket(BoltHandle, 0.03f, 0.01f, -0.08f);
             AddArm(d, string.Empty, "R", new Vector3(0f, -0.07f, -0.12f), 0.8f, 0.5f, 0.35f);
             AddArm(d, string.Empty, "L", new Vector3(-0.01f, -0.06f, 0.22f), 0.65f, -0.55f, 0.45f);
             return d;
@@ -101,6 +103,9 @@ namespace Blackout.Editor
             d.Box("BladeTip", 0f, -0.006f, 0.26f, 0.004f, 0.018f, 0.03f, "Steel", Hand);
             d.Box("SpineRidge", 0f, 0.014f, 0.15f, 0.005f, 0.006f, 0.17f, "Metal", Hand);
             AddArm(d, Hand, "R", new Vector3(0f, -0.008f, -0.02f), 0.6f, 0.35f, 0.42f);
+            // The Blender knife (SM_Weapon_Knife.fbx) has no empties, so the pivot is also ensured as a socket; the placeholder
+            // already has it as a pivot and keeps that one.
+            d.Socket(Hand, 0f, 0f, 0f);
             return d;
         }
 

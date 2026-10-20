@@ -25,8 +25,8 @@ namespace Blackout.Editor
         private static readonly ModelBudget Generator = new ModelBudget(10000, 6);
         private static readonly ModelBudget Robot = new ModelBudget(5000, 4);
         private static readonly ModelBudget Character = new ModelBudget(3000, 3);
-        private static readonly ModelBudget Weapon = new ModelBudget(2000, 3);
-        private static readonly ModelBudget Prop = new ModelBudget(1500, 2);
+        private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
+        private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
         /// <summary>Budget for a model asset name such as "SM_Generator" (extension optional).</summary>
         /// <returns>False when the name has no known budget, so the caller skips the check.</returns>

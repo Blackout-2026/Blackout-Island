@@ -69,15 +69,21 @@ namespace Blackout.Editor
         /// <summary>
         /// Replaces every imported material slot with the asset of the same name (a Blender material called M_Prop_Steel
         /// becomes Assets/Materials/Models/M_Prop_Steel.mat). A name that matches none stays as imported, with a warning.
+        /// The name is read from the FBX's own slot when the renderer belongs to a model instance, not from the slot as it is now:
+        /// a prefab that was built from an older FBX keeps its overrides (a hand left on M_Weapon_Metal), and matching those
+        /// by name would keep them for good.
         /// </summary>
         public static void AssignMaterials(GameObject instance, PartMaterials materials)
         {
             foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
             {
                 Material[] slots = renderer.sharedMaterials;
+                var source = PrefabUtility.GetCorrespondingObjectFromSource(renderer);
+                Material[] imported = source != null ? source.sharedMaterials : null;
                 for (int i = 0; i < slots.Length; i++)
                 {
-                    string slotName = slots[i] != null ? slots[i].name : string.Empty;
+                    Material named = imported != null && i < imported.Length && imported[i] != null ? imported[i] : slots[i];
+                    string slotName = named != null ? named.name : string.Empty;
                     Material replacement = materials.Find(slotName);
                     if (replacement != null)
                     {

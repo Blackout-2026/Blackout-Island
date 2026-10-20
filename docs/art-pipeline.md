@@ -136,13 +136,13 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Generator G-1 | `SM_Generator` | 8,840 | **10,000** | 15,000 | 6 |
 | Security robot | `SM_SecurityRobot` | 3,216 | **5,000** | 7,500 | 4 |
 | Humanoid (if modelled) | `SM_Char_*` | 2,600 to 3,100 | 3,000 | 4,500 | 3 |
-| Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 2,000 | 3,000 | 3 |
-| Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 300 | 450 | 2 |
-| Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 800 | 1,200 | 2 |
-| Prop, large (> 1.5 m): desk, lab bench, fuel tank, chamber | `SM_Prop_*` | | 1,500 | 2,250 | 2 |
+| Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
+| Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
+| Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
+| Prop, large (> 1.5 m): desk, lab bench, fuel tank, chamber | `SM_Prop_*` | | 3,000 | 4,500 | 4 |
 
 The importer cannot know a prop's size class from its name, so it checks every `SM_Prop_*` against the **large**
-limit (2,250). Keeping small and medium props to their own limit is on me (checklist item).
+limit (4,500). Keeping small and medium props to their own limit is on me (checklist item).
 
 Justification:
 
@@ -556,6 +556,38 @@ included. Use a free low-poly gun in their place (credits in `docs/credits/core-
 | `MuzzleFlash` (hidden, 3 crossed quads, under the muzzle) | yes | yes | none |
 | Moving part | none | `BoltHandle` pivot at (0.03, 0.01, -0.08), the bolt slides along Z | `Hand` pivot at the origin: the whole knife swings |
 | Held position, before the holder's 0.85 scale | (0.13, -0.125, 0.45) | (0.12, -0.12, 0.46) | (0.17, -0.18, 0.33), rotated (-14, -14, -23) degrees |
+
+**The Blender viewmodels (step C7).** All three weapons now have real models with two realistic hands (the knife has one), built in
+`Art/Blender/Scripts` and imported from `Assets/Models/Custom`:
+
+| | Knife | SMG | Rifle |
+| --- | --- | --- | --- |
+| File | `SM_Weapon_Knife.fbx` | `SM_Weapon_Smg.fbx` | `SM_Weapon_Sniper.fbx` |
+| Scripts | `build_knife.py`, `bake_knife.py`, `preview_knife.py` | `build_smg.py`, `bake_smg.py`, `preview_smg.py` | `build_sniper.py`, `bake_sniper.py`, `preview_sniper.py` |
+| Triangles (target 6,000) | 3,732 | 5,208 | 5,944 |
+| Body material and maps | `M_Weapon_Knife`, `T_WeaponKnife_*` | `M_Weapon_Smg`, `T_WeaponSmg_*` | `M_Weapon_Sniper`, `T_WeaponSniper_*` |
+| Origin | middle of the grip, blade along +Z | receiver centre | receiver centre |
+
+Each has 3 material slots: its body material, `M_Weapon_Glove` (the gloved hands and wrists) and `M_Weapon_Camo` (the sleeves). The
+**knife** is a tactical fixed blade in the style of the Mil-Tec combat knife (our own mesh, no maker's logo): blackened drop-point
+blade that thins to the tip, serrated heel, two round-ended fuller grooves, notched spine, hooked guard, and a black G10 handle with
+finger grooves, a notched thumb rest, three star-drive rivets and a lined lanyard hole. The **rifle** is a bolt-action sniper with a
+round action and rail, a heavy barrel with a ported muzzle brake, a 30 mm scope with turrets, a tan stock with a separate pistol
+grip, a box magazine and a folded bipod; its `BoltHandle` empty marks the pivot of the (modelled-in) bolt handle.
+
+**The hands** come from one shared kit, `hand_kit.py`: a skeleton of points with radii (palm slab, four fingers of three bones, a
+thumb, a forearm) is run through Blender's Skin modifier, subdivided and decimated, so the hand has round fingers, knuckles and a
+tapering wrist. `grip_frame()` works out how a right or left hand sits on a handle (index finger and thumb on the blade or muzzle side,
+the forearm coming from below and behind), so the fingers wrap the right way round. The hands wear coyote-tan tactical gloves with a wrist strap, as in photos of soldiers
+with camouflage sleeves, drawn 18 % larger than life so they read on screen. The glove is `make_glove_texture.py`: a seamless 512 px
+tile of woven fabric with wear and dirt, tiled over the hands (`T_WeaponGlove_BaseColor` and `_Normal`). Build Weapon Prefabs reads
+each material name from the FBX itself (`ModelPrefabBuilder.AssignMaterials`), so a prefab built from an older model version
+is corrected on the next run instead of keeping its old materials.
+
+**Blackout > Art > Use All Weapon Visuals In Player** (`PlayerViewmodelSwap`) nests each model in the Player prefab in place of the
+primitive stand-ins: the SMG under `SMG`, the rifle under `Rifle`, the knife under `Knife/Hand`. The knife's Hand is moved to
+(0.12, -0.10, 0.30) rotated (-10, -30, -25) degrees, because the real knife is longer than the placeholder blade and the old held
+position left it mostly below the screen edge. `preview_*.py` renders what the player sees (the game camera is 72 degrees vertical).
 
 **For the Systems Engineer** (nest, do not edit): put each `Weapon_*_Visual` under the weapon prefab's model slot, set its
 local position to the held position above (the constants are in `WeaponDefinitions`), start the shot at `MuzzlePoint`, enable

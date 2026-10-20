@@ -56,10 +56,10 @@ namespace Blackout.Editor.Tests
         public void Build_WarnsWhenThereAreTooManyMaterials()
         {
             ModelReport report = ModelReport.Build("Assets/Models/Custom/SM_Prop_Desk.fbx",
-                Meshes(500), 3, new Vector3(3f, 0.78f, 1f));
+                Meshes(500), 5, new Vector3(3f, 0.78f, 1f));
 
             Assert.That(report.Warnings, Has.Count.EqualTo(1));
-            Assert.That(report.Warnings[0], Does.Contain("3 materials is over the limit of 2"));
+            Assert.That(report.Warnings[0], Does.Contain("5 materials is over the limit of 4")); // a prop may use 4 (art-pipeline.md section 5)
         }
 
         [Test]

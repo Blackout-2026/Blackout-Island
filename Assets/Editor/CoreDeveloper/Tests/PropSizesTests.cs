@@ -19,13 +19,13 @@ namespace Blackout.Editor.Tests
         [Test]
         public void BudgetOf_MatchesTheArtPipelineTable()
         {
-            Assert.AreEqual(300, PropSizes.BudgetOf(PropSize.Small).TargetTriangles);
-            Assert.AreEqual(450, PropSizes.BudgetOf(PropSize.Small).MaxTriangles);
-            Assert.AreEqual(800, PropSizes.BudgetOf(PropSize.Medium).TargetTriangles);
-            Assert.AreEqual(1200, PropSizes.BudgetOf(PropSize.Medium).MaxTriangles);
-            Assert.AreEqual(1500, PropSizes.BudgetOf(PropSize.Large).TargetTriangles);
-            Assert.AreEqual(2250, PropSizes.BudgetOf(PropSize.Large).MaxTriangles);
-            Assert.AreEqual(2, PropSizes.BudgetOf(PropSize.Large).MaxMaterials);
+            Assert.AreEqual(1200, PropSizes.BudgetOf(PropSize.Small).TargetTriangles);
+            Assert.AreEqual(1800, PropSizes.BudgetOf(PropSize.Small).MaxTriangles);
+            Assert.AreEqual(2000, PropSizes.BudgetOf(PropSize.Medium).TargetTriangles);
+            Assert.AreEqual(3000, PropSizes.BudgetOf(PropSize.Medium).MaxTriangles);
+            Assert.AreEqual(3000, PropSizes.BudgetOf(PropSize.Large).TargetTriangles);
+            Assert.AreEqual(4500, PropSizes.BudgetOf(PropSize.Large).MaxTriangles);
+            Assert.AreEqual(4, PropSizes.BudgetOf(PropSize.Large).MaxMaterials);
         }
     }
 }

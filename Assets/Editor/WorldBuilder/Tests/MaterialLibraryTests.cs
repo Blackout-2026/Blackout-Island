@@ -24,12 +24,12 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
-        public void Library_HasTheTwelveSurfacesOfTheBrief()
+        public void Library_HasTheTwelveSurfacesOfTheBriefAndTheGeneratorGrating()
         {
             string[] expected =
             {
                 "Sand", "Grass", "ForestFloor", "Rock", "Concrete", "ConcreteStained", "MetalPlate", "Rust", "Tile",
-                "HazardStripe", "Glass", "Fabric",
+                "HazardStripe", "Glass", "Fabric", "MetalGrating",
             };
 
             Assert.That(SurfaceLibrary.All.Select(spec => spec.Name), Is.EqualTo(expected));

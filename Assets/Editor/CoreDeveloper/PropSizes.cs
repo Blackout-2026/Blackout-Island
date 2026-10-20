@@ -29,14 +29,15 @@ namespace Blackout.Editor
             return longest <= MediumMax ? PropSize.Medium : PropSize.Large;
         }
 
-        // Targets are 300 / 800 / 1,500 triangles; the hard maximum is 1.5 x that (ModelBudget). Two materials each.
+        // Targets are 1,200 / 2,000 / 3,000 triangles; the hard maximum is 1.5 x that (ModelBudget). Four materials each (step C7: the
+        // props are modelled like the real objects, with drawers, louvres, hoops and fittings, so they need more than the stand-ins did).
         public static ModelBudget BudgetOf(PropSize size)
         {
             switch (size)
             {
-                case PropSize.Small: return new ModelBudget(300, 2);
-                case PropSize.Medium: return new ModelBudget(800, 2);
-                default: return new ModelBudget(1500, 2);
+                case PropSize.Small: return new ModelBudget(1200, 4);
+                case PropSize.Medium: return new ModelBudget(2000, 4);
+                default: return new ModelBudget(3000, 4);
             }
         }
     }
