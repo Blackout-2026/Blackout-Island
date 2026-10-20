@@ -252,7 +252,10 @@ namespace Blackout.AI.Hunter
         /// of its radius in the prototype's colour, fading with age; a dimmer ring at the distance it could be heard
         /// through the walls counted; and a line to the Hunter's ears, green if it became the remembered noise.
         /// </summary>
-        private void OnDrawGizmosSelected()
+        private void OnDrawGizmosSelected() => DrawGizmos(UnityGizmoPainter.Instance);
+
+        /// <summary>The noise-radius gizmos, drawn with <paramref name="painter"/> (tests record them).</summary>
+        public void DrawGizmos(IGizmoPainter painter)
         {
             // Drawing must not create the fallback config (and its warning) just because the object is selected.
             HearingConfig values = config != null ? config : fallbackConfig;
@@ -274,17 +277,17 @@ namespace Blackout.AI.Hunter
 
                 Vector3 ground = noise.Position + Vector3.up * 0.1f;
                 Color colour = HunterGizmos.ForNoise(noise.Type);
-                Gizmos.color = HunterGizmos.Faded(colour, fade);
-                HunterGizmos.Circle(ground, noise.Radius);
+                painter.Color = HunterGizmos.Faded(colour, fade);
+                HunterGizmos.Circle(painter, ground, noise.Radius);
                 if (noise.Walls >= 0)
                 {
-                    Gizmos.color = HunterGizmos.Faded(colour, fade * 0.5f);
-                    HunterGizmos.Circle(ground, HearingMath.MaxHeardDistance(noise.Radius, noise.Walls,
+                    painter.Color = HunterGizmos.Faded(colour, fade * 0.5f);
+                    HunterGizmos.Circle(painter, ground, HearingMath.MaxHeardDistance(noise.Radius, noise.Walls,
                         values.wallFactor, values.hearing, values.threshold));
                 }
 
-                Gizmos.color = HunterGizmos.Faded(noise.Remembered ? HunterGizmos.Heard : HunterGizmos.NotHeard, fade);
-                Gizmos.DrawLine(noise.Position + Vector3.up * values.sourceHeight, ears);
+                painter.Color = HunterGizmos.Faded(noise.Remembered ? HunterGizmos.Heard : HunterGizmos.NotHeard, fade);
+                painter.Line(noise.Position + Vector3.up * values.sourceHeight, ears);
             }
         }
 

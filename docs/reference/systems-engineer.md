@@ -821,5 +821,7 @@ order: none
 
 - `HearingSystem` keeps the last **8** noises it was told about (position, radius, type, time, perceived loudness,
   walls, remembered or not) in a fixed array, so recording one allocates nothing.
-- The data behind each gizmo is a public query, so EditMode tests check it; the drawing code only reads it.
+- Drawing goes through a small `IGizmoPainter`: in the Editor it is Unity's `Gizmos` (which only work inside
+  `OnDrawGizmos*`), and EditMode tests pass a recording painter, so every line of the drawing code runs in a test
+  and what it would draw (lines, colours, boxes) is checked.
 - Gizmos are drawn when the Hunter is selected (`OnDrawGizmosSelected`), so two Hunters do not clutter the scene.

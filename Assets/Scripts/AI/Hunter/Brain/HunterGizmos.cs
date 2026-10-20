@@ -5,9 +5,38 @@ using UnityEngine;
 namespace Blackout.AI.Hunter
 {
     /// <summary>
+    /// Where the Hunter's gizmos are drawn. In the Editor it is <see cref="UnityGizmoPainter"/> (Unity's Gizmos, which
+    /// only work inside OnDrawGizmos*); tests pass a recording painter, so every line of the drawing code runs and what
+    /// it would draw can be checked.
+    /// </summary>
+    public interface IGizmoPainter
+    {
+        Color Color { get; set; }
+        void Line(Vector3 from, Vector3 to);
+        void WireSphere(Vector3 centre, float radius);
+        void WireCube(Vector3 centre, Vector3 size);
+    }
+
+    /// <summary>Draws with Unity's Gizmos. Use it only from OnDrawGizmos or OnDrawGizmosSelected.</summary>
+    public sealed class UnityGizmoPainter : IGizmoPainter
+    {
+        public static readonly UnityGizmoPainter Instance = new UnityGizmoPainter();
+
+        public Color Color
+        {
+            get => Gizmos.color;
+            set => Gizmos.color = value;
+        }
+
+        public void Line(Vector3 from, Vector3 to) => Gizmos.DrawLine(from, to);
+        public void WireSphere(Vector3 centre, float radius) => Gizmos.DrawWireSphere(centre, radius);
+        public void WireCube(Vector3 centre, Vector3 size) => Gizmos.DrawWireCube(centre, size);
+    }
+
+    /// <summary>
     /// Colours and shapes for the Hunter's Scene-view gizmos (docs/reference/systems-engineer.md section 16). The
-    /// colours are the prototype's debug overlay (ui/debug_overlay.js). The shapes are drawn with Gizmos.DrawLine, so
-    /// they allocate nothing, and only from OnDrawGizmosSelected.
+    /// colours are the prototype's debug overlay (ui/debug_overlay.js). Shapes are made of lines, so drawing
+    /// allocates nothing.
     /// </summary>
     public static class HunterGizmos
     {
@@ -59,13 +88,13 @@ namespace Blackout.AI.Hunter
         }
 
         /// <summary>A flat circle (around +y) of line segments.</summary>
-        public static void Circle(Vector3 centre, float radius)
+        public static void Circle(IGizmoPainter painter, Vector3 centre, float radius)
         {
-            Arc(centre, Vector3.forward, 360f, radius);
+            Arc(painter, centre, Vector3.forward, 360f, radius);
         }
 
         /// <summary>A flat arc of <paramref name="degrees"/> centred on <paramref name="forward"/>.</summary>
-        public static void Arc(Vector3 centre, Vector3 forward, float degrees, float radius)
+        public static void Arc(IGizmoPainter painter, Vector3 centre, Vector3 forward, float degrees, float radius)
         {
             if (radius <= 0f)
             {
@@ -80,7 +109,7 @@ namespace Blackout.AI.Hunter
             for (int i = 1; i <= segments; i++)
             {
                 Vector3 next = centre + Direction(start + step * i) * radius;
-                Gizmos.DrawLine(previous, next);
+                painter.Line(previous, next);
                 previous = next;
             }
         }
