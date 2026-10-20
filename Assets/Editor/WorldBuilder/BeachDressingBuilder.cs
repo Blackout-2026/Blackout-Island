@@ -61,7 +61,8 @@ namespace Blackout.Editor
             foreach (int side in new[] { -1, 1 })
             {
                 Vector3 start = new Vector3(1.15f, 1.35f, IslandLayout.BoatPosition.z + side * 2.5f);
-                Vector3 end = boat.TransformPoint(new Vector3(-1.35f, 1.05f, side * 2f));
+                Vector3 end = boat.TransformPoint(RowboatPlacement.IsPlaced(boat) ? RowboatPlacement.MooringPoint(side * 2f)
+                    : new Vector3(-1.35f, 1.05f, side * 2f));
                 var points = new Vector3[11];
                 for (int i = 0; i < points.Length; i++)
                 {
@@ -102,6 +103,7 @@ namespace Blackout.Editor
             }
             dock.Finish();
             fittings.Finish();
+            if (RowboatPlacement.IsPlaced(boat)) RowboatPlacement.Apply(boat);
             Transform light = WorldSceneSkeleton.FindRoot(scene, LightingSetup.LightingRootName).transform.Find("OutdoorLights/OutdoorLights_BoatLantern");
             if (light == null) throw new InvalidOperationException("Run Setup Lighting to create the existing boat lantern light.");
             FlickerLight flicker = light.GetComponent<FlickerLight>();
@@ -111,7 +113,8 @@ namespace Blackout.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log($"[World] Beach dressed: {dock.Count} shore/dock parts and {fittings.Count} boat parts; "
-                + "4 linked prefabs, 7 rope coils, 2 mooring lines; central1.2m route reserved; lantern uses existing flicker light.");
+                + "4 linked prefabs, 7 rope coils, 2 mooring lines; central1.2m route reserved; lantern uses existing flicker light. "
+                + (RowboatPlacement.IsPlaced(boat) ? "Rowboat retained; legacy boat fittings disabled except lantern." : "Legacy boat retained."));
         }
 
         internal static Renderer FindLantern(Scene scene) => WorldSceneSkeleton.FindRoot(scene, "Beach")?.transform
