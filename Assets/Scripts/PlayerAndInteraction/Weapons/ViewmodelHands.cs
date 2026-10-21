@@ -6,10 +6,11 @@ using UnityEngine;
 namespace Blackout.Weapons
 {
     /// <summary>
-    /// The player's hands and forearms. Every viewmodel carries them as meshes called Glove* and Sleeve* (the downloaded first-person arms: both
-    /// hands on the SMG and the rifle, one on the knife and the other beside it), so they are always seen with the weapon, except while the player
-    /// sprints: then they are hidden and the weapon is held without them. Only the renderers are switched, so a weapon that is not held
-    /// stays hidden as before, and nothing else about the weapons changes.
+    /// The player's hands and the weapon in them. Every viewmodel carries the arms as meshes called Glove* and Sleeve* (the downloaded first-person
+    /// arms: both hands on the SMG and the rifle, one on the knife and the other beside it), so they are always seen with the weapon, except while
+    /// the player sprints: then the whole viewmodel, the hands and the gun or the knife with them, is hidden (step F2: a gun hanging in the air
+    /// without hands looked wrong). Only the mesh renderers are switched, so a weapon that is not held stays hidden as before, and nothing else
+    /// about the weapons changes.
     /// </summary>
     public class ViewmodelHands : MonoBehaviour
     {
@@ -18,7 +19,8 @@ namespace Blackout.Weapons
 
         [SerializeField] private PlayerMotor motor;
 
-        private Renderer[] arms;
+        private Renderer[] parts;
+        private bool[] enabledByDesign; // a renderer that the prefab keeps switched off stays off when the viewmodel comes back
         private bool shown = true;
 
         /// <summary>True for the mesh objects of the arms: GloveR, GloveL, SleeveR and SleeveL.</summary>
@@ -29,47 +31,56 @@ namespace Blackout.Weapons
                        || objectName.StartsWith(SleevePrefix, System.StringComparison.Ordinal));
         }
 
-        /// <summary>The hands are shown unless the player is sprinting.</summary>
+        /// <summary>The hands and the weapon are shown unless the player is sprinting.</summary>
         public static bool ShouldShow(MovementState state)
         {
             return state != MovementState.Sprint;
         }
 
-        /// <summary>The number of arm renderers found (a test and the preview use it).</summary>
-        public int ArmCount => arms == null ? 0 : arms.Length;
+        /// <summary>The number of viewmodel renderers found, the arms and every weapon model (a test and the preview use it).</summary>
+        public int ArmCount => parts == null ? 0 : parts.Length;
 
         public bool Shown => shown;
 
-        /// <summary>Finds the arm renderers under this object, held weapon or not. Called again if a weapon model is swapped at run time.</summary>
+        /// <summary>
+        /// Finds the mesh renderers under this object, held weapon or not (the arms and the guns and the knife; the muzzle flash switches itself).
+        /// Called again if a weapon model is swapped at run time.
+        /// </summary>
         public void Collect()
         {
             var found = new List<Renderer>();
             foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
             {
-                if (IsArmPart(renderer.gameObject.name))
+                if (renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
                 {
                     found.Add(renderer);
                 }
             }
 
-            arms = found.ToArray();
+            parts = found.ToArray();
+            enabledByDesign = new bool[parts.Length];
+            for (int i = 0; i < parts.Length; i++)
+            {
+                enabledByDesign[i] = !shown || parts[i].enabled; // while hidden every renderer reads as off
+            }
+
             Apply(true);
         }
 
-        /// <summary>Shows or hides every arm renderer now.</summary>
+        /// <summary>Shows or hides every viewmodel renderer now.</summary>
         public void Apply(bool show)
         {
             shown = show;
-            if (arms == null)
+            if (parts == null)
             {
                 return;
             }
 
-            foreach (Renderer renderer in arms)
+            for (int i = 0; i < parts.Length; i++)
             {
-                if (renderer != null)
+                if (parts[i] != null)
                 {
-                    renderer.enabled = show;
+                    parts[i].enabled = show && enabledByDesign[i];
                 }
             }
         }
@@ -81,7 +92,7 @@ namespace Blackout.Weapons
 
         private void LateUpdate()
         {
-            if (arms == null || motor == null)
+            if (parts == null || motor == null)
             {
                 return;
             }

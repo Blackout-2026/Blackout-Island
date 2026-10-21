@@ -23,6 +23,10 @@ MonoBehaviour:
   falloffMinMultiplier: 1
   cooldown: 0.48
   automatic: 1
+  magazineSize: 0
+  startMagazines: 0
+  reloadTime: 1
+  magazinesPerBody: 0
   spread: 0
   moveSpread: 0
   bloomPerShot: 0

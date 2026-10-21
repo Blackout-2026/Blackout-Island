@@ -27,7 +27,8 @@ namespace Blackout.Editor.Tests
         [TestCase("Corridor", "Wall_W_1", "Concrete")]
         [TestCase("BunkerEntranceRamp", "Floor", "MetalPlate")]
         [TestCase("BunkerEntranceRamp", "Ceiling", "Concrete")]
-        [TestCase("GeneratorRoom", "Wall_N_0", "MetalPlate")]
+        [TestCase("GeneratorRoom", "Wall_N_0", "Concrete")]
+        [TestCase("GeneratorRoom", "Lintel_E_D-Generator", "Concrete")]
         [TestCase("GeneratorRoom", "Floor", "MetalGrating")]
         [TestCase("SecurityArea", "Lintel_N_D-Security", "Concrete")]
         public void SurfaceFor_PicksTheSurfaceByRoomAndPart(string room, string partName, string expected)

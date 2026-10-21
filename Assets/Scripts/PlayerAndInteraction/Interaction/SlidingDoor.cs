@@ -118,6 +118,7 @@ namespace Blackout.Interaction
 
         private void OnEnable()
         {
+            DoorRegistry.Register(this); // agents find the doors through the registry (step F2)
             if (unlockOn != null)
             {
                 unlockOn.OnRaised += StartUnlockTimer;
@@ -126,6 +127,7 @@ namespace Blackout.Interaction
 
         private void OnDisable()
         {
+            DoorRegistry.Unregister(this);
             if (unlockOn != null)
             {
                 unlockOn.OnRaised -= StartUnlockTimer;

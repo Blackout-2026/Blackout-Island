@@ -35,6 +35,10 @@ namespace Blackout.Player
 
         public PlayerMovementSettings Settings => settings;
         public MovementState State { get; private set; }
+        /// <summary>Standing, crouching or prone (C and Z toggle it). Crouching and prone slow the player down.</summary>
+        public Stance Stance { get; private set; }
+        /// <summary>Eye height above the feet now: it glides between the stances' heights, and PlayerLook puts the camera pivot there.</summary>
+        public float EyeHeight { get; private set; }
         public bool Grounded { get; private set; }
         public Vector3 Velocity => new Vector3(horizontalVelocity.x, verticalVelocity, horizontalVelocity.y);
         /// <summary>Horizontal distance actually travelled last frame (after collisions).</summary>
@@ -54,6 +58,7 @@ namespace Blackout.Player
             }
 
             ApplyBodySettings(controller, settings);
+            EyeHeight = settings.EyeHeight;
             footsteps = new FootstepTracker(settings);
             // What the capsule collides with, minus the player's own layer, so the ground probe never snaps onto
             // something the player would fall through (hitboxes, ragdolls) or onto the player itself.
@@ -83,13 +88,26 @@ namespace Blackout.Player
             Vector2 moveInput = hasInput ? input.Move : Vector2.zero;
             bool wasGrounded = Grounded;
 
-            State = PlayerMovementLogic.ChooseState(Grounded, moveInput, hasInput && input.SprintHeld);
-            float speed = PlayerMovementLogic.TargetSpeed(State, settings);
+            // Sprinting forward or jumping stands the player up; C and Z toggle crouching and lying prone.
+            bool sprintHeld = hasInput && input.SprintHeld;
+            bool wantsToStand = (sprintHeld && moveInput.y > 0f) || (Grounded && hasInput && input.JumpPressed);
+            Stance wanted = PlayerMovementLogic.NextStance(Stance, hasInput && input.CrouchPressed, hasInput && input.PronePressed, wantsToStand);
+            if (wanted != Stance)
+            {
+                TrySetStance(wanted);
+            }
+
+            EyeHeight = PlayerMovementLogic.Damp(EyeHeight, settings.EyeHeightFor(Stance), settings.stanceEyeDamping, dt);
+
+            // No sprint (and no jump) while there is no room to stand.
+            bool canSprint = Stance == Stance.Standing;
+            State = PlayerMovementLogic.ChooseState(Grounded, moveInput, sprintHeld && canSprint);
+            float speed = PlayerMovementLogic.TargetSpeed(State, Stance, settings);
             Vector2 wish = PlayerMovementLogic.WishVelocity(moveInput, transform.eulerAngles.y, speed);
             float acceleration = PlayerMovementLogic.Acceleration(Grounded, wish.sqrMagnitude > 0f, settings);
             horizontalVelocity = PlayerMovementLogic.Accelerate(horizontalVelocity, wish, acceleration, dt);
 
-            if (Grounded && hasInput && input.JumpPressed)
+            if (Grounded && hasInput && input.JumpPressed && Stance == Stance.Standing)
             {
                 verticalVelocity = settings.jumpSpeed;
                 Grounded = false;
@@ -134,6 +152,38 @@ namespace Blackout.Player
             LastMoveDistance = new Vector2(travelled.x, travelled.z).magnitude;
             HorizontalSpeed = LastMoveDistance / dt;
             UpdateFootsteps();
+        }
+
+        /// <summary>
+        /// Changes the capsule to the stance's height. Getting taller needs room: a capsule of the new height must not touch anything,
+        /// otherwise the player stays as he is (crouched under a low ceiling or a table).
+        /// </summary>
+        private bool TrySetStance(Stance target)
+        {
+            float height = PlayerMovementLogic.StanceHeight(target, settings);
+            if (height > controller.height + 0.001f)
+            {
+                float radius = controller.radius * 0.95f;
+                Vector3 bottom = transform.position + Vector3.up * (controller.radius + controller.skinWidth + 0.02f);
+                Vector3 top = transform.position + Vector3.up * Mathf.Max(height - controller.radius, controller.radius + controller.skinWidth + 0.03f);
+                if (Physics.CheckCapsule(bottom, top, radius, groundMask, QueryTriggerInteraction.Ignore))
+                {
+                    return false;
+                }
+            }
+
+            controller.height = height;
+            controller.center = new Vector3(0f, height * 0.5f, 0f); // pivot at the feet
+            Stance = target;
+            return true;
+        }
+
+        /// <summary>Back to a standing capsule at once (teleport, respawn). Nothing is checked: the player is being placed.</summary>
+        public void ResetStance()
+        {
+            Stance = Stance.Standing;
+            ApplyBodySettings(controller, settings);
+            EyeHeight = settings.EyeHeight;
         }
 
         /// <summary>
@@ -199,6 +249,7 @@ namespace Blackout.Player
         {
             controller.enabled = false;
             transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yawDegrees, 0f));
+            ResetStance();
             controller.enabled = true;
             horizontalVelocity = Vector2.zero;
             verticalVelocity = 0f;

@@ -18,7 +18,9 @@ namespace Blackout.Editor
     /// - every PlayerStart, AgentSpawn, Waypoint, CoverPoint and BoatExit marker is within 1 m of the NavMesh;
     /// - complete NavMesh paths exist PlayerStart -> CureSocket -> BoatExit (the mission, there and back);
     /// - every door gap (DoorSocket) is at least 1.2 m wide, measured with rays from the socket to the jambs;
-    /// - every pine and palm trunk on the terrain is cut out of the NavMesh, so agents walk round the trees (W6).
+    /// - every pine and palm trunk on the terrain is cut out of the NavMesh, so agents walk round the trees (W6);
+    /// - every agent's patrol route, leg by leg along the NavMesh, stays clear of the walls: no step of the body touches a collider (F2: the
+    ///   compound patrols walked through the entrance hut when the NavMesh was older than the hut).
     /// Read-only: it never changes the scene. Doors live in another scene, so paths go through the open gaps.
     /// Batch: Unity.exe -batchmode -nographics -quit -projectPath "..." -executeMethod Blackout.Editor.LayoutValidator.ValidateLayout
     /// (exit code 1 when a check fails).
@@ -107,7 +109,90 @@ namespace Blackout.Editor
             }
 
             checks.Add(CheckTrunksCutOut(scene, filter));
+            checks.Add(CheckRoutesClear(scene, markers, filter));
             return checks;
+        }
+
+        /// <summary>The body of an agent along a path: a capsule 0.3 m in radius from 0.45 to 1.45 m, tested every half metre.</summary>
+        public const float RouteStep = 0.5f;
+
+        // One row for all the agents' routes (F2): each leg from a waypoint to the next (and the last to the first, every route is a loop)
+        // is planned on the NavMesh and walked in half metre steps; a step whose body overlaps a collider of the scene (a wall, the hut) fails.
+        private static LayoutCheck CheckRoutesClear(Scene scene, List<Marker> markers, NavMeshQueryFilter filter)
+        {
+            const string check = "Routes clear of walls";
+            const string limit = "0 legs through a wall";
+            var routes = new SortedDictionary<string, List<Marker>>(StringComparer.Ordinal);
+            foreach (Marker marker in markers)
+            {
+                if (marker.Type == MarkerType.Waypoint && !string.IsNullOrEmpty(marker.Owner))
+                {
+                    if (!routes.TryGetValue(marker.Owner, out List<Marker> route))
+                    {
+                        route = new List<Marker>();
+                        routes.Add(marker.Owner, route);
+                    }
+
+                    route.Add(marker);
+                }
+            }
+
+            Physics.SyncTransforms();
+            PhysicsScene physics = scene.GetPhysicsScene();
+            var path = new NavMeshPath();
+            int legs = 0;
+            var through = new List<string>();
+            foreach (KeyValuePair<string, List<Marker>> pair in routes)
+            {
+                List<Marker> route = pair.Value;
+                route.Sort((a, b) => string.CompareOrdinal(Label(a), Label(b)));
+                for (int i = 0; route.Count > 1 && i < route.Count; i++)
+                {
+                    Vector3 from = route[i].transform.position;
+                    Vector3 to = route[(i + 1) % route.Count].transform.position;
+                    if (!NavMesh.SamplePosition(from, out NavMeshHit start, MaxMarkerDistance, filter)
+                        || !NavMesh.SamplePosition(to, out NavMeshHit end, MaxMarkerDistance, filter)
+                        || !NavMesh.CalculatePath(start.position, end.position, filter, path)
+                        || path.status != NavMeshPathStatus.PathComplete)
+                    {
+                        continue; // a missing path is reported by the rows above and by the agents' own tests
+                    }
+
+                    legs++;
+                    if (PathTouchesACollider(path.corners, physics, scene))
+                    {
+                        through.Add($"{pair.Key} leg {i + 1}");
+                    }
+                }
+            }
+
+            string measured = through.Count == 0 ? $"0 of {legs}" : $"{through.Count} of {legs}: {string.Join(", ", through)}";
+            return new LayoutCheck(check, $"{routes.Count} routes", measured, limit, through.Count == 0);
+        }
+
+        private static bool PathTouchesACollider(Vector3[] corners, PhysicsScene physics, Scene scene)
+        {
+            var overlaps = new Collider[8];
+            for (int i = 0; i + 1 < corners.Length; i++)
+            {
+                float length = Vector3.Distance(corners[i], corners[i + 1]);
+                int steps = Mathf.Max(1, Mathf.CeilToInt(length / RouteStep));
+                for (int step = 0; step <= steps; step++)
+                {
+                    Vector3 point = Vector3.Lerp(corners[i], corners[i + 1], (float)step / steps);
+                    int count = physics.OverlapCapsule(point + Vector3.up * 0.45f, point + Vector3.up * 1.45f, 0.3f, overlaps,
+                        Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                    for (int c = 0; c < count; c++)
+                    {
+                        if (overlaps[c].gameObject.scene == scene && !(overlaps[c] is TerrainCollider))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         // One row for all the terrain's pines and palms: how many trunks still have NavMesh at their foot.

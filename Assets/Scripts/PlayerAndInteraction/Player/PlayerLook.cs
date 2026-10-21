@@ -20,6 +20,7 @@ namespace Blackout.Player
         [SerializeField] private Transform cameraPivot;
         [SerializeField] private Camera playerCamera;
 
+        private PlayerMotor motor;
         private float pitch;
         private float recoilPitch;
         private float recoilYaw;
@@ -40,6 +41,7 @@ namespace Blackout.Player
                 playerCamera.fieldOfView = settings.fieldOfView;
             }
 
+            motor = GetComponent<PlayerMotor>();
             cameraPivot.localPosition = new Vector3(0f, settings.EyeHeight, 0f);
         }
 
@@ -55,6 +57,12 @@ namespace Blackout.Player
 
         private void Update()
         {
+            if (motor != null)
+            {
+                // The eyes sink when crouching or lying prone and rise again (the motor glides the height).
+                cameraPivot.localPosition = new Vector3(0f, motor.EyeHeight, 0f);
+            }
+
             if (!input.isActiveAndEnabled)
             {
                 return;

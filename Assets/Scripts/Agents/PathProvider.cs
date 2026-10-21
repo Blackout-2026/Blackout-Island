@@ -11,6 +11,8 @@ namespace Blackout.Agents
     /// </summary>
     public sealed class PathProvider : IPathProvider
     {
+        private const float OnFloorTolerance = 0.15f;
+
         private readonly NavMeshPath path = new NavMeshPath(); // reused: CalculatePath fills it in place
         private readonly float endpointSampleDistance;
         private readonly int areaMask;
@@ -51,6 +53,29 @@ namespace Blackout.Agents
 
             snapped = position;
             return false;
+        }
+
+        public bool TryStep(Vector3 from, Vector3 to, float maxDistance, out Vector3 snapped)
+        {
+            if (!TrySnap(to, maxDistance, out snapped))
+            {
+                return false;
+            }
+
+            // A step that ends on the floor cannot have crossed a wall (the floor is 0.4 m away from every wall). A step that had to be snapped
+            // from off the floor may have been snapped to the far side of a thin wall: it is only taken if no edge lies between the two points.
+            if ((snapped - to).sqrMagnitude <= OnFloorTolerance * OnFloorTolerance)
+            {
+                return true;
+            }
+
+            if (NavMesh.SamplePosition(from, out NavMeshHit start, endpointSampleDistance, areaMask) && NavMesh.Raycast(start.position, snapped, out _, areaMask))
+            {
+                snapped = from;
+                return false;
+            }
+
+            return true;
         }
 
         public bool IsBlocked(Vector3 from, Vector3 to)

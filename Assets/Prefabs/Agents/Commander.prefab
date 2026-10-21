@@ -592,6 +592,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.EnemyWeaponDrop
   dropPrefab: {fileID: 5029629598948273428, guid: 91e692206a8a83a4db8ad3de355b37b9, type: 3}
   medkitPrefab: {fileID: 7007076304234251251, guid: 31938ea3d7e560e418a6e74eb47d64e7, type: 3}
+  ammoPrefab: {fileID: 5575015901365246896, guid: da3f147dad008ef43b7914b03d33b3bb, type: 3}
   sideOffset: 0.6
   groundMask:
     serializedVersion: 2

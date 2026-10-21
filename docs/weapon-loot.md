@@ -17,6 +17,10 @@ After the storm in the introduction the player has only the **combat knife**. Th
 | `WeaponDropPickup` | `Interaction/WeaponDropPickup.cs` | An `Interactable` (press E). Shows the model of the gun it would give now; taking it calls `TakeNextLootWeapon()`, shows "<GUN> ACQUIRED" and removes the pickup. |
 | `WeaponDropBuilder` | `Editor/SystemsEngineer/WeaponDropBuilder.cs` | Menu `Blackout > Systems > Build Weapon Drops`: builds `Prefabs/Interactables/WeaponDrop.prefab` and adds `EnemyWeaponDrop` to the Security Patrol, Hunter and Commander. The robot guard carries no gun, so it drops none. |
 
+## Ammunition (step F2)
+
+The SMG has a 45 round magazine and the sniper rifle 10; an emptied gun reloads for 1 s, and every dead body leaves 2 SMG magazines and 1 sniper magazine to take. See [ammunition, stance, doors and walls](ammo-stance-doors.md).
+
 ## Design choices (for the viva)
 
 - **The pickup gives "the next missing gun", not a fixed gun.** The order is therefore the same whichever enemy dies first, and a kill can never give the same gun twice.

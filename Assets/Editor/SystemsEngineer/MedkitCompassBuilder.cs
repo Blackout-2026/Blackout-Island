@@ -114,9 +114,8 @@ namespace Blackout.Editor
             Vector2 bottomLeft = Vector2.zero;
             RectTransform panel = Rect(hud, "Medkits", bottomLeft, bottomLeft, new Vector2(34f, 100f), new Vector2(210f, 62f));
             GetOrAdd<Image>(panel.gameObject).color = HudColors.Panel;
-            Label(panel, "Label", "MEDKITS", 12, HudColors.Dim, new Vector2(-25f, -8f), new Vector2(140f, 18f));
+            // F2: only the number here; AmmoLootBuilder adds the medkit symbol (no MEDKITS caption, no Q hint).
             Text count = Label(panel, "Count", "0", 26, HudColors.Text, new Vector2(70f, -5f), new Vector2(60f, 32f));
-            Label(panel, "Hint", "Q · USE  +25 HP", 12, HudColors.Accent, new Vector2(0f, -36f), new Vector2(200f, 18f));
             var counter = GetOrAdd<MedkitCounter>(hud.gameObject);
             PlayerPrefabBuilder.Assign(counter, "inventory", inventory);
             PlayerPrefabBuilder.Assign(counter, "value", count);

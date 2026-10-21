@@ -19,7 +19,9 @@ namespace Blackout.Hud
             {
                 weapons.WeaponChanged += Highlight;
                 weapons.LoadoutChanged += Refresh;
+                weapons.AmmoChanged += ShowAmmo;
                 Highlight(weapons.ActiveWeapon);
+                ShowAmmo();
             }
         }
 
@@ -29,12 +31,25 @@ namespace Blackout.Hud
             {
                 weapons.WeaponChanged -= Highlight;
                 weapons.LoadoutChanged -= Refresh;
+                weapons.AmmoChanged -= ShowAmmo;
             }
         }
 
         private void Refresh()
         {
             Highlight(weapons.ActiveWeapon);
+        }
+
+        /// <summary>Puts the rounds of every gun on its slot (the loaded rounds and the spare ones, step F2).</summary>
+        private void ShowAmmo()
+        {
+            for (int i = 0; slots != null && i < slots.Length; i++)
+            {
+                if (slots[i] != null)
+                {
+                    slots[i].SetAmmo(weapons != null ? weapons.AmmoOf(slots[i].Weapon) : null);
+                }
+            }
         }
 
         private void Highlight(WeaponData active)

@@ -277,7 +277,7 @@ base colour becomes the tint, which is white except for Rock (#B8B8B4) and Tile 
 | Rock | rock, tint #B8B8B4 | #43423D | 0.20 / 0 | 0.12 | terrain layer TL_Rock and the rock prefabs (W6) |
 | Concrete | concrete, wallPanel | #72726B | 0 / 0 | 0.3 | ceilings, walls and lintels (27 parts) |
 | ConcreteStained | floorConcrete (oil stains) | #5C5E5A | 0 / 0 | 0.25 | floors of the lobby, SecurityArea, Corridor and GeneratorRoom (4) |
-| MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor, GeneratorRoom walls and lintel (7) |
+| MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor (F2: the GeneratorRoom's walls and lintel are Concrete now, 6 parts fewer) |
 | Rust | rust | #64361C | 0 / 0.3 | 0.5 (chosen: only on cylinders in the prototype) | — (props, W10) |
 | Tile | tiles, tint #D8DCDC | #AAB3B4 | 0 / 0 | 0.25 | Laboratory floor, walls and lintel (7) |
 | HazardStripe | hazard | #D9A521 | 0.25 / 0 | 1.5 | the 6 sills: every door and ramp passage threshold |
@@ -313,7 +313,7 @@ by hand.
 | Any room, `Sill_*` | HazardStripe |
 | Laboratory `Floor`, `Wall_*`, `Lintel_*` | Tile |
 | BunkerEntranceRamp `Floor` | MetalPlate |
-| GeneratorRoom `Wall_*`, `Lintel_*` | MetalPlate |
+| GeneratorRoom `Wall_*`, `Lintel_*` | Concrete (F2; it was a flat MetalPlate with no texture, also on the corridor's west wall beside D-Generator) |
 | Any room, `Floor` | ConcreteStained |
 | Any room, `Ceiling`, `Wall_*`, `Lintel_*` | Concrete |
 
@@ -325,7 +325,7 @@ along Z use (x, y). Tiling is then repeats per metre on every part, and textures
 UV2 (for the W7 lightmaps) is unwrapped at each part's real size. The part's scale, rotation, BoxCollider and static
 flags are unchanged, so the NavMesh does not need a rebake.
 
-**Result:** 51 parts (Concrete 27, Tile 7, MetalPlate 7, HazardStripe 6, ConcreteStained 4) and 51 meshes, which
+**Result:** 51 parts (Concrete 27, Tile 7, MetalPlate 7, HazardStripe 6, ConcreteStained 4) and 51 meshes (after F2: Concrete 33, MetalPlate 1, ConcreteStained 3, MetalGrating 1), which
 add about 290 KB to `Environment.unity`. A re-run leaves the scene byte-identical, and Validate Layout still passes
 65 of 65.
 

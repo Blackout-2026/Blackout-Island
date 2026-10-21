@@ -88,24 +88,28 @@ namespace Blackout.Interaction.Tests
         }
 
         [Test]
-        public void ApplyingHidden_SwitchesOnlyTheArmRenderers()
+        public void ApplyingHidden_SwitchesTheArmsAndTheWeaponTogether()
         {
             GameObject holder = Make("Holder");
             var hands = holder.AddComponent<ViewmodelHands>();
             GameObject weapon = Make("Weapon", holder.transform);
             Renderer[] arms = ArmParts.Select(name => Make(name, weapon.transform).AddComponent<MeshRenderer>()).Cast<Renderer>().ToArray();
             Renderer body = Make("Smg", weapon.transform).AddComponent<MeshRenderer>();
+            Renderer keptOff = Make("Spare", weapon.transform).AddComponent<MeshRenderer>();
+            keptOff.enabled = false;
 
             hands.Collect();
-            Assert.That(hands.ArmCount, Is.EqualTo(4));
+            Assert.That(hands.ArmCount, Is.EqualTo(6), "the four arm parts, the weapon and the spare mesh");
 
             hands.Apply(false);
             Assert.That(arms.All(arm => !arm.enabled), Is.True, "the hands are hidden");
-            Assert.That(body.enabled, Is.True, "the weapon stays");
+            Assert.That(body.enabled, Is.False, "and the weapon with them: a gun without hands looked wrong");
             Assert.That(hands.Shown, Is.False);
 
             hands.Apply(true);
             Assert.That(arms.All(arm => arm.enabled), Is.True, "and come back");
+            Assert.That(body.enabled, Is.True);
+            Assert.That(keptOff.enabled, Is.False, "a renderer the prefab keeps off stays off");
         }
 
         // ---------------------------------------------------------------------------------------------------------- swing
@@ -209,7 +213,7 @@ namespace Blackout.Interaction.Tests
 
             hands.Collect();
             // two hands and two sleeves on each of the three weapons
-            Assert.That(hands.ArmCount, Is.EqualTo(12));
+            Assert.That(hands.ArmCount, Is.GreaterThanOrEqualTo(15), "twelve arm parts and at least one mesh for each of the three weapons");
             foreach (string weapon in new[] { "SMG", "Rifle", "Knife" })
             {
                 var arms = holder.Find(weapon).GetComponentsInChildren<Renderer>(true).Where(r => ViewmodelHands.IsArmPart(r.gameObject.name)).Select(r => r.gameObject.name).OrderBy(n => n);

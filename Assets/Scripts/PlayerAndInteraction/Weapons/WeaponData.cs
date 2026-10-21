@@ -41,6 +41,16 @@ namespace Blackout.Weapons
         [Tooltip("Hold to keep firing. Off = one shot per click.")]
         public bool automatic = true;
 
+        [Header("Ammunition (step F2)")]
+        [Tooltip("Rounds in one magazine. 0 = no ammunition (the knife). SMG 45, sniper rifle 10.")]
+        [Min(0)] public int magazineSize = 0;
+        [Tooltip("Spare magazines the gun starts with, in addition to the loaded one.")]
+        [Min(0)] public int startMagazines = 2;
+        [Tooltip("Seconds to reload an emptied gun.")]
+        [Min(0f)] public float reloadTime = 1f;
+        [Tooltip("Spare magazines of this gun that each dead body gives: SMG 2, sniper rifle 1.")]
+        [Min(0)] public int magazinesPerBody = 0;
+
         [Header("Spread (degrees)")]
         [Tooltip("Cone half-angle when standing still.")]
         [Min(0f)] public float spread = 1.38f;

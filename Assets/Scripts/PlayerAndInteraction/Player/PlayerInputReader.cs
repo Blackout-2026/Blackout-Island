@@ -30,6 +30,8 @@ namespace Blackout.Player
         private InputAction weaponScroll;
         private InputAction interact;
         private InputAction useMedkit;
+        private InputAction crouch;
+        private InputAction prone;
 
         /// <summary>x = strafe, y = forward, each -1..1.</summary>
         public Vector2 Move => move.ReadValue<Vector2>();
@@ -43,6 +45,10 @@ namespace Blackout.Player
         public bool InteractPressed => interact.WasPressedThisFrame();
         public bool InteractHeld => interact.IsPressed();
         public bool UseMedkitPressed => useMedkit != null && useMedkit.WasPressedThisFrame();
+        /// <summary>C: crouch or stand up (step F2).</summary>
+        public bool CrouchPressed => crouch != null && crouch.WasPressedThisFrame();
+        /// <summary>Z: lie prone or stand up (step F2).</summary>
+        public bool PronePressed => prone != null && prone.WasPressedThisFrame();
         /// <summary>Mouse wheel this frame: positive = up. Only the sign matters (step size differs per OS).</summary>
         public float WeaponScroll => weaponScroll.ReadValue<float>();
 
@@ -87,6 +93,8 @@ namespace Blackout.Player
             weaponScroll = map.FindAction("WeaponScroll", true);
             interact = map.FindAction("Interact", true);
             useMedkit = map.FindAction("UseMedkit", true);
+            crouch = map.FindAction("Crouch", true);
+            prone = map.FindAction("Prone", true);
         }
 
         private void OnEnable()

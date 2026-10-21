@@ -18,5 +18,11 @@ namespace Blackout.Agents
 
         /// <summary>True when the straight way between two points is cut by an edge of the floor, for example a carved barricade.</summary>
         bool IsBlocked(Vector3 from, Vector3 to);
+
+        /// <summary>
+        /// A step from <paramref name="from"/> to <paramref name="to"/> that stays on the floor and never crosses a wall (step F2). The default is
+        /// <see cref="TrySnap"/>; the NavMesh one also refuses a step whose snap would carry the agent across an edge of the floor.
+        /// </summary>
+        bool TryStep(Vector3 from, Vector3 to, float maxDistance, out Vector3 snapped) => TrySnap(to, maxDistance, out snapped);
     }
 }

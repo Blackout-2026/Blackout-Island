@@ -51,6 +51,7 @@ namespace Blackout.Weapons
         private Quaternion restRotation;
         private bool loadoutLost;
         private WeaponLoadout loadout;
+        private WeaponAmmo[] ammo;
 
         private sealed class Checkpoint
         {
@@ -58,12 +59,13 @@ namespace Blackout.Weapons
             public bool[] Owned;
             public WeaponSwitcher Switcher;
             public float Cooldown;
+            public WeaponAmmo.State[] Ammo;
         }
 
         public object CaptureCheckpoint() => switcher == null ? null : new Checkpoint
         {
             LoadoutLost = loadoutLost, Owned = loadout.CaptureOwnership(),
-            Switcher = switcher.CaptureCheckpoint(), Cooldown = cooldown.Remaining
+            Switcher = switcher.CaptureCheckpoint(), Cooldown = cooldown.Remaining, Ammo = CaptureAmmo()
         };
 
         public void RestoreCheckpoint(object state)
@@ -73,6 +75,7 @@ namespace Blackout.Weapons
             loadout.RestoreOwnership(saved.Owned);
             switcher = saved.Switcher.CaptureCheckpoint(); // never mutate the stored snapshot
             cooldown.Start(saved.Cooldown);
+            RestoreAmmo(saved.Ammo);
             kickBack.Reset();
             kickRotate.Reset();
             ShowOnly(loadout.IsOwned(switcher.ActiveIndex) ? switcher.ActiveIndex : -1);
@@ -80,6 +83,9 @@ namespace Blackout.Weapons
             WeaponChanged?.Invoke(ActiveWeapon);
             LoadoutChanged?.Invoke();
         }
+
+        /// <summary>A round was fired, a reload finished or magazines were picked up (the HUD's ammunition counts, step F2).</summary>
+        public event Action AmmoChanged;
 
         /// <summary>A shot or swing damaged something; true if it killed it (the HUD's hit marker, Y4).</summary>
         public event Action<bool> HitConfirmed;
@@ -170,6 +176,71 @@ namespace Blackout.Weapons
         }
         public bool IsSwitching => switcher != null && !switcher.IsReady;
 
+        /// <summary>The rounds of a weapon (null for a weapon this controller does not have). The knife's has no limit.</summary>
+        public WeaponAmmo AmmoOf(WeaponData data)
+        {
+            if (ammo == null || data == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                if (weapons[i].Data == data)
+                {
+                    return ammo[i];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// A dead body's ammunition: every gun gets its <c>magazinesPerBody</c> spare magazines (2 for the SMG, 1 for the sniper rifle). Returns how many
+        /// magazines were added in all (0 before Awake).
+        /// </summary>
+        public int AddMagazinesFromBody()
+        {
+            int added = 0;
+            for (int i = 0; ammo != null && i < ammo.Length; i++)
+            {
+                int count = weapons[i].Data.magazinesPerBody;
+                if (count > 0 && ammo[i].IsLimited)
+                {
+                    ammo[i].AddMagazines(count);
+                    added += count;
+                }
+            }
+
+            if (added > 0)
+            {
+                AmmoChanged?.Invoke();
+            }
+
+            return added;
+        }
+
+        private WeaponAmmo.State[] CaptureAmmo()
+        {
+            var states = new WeaponAmmo.State[ammo.Length];
+            for (int i = 0; i < states.Length; i++)
+            {
+                states[i] = ammo[i].Capture();
+            }
+
+            return states;
+        }
+
+        private void RestoreAmmo(WeaponAmmo.State[] states)
+        {
+            for (int i = 0; states != null && i < states.Length && i < ammo.Length; i++)
+            {
+                ammo[i].Restore(states[i]);
+            }
+
+            AmmoChanged?.Invoke();
+        }
+
         private void Awake()
         {
             if (input == null || motor == null || motor.Settings == null || look == null || aim == null)
@@ -195,6 +266,12 @@ namespace Blackout.Weapons
             }
 
             loadout = new WeaponLoadout(data, !loadoutLost);
+            ammo = new WeaponAmmo[weapons.Length];
+            for (int i = 0; i < ammo.Length; i++)
+            {
+                ammo[i] = new WeaponAmmo(data[i].magazineSize, data[i].startMagazines, data[i].reloadTime);
+            }
+
             context = new WeaponContext(aim, motor.gameObject, hitMask, noiseChannel, tracers, impacts, OnHit);
             int start = Mathf.Clamp(startIndex, 0, weapons.Length - 1);
             if (!loadout.IsOwned(start))
@@ -229,6 +306,7 @@ namespace Blackout.Weapons
 
             bool hasInput = input.isActiveAndEnabled && Cursor.lockState == CursorLockMode.Locked;
             cooldown.Tick(dt);
+            TickAmmo(dt);
             if (hasInput)
             {
                 HandleSwitchInput();
@@ -249,6 +327,10 @@ namespace Blackout.Weapons
             if (hasInput && WantsToFire(weapon.Data) && CanFire(weapon.Data))
             {
                 Fire(weapon);
+                if (ammo[switcher.ActiveIndex].Consume())
+                {
+                    AmmoChanged?.Invoke();
+                }
             }
 
             UpdateHolderPose(dt);
@@ -322,11 +404,27 @@ namespace Blackout.Weapons
             return data.automatic ? input.FireHeld : input.FirePressed;
         }
 
-        /// <summary>Not while cooling down or switching, and guns not while sprinting (the knife can).</summary>
+        /// <summary>Not while cooling down or switching, not with an empty or reloading gun, and guns not while sprinting (the knife can).</summary>
         private bool CanFire(WeaponData data)
         {
             bool sprinting = motor.State == MovementState.Sprint;
-            return cooldown.IsReady && switcher.IsReady && (data.kind == WeaponKind.Melee || !sprinting);
+            return cooldown.IsReady && switcher.IsReady && ammo[switcher.ActiveIndex].CanFire
+                && (data.kind == WeaponKind.Melee || !sprinting);
+        }
+
+        // Every gun reloads in the background, so switching away from an emptied gun does not cancel its reload.
+        private void TickAmmo(float dt)
+        {
+            bool finished = false;
+            for (int i = 0; i < ammo.Length; i++)
+            {
+                finished |= ammo[i].Tick(dt);
+            }
+
+            if (finished)
+            {
+                AmmoChanged?.Invoke();
+            }
         }
 
         private void Fire(IWeapon weapon)

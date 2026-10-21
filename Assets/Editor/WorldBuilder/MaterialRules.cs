@@ -33,8 +33,8 @@ namespace Blackout.Editor
             new Rule("Laboratory", "Wall_", "Tile"), // wallLab: white lab walls
             new Rule("Laboratory", "Lintel_", "Tile"),
             new Rule("BunkerEntranceRamp", "Floor", "MetalPlate"), // diamondPlate: ramp floor
-            new Rule("GeneratorRoom", "Wall_", "MetalPlate"), // wallGen: industrial panels
-            new Rule("GeneratorRoom", "Lintel_", "MetalPlate"),
+            // F2: the generator room's walls and lintels were a flat MetalPlate (no texture set exists for it). They are the same bunker concrete as the other rooms,
+            // which also textures the corridor's west wall beside the generator door (the generator room builds that stretch).
             new Rule("GeneratorRoom", "Floor", "MetalGrating"), // step C7: welded steel grating over dark holes, not the oil-stained concrete
             new Rule(AnyRoom, "Floor", "ConcreteStained"), // floorConcrete (oil): security, corridor, lobby, generator
             new Rule(AnyRoom, "Ceiling", "Concrete"), // ceiling

@@ -36,8 +36,8 @@ up from 6,000, because the arms are the one thing always on screen (`ModelBudget
 ## In the game
 
 - **Both hands are always seen**, with whichever weapon is held, except while the player **sprints**. `ViewmodelHands` (on the `WeaponHolder`) switches the
-  renderers of every `Glove*` and `Sleeve*` mesh off while `PlayerMotor.State` is `Sprint` and on again afterwards. The weapon itself stays; a weapon that is not
-  held stays hidden as before.
+  renderers of every mesh of the holder, the hands **and the gun or knife** (F2: a weapon hanging in the air without hands looked wrong), off while `PlayerMotor.State`
+  is `Sprint` and on again afterwards. A weapon that is not held stays hidden as before, and a renderer that its prefab keeps off stays off.
 - **The SMG and the rifle are held in both hands**; the **knife is held in one**.
 - **The knife swings.** `KnifeSwing` (on the `Knife`) starts on `MeleeWeapon.Swung`, which `Fire()` raises on every attack. It gathers the knife, the right glove
   and the right sleeve into one `Swing` group at run time and turns the group about the elbow, so the whole forearm swings while the left hand stays: a short
