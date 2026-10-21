@@ -99,6 +99,44 @@ namespace Blackout.Interaction.Tests
         }
 
         // ---- health pickup -------------------------------------------------------------------------------
+        [Test]
+        public void Door_CombatLockClosesAnOpenDoor_AndSurvivesAPowerUnlock()
+        {
+            var door = gameObject.AddComponent<SlidingDoor>();
+            var panel = new GameObject("Panel");
+            panel.transform.SetParent(gameObject.transform, false);
+            var blocker = panel.AddComponent<BoxCollider>();
+            Set(door, "panel", panel.transform);
+            Set(door, "blocker", blocker);
+            door.RequestOpen(null);
+            panel.transform.localPosition = Vector3.right;
+            blocker.enabled = false;
+
+            door.SetCombatLocked(true);
+            door.SetLocked(false); // delayed generator unlock must not bypass the encounter
+            Assert.That(door.IsLocked, Is.True);
+            Assert.That(door.IsOpen, Is.False);
+            Assert.That(blocker.enabled, Is.True);
+            Assert.That(panel.transform.localPosition, Is.EqualTo(Vector3.zero));
+            Assert.That(door.RequestOpen(null), Is.False);
+            Assert.That(door.Prompt, Does.Contain("lab defenders"));
+
+            door.SetCombatLocked(false);
+            Assert.That(door.IsLocked, Is.False);
+            Assert.That(door.RequestOpen(null), Is.False, "already reopening after clearance");
+        }
+
+        [Test]
+        public void Door_ClearingCombatLockDoesNotReleaseAPoweredMaglock()
+        {
+            var door = gameObject.AddComponent<SlidingDoor>();
+            door.SetLocked(true);
+            door.SetCombatLocked(true);
+            door.SetCombatLocked(false);
+            Assert.That(door.IsLocked, Is.True);
+            Assert.That(door.RequestOpen(null), Is.False);
+        }
+
 
         [Test]
         public void HealthPickup_AtFullHealth_StaysForLater()

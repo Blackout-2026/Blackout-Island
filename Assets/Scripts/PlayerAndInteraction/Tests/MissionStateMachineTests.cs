@@ -128,6 +128,8 @@ namespace Blackout.Mission.Tests
             mission.OnCureTaken();
             Assert.AreEqual(MissionPhase.Escape, mission.Phase);
             Assert.AreEqual(MissionStateMachine.ObjectiveEscape, mission.Objective);
+            Assert.AreEqual(MissionStateMachine.CheckpointEscapeLab, mission.CheckpointId,
+                "death must not strand the player outside the locked lab");
         }
 
         [Test]
@@ -136,7 +138,7 @@ namespace Blackout.Mission.Tests
             var mission = NewMission();
             mission.JumpTo(MissionPhase.Escape);
             mission.Tick(CorridorMiddle);
-            Assert.AreEqual(MissionStateMachine.CheckpointGeneratorRoom, mission.CheckpointId);
+            Assert.AreEqual(MissionStateMachine.CheckpointEscapeLab, mission.CheckpointId);
             Assert.AreEqual(MissionChange.Checkpoint, mission.Tick(CompoundYard));
             Assert.AreEqual(MissionStateMachine.CheckpointEscapeEntrance, mission.CheckpointId);
             Assert.AreEqual(MissionChange.Checkpoint, mission.Tick(OutsideGate));

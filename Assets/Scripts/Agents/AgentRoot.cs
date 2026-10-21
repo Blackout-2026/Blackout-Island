@@ -272,6 +272,8 @@ namespace Blackout.Agents
             mover?.Stop();
             shooter?.CeaseFire();
             animator?.PlayDeath();
+            // A cleared lab must remain passable, and dead bodies must not absorb later shots.
+            foreach (Collider body in GetComponentsInChildren<Collider>()) body.enabled = false;
             UnregisterFromRegistry();
         }
 

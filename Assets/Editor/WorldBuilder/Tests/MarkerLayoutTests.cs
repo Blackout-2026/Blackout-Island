@@ -4,7 +4,10 @@ using Blackout.Shared;
 using Blackout.World;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 namespace Blackout.Editor.Tests
 {
@@ -55,15 +58,62 @@ namespace Blackout.Editor.Tests
         }
 
         [Test]
-        public void AgentMarkers_BelongToTheEightAgents()
+        public void AgentMarkers_BelongToTheTwentyFourAgents()
         {
-            Assert.That(markers.Count(m => m.Type == MarkerType.AgentSpawn), Is.EqualTo(8));
+            Assert.That(markers.Count(m => m.Type == MarkerType.AgentSpawn), Is.EqualTo(24));
             var agents = new HashSet<string>(markers.Where(m => m.Type == MarkerType.AgentSpawn).Select(m => m.Owner));
             foreach (MarkerSpec marker in markers)
             {
                 bool agentMarker = marker.Type == MarkerType.AgentSpawn || marker.Type == MarkerType.Waypoint;
                 Assert.That(agentMarker ? agents.Contains(marker.Owner) : marker.Owner == "", Is.True, $"owner of {marker.Name}");
             }
+        }
+
+        [Test]
+        public void Population_MatchesTheRequestedRoomDistribution()
+        {
+            var spawns = markers.Where(m => m.Type == MarkerType.AgentSpawn).ToList();
+            Assert.That(spawns.Count(m => m.Owner.StartsWith("Hunter-")), Is.EqualTo(5));
+            var patrols = spawns.Where(m => m.Owner.StartsWith("Patrol-")).ToList();
+            Assert.That(patrols.Count, Is.EqualTo(12));
+            Assert.That(patrols.Count(m => m.Position.y > 9f), Is.EqualTo(3), "compound");
+            Assert.That(patrols.Count(m => Interior(layout.FindRoom("SecurityArea"), m.Position)), Is.EqualTo(2), "security door");
+            Assert.That(patrols.Count(m => Interior(layout.FindRoom("GeneratorRoom"), m.Position)), Is.EqualTo(2));
+            Assert.That(patrols.Count(m => Interior(layout.FindRoom("Corridor"), m.Position)), Is.EqualTo(2));
+            Assert.That(patrols.Count(m => Interior(layout.FindRoom("Laboratory"), m.Position)), Is.EqualTo(3));
+            var guards = spawns.Where(m => m.Owner.StartsWith("TG-")).ToList();
+            Assert.That(guards.Count, Is.EqualTo(6));
+            Assert.That(guards.Count(m => Interior(layout.FindRoom("Laboratory"), m.Position)), Is.EqualTo(2));
+            Assert.That(guards.Count(m => Interior(layout.FindRoom("GeneratorRoom"), m.Position)), Is.EqualTo(2));
+            Assert.That(guards.Count(m => Interior(layout.FindRoom("Corridor"), m.Position)), Is.EqualTo(1));
+            Assert.That(guards.Count(m => Interior(layout.FindRoom("SecurityArea"), m.Position)), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SavedPopulation_MatchesLayout_AndSpawnsClearOfSolidGeometryOnTheNavMesh()
+        {
+            Scene scene = EditorSceneManager.OpenScene("Assets/Scenes/Environment.unity", OpenSceneMode.Additive);
+            try
+            {
+                Physics.SyncTransforms();
+                var saved = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Marker>()).ToList();
+                var spawns = saved.Where(m => m.Type == MarkerType.AgentSpawn).ToList();
+                Assert.That(spawns.Count, Is.EqualTo(24));
+                foreach (MarkerSpec spec in markers.Where(m => m.Type == MarkerType.AgentSpawn || m.Type == MarkerType.Waypoint || m.Name == "Checkpoint_EscapeLab"))
+                {
+                    Marker marker = saved.Single(m => m.Id == spec.Name);
+                    Assert.That(marker.Owner, Is.EqualTo(spec.Owner), spec.Name);
+                    Assert.That(Vector3.Distance(marker.transform.position, spec.Position), Is.LessThan(0.001f), spec.Name);
+                    Assert.That(NavMesh.SamplePosition(spec.Position, out NavMeshHit hit, 1f, NavMesh.AllAreas), Is.True, spec.Name + " has no nearby NavMesh");
+                    Assert.That(Mathf.Abs(hit.position.y - spec.Position.y), Is.LessThan(0.5f), spec.Name + " wrong floor");
+                    if (spec.Type != MarkerType.AgentSpawn) continue;
+                    bool blocked = Physics.CheckCapsule(spec.Position + Vector3.up * 0.5f,
+                        spec.Position + Vector3.up * 1.3f, 0.38f,
+                        (1 << PhysicsLayers.Level) | (1 << PhysicsLayers.Interactable), QueryTriggerInteraction.Ignore);
+                    Assert.That(blocked, Is.False, spec.Name + " overlaps solid geometry");
+                }
+            }
+            finally { EditorSceneManager.CloseScene(scene, true); }
         }
 
         [Test]

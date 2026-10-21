@@ -346,5 +346,86 @@ namespace Blackout.Agents.Tests
             }
             return null;
         }
+
+        private void Kill(string name)
+        {
+            Find(name).GetComponent<Health>().TakeDamage(
+                new DamageInfo(1000f, Vector3.zero, Vector3.forward, null, DamageType.Bullet));
+        }
+
+        [Test]
+        public void TimedRespawn_ReplacesOnlyTheDeadSlotAtItsMarker_WithNoRosterGrowth()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Hunter-1", new Vector3(2f, 4f, -30f), 90f);
+            AddMarker(MarkerType.AgentSpawn, "Hunter-2", new Vector3(6f, 4f, -30f));
+            spawner.Configure(registry, difficulty, AllFourEntries());
+            spawner.SpawnAll();
+            GameObject survivor = Find("Hunter-2");
+            for (int cycle = 0; cycle < 3; cycle++)
+            {
+                GameObject old = Find("Hunter-1");
+                old.transform.position = Vector3.zero;
+                Kill("Hunter-1");
+                spawner.TickRespawns(spawner.RespawnDelay - 1f);
+                Assert.That(Find("Hunter-1"), Is.SameAs(old));
+                spawner.TickRespawns(1f);
+                Assert.That(old == null, Is.True);
+                Assert.That(Find("Hunter-1").transform.position, Is.EqualTo(new Vector3(2f, 4f, -30f)));
+                Assert.That(Find("Hunter-1").GetComponent<Health>().Current, Is.EqualTo(90f));
+                Assert.That(Find("Hunter-2"), Is.SameAs(survivor));
+                Assert.That(spawner.Spawned.Count, Is.EqualTo(2));
+            }
+        }
+
+        [Test]
+        public void LabDeaths_RespawnBeforeCure_ButPendingAndLaterDeathsStayDeadAfterCure()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Patrol-10", new Vector3(-3f, 2.5f, 127f));
+            AddMarker(MarkerType.AgentSpawn, "TG-02", new Vector3(3f, 2.5f, 129f));
+            AddMarker(MarkerType.AgentSpawn, "Commander", new Vector3(6f, 2.5f, 138f));
+            AddMarker(MarkerType.AgentSpawn, "Hunter-1", new Vector3(10f, 4f, -30f));
+            spawner.Configure(registry, difficulty, AllFourEntries());
+            spawner.SpawnAll();
+            Kill("TG-02");
+            spawner.TickRespawns(spawner.RespawnDelay);
+            Assert.That(Find("TG-02").GetComponent<Health>().IsAlive, Is.True);
+
+            Kill("Patrol-10"); // already dead when the cure is taken
+            registry.Blackboard.ReportCureTaken();
+            Kill("TG-02");
+            Kill("Commander");
+            Kill("Hunter-1");
+            spawner.TickRespawns(spawner.RespawnDelay * 3f);
+            Assert.That(Find("Patrol-10").GetComponent<Health>().IsAlive, Is.False);
+            Assert.That(Find("TG-02").GetComponent<Health>().IsAlive, Is.False);
+            Assert.That(Find("Commander").GetComponent<Health>().IsAlive, Is.False);
+            Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.True);
+            Assert.That(spawner.LivingLabDefenders, Is.Zero);
+        }
+
+        [Test]
+        public void Cure_ReturnsALivingWanderingLabDefender_WithoutRevivingDeadDefenders()
+        {
+            AddMarker(MarkerType.AgentSpawn, "TG-02", new Vector3(3f, 2.5f, 129f));
+            AddMarker(MarkerType.AgentSpawn, "Commander", new Vector3(6f, 2.5f, 138f));
+            spawner.Configure(registry, difficulty, AllFourEntries());
+            spawner.SpawnAll();
+            Find("TG-02").transform.position = new Vector3(0f, 2.5f, 100f);
+            Kill("Commander");
+            registry.Blackboard.ReportCureTaken();
+            Assert.That(Find("TG-02").transform.position, Is.EqualTo(new Vector3(3f, 2.5f, 129f)));
+            Assert.That(Find("Commander").GetComponent<Health>().IsAlive, Is.False);
+            Assert.That(spawner.LivingLabDefenders, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SpawnAll_RepeatedCallDoesNotDuplicateTheRoster()
+        {
+            AddTheEightSpawnMarkers();
+            spawner.Configure(registry, difficulty, AllFourEntries());
+            spawner.SpawnAll();
+            Assert.That(spawner.SpawnAll(), Is.Zero);
+            Assert.That(spawner.Spawned.Count, Is.EqualTo(8));
+        }
     }
 }

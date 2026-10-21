@@ -27,6 +27,7 @@ namespace Blackout.Mission
         public const string CheckpointForest = "Checkpoint_Forest";
         public const string CheckpointBunkerEntrance = "Checkpoint_BunkerEntrance";
         public const string CheckpointGeneratorRoom = "Checkpoint_GeneratorRoom";
+        public const string CheckpointEscapeLab = "Checkpoint_EscapeLab";
         public const string CheckpointEscapeEntrance = "Checkpoint_EscapeEntrance";
         public const string CheckpointEscapeForest = "Checkpoint_EscapeForest";
 
@@ -161,10 +162,10 @@ namespace Blackout.Mission
             CureTaken |= phase >= MissionPhase.Escape;
             MissionChange change = SetPhase(phase);
             if (phase >= MissionPhase.Escape && !IsEscapeCheckpoint(CheckpointId)
-                && CheckpointId != CheckpointGeneratorRoom)
+                && CheckpointId != CheckpointEscapeLab)
             {
-                // The escape starts from the generator room checkpoint, as if the player had come that way.
-                CheckpointId = CheckpointGeneratorRoom;
+                // Keep respawns inside the lab while its combat exit may still be locked.
+                CheckpointId = CheckpointEscapeLab;
                 change |= MissionChange.Checkpoint;
             }
 
@@ -186,7 +187,7 @@ namespace Blackout.Mission
             }
         }
 
-        /// <summary>The checkpoint a phase starts with, or null to keep the current one (Escape, Complete).</summary>
+        /// <summary>The checkpoint a phase starts with, or null to keep the current one (Complete).</summary>
         public static string CheckpointFor(MissionPhase phase)
         {
             switch (phase)
@@ -197,6 +198,7 @@ namespace Blackout.Mission
                 case MissionPhase.Corridor: return CheckpointBunkerEntrance;
                 case MissionPhase.GeneratorRoom:
                 case MissionPhase.Lab: return CheckpointGeneratorRoom;
+                case MissionPhase.Escape: return CheckpointEscapeLab;
                 default: return null;
             }
         }

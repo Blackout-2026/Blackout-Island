@@ -169,6 +169,8 @@ waypoints by id.
 DoorSockets are at floor level in the middle of the wall. They face into the room you enter on the way in. Only
 door gaps get one; the open ramp passages (O-RampTop, O-RampBottom) have no door.
 
+The current E1 population is 5 Hunters, 12 Security Patrols, 6 Tactical Guards and 1 Commander. See [enemy population and lab clearance](enemy-population.md) for the current distribution, respawn rules and lab checkpoint. The original route table below documents the eight prototype agents; additional routes are defined in MarkerLayout.cs.
+
 **Agents.** Agent names follow the prototype and the Agent Controller's `AgentRoot` (for example `Patrol-1`). An
 agent's AgentSpawn is `AgentSpawn_<agent>`. Its waypoints are `Waypoint_<agent>_01`, `_02` …, in route order, and
 every route is a loop.

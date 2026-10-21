@@ -14,7 +14,7 @@ namespace Blackout.Interaction
     /// Optional fail-safe maglock: unlocks and opens itself a few seconds after an event (the lab door after
     /// GeneratorDisabled). Numbers: docs/reference/systems-engineer.md section 10.
     /// </summary>
-    public class SlidingDoor : Interactable, IDoor
+    public class SlidingDoor : Interactable, IDoor, IDoorCombatLock
     {
         private const float PassableOpen = 0.8f;
 
@@ -54,17 +54,18 @@ namespace Blackout.Interaction
         private float open;
         private float target;
         private bool locked;
+        private bool combatLocked;
         private float unlockTimer = -1f;
         private string openPrompt;
         private string closePrompt;
         private string lockedPrompt;
 
-        public override string Prompt => locked ? lockedPrompt : target > 0.5f ? closePrompt : openPrompt;
-        public override string Key => locked ? string.Empty : "E";
+        public override string Prompt => combatLocked ? "Eliminate the remaining lab defenders" : locked ? lockedPrompt : target > 0.5f ? closePrompt : openPrompt;
+        public override string Key => IsLocked ? string.Empty : "E";
 
         public Vector3 Position => transform.position;
         public bool IsOpen => open > PassableOpen;
-        public bool IsLocked => locked;
+        public bool IsLocked => locked || combatLocked;
 
         private void Awake()
         {
@@ -98,7 +99,7 @@ namespace Blackout.Interaction
 
         public override void Interact(GameObject by)
         {
-            if (locked)
+            if (IsLocked)
             {
                 onLockedUsed.Invoke();
                 return;
@@ -109,7 +110,7 @@ namespace Blackout.Interaction
 
         public bool RequestOpen(GameObject by)
         {
-            if (locked || target > 0.5f)
+            if (IsLocked || target > 0.5f)
             {
                 return false;
             }
@@ -121,14 +122,34 @@ namespace Blackout.Interaction
         public void SetLocked(bool value)
         {
             locked = value;
+            ApplyLock();
+        }
+
+        public void SetCombatLocked(bool value)
+        {
+            if (combatLocked == value) return;
+            combatLocked = value;
+            if (value)
+            {
+                // Close immediately so the player cannot slip through while the panel is sliding.
+                target = open = 0f;
+                if (panel != null) panel.localPosition = closedPosition;
+                if (blocker != null) blocker.enabled = true;
+            }
+            ApplyLock();
+            if (!value && !IsLocked) RequestOpen(null);
+        }
+
+        private void ApplyLock()
+        {
             if (lockObstacle != null)
             {
-                lockObstacle.enabled = value;
+                lockObstacle.enabled = IsLocked;
             }
 
             if (lockLamp != null)
             {
-                Material lamp = value ? lockedLampMaterial : unlockedLampMaterial;
+                Material lamp = IsLocked ? lockedLampMaterial : unlockedLampMaterial;
                 if (lamp != null)
                 {
                     lockLamp.sharedMaterial = lamp;

@@ -14,7 +14,7 @@ namespace Blackout.Agents.PlayTests
         private const float FullSeconds = 300f;
 
         [UnityTest, Timeout(120000)]
-        public IEnumerator Smoke_AllEightAgentsSpawnAndRunWithoutErrors()
+        public IEnumerator Smoke_AllAgentsSpawnAndRunWithoutErrors()
         {
             var run = new AgentStressRun();
 
@@ -23,7 +23,7 @@ namespace Blackout.Agents.PlayTests
             AssertHealthy(run);
         }
 
-        [UnityTest, Timeout(900000), Explicit("Five real minutes with all eight agents; writes a report to the temp folder.")]
+        [UnityTest, Timeout(900000), Explicit("Five real minutes with all 24 agents; writes a report to the temp folder.")]
         public IEnumerator Stress_FiveMinutes()
         {
             var run = new AgentStressRun();
@@ -35,7 +35,7 @@ namespace Blackout.Agents.PlayTests
 
         private static void AssertHealthy(AgentStressRun run)
         {
-            Assert.AreEqual(AgentStressRun.ExpectedAgents, run.agentsSpawned, "Hunter x2, Security Patrol x3, Tactical Guard x2, Commander x1");
+            Assert.AreEqual(AgentStressRun.ExpectedAgents, run.agentsSpawned, "Hunter x5, Security Patrol x12, Tactical Guard x6, Commander x1");
             Assert.AreEqual(0, run.nullReferences, "no null references. Report: " + run.reportPath);
             Assert.AreEqual(0, run.exceptions, "no exceptions. Report: " + run.reportPath);
         }

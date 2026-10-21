@@ -76,7 +76,7 @@ namespace Blackout.AI.Hunter.Tests
                 }
             }
 
-            Assert.AreEqual(12, routePoints.Count, "6 waypoints for each Hunter");
+            Assert.AreEqual(30, routePoints.Count, "6 waypoints for each of five Hunters, sharing the existing clearings");
             float nearest = float.MaxValue;
             foreach (Vector3 bush in HunterWorld.Bushes(terrain))
             {
