@@ -15,8 +15,8 @@ No textures have been added yet. All 12 environment materials use the flat palet
 | Grass | none yet (flat #2C3A1D) | — | — | — | — |
 | ForestFloor | none yet (flat #32281A) | — | — | — | — |
 | Rock | none yet (flat #43423D) | — | — | — | — |
-| Concrete | none yet (flat #72726B) | — | — | — | — |
-| ConcreteStained | none yet (flat #5C5E5A) | — | — | — | — |
+| Concrete | `Concrete_BaseColor.png`, `_Normal.png`, `_Roughness.png`, `_AO.png` (the hut's roof maps, unchanged apart from PNG; step B1) | Military Hut (`Military_Hut.zip`, `Military_Hut_Roof_map_*`) | TODO: page URL | TODO: check before publishing the repo (the download contains no licence text) | TODO: confirm on the page (the folder name suggests Sketchfab, TampaJoey) |
+| ConcreteStained | `ConcreteStained_BaseColor.png`, `_Roughness.png`, `_AO.png` (a clean 512 px patch of the hut's pad maps, mirrored to tile; step B1) | Military Hut (`Military_Hut_Foundation_map_*`) | TODO: page URL | same as Concrete | same as Concrete |
 | MetalPlate | none yet (flat #5A5E60) | — | — | — | — |
 | Rust | none yet (flat #64361C) | — | — | — | — |
 | Tile | none yet (flat #AAB3B4) | — | — | — | — |
@@ -26,6 +26,16 @@ No textures have been added yet. All 12 environment materials use the flat palet
 
 Generated files are not credited separately: `<Surface>_MetallicSmoothness.png` is made by Build Material Library
 from that surface's Roughness and Metallic maps, so it has the same source and licence.
+
+## Military hut entrance (B1)
+
+| Files in the project | Source asset | URL | Licence | Author |
+| --- | --- | --- | --- | --- |
+| `Assets/Models/Custom/SM_Hut_Entrance.fbx`, `SM_Hut_Props.fbx` and `Art/Blender/SM_Military_Hut.blend` (the download cut down and scaled by `Art/Blender/Scripts/build_military_hut.py`) | "Military Hut" with animations, `Military_Hut.zip` (`Military_Hut.fbx`) | TODO: page URL | TODO: check before publishing the repo (the download contains no licence text) | TODO: confirm on the page (the folder name suggests Sketchfab, TampaJoey) |
+| `Assets/Textures/Models/T_Hut_*_BaseColor.png`, `_Normal.png` (the downloaded maps, some halved to 512 px) and `_MetalSmooth.png` (repacked from the downloaded Metallic, Roughness and AO maps) | same zip | TODO: page URL | same | same |
+
+Fill the TODO cells from the page the folder was downloaded from. If its licence does not allow use in a public repository, keep the repository
+private or replace the hut.
 
 ## How to add a texture set
 

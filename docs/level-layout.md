@@ -1196,6 +1196,16 @@ Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs
 | Laboratory | LabCommanderMonitor | Prop_Monitor | 6.4 | 3.35 | 141.1 | 180 | 1 | 1 | 1 |
 | Laboratory | LabSign | Prop_Sign_BiohazardLevel4 | -2.8 | 4.5 | 124.03 | 0 | 1 | 1 | 1 |
 | Laboratory | LabFlask01 | Prop_Flask | -7.5 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyFuseBox | Prop_HutFuseBox | 2.6 | 11 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyKeypad | Prop_HutKeypad | -1.55 | 11.3 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyNotice | Prop_HutSignNotice | 1.75 | 12.1 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyCamera | Prop_HutCamera | -5.6 | 12.6 | 50.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityFuseBox | Prop_HutFuseBox | 7.97 | 3.5 | 71.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityCamera | Prop_HutCamera | 5.5 | 4.7 | 81.97 | 180 | 1 | 1 | 1 |
+| Corridor | CorridorCamera | Prop_HutCamera | -1.47 | 4.7 | 91 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorFuseBox | Prop_HutFuseBox | -1.47 | 3.5 | 112 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorWarning | Prop_HutSignWarning | 1.47 | 4 | 116 | 270 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorFuseBox | Prop_HutFuseBox | -19.87 | 3.5 | 99 | 90 | 1 | 1 | 1 |
 <!-- W10-DRESSING-END -->
 
 ### Rebuilding and preserving hand edits
