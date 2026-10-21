@@ -11,6 +11,22 @@ section 12 **physics hygiene** (Y7, from `physics/collision.js` and `weapons/wea
 **Hunter** AI with its behaviour tree core (H1, from `agents/hunter_bt.js`), section 14 covers its **hearing**
 (H2, from `agents/perception.js` and `physics/collision.js`), section 15 its **tree** (H3, from
 `agents/hunter_bt.js` and `agents/perception.js`), and section 16 its **debug view** (H4, from `ui/debug_overlay.js`).
+Section 17 covers the **audio events** (Y0, from `audio/audio.js`), the last part of the Y0 extraction.
+
+**Y0 checklist** (playbook step Y0, done after the fact; every item is now covered):
+
+| Y0 asks for | Section |
+| --- | --- |
+| Player speeds, jump, sprint, crouch | 1 |
+| Head bob | 3 |
+| Each weapon's damage, range, cooldown, spread, falloff, switch time, recoil | 7 |
+| Health numbers | 5, 8 |
+| Interaction ranges and hold times; door and crate behaviour | 10 |
+| Mission phases with objective strings | 11 |
+| Respawn rules | 8 |
+| Noise event types and loudness values | 4, 14 |
+| HUD elements | 9 |
+| Audio events | 17 |
 
 Numbers are copied from the code. Anything marked **[GUESS]** is my interpretation or a Unity-side
 choice, not a prototype value.
@@ -90,8 +106,8 @@ those are published as `Footstep` with radius 7 and 9.
 
 | Source | Radius (m) | Prototype file |
 | --- | --- | --- |
-| Player weapon / melee | `d.noise` per weapon (Y3 adds the values) | `weapons/weapon_system.js` |
-| Agent gunfire | `w.noise` per agent weapon | `agents/agent_base.js` |
+| Player weapon / melee | SMG 42, rifle 65, knife 3 (`d.noise`, section 7) | `weapons/weapon_system.js` |
+| Agent gunfire | 40 for every agent type (the `agent_base.js` default; no type overrides it) | `agents/agent_base.js` |
 | Bunker door / other doors | 22 / 14 | `physics/doors.js` |
 | Generator disabled | 60 | `physics/interactables.js` |
 | Cure alarm | 18 (type `alarm`) | `physics/interactables.js` |
@@ -309,7 +325,7 @@ The prototype checks the player's position every frame (after 20 other updates) 
 | --- | --- | --- | --- | --- |
 | `beach` | start | Reach the bunker in the north of the island | BEACH | beach |
 | `forest` | left the beach (crossed the beach's inland edge) | Follow the trail and get into the bunker | FOREST | forest |
-| `entrance` | inside the compound (from beach or forest) | Open the bunker door [E], then Go down the ramp to level B1 once `door:opened` for the bunker door | BUNKER ENTRANCE | entrance |
+| `entrance` | inside the compound (from beach or forest) | Open the bunker door [E]; Go down the ramp to level B1 once `door:opened` for the bunker door (at once if it is already open) | BUNKER ENTRANCE | entrance |
 | `bunker` | underground (`player.zone === 'bunker'`) | Find the generator room | LEVEL B1 | (kept) |
 | `generator` | inside the generator room (from entrance or bunker) | Disable the generator — hold [E] at the control console | GENERATOR ROOM | generator |
 | (same phase) | `generator:disabled` | Take the cure from the laboratory | GENERATOR ROOM | (kept) |
@@ -825,3 +841,113 @@ order: none
   `OnDrawGizmos*`), and EditMode tests pass a recording painter, so every line of the drawing code runs in a test
   and what it would draw (lines, colours, boxes) is checked.
 - Gizmos are drawn when the Hunter is selected (`OnDrawGizmosSelected`), so two Hunters do not clutter the scene.
+
+---
+
+## 17. Audio events (`audio/audio.js`)
+
+### What the prototype does
+
+**Everything is synthesised with WebAudio; there are no sound files.** A sound is either filtered noise (white or
+brown, through a low-, high- or band-pass filter) or an oscillator tone (sine, triangle, sawtooth or square), each with
+a short attack and an exponential decay. Below, "noise 1300 Hz band 0.09 s" means band-passed noise at 1300 Hz lasting
+0.09 s; "tone 140 → 55 Hz" is a pitch sweep. Gains are linear (1 = full scale).
+
+**Mixing graph.**
+
+| Part | Values |
+| --- | --- |
+| Buses | one-shots → `sfx`; ambience → `amb` (gain 0.9); both → `master` (the volume setting, default **0.8**) → compressor → speakers |
+| Compressor | threshold **−14 dB**, ratio **4** |
+| Reverb | generated impulse **2.4 s**, decay exponent **2.6**; the `sfx` bus sends to it with wet gain **0.4 × interior** |
+| Interior factor | `Level.interiorFactor`: **1** in the bunker, rising from 0 to 1 through the entrance (prototype z −48.5 → −62, the lobby and ramp), **0** outside |
+| Positional sounds | equal-power panner, inverse distance model, reference distance **3 m** unless a sound sets its own (1.5–6 m), roll-off **1.1**, max distance **120 m**. The listener follows the camera |
+
+**Ambience** (continuous, updated every frame).
+
+| Layer | Sound | Level |
+| --- | --- | --- |
+| Waves | brown noise, low-pass 520 Hz, with a slow swell `0.6 + 0.4·sin(0.55 t)·sin(0.21 t + 1)` | `(0.05 + 0.32 × shore) × swell × (1 − interior)`; shore rises from 0 to 1 as the camera's prototype z goes from 40 to 100 (towards the beach) |
+| Wind | white noise, band-pass 500–800 Hz (centre drifts `500 + 300·sin(0.17 t)`) | `0.045 × (1 − interior) × (0.7 + 0.3·sin(0.3 t))` |
+| Forest insects | three chirps of a 3800–5400 Hz tone (0.035 s, 0.07 s apart), at a random spot within 15 m, every 0.15–1.05 s | gain 0.025, reference distance 6 m; only outdoors (interior < 0.2) and in the forest (prototype z < 85) |
+| Bunker room tone | brown noise, low-pass 180 Hz | `0.06 × interior` |
+| Generator hum | positional at the generator (+1.5 m): 50 Hz sine (0.5), 100 Hz sawtooth (0.12), 150 Hz sine (0.15), 300 Hz triangle (0.03), low-pass 420 Hz, 0.4 Hz wobble | `0.55 × smoothstep(0.3, 1, interior)`; reference 4 m, roll-off 1.3 |
+| Alarm siren | square wave through a 900 Hz band-pass, alternating **880 / 620 Hz** at 1.6 changes per second | silent until `lights:emergency`, then `0.05 + 0.07 × interior` |
+
+**One-shots: every sound subscribes to a game event, so no system calls audio directly.**
+
+| Event | Sound |
+| --- | --- |
+| `player:footstep` | the surface's footstep (below) × **1.4** when sprinting, × **0.45** crouching, × 1 walking |
+| `player:land` | the surface's footstep × **1.6** and a tone 70 → 40 Hz, 0.15 s, gain 0.3 |
+| `player:jump` | noise 500 Hz band 0.12 s, gain 0.05 |
+| `weapon:fired` | the weapon's gun sound (below), not positional |
+| `weapon:bolt` | rifle bolt, 35 % into the 0.95 s bolt cycle (0.33 s): two clicks, 2500 Hz then 1800 Hz 0.22 s later, gain 0.15 |
+| `weapon:switching` / `weapon:switched` | noise 1400 Hz band 0.08 s / 2600 Hz band 0.05 s, gain 0.08 |
+| `enemy:fired` | the agent type's gun sound, positional at its muzzle |
+| `hit:marker` | tone 1900 Hz (2600 Hz on a head hit) 0.05 s, gain 0.08; on a kill also a triangle 520 → 380 Hz, 0.18 s |
+| `enemy:damaged` | robot (guard): a 3500 Hz band of noise and a 640 Hz triangle; humanoid: a sawtooth 150–190 → 110 Hz grunt through a 750 Hz band. Positional at 1.5 m |
+| `enemy:killed` | robot: sawtooth 420 → 40 Hz over 1.4 s and six sparks; humanoid: sawtooth 170 → 70 Hz, 0.55 s, then a 60 → 40 Hz thud |
+| `player:damaged` | tone 90 → 50 Hz 0.2 s (gain 0.35) and low-pass noise 600 Hz 0.15 s |
+| `player:died` | triangle 220 → 40 Hz over 1.6 s |
+| `bullet:whiz` | high-pass noise 2500 → 900 Hz, 0.12 s, at the end of an agent's shot that missed the player (reference 2 m) |
+| `pickup:health` | three rising tones 660, 880, 1320 Hz, 0.07 s apart |
+| `door:opened` / `door:closed` | hinged door: a creaking sawtooth 260 → 340 Hz (opening) or → 200 Hz (closing) and a 90 Hz thud; sliding door: a brown-noise rumble of **1.0 s** (**2.2 s** and louder for the bunker door) ending in a 70 → 50 Hz clunk |
+| `door:locked` | square 110 Hz buzz through a 600 Hz low-pass, 0.3 s |
+| `interact:holdtick` | tone 1500 Hz 0.02 s, gain 0.03, about 6 times a second while holding |
+| `crate:scrape` | brown noise, low-pass 380 Hz, 0.5 s, gain 0.2, positional |
+| `generator:disabled` | the hum's oscillators fall to 15 % of their pitch over **3.5 s** and fade; a sawtooth 300 → 30 Hz over 3.2 s and a 2000 → 100 Hz noise sweep over 2.5 s |
+| `lights:emergency` | starts the alarm siren |
+| `alert:broadcast` | radio squelch (1800 Hz band 0.35 s) then four square beeps 880 / 660 / 880 / 660 Hz |
+| `mission:complete` | four triangle notes 523, 659, 784, 1046 Hz (C major), 0.15 s apart |
+| `fx:lightpop`, `fx:spark`, `fx:casing`, `fx:impact` | a bulb pop; four tiny 4000 Hz crackles; a casing tink (3200–4700 Hz); a ping on metal only (1800–2400 Hz) |
+| `ui:click`, `player:flashlight` | a 1200 Hz click; a 3000 Hz click |
+
+**Footsteps by surface** (gain × the footstep multiplier above).
+
+| Surface | Sound |
+| --- | --- |
+| Sand | low-pass noise 900 Hz, 0.16 s, gain 0.12 |
+| Grass, foliage | high-pass 2500 Hz (0.07) plus 700 Hz band (0.06) |
+| Dirt, gravel, rock | 1600 Hz band (0.12) plus a 90 → 60 Hz thump |
+| Metal | 3000 Hz band plus ringing tones 880–960 Hz and 1370 Hz and a 110 → 70 Hz thump |
+| Wood | tone 150 → 90 Hz (0.14) plus 1200 Hz band |
+| Concrete (default) | 2200 Hz band (0.12) plus a 95 → 60 Hz thump |
+
+**Guns** (`weapon.sound` for the player, the agent type for agents).
+
+| Gun | Sound |
+| --- | --- |
+| SMG (`smg`) | 1300 Hz band 0.09 s (0.5), a 4000 Hz crack (0.25) and a 140 → 55 Hz thump (0.45) |
+| Rifle (`sniper`) | low-pass sweep 4000 → 250 Hz over 0.55 s (0.8), crack, 90 → 35 Hz boom, and a 1.2 s tail |
+| Knife (`knife`) | a 700 → 3200 Hz whoosh, 0.22 s |
+| Security Patrol | 950 Hz band and a 120 → 50 Hz thump |
+| Hunter | low-pass sweep 3000 → 400 Hz over 0.35 s and a 100 → 40 Hz boom |
+| Tactical Guard (robot) | a 260 → 90 Hz square zap through 1800 Hz, and a band of noise |
+| Other agents | 1500 Hz band and a 160 → 80 Hz thump |
+
+### Unity mapping [GUESS]
+
+Unity has **no audio code yet** (no `AudioSource` in any script); audio was a "Should". The prototype's rule carries
+over directly: an audio component listens to events and nothing calls it. Which events exist today:
+
+| Prototype event | In Unity now |
+| --- | --- |
+| `player:footstep`, `player:land`, `player:jump` | `PlayerMotor.Footstep(MovementState)`, `Landed(speed)`, `Jumped`. The surface is not known yet |
+| `weapon:fired` | no event; a player shot raises a `Gunshot` noise on `Noise.asset` with the player as source |
+| `weapon:switched` | `WeaponController.WeaponChanged` |
+| `hit:marker` | `WeaponController.HitConfirmed(killed)` (no head-hit flag) |
+| `player:damaged`, `player:died` | the player's `Health.OnDamaged`; `PlayerHealth.Died` and `PlayerDied.asset` |
+| `enemy:damaged`, `enemy:killed` | each agent's `Health.OnDamaged` and `OnDied` |
+| `enemy:fired` | `AgentShooter` raises a `Gunshot` noise only if its gunfire channel is set (not yet on `AgentBase`) |
+| `crate:scrape`, doors opening | `Crate` and `Door` noises on `Noise.asset` |
+| `generator:disabled`, `mission:complete` | `GeneratorDisabled.asset`, `MissionComplete.asset` |
+| `alert:broadcast` | `Blackboard.AlertChanged` |
+| `lights:emergency`, `fx:lightpop` | the World Builder's `PowerStateLighting` (their events) |
+| `weapon:bolt`, `weapon:switching`, `bullet:whiz`, `pickup:health`, `door:closed`, `door:locked`, `interact:holdtick`, `fx:*`, `ui:click`, `player:flashlight` | **missing**: no event today |
+
+- Synthesis can be kept by generating clips in an Editor tool (`AudioClip.Create` from the same recipes), or replaced
+  by recorded clips; either way the numbers above are the brief.
+- Positional sounds map to `AudioSource.spatialBlend = 1` with a logarithmic roll-off, minimum distance = the
+  prototype's reference distance, maximum 120 m. The interior factor maps to an `AudioMixer` snapshot blend or a
+  reverb zone over the bunker.
