@@ -113,7 +113,7 @@ namespace Blackout.Diagnostics.PlayTests
 
                 Assert.That(director.Phase, Is.EqualTo(MissionPhase.GeneratorRoom));
                 Assert.That(director.Deaths, Is.Zero, "counters rewind with the saved run");
-                Assert.That(health.Current, Is.EqualTo(75f));
+                Assert.That(health.Current, Is.EqualTo(health.Max), "respawn heals fully even from a wounded checkpoint");
                 Assert.That(health.IsInvulnerable, Is.True);
                 Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(1));
                 Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));

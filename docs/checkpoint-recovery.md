@@ -35,9 +35,10 @@ cannot save a dead player.
 
 After the existing **2.2 s** death delay, the player teleports to the checkpoint.
 PlayerRespawned listeners first forget the failed attempt; recovery then restores
-the saved state so those callbacks cannot erase it. Health returns to its saved
-value, with the existing **1.5 s** safety invulnerability. Thus a checkpoint
-reached at 75 HP restores 75 HP rather than automatically healing to 100.
+the saved state so those callbacks cannot erase it. The player then receives
+**full health (100 HP with the current configuration)** and the existing
+**1.5 s** safety invulnerability. A checkpoint reached at 75 HP therefore
+respawns the player at 100 HP. Enemies still restore their saved health.
 
 Each owner implements the small `Blackout.Shared.ICheckpointState` contract.
 CheckpointWorld discovers these components across the loaded additive scenes,
@@ -85,12 +86,17 @@ diagnostics and existing fixture warnings; no final test failures or compiler
 warnings/errors. These selected headless checks do not prove full gameplay,
 visual quality, cinematic integration or an entire-project test pass.
 
+Full-health follow-up: the two checkpoint PlayMode tests passed again (**2/2**,
+Unity exit **0**), including repeated recovery from a checkpoint saved at 75 HP
+to full player health, with saved enemy health and world state preserved.
+Evidence: system Temp `blackout-R1-full-health-playmode.{log,xml}`.
+
 Manual checks in Bootstrap:
 
 1. Kill an enemy before taking the cure. Wait over 20 s; it must stay dead.
 2. Reach the generator checkpoint with a wounded player, a missing gun and a
    fallen enemy. Then take a gun/medkit, push the crate, disable the generator
-   and die. Check saved health/loadout, pickups, crate, doors, powered lighting,
+   and die. Check full player health, saved loadout, pickups, crate, doors, powered lighting,
    objective and enemy health/positions return. Repeat without advancing.
 3. Take the cure. Fallen enemies outside the lab return once; dead lab defenders
    stay dead. Kill a returned enemy and wait: it must not return again.

@@ -132,7 +132,8 @@ namespace Blackout.Player
             // Lifecycle listeners first forget the failed attempt. Restore afterwards so they cannot erase
             // saved world knowledge or leave the checkpoint's lights, pickups or equipment in a later state.
             if (checkpoints != null) checkpoints.RestoreWorld();
-            health.SetInvulnerable(invulnerableAfterRespawn);
+            // The player's full-health respawn rule takes precedence over the saved health value.
+            health.ResetHealth(invulnerableAfterRespawn);
             Respawned?.Invoke();
         }
 
