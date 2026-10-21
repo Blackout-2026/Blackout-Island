@@ -30,6 +30,31 @@
 - I replaced the capsules inside the Agent Controller's three prefabs through a menu tool. The change is the removed capsule, the nested model
   and one muzzle reference, but they should know.
 
+## The camo Patrol soldier (step PS1) - added at the owner's request
+
+**What changed and why.** The owner supplied a photo of a camouflaged soldier and one of a tan SCAR-style rifle and asked for that soldier,
+holding that rifle, as the Security Patrol's model. The Patrol was an old navy operator, and in fact the game still showed the blue capsule:
+`SecurityPatrol.prefab` had never been swapped. `build_humans.py` now builds the soldier, and the existing menu **Blackout > Art > Use Character
+Models In Agents** nests it in the prefab.
+
+**Design decisions I can defend.**
+- **Same rig, new costume.** Same 18 joints, rotation 0 and MuzzlePoint contract (0.74 m ahead of the socket; the flash hider ends at 0.745 m), so
+  `CharacterFbxTests`, the swap tool and the shooter wiring did not need changes.
+- **Same bent-arm pose as the Hunter.** Both hands hold the rifle, so the arms are modelled bent while the joints stay put.
+- **Two textures, three materials.** A seamless woodland camo (`make_patrol_camo.py`) for the uniform and helmet cover, and a 64 px four-swatch atlas
+  (`make_patrol_kit.py`: skin, rifle tan, vest olive, dark) so face, vest, rifle furniture and boots share one `M_Char_Patrol_Kit`; the third material
+  is the flat black metal. That keeps the 3-material budget with a bare face and a two-tone rifle.
+- **Own shapes.** The rifle is my own SCAR-style box model (rails, flip-up sights, folding stock, straight magazine), with no markings.
+
+**One number and why.** 2,792 triangles against a 3,000 target (4,500 maximum): enough for a helmet with skirts, a vest with pouches and a
+railed rifle, and still cheap for three agents on screen.
+
+**Known weaknesses.**
+- Rigid parts again, so no walking animation: the soldier slides along its path like the other humans.
+- The helmet and rifle are boxy at close range; the face is a few blocks with dark eyes, not a painted face.
+- The camo is generated noise, not a real camouflage pattern, and the model has been checked in Blender renders and Unity tests, not yet in a Play Mode fight.
+- The rifle's stock sits inside the vest volume (hidden), like the Hunter's, because the arms and the Gun socket are fixed by the rig table.
+
 ## The realistic Commander (step C10b) - added at the owner's request
 
 **What changed and why.** The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service

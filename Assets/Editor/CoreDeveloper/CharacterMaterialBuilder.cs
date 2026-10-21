@@ -7,7 +7,7 @@ namespace Blackout.Editor
     /// <summary>
     /// Creates the nine flat URP Lit materials of the three humanoid agents in Assets/Materials/Models (docs/art-pipeline.md section 18).
     /// The colours are the prototype's (docs/reference/core-developer.md 4.2 to 4.4); there are no textures, so silhouette and colour carry
-    /// the look at the 10 to 30 m the characters are seen from (only the Hunter's camouflage uniform has a texture, T_CharHunter_BaseColor). Re-runnable and non-destructive like the robot's: an existing material
+    /// the look at the 10 to 30 m the characters are seen from (only the camouflage uniforms of the Hunter and the Patrol and the Patrol's swatch atlas have textures). Re-runnable and non-destructive like the robot's: an existing material
     /// keeps every hand edit.
     /// </summary>
     public static class CharacterMaterialBuilder
@@ -15,6 +15,8 @@ namespace Blackout.Editor
         public const string Folder = "Assets/Materials/Models";
         public const string TextureFolder = "Assets/Textures/Models";
         private const string TexturePrefix = "T_Char_";
+        private const string PatrolCamoTexturePrefix = "T_CharPatrol_";
+        private const string PatrolKitTexturePrefix = "T_CharPatrolKit_";
         private const string HunterCamoTexturePrefix = "T_CharHunter_";
         private const string HunterSkinTexturePrefix = "T_CharHunterSkin_";
         private const string CommanderUniformPrefix = "T_CharCommanderUniform_";
@@ -24,8 +26,8 @@ namespace Blackout.Editor
         // Smoothness = 1 - roughness of the Blender material (build_humans.py).
         public static readonly ModelMaterialSpec[] Specs =
         {
-            new ModelMaterialSpec("M_Char_Patrol_Cloth", "#2b3546", 0f, 0.15f),
-            new ModelMaterialSpec("M_Char_Patrol_Gear", "#1a1b1d", 0.1f, 0.2f),
+            new ModelMaterialSpec("M_Char_Patrol_Camo", "#5f7346", 0f, 0.1f, textured: true), // T_CharPatrol_BaseColor and _Normal (make_patrol_camo.py)
+            new ModelMaterialSpec("M_Char_Patrol_Kit", "#4d5230", 0f, 0.2f, textured: true),  // T_CharPatrolKit: skin, tan, olive and dark swatches (make_patrol_kit.py)
             new ModelMaterialSpec("M_Char_Patrol_Metal", "#161718", 0.6f, 0.6f),
             new ModelMaterialSpec("M_Char_Hunter_Camo", "#27301e", 0f, 0.1f, textured: true), // T_CharHunter_BaseColor (make_hunter_camo.py)
             new ModelMaterialSpec("M_Char_Hunter_Skin", "#b08368", 0f, 0.3f, textured: true), // T_CharHunterSkin: skin, eye white, iris and pupil swatches (make_hunter_skin.py)
@@ -41,6 +43,8 @@ namespace Blackout.Editor
         {
             switch (materialName)
             {
+                case "M_Char_Patrol_Camo": return PatrolCamoTexturePrefix;
+                case "M_Char_Patrol_Kit": return PatrolKitTexturePrefix;
                 case "M_Char_Hunter_Camo": return HunterCamoTexturePrefix;
                 case "M_Char_Hunter_Skin": return HunterSkinTexturePrefix;
                 case "M_Char_Commander_Uniform": return CommanderUniformPrefix;
