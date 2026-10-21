@@ -12,7 +12,7 @@ namespace Blackout.Weapons
     /// holder (switch dip and viewmodel kick). What a shot or swing actually does is left to the weapon.
     /// Runs after PlayerLook so shots use this frame's aim.
     /// </summary>
-    public class WeaponController : MonoBehaviour
+    public class WeaponController : MonoBehaviour, IWeaponLoot
     {
         // Viewmodel springs (docs/reference/systems-engineer.md section 7): a shot adds kick × 30 to the
         // spring's velocity, and the offset is applied at 60 %.
@@ -49,11 +49,15 @@ namespace Blackout.Weapons
         private WeaponContext context;
         private Vector3 restPosition;
         private Quaternion restRotation;
+        private bool loadoutLost;
+        private WeaponLoadout loadout;
 
         /// <summary>A shot or swing damaged something; true if it killed it (the HUD's hit marker, Y4).</summary>
         public event Action<bool> HitConfirmed;
         /// <summary>The held weapon changed (the HUD's slot highlight, Y4).</summary>
         public event Action<WeaponData> WeaponChanged;
+        /// <summary>The set of owned weapons changed: the storm took the guns, or the player took one from a dead enemy (the HUD's slots).</summary>
+        public event Action LoadoutChanged;
 
         /// <summary>Debug: every pellet's ray and what it hit (the Stress Test). Subscribe after Awake.</summary>
         public event Action<PelletTrace> PelletTraced
@@ -74,7 +78,67 @@ namespace Blackout.Weapons
             }
         }
 
-        public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 ? weapons[switcher.ActiveIndex].Data : null;
+        public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 && switcher != null && loadout != null && loadout.IsOwned(switcher.ActiveIndex)
+            ? weapons[switcher.ActiveIndex].Data : null;
+
+        /// <summary>False once the storm has taken the starting guns (they come back one by one from dead enemies, see <see cref="TakeNextLootWeapon"/>).</summary>
+        public bool HasLoadout => !loadoutLost;
+
+        /// <summary>
+        /// The storm of the introduction takes every gun and leaves the knife (step L1). The loss persists through respawns, and it is safe before Awake on the
+        /// inactive bootstrap player: the weapons are hidden now and Awake starts the player with the knife only.
+        /// </summary>
+        public void LoseStartingLoadout()
+        {
+            loadoutLost = true;
+            if (loadout == null)
+            {
+                foreach (IWeapon weapon in GetComponentsInChildren<IWeapon>(true)) weapon.SetEquipped(false);
+            }
+            else
+            {
+                loadout.KeepOnlyMelee();
+                int knife = loadout.FirstOwned();
+                switcher = new WeaponSwitcher(weapons.Length, Mathf.Max(0, knife));
+                ShowOnly(knife);
+            }
+
+            WeaponChanged?.Invoke(ActiveWeapon);
+            LoadoutChanged?.Invoke();
+        }
+
+        /// <summary>True if the player holds this weapon now (before Awake: all of them, or only the knife after the storm).</summary>
+        public bool Owns(WeaponData data)
+        {
+            if (loadout != null)
+            {
+                return loadout.Owns(data);
+            }
+
+            return data != null && (!loadoutLost || data.kind == WeaponKind.Melee);
+        }
+
+        /// <summary>The gun a dead enemy's pickup would give now: the SMG first, then the R-700 sniper rifle; null once the player has both.</summary>
+        public WeaponData NextLootWeapon()
+        {
+            int index = loadout != null ? loadout.NextLootIndex() : -1;
+            return index >= 0 ? weapons[index].Data : null;
+        }
+
+        /// <summary>Takes the next loot gun, shows it to the player by switching to it, and returns it (null if there is none left).</summary>
+        public WeaponData TakeNextLootWeapon()
+        {
+            int index = loadout != null ? loadout.NextLootIndex() : -1;
+            if (index < 0)
+            {
+                return null;
+            }
+
+            loadout.Grant(index);
+            switcher.Request(index, weapons[index].Data.switchTime);
+            LoadoutChanged?.Invoke();
+            return weapons[index].Data;
+        }
         public bool IsSwitching => switcher != null && !switcher.IsReady;
 
         private void Awake()
@@ -95,15 +159,27 @@ namespace Blackout.Weapons
             }
 
             Array.Sort(weapons, (a, b) => a.Data.slot.CompareTo(b.Data.slot));
+            var data = new WeaponData[weapons.Length];
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                data[i] = weapons[i].Data;
+            }
+
+            loadout = new WeaponLoadout(data, !loadoutLost);
             context = new WeaponContext(aim, motor.gameObject, hitMask, noiseChannel, tracers, impacts, OnHit);
             int start = Mathf.Clamp(startIndex, 0, weapons.Length - 1);
+            if (!loadout.IsOwned(start))
+            {
+                start = Mathf.Max(0, loadout.FirstOwned()); // after the storm: the knife
+            }
+
             switcher = new WeaponSwitcher(weapons.Length, start);
             for (int i = 0; i < weapons.Length; i++)
             {
                 weapons[i].Initialize(context);
             }
 
-            ShowOnly(start);
+            ShowOnly(loadout.IsOwned(start) ? start : -1);
             restPosition = transform.localPosition;
             restRotation = transform.localRotation;
         }
@@ -115,6 +191,7 @@ namespace Blackout.Weapons
 
         private void Update()
         {
+            if (switcher == null) return;
             float dt = Time.deltaTime;
             if (dt <= 0f)
             {
@@ -152,7 +229,7 @@ namespace Blackout.Weapons
         public bool DebugEquip(int slot)
         {
             int index = weapons != null ? IndexOfSlot(slot) : -1;
-            if (index < 0)
+            if (index < 0 || !loadout.IsOwned(index))
             {
                 return false;
             }
@@ -167,7 +244,7 @@ namespace Blackout.Weapons
         /// sprint rule. Recoil and noise happen as for a real shot.</summary>
         public void DebugFire()
         {
-            if (weapons != null)
+            if (weapons != null && switcher != null && loadout.IsOwned(switcher.ActiveIndex))
             {
                 Fire(weapons[switcher.ActiveIndex]);
             }
@@ -186,13 +263,13 @@ namespace Blackout.Weapons
             float scroll = input.WeaponScroll;
             if (scroll != 0f && switcher.IsReady)
             {
-                Request(switcher.Neighbour(scroll < 0f ? 1 : -1));
+                Request(loadout.NextOwned(switcher.ActiveIndex, scroll < 0f ? 1 : -1));
             }
         }
 
         private void Request(int index)
         {
-            if (index >= 0)
+            if (loadout.IsOwned(index))
             {
                 switcher.Request(index, weapons[index].Data.switchTime);
             }
