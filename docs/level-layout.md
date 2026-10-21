@@ -455,6 +455,22 @@ moves 4 pines and 4 palms: on exact values the prototype's own code also gives 4
   by the quality level.
 - **Not placed:** the prototype's 12 fallen logs; W10 covers bunker rooms only.
 
+**Forest models (F1).** The pines (`Pine`, `PineB`, `PineC`, `PineD`), `Rock`, `RockSmall`, `Bush` and `Grass` are now the downloaded ponderosa
+stand, so the forest no longer uses those placeholders (the beach palms, sea almonds and bananas are unchanged). **Blackout/World/Apply Forest
+Models** (`ForestModelSwap.cs`) builds the Rock, RockSmall, Bush and Grass prefabs and swaps the terrain prototypes' prefabs in place. It does
+not repaint: all 657 trees and rocks, 376 bushes and 6,000 tufts keep their position, scale and yaw, and the terrain layers, trail, NavMesh
+(the capsules are the placeholders' numbers) and lighting are untouched. Credits: `docs/credits/world-builder.md`; models: `docs/art-pipeline.md` 19.5.
+
+| Prefab | LOD0 / LOD1 / LOD2 triangles | Size |
+| --- | --- | --- |
+| Pine, PineB, PineC, PineD | 2,700 / 800 / 229, 2,700 / 800 / 229, 3,052 / 799 / 229, 2,416 / 799 / 229 | 10.8, 12.9, 9.1, 5.4 m tall |
+| Rock, RockSmall | 900 / 320 / 90, 700 / 260 / 79 | 2.4 x 1.0 m, 1.4 x 0.8 x 2.0 m, pivot in the middle |
+| Bush, Grass | 560, 6 | 1.0 m tall, 1.0 x 0.75 m |
+
+The pines are about as heavy as the trees they replace (the earlier pines averaged 2,842 at LOD0, these 2,700 to 3,050), so this step should not
+make the estimate below worse (not re-measured). It is an estimate of the old placeholders; Paint Terrain And Forest prints the real numbers and was not run, because
+it also repaints the terrain.
+
 **Prefabs.** `VegetationLibrary` uses `Assets/Environment/Vegetation/<Name>.prefab` (Pine, Palm, Rock, RockSmall,
 Bush, Grass) if it exists, else the generated `Placeholder/<Name>_Placeholder.prefab`. The placeholders port the
 prototype's own models and add 2 lower LODs:

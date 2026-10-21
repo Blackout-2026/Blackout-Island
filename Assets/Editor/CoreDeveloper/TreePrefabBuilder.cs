@@ -66,12 +66,13 @@ namespace Blackout.Editor
 
         public static readonly TreeEntry[] Trees =
         {
-            new TreeEntry("Pine", PineLods, new Vector3(0.3f, 10f, 4f), "M_Tree_PineBark", "M_Tree_PineNeedles", "T_PineBark", "T_PineNeedles"),
-            new TreeEntry("PineB", PineLods, new Vector3(0.3f, 12f, 4.8f), "M_Tree_PineBark_B", "M_Tree_PineNeedles_B", "T_PineBark", "T_PineNeedles",
+            // F1: the four pines are the downloaded ponderosa stand (build_ponderosa_forest.py), so they use its bark and needle textures
+            new TreeEntry("Pine", PineLods, new Vector3(0.3f, 10f, 4f), "M_Tree_PineBark", "M_Tree_PineNeedles", "T_PonderosaBark", "T_PonderosaNeedles"),
+            new TreeEntry("PineB", PineLods, new Vector3(0.3f, 12f, 4.8f), "M_Tree_PineBark_B", "M_Tree_PineNeedles_B", "T_PonderosaBark", "T_PonderosaNeedles",
                 new Color(0.85f, 0.85f, 0.90f), new Color(0.74f, 0.90f, 0.84f)),
-            new TreeEntry("PineC", PineLods, new Vector3(0.34f, 8.5f, 3.4f), "M_Tree_PineBark_C", "M_Tree_PineNeedles_C", "T_PineBark", "T_PineNeedles",
+            new TreeEntry("PineC", PineLods, new Vector3(0.34f, 8.5f, 3.4f), "M_Tree_PineBark_C", "M_Tree_PineNeedles_C", "T_PonderosaBark", "T_PonderosaNeedles",
                 new Color(1.05f, 0.95f, 0.85f), new Color(0.95f, 1.0f, 0.64f)),
-            new TreeEntry("PineD", PineLods, new Vector3(0.2f, 5f, 2f), "M_Tree_PineBark_D", "M_Tree_PineNeedles_D", "T_PineBark", "T_PineNeedles",
+            new TreeEntry("PineD", PineLods, new Vector3(0.2f, 5f, 2f), "M_Tree_PineBark_D", "M_Tree_PineNeedles_D", "T_PonderosaBark", "T_PonderosaNeedles",
                 Color.white, new Color(0.86f, 1.0f, 0.74f)),
             new TreeEntry("Palm", PalmLods, new Vector3(0.25f, 8f, 3f), "M_Tree_PalmBark", "M_Tree_PalmFrond", "T_PalmBark", "T_PalmFrond"),
             new TreeEntry("PalmB", PalmLods, new Vector3(0.22f, 9f, 3.6f), "M_Tree_PalmBark_B", "M_Tree_PalmFrond_B", "T_PalmBark", "T_PalmFrond",

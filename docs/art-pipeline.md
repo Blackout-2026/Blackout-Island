@@ -989,8 +989,8 @@ python Art/Blender/Scripts/make_tree_textures.py
 "D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_trees.py
 ```
 
-**Limits, honestly:** these are card-and-mesh trees, not SpeedTree-quality, and there is no wind sway. Bushes, grass and rocks are still the
-World Builder's placeholders. `TreeFbxTests` checks the heights, the three falling LODs, the UVs and the material slots. The World Builder's
+**Limits, honestly:** these are card-and-mesh trees, not SpeedTree-quality, and there is no wind sway. Bushes, grass and rocks were still the
+World Builder's placeholders (replaced in 19.5). `TreeFbxTests` checks the heights, the three falling LODs, the UVs and the material slots. The World Builder's
 visible-triangle budget (250,000) should be rechecked in the report that Paint Terrain And Forest prints.
 
 ### 19.2 Eight shapes, mixed over the island
@@ -1051,6 +1051,35 @@ Each main pine branch now also carries two side branchlets (one each side, 52 de
 branch is a three-dimensional spray and not a flat feather. The needle texture has 8 to 12 needles per fascicle (it was 6 to 9) and lighter new
 growth toward the twig tips. Pine LOD0 is now 2,864 / PineB 4,140 / PineC 2,176 / PineD 1,696 triangles (the test limit for a tree seen up
 close is 5,000); LOD1 and LOD2 are unchanged. The sea almond's bare branch now ends inside its leaves.
+
+### 19.5 The forest from a downloaded ponderosa stand (step F1)
+
+The pines, rocks, bush and grass of the forest are replaced by the models of a downloaded scene (`ponderosa_stand_sketchfab.glb`: three Florasynth
+trees, 64 ponderosa seedlings, six rocks and grass cards). Unity 6 cannot import a `.glb` and the project has no glTFast, so
+`Art/Blender/Scripts/build_ponderosa_forest.py` converts it in background Blender (the scene is not copied into the repository; the script takes
+the path as an argument) into the layout of this section. Nothing in the World Builder's scatter, terrain painting or NavMesh is changed.
+
+| File | From the stand | Result |
+| --- | --- | --- |
+| `SM_Tree_Pine`, `PineB` (overwritten in place) | the two Florasynth trees' `_far` meshes | 10.8 m and 12.9 m, LOD0 2,700 triangles |
+| `SM_Tree_PineC`, `PineD` (overwritten in place) | seedlings `.001` and `.062` | 9.1 m (3,052) and 5.4 m (2,416) |
+| `SM_Forest_Rock`, `SM_Forest_RockSmall` | two icosphere rocks | 900 / 320 / 90 and 700 / 260 / 79 triangles, pivot at the centre |
+| `SM_Forest_Bush` | the needle sprays of seedling `.061`, one slot | 560 triangles, 1 m tall |
+| `SM_Forest_Grass` | three crossed cards | 6 triangles, 1.0 x 0.75 m |
+
+- **LODs.** The needle sprays are loose cards, which Decimate cannot reduce without wrecking them, so a lower LOD keeps an evenly spread share of
+  the cards and enlarges each one (up to 1.35, 1.9 and 3.0 times) to keep the crown's volume. The branches are about 130 loose tubes: LOD1 and LOD2 keep
+  the tallest tubes (the trunk first) and Decimate trims the rest. LOD0 is about 2,700 triangles, the average of the pines it replaces.
+- **Textures** (1024, 512 for the grass, in `Assets/Textures/Models`): `T_PonderosaBark_BaseColor/_Normal`, `T_PonderosaNeedles_BaseColor`,
+  `T_ForestGrass_BaseColor`, `T_ForestRock_BaseColor`. `TreeEntry` now points the four pines at the ponderosa textures; the per-variant tints
+  of 19.2 still multiply them. The material and prefab tools are unchanged, so run **Blackout > Art > Build Realistic Trees** after re-exporting.
+- **Rocks, bush, grass.** **Blackout > World > Apply Forest Models** builds `Rock`, `RockSmall`, `Bush` and `Grass.prefab` in
+  `Assets/Environment/Vegetation` (the names `VegetationLibrary` prefers over its placeholders) and swaps the terrain's prototypes in place, so no
+  tree, rock or tuft moves.
+- **Limits, honestly:** the pines are repeated three big shapes (the stand's trees) and one young tree, not a varied forest; the bush has no stem
+  (only needle sprays); a terrain detail draws one material, so it cannot have bark. The grass texture hangs from its top edge in the file, so the
+  cards have the root at v = 1. No wind. The look in the dark scene was not judged: the bark is much lighter than the old bark, so check it in
+  Bootstrap and tune `BarkTint` in `TreePrefabBuilder` if needed. Author and licence of the download are unconfirmed (`docs/credits/world-builder.md`).
 
 ## 20. Footbridge dock (step C12)
 

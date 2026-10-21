@@ -69,6 +69,25 @@ prototype's own geometry), which need no credit. Fill in a row when you add a re
 | Bush.prefab | Bush_Placeholder (160) | — | — | — | — |
 | Grass.prefab | Grass_Placeholder (6) | — | — | — | — |
 
+### Ponderosa forest models (F1)
+
+The pines, rocks, bush and grass of the forest come from one downloaded scene, `D:\model\pine-forest-at-sunset` (not in the repository: the `.glb`
+is 37 MB). It was converted by `Art/Blender/Scripts/build_ponderosa_forest.py`. **Author, source URL and licence are not recorded in the download
+(the file is named `ponderosa_stand_sketchfab.glb`, made with Blender's Florasynth add-on): confirm them and fill in the row before the project is
+published or handed in.**
+
+| Used for | Source in the download | Author | URL | Licence |
+| --- | --- | --- | --- | --- |
+| Pine, PineB (`SM_Tree_Pine`, `SM_Tree_PineB`) | the `FlorasynthTree.001` and `.002` trees, the lower-detail `_far` meshes | to confirm | to confirm | to confirm |
+| PineC, PineD (`SM_Tree_PineC`, `SM_Tree_PineD`) | `Ponderosa Pine seedling.001` and `.062` | to confirm | to confirm | to confirm |
+| Rock, RockSmall (`SM_Forest_Rock`, `SM_Forest_RockSmall`) | the scene's `Icosphere.003` and `.004` rocks | to confirm | to confirm | to confirm |
+| Bush (`SM_Forest_Bush`) | the needle sprays of `Ponderosa Pine seedling.061` | to confirm | to confirm | to confirm |
+| Bark and needles (`T_PonderosaBark_*`, `T_PonderosaNeedles_BaseColor`) | `ponderosa-bark-old_1.jpeg`, `brown-bark-old-NORMAL_0.jpeg`, `ponderosa-foliage_2.png` | to confirm | to confirm | to confirm |
+| Grass tuft (`SM_Forest_Grass`, `T_ForestGrass_BaseColor`) | `grass-lush-min_4.png` on three cards | to confirm | to confirm | to confirm |
+| Rock texture (`T_ForestRock_BaseColor`) | `mossy_rock_diff_1k.jpg` (the name matches a Poly Haven CC0 texture, unverified) | to confirm | to confirm | to confirm |
+
+Not used from the download: its terrain, logs, the 440 scattered tree copies and the two large grass meshes.
+
 ## How to add a vegetation model
 
 1. Use a CC0 low-poly pack (for example Kenney or Quaternius, both CC0 1.0). Put its files in
