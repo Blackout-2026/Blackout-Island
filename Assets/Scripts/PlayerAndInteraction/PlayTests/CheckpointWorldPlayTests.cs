@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using Blackout.Agents;
 using Blackout.Environment;
+using Blackout.Hud;
 using Blackout.Interaction;
 using Blackout.Mission;
 using Blackout.Player;
@@ -51,7 +52,6 @@ namespace Blackout.Diagnostics.PlayTests
             tracker = player.GetComponent<CheckpointTracker>();
             weapons = player.GetComponentInChildren<WeaponController>(true);
             medkits = player.GetComponent<MedkitInventory>();
-            weapons.LoseStartingLoadout();
             // Begin the real mission without the unrelated cinematic introduction.
             directorObject = new GameObject("Checkpoint test mission");
             directorObject.SetActive(false);
@@ -75,6 +75,63 @@ namespace Blackout.Diagnostics.PlayTests
             if (directorObject != null) Object.Destroy(directorObject);
             if (player != null) Object.Destroy(player);
             yield return null;
+        }
+
+        [UnityTest, Timeout(120000)]
+        public IEnumerator KnifeStart_LootsBothGuns_AndRestoresTheSavedLoadout()
+        {
+            Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
+            Assert.That(weapons.DebugEquip(1), Is.False);
+            Assert.That(weapons.DebugEquip(2), Is.False);
+            AssertVisibleSlots(3);
+
+            Kill(Agent("Hunter-1"));
+            var first = Agent("Hunter-1").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
+            Assert.That(first.Offer.slot, Is.EqualTo(1), "runtime lookup finds the player's missing SMG");
+            Assert.That(first.CanInteract, Is.True);
+            first.Interact(player);
+            first.Interact(player); // a second use of the same body must not grant the rifle
+            yield return new WaitForSeconds(0.6f);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
+            Assert.That(weapons.DebugEquip(2), Is.False);
+            Assert.That(weapons.AmmoOf(weapons.ActiveWeapon).CanFire, Is.True);
+            AssertVisibleSlots(1, 3);
+            tracker.SetCheckpoint(tracker.Current);
+            yield return null; // save the SMG, its collected drop and the dead first enemy
+
+            Kill(Agent("Hunter-2"));
+            var second = Agent("Hunter-2").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
+            Assert.That(second.Offer.slot, Is.EqualTo(2));
+            second.Interact(player);
+            yield return new WaitForSeconds(0.6f);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(2));
+            Assert.That(weapons.NextLootWeapon(), Is.Null);
+            Assert.That(weapons.AmmoOf(weapons.ActiveWeapon).CanFire, Is.True);
+            AssertVisibleSlots(1, 2, 3);
+
+            Kill(Agent("Patrol-1"));
+            var third = Agent("Patrol-1").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
+            Assert.That(third.CanInteract, Is.False, "both guns are already owned");
+            weapons.gameObject.SetActive(false);
+            weapons.gameObject.SetActive(true);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(2), "re-enabling must preserve earned weapons");
+
+            yield return DieAndRespawn();
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1), "restore the saved SMG, not a fresh knife-only state");
+            Assert.That(weapons.DebugEquip(2), Is.False, "the later rifle acquisition rewinds");
+            Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(2));
+            Assert.That(first.IsTaken, Is.True);
+            Assert.That(first.gameObject.activeSelf, Is.False);
+            Assert.That(Object.FindObjectsByType<WeaponDropPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
+                Is.EqualTo(1), "later drops disappear and restoring a dead enemy must not duplicate loot");
+            AssertVisibleSlots(1, 3);
+        }
+
+        private void AssertVisibleSlots(params int[] expected)
+        {
+            var slots = player.transform.Find("HUD/Weapons").GetComponentsInChildren<WeaponSlot>(true);
+            Assert.That(slots.Where(slot => slot.gameObject.activeSelf).Select(slot => slot.Weapon.slot),
+                Is.EquivalentTo(expected));
         }
 
         [UnityTest, Timeout(120000)]

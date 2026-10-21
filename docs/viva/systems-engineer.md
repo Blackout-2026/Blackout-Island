@@ -21,6 +21,7 @@ This file covers the three topics step Y7 asks for. Each earlier step has its ow
 | H3 | [systems-engineer-h3-hunter-tree.md](systems-engineer/systems-engineer-h3-hunter-tree.md) | HunterBrain and its tree: reactions by noise type, camouflage, cover, Commander orders, prefab wiring |
 | H4 | [hunter.md](hunter.md) | The Hunter viva: behaviour tree vs FSM, sound vs a detection radius, the attenuation formula, a weakness; debug text and gizmos |
 | MC1 | [medkits-compass.md](../medkits-compass.md) | Enemy medkit inventory, Q healing, checkpoint recovery and objective compass |
+| L2 | [weapon-loot.md](../weapon-loot.md) | Knife-only fresh starts, enemy gun progression and saved-loadout recovery |
 
 ---
 

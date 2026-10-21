@@ -49,7 +49,8 @@ namespace Blackout.Weapons
         private WeaponContext context;
         private Vector3 restPosition;
         private Quaternion restRotation;
-        private bool loadoutLost;
+        // Gameplay starts after the loss of the guns, even when the cinematic is skipped.
+        private bool loadoutLost = true;
         private WeaponLoadout loadout;
         private WeaponAmmo[] ammo;
 
@@ -116,7 +117,7 @@ namespace Blackout.Weapons
         public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 && switcher != null && loadout != null && loadout.IsOwned(switcher.ActiveIndex)
             ? weapons[switcher.ActiveIndex].Data : null;
 
-        /// <summary>False once the storm has taken the starting guns (they come back one by one from dead enemies, see <see cref="TakeNextLootWeapon"/>).</summary>
+        /// <summary>False for the normal knife-only start. Guns are recovered through <see cref="TakeNextLootWeapon"/>.</summary>
         public bool HasLoadout => !loadoutLost;
 
         /// <summary>
@@ -142,7 +143,7 @@ namespace Blackout.Weapons
             LoadoutChanged?.Invoke();
         }
 
-        /// <summary>True if the player holds this weapon now (before Awake: all of them, or only the knife after the storm).</summary>
+        /// <summary>True if the player holds this weapon now (before Awake: only the knife).</summary>
         public bool Owns(WeaponData data)
         {
             if (loadout != null)

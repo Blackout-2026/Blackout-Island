@@ -1,5 +1,7 @@
 using Blackout.Weapons;
+using System.Reflection;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Blackout.Player.Tests
@@ -45,7 +47,7 @@ namespace Blackout.Player.Tests
         }
 
         [Test]
-        public void NormalStart_OwnsEveryWeaponAndHasNothingLeftToLoot()
+        public void ExplicitFullLoadout_OwnsEveryWeaponAndHasNothingLeftToLoot()
         {
             WeaponLoadout loadout = Loadout(true);
 
@@ -151,7 +153,7 @@ namespace Blackout.Player.Tests
         }
 
         [Test]
-        public void ControllerBeforeAwake_OwnsEverythingUntilTheStormThenOnlyTheKnife()
+        public void ControllerBeforeAwake_StartsWithOnlyTheKnifeWithoutTheStorm()
         {
             var root = new GameObject("Inactive bootstrap player");
             root.SetActive(false);
@@ -159,8 +161,12 @@ namespace Blackout.Player.Tests
             {
                 var controller = root.AddComponent<WeaponController>();
 
-                Assert.IsTrue(controller.HasLoadout);
-                Assert.IsTrue(controller.Owns(smg) && controller.Owns(knife));
+                Assert.IsFalse(controller.HasLoadout);
+                Assert.IsFalse(controller.Owns(smg));
+                Assert.IsFalse(controller.Owns(rifle));
+                Assert.IsTrue(controller.Owns(knife));
+                Assert.IsFalse(controller.DebugEquip(1));
+                Assert.IsFalse(controller.DebugEquip(2));
                 Assert.IsNull(controller.NextLootWeapon(), "nothing to loot before the weapons exist");
 
                 controller.LoseStartingLoadout();
@@ -174,6 +180,40 @@ namespace Blackout.Player.Tests
             finally
             {
                 Object.DestroyImmediate(root);
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PlayerPrefab_InitializesWithOnlyTheKnife_WithOrWithoutStormCallback(bool storm)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Player/Player.prefab");
+            Assert.That(prefab, Is.Not.Null);
+            var player = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            player.SetActive(false);
+            try
+            {
+                var controller = player.GetComponentInChildren<WeaponController>(true);
+                if (storm) controller.LoseStartingLoadout();
+                // EditMode does not run Awake; initialize the real, serialized controller explicitly.
+                typeof(WeaponController).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(controller, null);
+
+                Assert.That(controller.enabled, Is.True);
+                Assert.That(controller.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
+                Assert.That(controller.NextLootWeapon().slot, Is.EqualTo(1));
+                Assert.That(controller.DebugEquip(1), Is.False);
+                Assert.That(controller.DebugEquip(2), Is.False);
+                foreach (IWeapon weapon in controller.GetComponentsInChildren<IWeapon>(true))
+                {
+                    bool isKnife = weapon.Data.kind == WeaponKind.Melee;
+                    Assert.That(controller.Owns(weapon.Data), Is.EqualTo(isKnife));
+                    Assert.That(((Component)weapon).gameObject.activeSelf, Is.EqualTo(isKnife));
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
             }
         }
     }

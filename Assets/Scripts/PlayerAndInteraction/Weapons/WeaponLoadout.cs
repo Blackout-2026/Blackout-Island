@@ -3,7 +3,7 @@ namespace Blackout.Weapons
 {
     /// <summary>
     /// Which of the player's weapons are owned right now (the loot progression of step L1). The controller keeps all weapons in slot order; this
-    /// remembers which of them the player holds: everything at the start of a run, only the knife once the storm has taken the guns, and then
+    /// remembers which of them the player holds: only the knife at gameplay start, and then
     /// the SMG (slot 1), the R-700 sniper rifle (slot 2) as the player takes them from dead enemies, in that order. Pure C#, so the rules are
     /// tested without a scene; WeaponController shows and hides the models.
     /// </summary>
@@ -13,7 +13,7 @@ namespace Blackout.Weapons
         private readonly bool[] owned;
 
         /// <param name="weaponsInSlotOrder">The weapons in the controller's order (ascending slot).</param>
-        /// <param name="ownAll">True for a normal start; false for the storm's aftermath (the knife only).</param>
+        /// <param name="ownAll">False for normal gameplay (the knife only); true for an explicitly supplied full loadout.</param>
         public WeaponLoadout(WeaponData[] weaponsInSlotOrder, bool ownAll)
         {
             weapons = weaponsInSlotOrder;
