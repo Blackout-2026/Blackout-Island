@@ -140,6 +140,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 621524260021865184}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6061041094201253823}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!1 &1488490957280755654 stripped
 GameObject:
@@ -171,6 +174,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e9b0f3d4f6966c409c75f67d45ae0e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blackout.AI.Commander::Blackout.AI.Commander.CommanderDirectiveGizmos
+--- !u!114 &6061041094201253823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f28619a31ae80942b0573fc806ee81c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.EnemyWeaponDrop
+  dropPrefab: {fileID: 5029629598948273428, guid: 91e692206a8a83a4db8ad3de355b37b9, type: 3}
+  sideOffset: 0.6
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 257
 --- !u!4 &8454537713324184309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
