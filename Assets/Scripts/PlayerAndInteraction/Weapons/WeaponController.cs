@@ -12,7 +12,7 @@ namespace Blackout.Weapons
     /// holder (switch dip and viewmodel kick). What a shot or swing actually does is left to the weapon.
     /// Runs after PlayerLook so shots use this frame's aim.
     /// </summary>
-    public class WeaponController : MonoBehaviour, IWeaponLoot
+    public class WeaponController : MonoBehaviour, IWeaponLoot, ICheckpointState
     {
         // Viewmodel springs (docs/reference/systems-engineer.md section 7): a shot adds kick × 30 to the
         // spring's velocity, and the offset is applied at 60 %.
@@ -51,6 +51,35 @@ namespace Blackout.Weapons
         private Quaternion restRotation;
         private bool loadoutLost;
         private WeaponLoadout loadout;
+
+        private sealed class Checkpoint
+        {
+            public bool LoadoutLost;
+            public bool[] Owned;
+            public WeaponSwitcher Switcher;
+            public float Cooldown;
+        }
+
+        public object CaptureCheckpoint() => switcher == null ? null : new Checkpoint
+        {
+            LoadoutLost = loadoutLost, Owned = loadout.CaptureOwnership(),
+            Switcher = switcher.CaptureCheckpoint(), Cooldown = cooldown.Remaining
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            if (!(state is Checkpoint saved)) return;
+            loadoutLost = saved.LoadoutLost;
+            loadout.RestoreOwnership(saved.Owned);
+            switcher = saved.Switcher.CaptureCheckpoint(); // never mutate the stored snapshot
+            cooldown.Start(saved.Cooldown);
+            kickBack.Reset();
+            kickRotate.Reset();
+            ShowOnly(loadout.IsOwned(switcher.ActiveIndex) ? switcher.ActiveIndex : -1);
+            UpdateHolderPose(0f);
+            WeaponChanged?.Invoke(ActiveWeapon);
+            LoadoutChanged?.Invoke();
+        }
 
         /// <summary>A shot or swing damaged something; true if it killed it (the HUD's hit marker, Y4).</summary>
         public event Action<bool> HitConfirmed;

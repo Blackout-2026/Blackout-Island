@@ -5,6 +5,10 @@ drives Security Patrol, Hunter, Tactical Guard and Commander. The 24 spawned
 agents use their existing four gameplay prefabs. AI decisions, navigation,
 combat timing and respawn rules still use their existing systems.
 
+R1 subsequently replaces timed respawns with one cure-triggered wave outside
+the lab. Player death restores the saved roster through
+[checkpoint recovery](checkpoint-recovery.md), including fresh animation instances.
+
 Run **Blackout > Agents > Apply Soldier Animations** after rebuilding a visual
 or replacing an agent prefab. The tool fills the existing
 `Assets/Animations/Agent_Humanoid.controller`, creates the sidearm override and
@@ -78,8 +82,9 @@ device, so run it in batch mode without `-nographics`. Its image order is
 Commander, Tactical Guard, Hunter, Patrol from left to right. It saves no scene.
 
 Manual checks: play Bootstrap, watch every type idle, walk and run, draw fire
-and check moving aim/recoil, damage and kill each type, then wait for a normal
-respawn. Take the cure, clear the lab and verify the exit still opens. Restart
+and check moving aim/recoil, damage and kill each type. Take the cure and check
+the one outside-lab wave, clear the lab and verify the exit still opens. Die
+and check checkpoint recovery restores the saved roster and visuals. Restart
 and check there are no frozen or already-dead visuals. Check Console errors.
 
 Limits: these are retargeted human clips, including on the robot's rigid parts.

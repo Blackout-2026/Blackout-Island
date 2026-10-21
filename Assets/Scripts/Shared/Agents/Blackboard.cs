@@ -28,6 +28,48 @@ namespace Blackout.Shared
         public bool HasAlertBuff { get; private set; }
         public AgentAlert Alert { get; private set; } = new AgentAlert(1f, 1f, 1f);
 
+        private sealed class Checkpoint
+        {
+            public Vector3 LastKnownPlayerPos;
+            public float SightingAge;
+            public int AlertLevel;
+            public bool GeneratorDisabled, CureTaken, PlayerNeutralized, SquadAssembled, HasAlertBuff;
+            public AgentAlert Alert;
+            public readonly Dictionary<string, Directive> Orders = new Dictionary<string, Directive>();
+        }
+
+        public object CaptureCheckpoint()
+        {
+            var saved = new Checkpoint
+            {
+                LastKnownPlayerPos = lastKnownPlayerPos, SightingAge = Time.time - lastKnownPlayerTime,
+                AlertLevel = alertLevel, GeneratorDisabled = generatorDisabled, CureTaken = cureTaken,
+                PlayerNeutralized = playerNeutralized, SquadAssembled = squadAssembled,
+                HasAlertBuff = HasAlertBuff, Alert = Alert
+            };
+            foreach (BlackboardAgent agent in agents)
+                if (agent.HasDirective) saved.Orders.Add(agent.Name, agent.LastDirective);
+            return saved;
+        }
+
+        /// <summary>Silent restoration must not replay cure pickup or trigger another reinforcement wave.</summary>
+        public void RestoreCheckpoint(object state, bool restoreOrders = true)
+        {
+            var saved = (Checkpoint)state;
+            lastKnownPlayerPos = saved.LastKnownPlayerPos;
+            lastKnownPlayerTime = Time.time - saved.SightingAge;
+            alertLevel = saved.AlertLevel;
+            generatorDisabled = saved.GeneratorDisabled;
+            cureTaken = saved.CureTaken;
+            playerNeutralized = saved.PlayerNeutralized;
+            squadAssembled = saved.SquadAssembled;
+            HasAlertBuff = saved.HasAlertBuff;
+            Alert = saved.Alert;
+            if (restoreOrders)
+                foreach (BlackboardAgent agent in agents)
+                    if (saved.Orders.TryGetValue(agent.Name, out Directive order)) agent.Issue(order);
+        }
+
         /// <summary>Called by the event-channel holder. Living Commanders react synchronously.</summary>
         public void ReportCureTaken()
         {

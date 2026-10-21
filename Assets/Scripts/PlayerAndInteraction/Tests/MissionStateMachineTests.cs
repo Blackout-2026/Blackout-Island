@@ -261,6 +261,27 @@ namespace Blackout.Mission.Tests
             }, phases);
         }
 
+        [Test]
+        public void Checkpoint_RewindsCompletionAndWorldFlags_AndCanBeRestoredAgain()
+        {
+            var mission = new MissionStateMachine();
+            mission.SetBoatExit(BoatExit);
+            mission.JumpTo(MissionPhase.GeneratorRoom);
+            MissionStateMachine saved = mission.CaptureCheckpoint();
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                mission.OnGeneratorDisabled();
+                mission.OnCureTaken();
+                mission.Tick(BoatExit);
+                Assert.That(mission.IsComplete, Is.True);
+                mission.RestoreCheckpoint(saved);
+                Assert.That(mission.Phase, Is.EqualTo(MissionPhase.GeneratorRoom));
+                Assert.That(mission.GeneratorDisabled, Is.False);
+                Assert.That(mission.CureTaken, Is.False);
+                Assert.That(mission.CheckpointId, Is.EqualTo(MissionStateMachine.CheckpointGeneratorRoom));
+            }
+        }
+
         [TestCase(0f, "0:00")]
         [TestCase(59.6f, "1:00")]
         [TestCase(125.4f, "2:05")]

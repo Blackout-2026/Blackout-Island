@@ -14,7 +14,7 @@ namespace Blackout.Agents
     /// its type's numbers from the <see cref="DifficultyConfig"/>. <see cref="RespawnAll"/> replaces every agent
     /// with a fresh one, and is raised by the optional restart channel.
     /// </summary>
-    public class AgentSpawner : MonoBehaviour
+    public class AgentSpawner : MonoBehaviour, ICheckpointRoster
     {
         [Serializable]
         public class SpawnEntry
@@ -33,8 +33,8 @@ namespace Blackout.Agents
         [SerializeField] private VoidEventChannel restartChannel;
         [Tooltip("For a prefab with no brain: add the placeholder that walks the agent's waypoints, instead of leaving it standing still. Turn off once the real brains are in the prefabs.")]
         [SerializeField] private bool placeholderBrainWhenMissing;
-        [Tooltip("Seconds after death before a replacement returns to its spawn marker. Lab defenders stop returning once the cure is taken.")]
-        [SerializeField, Min(5f)] private float respawnDelay = 20f;
+        // Retained for serialized compatibility and older diagnostic callers. No timed respawns remain.
+        [SerializeField, HideInInspector] private float respawnDelay = 20f;
 
         private sealed class SpawnSlot
         {
@@ -42,7 +42,6 @@ namespace Blackout.Agents
             public Marker Marker;
             public Health Health;
             public bool LabDefender;
-            public float DeadSeconds;
         }
 
         private readonly List<GameObject> spawned = new List<GameObject>();
@@ -52,6 +51,8 @@ namespace Blackout.Agents
         private Blackboard boundBoard;
         private IDoorCombatLock labDoor;
         private Component labDoorComponent;
+        private bool cureWaveSpent;
+        private bool restoringCheckpoint;
 
         public float RespawnDelay => respawnDelay;
         public int LivingLabDefenders { get; private set; }
@@ -146,22 +147,13 @@ namespace Blackout.Agents
         public void RespawnAll()
         {
             DestroyAll();
+            cureWaveSpent = false;
             SpawnAll();
         }
 
-        /// <summary>Update's clock, exposed for focused tests. One bounded slot per original spawn.</summary>
+        /// <summary>Legacy tick entry point: only refreshes lab clearance. Time never respawns an enemy.</summary>
         public void TickRespawns(float deltaTime)
         {
-            bool cureTaken = registry != null && registry.Blackboard.cureTaken;
-            for (int i = 0; i < slots.Count; i++)
-            {
-                SpawnSlot slot = slots[i];
-                if (slot.Health != null && slot.Health.IsAlive) continue;
-                // The membership belongs to the spawn, even if the defender chased out of the lab.
-                if (cureTaken && slot.LabDefender) continue;
-                slot.DeadSeconds += Mathf.Max(0f, deltaTime);
-                if (slot.DeadSeconds >= respawnDelay && slot.Marker != null) Replace(i);
-            }
             RefreshLabLock();
         }
 
@@ -173,7 +165,6 @@ namespace Blackout.Agents
             spawned[index] = spawned[spawned.Count - 1];
             spawned.RemoveAt(spawned.Count - 1);
             slot.Health = spawned[index].GetComponent<Health>();
-            slot.DeadSeconds = 0f;
         }
 
         private static bool IsInLab(Vector3 p) => Mathf.Abs(p.x) <= 10f && p.z >= 124f && p.z <= 142f && p.y < 9f;
@@ -191,12 +182,76 @@ namespace Blackout.Agents
 
         private void OnCureTaken()
         {
+            if (restoringCheckpoint || cureWaveSpent) return;
+            cureWaveSpent = true;
+            // One escape wave: only fallen enemies outside the lab return. Survivors keep their positions.
+            for (int i = 0; i < slots.Count; i++)
+                if (!slots[i].LabDefender && (slots[i].Health == null || !slots[i].Health.IsAlive)
+                    && slots[i].Marker != null) Replace(i);
             // A living lab defender may have followed the player outside. Return it to its post so
             // locking the exit cannot strand a required target on the other side of the door.
             for (int i = 0; i < slots.Count; i++)
                 if (slots[i].LabDefender && slots[i].Health != null && slots[i].Health.IsAlive &&
                     !IsInLab(spawned[i].transform.position)) Replace(i);
             if (labDoorComponent == null) FindLabDoor();
+            RefreshLabLock();
+        }
+
+        private sealed class Checkpoint
+        {
+            public object Board;
+            public bool CureWaveSpent;
+            public AgentCheckpoint[] Agents;
+        }
+
+        private struct AgentCheckpoint
+        {
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public object Health;
+            public bool Alive;
+        }
+
+        public object CaptureCheckpoint()
+        {
+            var saved = new Checkpoint
+            {
+                Board = Registry().Blackboard.CaptureCheckpoint(), CureWaveSpent = cureWaveSpent,
+                Agents = new AgentCheckpoint[slots.Count]
+            };
+            for (int i = 0; i < slots.Count; i++)
+                saved.Agents[i] = new AgentCheckpoint
+                {
+                    Position = spawned[i].transform.position, Rotation = spawned[i].transform.rotation,
+                    Health = slots[i].Health.CaptureCheckpoint(), Alive = slots[i].Health.IsAlive
+                };
+            return saved;
+        }
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            restoringCheckpoint = true;
+            try
+            {
+                DestroyAll(); // unregister old names before registering their replacements
+                registry.Blackboard.RestoreCheckpoint(saved.Board, false);
+                SpawnAll();
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    AgentCheckpoint agent = saved.Agents[i];
+                    slots[i].Health.RestoreCheckpoint(agent.Health);
+                    if (agent.Alive)
+                        spawned[i].GetComponent<AgentRoot>()?.Initialize(registry);
+                    else
+                        spawned[i].SetActive(false); // no death callbacks, duplicate loot, or corpse collisions
+                    spawned[i].transform.SetPositionAndRotation(agent.Position, agent.Rotation);
+                }
+                // Initializing a Commander may broadcast. The saved flags and orders take final precedence.
+                registry.Blackboard.RestoreCheckpoint(saved.Board);
+                cureWaveSpent = saved.CureWaveSpent;
+            }
+            finally { restoringCheckpoint = false; }
             RefreshLabLock();
         }
 
@@ -216,7 +271,7 @@ namespace Blackout.Agents
             LivingLabDefenders = 0;
             foreach (SpawnSlot slot in slots)
                 if (slot.LabDefender && slot.Health != null && slot.Health.IsAlive) LivingLabDefenders++;
-            if (labDoorComponent != null)
+            if (labDoorComponent != null && !restoringCheckpoint)
                 labDoor.SetCombatLocked(registry != null && registry.Blackboard.cureTaken && LivingLabDefenders > 0);
         }
 

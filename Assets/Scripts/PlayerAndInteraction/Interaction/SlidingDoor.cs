@@ -15,7 +15,7 @@ namespace Blackout.Interaction
     /// Optional fail-safe maglock: unlocks and opens itself a few seconds after an event (the lab door after
     /// GeneratorDisabled). Numbers: docs/reference/systems-engineer.md section 10.
     /// </summary>
-    public class SlidingDoor : Interactable, IDoor, IDoorCombatLock
+    public class SlidingDoor : Interactable, IDoor, IDoorCombatLock, ICheckpointState
     {
         private const float PassableOpen = 0.8f;
 
@@ -70,6 +70,32 @@ namespace Blackout.Interaction
         public Vector3 Position => transform.position;
         public bool IsOpen => open > PassableOpen;
         public bool IsLocked => locked || combatLocked;
+
+        private struct Checkpoint
+        {
+            public float Open, Target, UnlockTimer;
+            public bool Locked, CombatLocked;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            Open = open, Target = target, UnlockTimer = unlockTimer, Locked = locked, CombatLocked = combatLocked
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            open = saved.Open;
+            target = saved.Target;
+            unlockTimer = saved.UnlockTimer;
+            locked = saved.Locked;
+            combatLocked = saved.CombatLocked;
+            float slide = slideDistance * Mathf.SmoothStep(0f, 1f, open);
+            if (panel != null) panel.localPosition = closedPosition + Vector3.right * slide;
+            if (mirrorPanel != null) mirrorPanel.localPosition = mirrorClosedPosition + Vector3.left * slide;
+            if (blocker != null) blocker.enabled = IsLocked || open < PassableOpen;
+            ApplyLock(); // no opening sounds or noises during restoration
+        }
 
         private void Awake()
         {

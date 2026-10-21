@@ -12,7 +12,7 @@ namespace Blackout.Agents
     /// (think at 10 Hz with a random offset per agent, executors every frame).
     /// </summary>
     [RequireComponent(typeof(Health))]
-    public class AgentRoot : MonoBehaviour, IAgentInfo
+    public class AgentRoot : MonoBehaviour, IAgentInfo, ICheckpointRosterMember
     {
         [Tooltip("Unique name such as Patrol-1. Used on the Blackboard and as the Owner of this agent's markers. Empty uses the object name.")]
         [SerializeField] private string agentName;
@@ -42,6 +42,7 @@ namespace Blackout.Agents
         private float thinkTimer;
         private float thinkElapsed;
         private float stateTimer;
+        private bool initialized;
 
         public string AgentName => string.IsNullOrEmpty(agentName) ? name : agentName;
         public AgentKind Kind => kind;
@@ -74,7 +75,8 @@ namespace Blackout.Agents
 
         private void Start()
         {
-            Initialize(AgentRegistry.Current != null ? AgentRegistry.Current : FindFirstObjectByType<AgentRegistry>());
+            if (!initialized)
+                Initialize(AgentRegistry.Current != null ? AgentRegistry.Current : FindFirstObjectByType<AgentRegistry>());
             thinkTimer = Random.value * thinkInterval; // stagger agents so they do not all think in the same frame
         }
 
@@ -129,6 +131,7 @@ namespace Blackout.Agents
 
             registry.Register(this);
             brain?.Initialize(registry.CreateContext(transform, health));
+            initialized = true;
             hasAppliedAlert = false;
             BindAlert();
         }

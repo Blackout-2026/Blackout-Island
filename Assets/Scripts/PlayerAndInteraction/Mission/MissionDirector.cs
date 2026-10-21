@@ -15,7 +15,7 @@ namespace Blackout.Mission
     /// raises MissionComplete and shows the Mission Complete screen. Started by SceneBootstrap once the level
     /// scenes have loaded; markers and the bunker door are in other scenes, so they are found at runtime.
     /// </summary>
-    public class MissionDirector : MonoBehaviour
+    public class MissionDirector : MonoBehaviour, ICheckpointState
     {
         private const string BunkerDoorName = "Door_D-Bunker";
 
@@ -46,6 +46,29 @@ namespace Blackout.Mission
         public int Kills { get; private set; }
         public int Deaths { get; private set; }
         public float ElapsedTime => running ? Time.time - startTime : 0f;
+
+        private sealed class Checkpoint
+        {
+            public MissionStateMachine Mission;
+            public int Kills, Deaths;
+            public float Elapsed;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            Mission = mission.CaptureCheckpoint(), Kills = Kills, Deaths = Deaths, Elapsed = ElapsedTime
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            mission.RestoreCheckpoint(saved.Mission);
+            Kills = saved.Kills;
+            Deaths = saved.Deaths;
+            startTime = Time.time - saved.Elapsed;
+            if (objectiveChanged != null) objectiveChanged.Raise(mission.Objective);
+            // Do not Apply(Checkpoint): restoring must never overwrite the saved world.
+        }
 
         private void OnEnable()
         {

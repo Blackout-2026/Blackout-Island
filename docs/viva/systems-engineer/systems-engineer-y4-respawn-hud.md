@@ -1,5 +1,9 @@
 # Viva notes: death, respawn and HUD (Systems Engineer, step Y4)
 
+Current solo rule (R1): checkpoint recovery now restores saved gameplay state,
+including health, equipment and world changes. The old full-health/keep-progress
+description below is historical. See [checkpoint recovery](../../checkpoint-recovery.md).
+
 PR #22. Commits 87c8c8b, ad168ec, df9980f, 74d0b30 and f0d9514. Numbers are in `docs/reference/systems-engineer.md`
 sections 8–9.
 

@@ -26,6 +26,13 @@ namespace Blackout.Weapons
 
         public int Count => weapons.Length;
 
+        public bool[] CaptureOwnership() => (bool[])owned.Clone();
+
+        public void RestoreOwnership(bool[] saved)
+        {
+            System.Array.Copy(saved, owned, owned.Length);
+        }
+
         public int OwnedCount
         {
             get

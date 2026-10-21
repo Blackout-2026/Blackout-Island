@@ -7,8 +7,8 @@ namespace Blackout.Player
 {
     /// <summary>
     /// The player's life cycle on top of the shared <see cref="Health"/> (100 HP, no regeneration): fall damage,
-    /// the kill height, death, and the respawn at the last checkpoint after 2.2 s with 1.5 s of invulnerability.
-    /// Publishes PlayerDied and PlayerRespawned. Nothing else is reset, so generator and cure state are kept.
+    /// the kill height, death, and checkpoint recovery after 2.2 s with 1.5 s of invulnerability.
+    /// Publishes PlayerDied and PlayerRespawned, then restores the saved checkpoint's gameplay state.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public class PlayerHealth : MonoBehaviour
@@ -129,6 +129,10 @@ namespace Blackout.Player
                 playerRespawned.Raise();
             }
 
+            // Lifecycle listeners first forget the failed attempt. Restore afterwards so they cannot erase
+            // saved world knowledge or leave the checkpoint's lights, pickups or equipment in a later state.
+            if (checkpoints != null) checkpoints.RestoreWorld();
+            health.SetInvulnerable(invulnerableAfterRespawn);
             Respawned?.Invoke();
         }
 

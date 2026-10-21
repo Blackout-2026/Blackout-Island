@@ -9,7 +9,7 @@ namespace Blackout.Interaction
     /// The cure on its pedestal: walking into it takes it (a trigger, as in the prototype), raises CureTaken and
     /// sets off an 18 m alarm noise. Until then the case turns slowly and bobs.
     /// </summary>
-    public class CurePickup : MonoBehaviour
+    public class CurePickup : MonoBehaviour, ICheckpointState
     {
         // Prototype idle motion: 0.6 rad/s spin, ±0.02 m bob at 1.6 rad/s.
         private const float SpinDegreesPerSecond = 34.4f;
@@ -29,6 +29,14 @@ namespace Blackout.Interaction
         private Vector3 visualRest;
 
         public bool IsTaken { get; private set; }
+
+        public object CaptureCheckpoint() => IsTaken;
+
+        public void RestoreCheckpoint(object state)
+        {
+            IsTaken = (bool)state;
+            if (visual != null) visual.gameObject.SetActive(!IsTaken);
+        }
 
         private void Awake()
         {

@@ -11,7 +11,7 @@ namespace Blackout.Hud
     /// the SECURITY ALERT banner, which pulses for 7 s when the cure is taken and then stays as a small label.
     /// Strings are only built when an event happens, never per frame.
     /// </summary>
-    public class HudMessages : MonoBehaviour
+    public class HudMessages : MonoBehaviour, ICheckpointState
     {
         private const float ToastTime = 3.2f;
         private const float AlertPulseTime = 7f;
@@ -36,6 +36,28 @@ namespace Blackout.Hud
 
         private float toastLeft;
         private float alertLeft;
+
+        private struct Checkpoint
+        {
+            public float AlertLeft;
+            public bool Banner, Label;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            AlertLeft = alertLeft, Banner = alertBanner != null && alertBanner.gameObject.activeSelf,
+            Label = alertLabel != null && alertLabel.activeSelf
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            alertLeft = saved.AlertLeft;
+            toastLeft = 0f;
+            if (toast != null) toast.enabled = false;
+            if (alertBanner != null) alertBanner.gameObject.SetActive(saved.Banner);
+            SetActive(alertLabel, saved.Label);
+        }
 
         private void Awake()
         {

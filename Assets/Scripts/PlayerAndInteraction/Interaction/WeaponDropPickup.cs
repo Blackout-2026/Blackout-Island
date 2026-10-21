@@ -1,6 +1,7 @@
 // Owner: Systems Engineer.
 using System;
 using Blackout.Hud;
+using Blackout.Shared;
 using Blackout.Weapons;
 using UnityEngine;
 using UnityEngine.Events;
@@ -12,7 +13,7 @@ namespace Blackout.Interaction
     /// first pickup taken is the SMG, the second the R-700 sniper rifle (the order is WeaponLoadout's), and a pickup that finds nothing left to give
     /// hides itself. It shows the model of the gun it would give now, so the prompt and the picture always agree. It bobs and turns slowly until taken.
     /// </summary>
-    public class WeaponDropPickup : Interactable
+    public class WeaponDropPickup : Interactable, ICheckpointSpawnedObject
     {
         private const float SpinDegreesPerSecond = 40f;
         private const float BobHeight = 0.05f;
@@ -42,6 +43,29 @@ namespace Blackout.Interaction
         private Vector3 visualRest;
 
         public bool IsTaken { get; private set; }
+
+        private struct Checkpoint
+        {
+            public bool Taken, Active;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint { Taken = IsTaken, Active = gameObject.activeSelf };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            IsTaken = saved.Taken;
+            gameObject.SetActive(saved.Active);
+            shown = -2;
+            Refresh();
+        }
+
+        public void DiscardForCheckpoint()
+        {
+            gameObject.SetActive(false);
+            if (Application.isPlaying) Destroy(gameObject);
+            else DestroyImmediate(gameObject);
+        }
 
         /// <summary>The gun this pickup would give now, or null.</summary>
         public WeaponData Offer => Loot != null ? Loot.NextLootWeapon() : null;
@@ -177,14 +201,8 @@ namespace Blackout.Interaction
             }
 
             onTaken.Invoke();
-            if (Application.isPlaying)
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                gameObject.SetActive(false); // EditMode tests may not call Destroy
-            }
+            // A pickup present at the checkpoint must still exist for restoration after being collected.
+            gameObject.SetActive(false);
         }
     }
 }

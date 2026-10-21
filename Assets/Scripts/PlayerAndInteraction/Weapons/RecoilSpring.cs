@@ -19,6 +19,11 @@ namespace Blackout.Weapons
 
         public float Offset { get; private set; }
 
+        public void Reset()
+        {
+            Offset = velocity = 0f;
+        }
+
         public void Kick(float addedVelocity)
         {
             velocity += addedVelocity;

@@ -9,7 +9,7 @@ namespace Blackout.Shared
     /// damage is clamped at 0, ignored while invulnerable or dead, and the invulnerability timer counts down
     /// by delta time (respawn uses 1.5 s). Death is raised once through <see cref="OnDied"/>.
     /// </summary>
-    public class Health : MonoBehaviour, IDamageable
+    public class Health : MonoBehaviour, IDamageable, ICheckpointState
     {
         [SerializeField, Min(1f)] private float maxHealth = 100f; // prototype player: 100 HP
 
@@ -25,6 +25,21 @@ namespace Blackout.Shared
         public float Current => current;
         public bool IsAlive => current > 0f;
         public bool IsInvulnerable => invulnerableTime > 0f;
+
+        private struct Checkpoint
+        {
+            public float Current, InvulnerableTime;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint { Current = current, InvulnerableTime = invulnerableTime };
+
+        /// <summary>Restore without damage/death callbacks: recovery must not award kills or drop weapons.</summary>
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            current = Mathf.Clamp(saved.Current, 0f, maxHealth);
+            invulnerableTime = saved.InvulnerableTime;
+        }
 
         private void Awake()
         {

@@ -15,7 +15,7 @@ namespace Blackout.Agents.PlayTests
     public class AgentRespawnPlayTests
     {
         [UnityTest, Timeout(120000)]
-        public IEnumerator CureLocksLab_OnlyNonLabDeathsRespawn_AndFinalKillOpensExit()
+        public IEnumerator CureLocksLab_OneOutsideWave_AndFinalKillOpensExit()
         {
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Environment.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Interactables.unity", new LoadSceneParameters(LoadSceneMode.Additive));
@@ -34,12 +34,14 @@ namespace Blackout.Agents.PlayTests
             Assert.That(door.IsLocked, Is.False);
             Assert.That(door.IsOpen, Is.True);
 
+            GameObject oldHunter = spawner.Spawned.First(a => a.name == "Hunter-1");
+            Kill(oldHunter);
+            spawner.TickRespawns(600f);
+            Assert.That(oldHunter.GetComponent<Health>().IsAlive, Is.False);
             AssetDatabase.LoadAssetAtPath<VoidEventChannel>("Assets/ScriptableObjects/Events/CureTaken.asset").Raise();
             Assert.That(AgentRegistry.Current.Blackboard.cureTaken, Is.True);
             Assert.That(door.IsLocked, Is.True);
             Assert.That(door.IsOpen, Is.False);
-            GameObject oldHunter = spawner.Spawned.First(a => a.name == "Hunter-1");
-            Kill(oldHunter);
             var defenders = new[] { "Patrol-10", "Patrol-11", "Patrol-12", "TG-02", "TG-04", "Commander" };
             foreach (string name in defenders.Take(5)) Kill(spawner.Spawned.First(a => a.name == name));
             spawner.TickRespawns(spawner.RespawnDelay);
@@ -48,6 +50,10 @@ namespace Blackout.Agents.PlayTests
             Assert.That(oldHunter == null, Is.True);
             Assert.That(AgentRegistry.Current.Agents.Count, Is.EqualTo(19), "old OnDestroy must not erase the replacement's registration");
             Assert.That(spawner.Spawned.First(a => a.name == "Hunter-1").GetComponent<AgentRoot>().VisionRangeMultiplier, Is.EqualTo(1.4f));
+            Kill(spawner.Spawned.First(a => a.name == "Hunter-1"));
+            spawner.TickRespawns(600f);
+            AssetDatabase.LoadAssetAtPath<VoidEventChannel>("Assets/ScriptableObjects/Events/CureTaken.asset").Raise();
+            Assert.That(spawner.Spawned.First(a => a.name == "Hunter-1").GetComponent<Health>().IsAlive, Is.False);
             Assert.That(door.IsLocked, Is.True, "the Commander still lives");
             Kill(spawner.Spawned.First(a => a.name == "Commander"));
             spawner.TickRespawns(spawner.RespawnDelay);

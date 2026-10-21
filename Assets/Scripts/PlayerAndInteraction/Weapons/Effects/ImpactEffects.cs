@@ -1,4 +1,5 @@
 // Owner: Systems Engineer.
+using Blackout.Shared;
 using UnityEngine;
 
 namespace Blackout.Weapons
@@ -9,7 +10,7 @@ namespace Blackout.Weapons
     /// in world space, so they stay where they were emitted when the emitter moves to the next hit.
     /// </summary>
     [RequireComponent(typeof(ParticleSystem))]
-    public class ImpactEffects : MonoBehaviour
+    public class ImpactEffects : MonoBehaviour, ICheckpointState
     {
         // Lifts the emitter off the surface so sparks do not start inside it.
         private const float SurfaceOffset = 0.02f;
@@ -18,6 +19,12 @@ namespace Blackout.Weapons
         [SerializeField, Min(1)] private int sparksPerHit = 5;
 
         private ParticleSystem particles;
+
+        public object CaptureCheckpoint() => null;
+        public void RestoreCheckpoint(object state)
+        {
+            if (particles != null) particles.Clear(true);
+        }
 
         private void Awake()
         {

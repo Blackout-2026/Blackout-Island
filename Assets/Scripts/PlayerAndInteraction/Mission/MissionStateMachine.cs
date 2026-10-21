@@ -61,6 +61,25 @@ namespace Blackout.Mission
         /// <summary>The HUD objective; empty once the mission is complete.</summary>
         public string Objective { get; private set; }
 
+        public MissionStateMachine CaptureCheckpoint() => new MissionStateMachine
+        {
+            Phase = Phase, GeneratorDisabled = GeneratorDisabled, CureTaken = CureTaken,
+            BunkerDoorOpen = BunkerDoorOpen, CheckpointId = CheckpointId, Objective = Objective,
+            boatExit = boatExit, hasBoatExit = hasBoatExit
+        };
+
+        public void RestoreCheckpoint(MissionStateMachine saved)
+        {
+            Phase = saved.Phase;
+            GeneratorDisabled = saved.GeneratorDisabled;
+            CureTaken = saved.CureTaken;
+            BunkerDoorOpen = saved.BunkerDoorOpen;
+            CheckpointId = saved.CheckpointId;
+            Objective = saved.Objective;
+            boatExit = saved.boatExit;
+            hasBoatExit = saved.hasBoatExit;
+        }
+
         /// <summary>The BoatExit marker's position. Until it is known the mission cannot be completed.</summary>
         public void SetBoatExit(Vector3 position)
         {

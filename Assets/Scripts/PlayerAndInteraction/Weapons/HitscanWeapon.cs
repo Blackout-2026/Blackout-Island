@@ -9,7 +9,7 @@ namespace Blackout.Weapons
     /// spread cone, raycasts from the camera, and damages the first IDamageable it hits with distance falloff.
     /// Sits on the weapon's GameObject under the WeaponHolder, with the viewmodel as its children.
     /// </summary>
-    public class HitscanWeapon : MonoBehaviour, IWeapon
+    public class HitscanWeapon : MonoBehaviour, IWeapon, ICheckpointState
     {
         [SerializeField] private WeaponData data;
         [Tooltip("End of the barrel: where tracers start and the flash appears.")]
@@ -21,6 +21,21 @@ namespace Blackout.Weapons
         private int shots;
 
         public WeaponData Data => data;
+
+        private struct Checkpoint
+        {
+            public float Bloom;
+            public int Shots;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint { Bloom = bloom, Shots = shots };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            bloom = saved.Bloom;
+            shots = saved.Shots;
+        }
 
         public void Initialize(WeaponContext weaponContext)
         {

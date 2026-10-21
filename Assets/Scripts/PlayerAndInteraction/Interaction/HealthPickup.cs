@@ -10,7 +10,7 @@ namespace Blackout.Interaction
     /// (prototype). It spins and bobs until taken. Uses OnTriggerStay so a player who gets hurt while standing on
     /// it still picks it up.
     /// </summary>
-    public class HealthPickup : MonoBehaviour
+    public class HealthPickup : MonoBehaviour, ICheckpointState
     {
         // Prototype idle motion: 1.2 rad/s spin, ±0.05 m bob at 2 rad/s.
         private const float SpinDegreesPerSecond = 68.8f;
@@ -30,6 +30,15 @@ namespace Blackout.Interaction
         private Vector3 visualRest;
 
         public bool IsTaken { get; private set; }
+
+        public object CaptureCheckpoint() => IsTaken;
+
+        public void RestoreCheckpoint(object state)
+        {
+            IsTaken = (bool)state;
+            if (visual != null) visual.gameObject.SetActive(!IsTaken);
+            if (glow != null) glow.enabled = !IsTaken;
+        }
 
         private void Awake()
         {

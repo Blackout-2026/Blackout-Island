@@ -9,7 +9,7 @@ namespace Blackout.Art
     /// "off" material, stops the hum and plays the sparks. Visuals only, no interaction: the Systems Engineer's
     /// interactable raises the event, this script just reacts to it.
     /// </summary>
-    public class GeneratorVisuals : MonoBehaviour
+    public class GeneratorVisuals : MonoBehaviour, ICheckpointState
     {
         [Header("Event")]
         [SerializeField] private VoidEventChannel generatorDisabled;
@@ -29,6 +29,18 @@ namespace Blackout.Art
         private VoidEventChannel boundChannel;
 
         public bool IsPoweredDown { get; private set; }
+
+        public object CaptureCheckpoint() => IsPoweredDown;
+
+        public void RestoreCheckpoint(object state)
+        {
+            if ((bool)state)
+            {
+                PowerDown();
+                if (sparks != null) sparks.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            else RestorePower();
+        }
 
         private void OnEnable()
         {
@@ -96,7 +108,7 @@ namespace Blackout.Art
             }
         }
 
-        /// <summary>Undoes PowerDown. For testing in the Editor; the game never turns the generator back on.</summary>
+        /// <summary>Undoes PowerDown for Editor previews and recovery to a checkpoint with working power.</summary>
         [ContextMenu("Test: Restore Power")]
         public void RestorePower()
         {

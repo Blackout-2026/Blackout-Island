@@ -354,31 +354,35 @@ namespace Blackout.Agents.Tests
         }
 
         [Test]
-        public void TimedRespawn_ReplacesOnlyTheDeadSlotAtItsMarker_WithNoRosterGrowth()
+        public void Cure_ReplacesADeadOutsideSlotOnce_AndTimeNeverRespawnsIt()
         {
             AddMarker(MarkerType.AgentSpawn, "Hunter-1", new Vector3(2f, 4f, -30f), 90f);
             AddMarker(MarkerType.AgentSpawn, "Hunter-2", new Vector3(6f, 4f, -30f));
             spawner.Configure(registry, difficulty, AllFourEntries());
             spawner.SpawnAll();
             GameObject survivor = Find("Hunter-2");
-            for (int cycle = 0; cycle < 3; cycle++)
-            {
-                GameObject old = Find("Hunter-1");
-                old.transform.position = Vector3.zero;
-                Kill("Hunter-1");
-                spawner.TickRespawns(spawner.RespawnDelay - 1f);
-                Assert.That(Find("Hunter-1"), Is.SameAs(old));
-                spawner.TickRespawns(1f);
-                Assert.That(old == null, Is.True);
-                Assert.That(Find("Hunter-1").transform.position, Is.EqualTo(new Vector3(2f, 4f, -30f)));
-                Assert.That(Find("Hunter-1").GetComponent<Health>().Current, Is.EqualTo(90f));
-                Assert.That(Find("Hunter-2"), Is.SameAs(survivor));
-                Assert.That(spawner.Spawned.Count, Is.EqualTo(2));
-            }
+            GameObject old = Find("Hunter-1");
+            old.transform.position = Vector3.zero;
+            Kill("Hunter-1");
+            spawner.TickRespawns(600f);
+            Assert.That(Find("Hunter-1"), Is.SameAs(old));
+            Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.False);
+            registry.Blackboard.ReportCureTaken();
+            Assert.That(old == null, Is.True);
+            Assert.That(Find("Hunter-1").transform.position, Is.EqualTo(new Vector3(2f, 4f, -30f)));
+            Assert.That(Find("Hunter-1").GetComponent<Health>().Current, Is.EqualTo(90f));
+            Assert.That(Find("Hunter-2"), Is.SameAs(survivor));
+            Kill("Hunter-1");
+            spawner.TickRespawns(600f);
+            spawner.enabled = false;
+            spawner.enabled = true;
+            registry.Blackboard.ReportCureTaken();
+            Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.False);
+            Assert.That(spawner.Spawned.Count, Is.EqualTo(2));
         }
 
         [Test]
-        public void LabDeaths_RespawnBeforeCure_ButPendingAndLaterDeathsStayDeadAfterCure()
+        public void LabDeaths_StayDeadBeforeAndAfterCure_AndLaterOutsideDeathsStayDead()
         {
             AddMarker(MarkerType.AgentSpawn, "Patrol-10", new Vector3(-3f, 2.5f, 127f));
             AddMarker(MarkerType.AgentSpawn, "TG-02", new Vector3(3f, 2.5f, 129f));
@@ -388,7 +392,7 @@ namespace Blackout.Agents.Tests
             spawner.SpawnAll();
             Kill("TG-02");
             spawner.TickRespawns(spawner.RespawnDelay);
-            Assert.That(Find("TG-02").GetComponent<Health>().IsAlive, Is.True);
+            Assert.That(Find("TG-02").GetComponent<Health>().IsAlive, Is.False);
 
             Kill("Patrol-10"); // already dead when the cure is taken
             registry.Blackboard.ReportCureTaken();
@@ -399,8 +403,39 @@ namespace Blackout.Agents.Tests
             Assert.That(Find("Patrol-10").GetComponent<Health>().IsAlive, Is.False);
             Assert.That(Find("TG-02").GetComponent<Health>().IsAlive, Is.False);
             Assert.That(Find("Commander").GetComponent<Health>().IsAlive, Is.False);
-            Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.True);
+            Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.False);
             Assert.That(spawner.LivingLabDefenders, Is.Zero);
+        }
+
+        [Test]
+        public void Checkpoint_RestoresDeadAndWoundedSlots_FlagsPositionsAndWaveEligibility()
+        {
+            AddMarker(MarkerType.AgentSpawn, "Hunter-1", new Vector3(2f, 4f, -30f));
+            AddMarker(MarkerType.AgentSpawn, "Hunter-2", new Vector3(6f, 4f, -30f));
+            spawner.Configure(registry, difficulty, AllFourEntries());
+            spawner.SpawnAll();
+            Kill("Hunter-1");
+            Find("Hunter-2").transform.position = new Vector3(8f, 4f, -20f);
+            Find("Hunter-2").GetComponent<Health>().TakeDamage(
+                new DamageInfo(10f, Vector3.zero, Vector3.forward, null, DamageType.Bullet));
+            object saved = spawner.CaptureCheckpoint();
+            registry.Blackboard.generatorDisabled = true;
+            registry.Blackboard.ReportCureTaken();
+            registry.Blackboard.BroadcastAlert(new AgentAlert(1.25f, 1.4f, 0.9f));
+            Kill("Hunter-2");
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                spawner.RestoreCheckpoint(saved);
+                Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.False);
+                Assert.That(Find("Hunter-2").GetComponent<Health>().Current, Is.EqualTo(80f));
+                Assert.That(Find("Hunter-2").transform.position, Is.EqualTo(new Vector3(8f, 4f, -20f)));
+                Assert.That(registry.Blackboard.generatorDisabled, Is.False);
+                Assert.That(registry.Blackboard.cureTaken, Is.False);
+                Assert.That(registry.Blackboard.HasAlertBuff, Is.False);
+                registry.Blackboard.ReportCureTaken();
+                Assert.That(Find("Hunter-1").GetComponent<Health>().IsAlive, Is.True,
+                    "rewinding before the cure also rewinds eligibility for its one wave");
+            }
         }
 
         [Test]

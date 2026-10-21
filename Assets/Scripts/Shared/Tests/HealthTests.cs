@@ -148,5 +148,27 @@ namespace Blackout.Shared.Tests
             Assert.AreEqual(100f, health.Current);
             Assert.IsTrue(health.IsInvulnerable);
         }
+
+        [Test]
+        public void Checkpoint_RestoresWoundsAndDeathSilently_WithoutMutatingTheSave()
+        {
+            health.TakeDamage(Hit(35f));
+            object wounded = health.CaptureCheckpoint();
+            health.TakeDamage(Hit(100f));
+            object dead = health.CaptureCheckpoint();
+            int deaths = 0;
+            int damage = 0;
+            health.OnDied += () => deaths++;
+            health.OnDamaged += _ => damage++;
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                health.RestoreCheckpoint(wounded);
+                Assert.That(health.Current, Is.EqualTo(65f));
+                health.RestoreCheckpoint(dead);
+                Assert.That(health.IsAlive, Is.False);
+            }
+            Assert.That(deaths, Is.Zero, "restoration must not create another kill or loot drop");
+            Assert.That(damage, Is.Zero);
+        }
     }
 }
