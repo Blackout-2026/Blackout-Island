@@ -42,7 +42,7 @@ namespace Blackout.Editor
         {
             if (entry.Skinned)
             {
-                PatrolSoldierBuilder.Build(entry, materials); // the downloaded soldier needs its pose and his rifle, not just the model
+                SkinnedHumanoidBuilder.Build(entry, SkinnedHumanoidBuilder.SpecFor(entry.Name), materials); // a downloaded model needs its pose and a rifle, not just the model
                 return;
             }
 

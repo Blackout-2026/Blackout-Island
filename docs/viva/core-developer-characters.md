@@ -80,6 +80,28 @@ and he is modelled in a T-pose.
 - **The rifle is the weakest part.** It is the plain box model from PS3 next to a photographic soldier.
 - **Not seen in a Play Mode fight yet.** I checked it in Unity-rendered pictures and EditMode tests, not in the game.
 
+## The downloaded Hunter (step HV1) - added at the owner's request
+
+**What changed and why.** The owner supplied the Hunter of Left 4 Dead and asked for it as the game's Hunter. It is the second skinned character here, so the pose and build code written for the Patrol's soldier (PS4) was
+made general instead of copied: a bone-name map per skeleton (Mixamo and Valve biped), a rifle-hold struct, and a spec per character. The rigid camouflage Hunter stays in the project, unused.
+
+**Design decisions I can defend.**
+- **General, not copied.** The IK pose depends only on bone positions, so a `HumanoidBones` map is all that differs between a four-bone Mixamo finger and a three-bone Valve finger, and between palms-down and palms-in rest poses.
+  `SkinnedHumanoidTestsBase` runs the same tests for both characters, so the second one is held to the same standard as the first.
+- **Inspect before trusting.** The FBX is ASCII FBX 6.1 that Blender cannot open, so I read its structure as text (53 Valve bones, one skinned mesh, 5,046 triangles, Z-up data in inches) and rendered it raw in Unity before
+  writing any code. That showed it needed only a 180 degree turn, no scale fix.
+- **A rifle for a zombie.** The Hunter of this game shoots, so the shooter needs a muzzle; he gets the Patrol's rifle with a scope (746 triangles) rather than firing from his fist.
+- **Generic rig.** No humanoid clips are planned for it, and a rig type of None would drop the skin weights.
+- **Same prefab, same name.** `Char_Hunter_Visual.prefab` keeps its asset, so `Hunter.prefab` still nests it and its structure did not change.
+
+**One number and why.** 5,046 triangles against a 6,000 target: the model is already low-poly, and its budget was set from the measured count (the default character limit of 4,500 flagged it at import).
+
+**Known weaknesses (say these before they ask).**
+- **Licence.** It is Valve's copyrighted character, taken from a fan site with no licence text. `docs/credits/core-developer.md` says so; it must not go into a public repository without permission.
+- **Not the camouflaged sniper of the design document**, but a hooded zombie with a gun, and its eyes are dark sockets.
+- **No animation**: a fixed pose, sliding along its path.
+- **The rifle is a plain box model**, and I have not seen the Hunter in a Play Mode fight.
+
 ## The realistic Commander (step C10b) - added at the owner's request
 
 **What changed and why.** The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service

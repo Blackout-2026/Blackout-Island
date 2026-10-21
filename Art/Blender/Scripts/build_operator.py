@@ -317,7 +317,8 @@ def RW(lx, ly, lz):
     return V(GUN.x + RIFLE_DX + lx, GUN.y + ly, GUN.z + lz)
 
 
-def build_rifle():
+def build_rifle(scope=False):
+    """The rifle's parts in the Gun joint. scope=True adds a rifle scope on two rings over the top rail (the Hunter's rifle, step HV1)."""
     j = "Gun"
     box(j, PAINT["tan"], RW(0, 0, 0.03), (0.052, 0.074, 0.40), label="receiver")
     box(j, PAINT["gunmetal"], RW(0, 0.043, 0.20), (0.024, 0.012, 0.62), label="top rail")
@@ -347,6 +348,14 @@ def build_rifle():
     box(j, PAINT["tan"], RW(0, -0.058, -0.25), (0.036, 0.035, 0.10), label="lower strut")
     box(j, PAINT["gunmetal"], RW(0, -0.005, -0.165), (0.050, 0.070, 0.020), label="stock hinge")
     box(j, PAINT["dark"], RW(0, -0.010, -0.305), (0.050, 0.115, 0.026), label="butt pad")
+    if scope:
+        for z in (0.02, 0.20):
+            box(j, PAINT["gunmetal"], RW(0, 0.063, z), (0.032, 0.028, 0.022), label="scope ring")
+        sweep(j, PAINT["gunmetal"], [RW(0, 0.094, -0.025), RW(0, 0.094, 0.285)], [(0.0175, 0.0175)] * 2, sides=14, ref=(0.0, 1.0, 0.0), label="scope tube")
+        sweep(j, PAINT["gunmetal"], [RW(0, 0.094, 0.235), RW(0, 0.094, 0.300)], [(0.026, 0.026)] * 2, sides=14, ref=(0.0, 1.0, 0.0), label="scope objective")
+        sweep(j, PAINT["gunmetal"], [RW(0, 0.094, -0.055), RW(0, 0.094, -0.020)], [(0.022, 0.022)] * 2, sides=14, ref=(0.0, 1.0, 0.0), label="scope eyepiece")
+        box(j, PAINT["dark"], RW(0, 0.118, 0.100), (0.016, 0.014, 0.016), label="scope elevation turret")
+        box(j, PAINT["dark"], RW(0.021, 0.094, 0.100), (0.014, 0.016, 0.016), label="scope windage turret")
 
 
 # ----------------------------------------------------------------------------- the arms: bent, both hands on the rifle

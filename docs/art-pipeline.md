@@ -138,6 +138,7 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Humanoid (if modelled) | `SM_Char_*` | 2,600 to 3,100 | 3,000 | 4,500 | 3 |
 | Hero humanoid (the earlier rigid Patrol operator, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
 | Hero humanoid (the Patrol now: a downloaded skinned soldier, step PS4) | `SM_Char_PatrolSoldier` | 9,710 | **10,000** | 15,000 | 7 |
+| Hunter (a downloaded skinned model, step HV1) | `SM_Char_HunterL4D` | 5,046 | **6,000** | 9,000 | 2 |
 | Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
 | Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
 | Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
@@ -774,11 +775,11 @@ and differ in clothes, head gear and weapon. The look comes from reference photo
 
 | | Security Patrol | Hunter | Commander |
 | --- | --- | --- | --- |
-| Look | the downloaded soldier of step PS4 (section 18.4): a skinned Mixamo-style character with photographic textures: a woodland-camouflage jacket and trousers, a vest with pouches and straps, laced boots, a cap and a real face (`T_CharPatrolSoldier*`); he holds the rifle at the low ready in both hands (a pose baked into the prefab). The PS3 operator (section 18.3) is still in the project, unused | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
-| Weapon | the same SCAR-style rifle as before (tan receiver, handguard, pistol grip and folding stock, black rails with teeth, barrel with flash hider, flip-up sights, curved magazine), now its own file `SM_Char_PatrolRifle.fbx` nested under the soldier's right hand | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
+| Look | the downloaded soldier of step PS4 (section 18.4): a skinned Mixamo-style character with photographic textures: a woodland-camouflage jacket and trousers, a vest with pouches and straps, laced boots, a cap and a real face (`T_CharPatrolSoldier*`); he holds the rifle at the low ready in both hands (a pose baked into the prefab). The PS3 operator (section 18.3) is still in the project, unused | the downloaded Left 4 Dead Hunter of step HV1 (section 18.5): a skinned Valve-biped model with a photographic 2048 texture (a grey hoodie with a hood over a pale face, bandaged forearms, knee pads, dark boots), holding a scoped rifle in both hands at the low ready (a pose baked into the prefab). The rigid camouflage Hunter (below, section 18.1) is still in the project, unused | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
+| Weapon | the same SCAR-style rifle as before (tan receiver, handguard, pistol grip and folding stock, black rails with teeth, barrel with flash hider, flip-up sights, curved magazine), now its own file `SM_Char_PatrolRifle.fbx` nested under the soldier's right hand | the Patrol's SCAR-style rifle with a scope on two rings, its own file `SM_Char_HunterRifle.fbx` (746 triangles) nested under the right hand | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
 | Muzzle | `MuzzlePoint` 0.74 m ahead of the rifle's `Gun` (the flash hider ends 0.745 m ahead) | 0.74 m | 0.22 m |
-| Triangles (target 3,000; the Patrol 10,000; the Commander 14,000) | 9,710 for the soldier and 542 for the rifle (1.86 m tall) | 2,819 | 13,038 |
-| Materials | `M_Char_PatrolSoldier_Body`, `_Face`, `_Legs`, `_Hands`, `_Hair` (all textured, URP Lit) for the soldier and `M_Char_Patrol_Kit` for the rifle | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
+| Triangles (target 3,000; the Patrol 10,000; the Commander 14,000) | 9,710 for the soldier and 542 for the rifle (1.86 m tall) | 5,046 for the Hunter and 746 for his rifle (1.83 m tall) | 13,038 |
+| Materials | `M_Char_PatrolSoldier_Body`, `_Face`, `_Legs`, `_Hands`, `_Hair` (all textured, URP Lit) for the soldier and `M_Char_Patrol_Kit` for the rifle | `M_Char_HunterL4D` (one URP Lit material, `T_CharHunterL4D_BaseColor`) for the model and `M_Char_Patrol_Kit` for the rifle | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
 
 ### 18.1 How they are built (scripts in `Art/Blender/Scripts`)
 
@@ -905,6 +906,36 @@ the fingers curl towards the palm; two builds give the same pose; and the `Secur
 **Limits.** There is still no animation: the soldier stands in his rifle-ready pose and slides along his path like the other humans. The Agent Controller's `AnimatorDriver` and `Agent_Humanoid.controller` need clips named `Idle`,
 `Walk`, `Run`, `Aim_Idle`, `HitReact` and `Death` in `Assets/Animations/Humanoid`; the Humanoid avatar is ready for Mixamo versions of them, and a controller would then replace the baked pose. The rifle is the plain box model from
 PS3, so it looks simpler than the soldier.
+
+### 18.5 The downloaded Hunter (step HV1)
+
+The owner supplied the Hunter of Left 4 Dead (`D:\model\hunter-from-left-4-dead`: `hunter.rar` with `Hunter.FBX` and TGA textures) and asked for it as the game's Hunter. **It is Valve's copyrighted character;
+see `docs/credits/core-developer.md` before this goes anywhere public.** It is done the same way as the Patrol's soldier (section 18.4); the shared parts were made general for it.
+
+| What | Measured |
+| --- | --- |
+| File | an ASCII FBX 6.1 from 3ds Max (Blender cannot import ASCII FBX, Unity can; it was inspected as text and in Unity), one skinned mesh `SMDImport`, 5,046 triangles (15,138 unindexed vertices), 1 material, one 2048 x 2048 32-bit TGA |
+| Skeleton | Valve biped, 53 bones: `ValveBiped.Bip01_Pelvis`, `_Spine` to `_Spine4`, `_L_UpperArm`, `_L_Forearm`, `_L_Hand`, three-bone fingers `_L_Finger0` (the thumb) to `_Finger4`, `_L_Thigh`, `_L_Calf`, `_L_Foot`, `_L_Toe0` |
+| Size and pose | the importer gives 1.83 m tall (Source's 72 inches), no scale fix needed, in a relaxed A-pose with the arms 30 degrees out; it faces -Z once imported, so the prefab turns the `Model` 180 degrees about Y |
+
+| Step | What does it |
+| --- | --- |
+| Import | `Hunter.FBX` is copied unchanged to `Assets/Models/Custom/SM_Char_HunterL4D.fbx` and `hunter_01.tga` to `T_CharHunterL4D_BaseColor.tga`. It imports with a **Generic** rig: no humanoid clips are planned for it, and a rig type of None would drop the skin weights |
+| Material | `M_Char_HunterL4D` (URP Lit) from the texture, assigned to the one slot `Material #21` |
+| Rifle | `build_patrol_rifle.py -- Hunter` exports the Patrol's rifle with a scope (two rings, a tube, an objective, an eyepiece and two turrets) as `SM_Char_HunterRifle.fbx`, 746 triangles, `Gun` and `MuzzlePoint` 0.74 m ahead. The Hunter of this game shoots, so the shooter needs a muzzle |
+| Pose | `HumanoidRiflePose` (the maths of step PS4, now general) with `ValveBones` (the Valve names, three-bone fingers, palms turned in at rest) and the same low-ready hold |
+| Prefab | `SkinnedHumanoidBuilder` rebuilds `Char_Hunter_Visual.prefab`, which `Hunter.prefab` already nests, and **Blackout > Art > Use Character Models In Agents** re-points the shooter's muzzle |
+
+**What was made general.** `HumanoidBones` (a bone-name map: `MixamoBones` for the soldier, `ValveBones` for the Hunter), `HumanoidRiflePose` and `RifleHold` (the pose maths and the hold), `SkinnedHumanoidSpec` and
+`SkinnedHumanoidBuilder` (the files, materials and prefab of one character) replace the Patrol-only code; `PatrolSoldierBuilder` and `HunterModelBuilder` are now just each character's spec. `CharacterEntry` has a `Skinned`
+flag and a file name, `ModelBudget` knows both models, and the rigid-joint checks of `CharacterFbxTests` now cover only the Commander.
+
+**Checks.** `SkinnedHumanoidTestsBase` runs the same EditMode tests for both characters (`PatrolSoldierTests`, `HunterModelTests`): a skinned skeleton of about 1.87 m with its feet on the floor, inside its budget with the rig type it needs;
+the rifle's `Gun` and `MuzzlePoint`; a visual that faces +Z, wears its textured materials, carries the rifle on the right hand with the muzzle in front of the chest, holds it with both palms on the grips with bent elbows, curls its
+fingers and builds the same pose every time; and an agent prefab that shows it and shoots from the rifle's muzzle.
+
+**Limits.** No animation: he stands in the rifle-ready pose and slides along his path, and the Left 4 Dead clips (leaping, pouncing) are not part of the download. The model is a zombie in a hoodie with a gun, not the camouflaged sniper
+the design document describes, and its eyes are dark sockets because the game drew them with a shader. The detail texture of the game (`hunter_01_detail.tga`) is not used. The rifle is the plain box model from PS3.
 
 ## 19. Realistic trees (step C11)
 

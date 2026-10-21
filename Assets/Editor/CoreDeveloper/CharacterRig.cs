@@ -39,7 +39,7 @@ namespace Blackout.Editor
         public static readonly CharacterEntry[] Characters =
         {
             new CharacterEntry("Patrol", "Assets/Prefabs/Agents/SecurityPatrol.prefab", 0.74f, "SM_Char_PatrolSoldier", skinned: true),
-            new CharacterEntry("Hunter", "Assets/Prefabs/Agents/Hunter.prefab", 0.74f),
+            new CharacterEntry("Hunter", "Assets/Prefabs/Agents/Hunter.prefab", 0.74f, "SM_Char_HunterL4D", skinned: true),
             new CharacterEntry("Commander", "Assets/Prefabs/Agents/Commander.prefab", 0.22f),
         };
 

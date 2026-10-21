@@ -31,6 +31,8 @@ namespace Blackout.Editor
         private static readonly ModelBudget PatrolHero = new ModelBudget(12000, 3);
         // The downloaded photographic soldier that is the Patrol now (docs/art-pipeline.md section 18.4): 9,710 triangles and the seven material slots Mixamo exports.
         private static readonly ModelBudget PatrolSoldierHero = new ModelBudget(10000, 7);
+        // The Hunter is the downloaded Left 4 Dead model (docs/art-pipeline.md section 18.5): 5,046 triangles, one material.
+        private static readonly ModelBudget HunterL4D = new ModelBudget(6000, 2);
         private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
         private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
@@ -55,6 +57,10 @@ namespace Blackout.Editor
             else if (Matches(assetName, "SM_Char_Commander"))
             {
                 budget = CommanderHero;
+            }
+            else if (Matches(assetName, "SM_Char_HunterL4D"))
+            {
+                budget = HunterL4D;
             }
             else if (Matches(assetName, "SM_Char_PatrolSoldier"))
             {

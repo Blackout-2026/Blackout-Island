@@ -35,6 +35,8 @@ namespace Blackout.Editor
             new ModelMaterialSpec("M_Char_PatrolSoldier_Legs", "#58563c", 0f, 0.12f, textured: true),   // trousers, boots and the cap
             new ModelMaterialSpec("M_Char_PatrolSoldier_Hands", "#a77d62", 0f, 0.30f, textured: true),
             new ModelMaterialSpec("M_Char_PatrolSoldier_Hair", "#3a2f26", 0f, 0.20f, textured: true),
+            // The Hunter is the downloaded Left 4 Dead model (docs/art-pipeline.md section 18.5): one material, one 2048 texture.
+            new ModelMaterialSpec("M_Char_HunterL4D", "#6a6358", 0f, 0.12f, textured: true),            // T_CharHunterL4D_BaseColor
             new ModelMaterialSpec("M_Char_Hunter_Camo", "#27301e", 0f, 0.1f, textured: true), // T_CharHunter_BaseColor (make_hunter_camo.py)
             new ModelMaterialSpec("M_Char_Hunter_Skin", "#b08368", 0f, 0.3f, textured: true), // T_CharHunterSkin: skin, eye white, iris and pupil swatches (make_hunter_skin.py)
             new ModelMaterialSpec("M_Char_Hunter_Gear", "#161718", 0.3f, 0.4f),
@@ -53,6 +55,7 @@ namespace Blackout.Editor
         {
             switch (materialName)
             {
+                case "M_Char_HunterL4D": return "T_CharHunterL4D_";
                 case "M_Char_PatrolSoldier_Body": return SoldierTexturePrefix + "Body_";
                 case "M_Char_PatrolSoldier_Face": return SoldierTexturePrefix + "Face_";
                 case "M_Char_PatrolSoldier_Legs": return SoldierTexturePrefix + "Legs_";
