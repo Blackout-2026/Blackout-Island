@@ -60,8 +60,16 @@ namespace Blackout.Agents
             Configure(
                 brainBehaviour as IAgentBrain ?? GetComponent<IAgentBrain>(),
                 GetComponent<IAgentMover>(),
-                GetComponentInChildren<IAgentAnimator>(true),
+                FindEnabledAnimator(),
                 GetComponentInChildren<IAgentShooter>(true));
+        }
+
+        private IAgentAnimator FindEnabledAnimator()
+        {
+            // A prefab may retain a disabled legacy driver for its original visual setup.
+            foreach (MonoBehaviour component in GetComponentsInChildren<MonoBehaviour>(true))
+                if (component.enabled && component is IAgentAnimator driver) return driver;
+            return null;
         }
 
         private void Start()

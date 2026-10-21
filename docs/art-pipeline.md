@@ -1,5 +1,12 @@
 # Art pipeline: Blender to Unity 6
 
+Current animation integration (AN1): all four gameplay agent prefabs use the
+imported Human Soldier Animations package. The Hunter now imports as Humanoid;
+the rigid Commander and robot use generated avatars. This supersedes the older
+static/Generic/procedural animation limits below. After rebuilding agent
+visuals, run **Blackout > Agents > Apply Soldier Animations**. See
+[the current animation setup](agent-animations.md).
+
 Owner: Core Developer. Applies to every custom model in the game (generator, security robot, props,
 weapon viewmodels). Unity 6000.3.25f1, URP, Blender 4.2 LTS or newer (menu names below are from 4.x).
 

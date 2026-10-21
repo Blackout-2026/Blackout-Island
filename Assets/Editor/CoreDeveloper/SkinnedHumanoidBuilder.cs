@@ -81,7 +81,7 @@ namespace Blackout.Editor
 
         /// <summary>
         /// Sets the rig type the model needs. A rig type of None would drop the skin weights and import a static mesh that the bones no longer move; Humanoid (the Mixamo soldier)
-        /// gives a valid avatar for the Agent Controller's humanoid clips later, Generic (the Valve-biped Hunter, which no humanoid clips are planned for) just keeps the skin.
+        /// gives a valid avatar for the shared soldier clips. AN1 also imports the Valve-biped Hunter as Humanoid; Generic would only keep the skin without retargeting these clips.
         /// The importer adds an Animator without a controller, which leaves the baked pose alone until one is assigned.
         /// </summary>
         public static void EnsureImportSettings(SkinnedHumanoidSpec spec)

@@ -22,6 +22,6 @@ namespace Blackout.Editor
         };
 
         public static readonly SkinnedHumanoidSpec Spec = new SkinnedHumanoidSpec("Hunter", ModelFbxPath, RifleFbxPath, RifleMaterialName,
-            new HumanoidRiflePose(new ValveBones(), RifleHold.LowReady), ModelImporterAnimationType.Generic, 180f, SlotMaterials);
+            new HumanoidRiflePose(new ValveBones(), RifleHold.LowReady), ModelImporterAnimationType.Human, 180f, SlotMaterials);
     }
 }

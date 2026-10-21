@@ -6,7 +6,7 @@ namespace Blackout.Editor.Tests
 {
     /// <summary>
     /// The Hunter as the downloaded Left 4 Dead model (step HV1): everything <see cref="SkinnedHumanoidTestsBase"/> asks of a skinned humanoid agent (a Valve-biped skeleton with a
-    /// Generic rig, the scoped rifle on its right hand), plus its one textured material.
+    /// Humanoid rig for AN1's soldier clips, the scoped rifle on its right hand), plus its one textured material.
     /// </summary>
     public class HunterModelTests : SkinnedHumanoidTestsBase
     {

@@ -1,5 +1,15 @@
 # Credits (Core Developer)
 
+## Agent animation clips (AN1)
+
+**Human Soldier Animations 2.0 FREE**, by **Kevin Iglesias**, was imported by the
+project owner and committed in `9faf20d`. The source package remains under
+`Assets/Kevin Iglesias/Human Animations`, including its supplied documentation.
+AN1 uses its male idle, walk, run, rifle/sidearm aim and shot, damage and death
+clips on the existing agents. See [the exact clip list](../agent-animations.md).
+This credit records the supplied package and author; it does not classify the
+package as CC0 or change the package's supplied terms.
+
 Third-party assets used by the Core Developer (`Assets/Models/Custom`, `Assets/Textures/Models`, `Assets/Prefabs/Props`,
 `Assets/Prefabs/Models`). Every third-party mesh, texture or sound needs a row here **before** it is committed. Use CC0
 sources only unless the team agrees otherwise.
