@@ -2,6 +2,7 @@
 using Blackout.Player;
 using Blackout.Shared;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Blackout.Interaction
 {
@@ -11,6 +12,7 @@ namespace Blackout.Interaction
         [SerializeField] private Transform visual;
         [SerializeField] private Light glow;
         private Vector3 visualRest;
+        public UnityEvent onPickedUp = new UnityEvent();
         public bool IsTaken { get; private set; }
 
         private struct Checkpoint { public bool Taken, Active; }
@@ -37,6 +39,7 @@ namespace Blackout.Interaction
         {
             if (IsTaken || inventory == null || !inventory.AddMedkit()) return false;
             IsTaken = true;
+            onPickedUp.Invoke();
             // Keep the instance: a checkpoint may contain this uncollected drop.
             gameObject.SetActive(false);
             return true;

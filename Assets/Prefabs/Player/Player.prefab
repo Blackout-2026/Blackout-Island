@@ -16322,6 +16322,7 @@ GameObject:
   - component: {fileID: 8813139205175220179}
   - component: {fileID: 7093629469916096188}
   - component: {fileID: 6214130571938756471}
+  - component: {fileID: 3780103019779969711}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -16513,6 +16514,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Player.MedkitInventory
   input: {fileID: 796301633198802300}
+--- !u!114 &3780103019779969711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16125446607cd7644ab59ab394c5788c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.GameplayAudio
+  bank: {fileID: 11400000, guid: b044b22a47e46d242b3f54af4f7b1315, type: 2}
+  noise: {fileID: 11400000, guid: 98d0adc7da0714458b8d4cd08ad6ef25, type: 2}
+  generatorDisabled: {fileID: 11400000, guid: 576b9297d96eb4af18c28643cd32a396, type: 2}
+  cureTaken: {fileID: 11400000, guid: f3c2f2ff34e7d4846931e00b780033c8, type: 2}
+  missionComplete: {fileID: 11400000, guid: d5c607cfcd40f44ab874137083035afb, type: 2}
+  motor: {fileID: 1044645646848375807}
+  weapons: {fileID: 466296247462174139}
+  health: {fileID: 8498714324318633510}
+  bunker:
+    m_Center: {x: -4.95, y: 5.75, z: 106}
+    m_Extent: {x: 15.349999, y: 3.6499999, z: 36.399998}
+  entrance:
+    m_Center: {x: 0, y: 7.7499995, z: 59}
+    m_Extent: {x: 6, y: 5.6499996, z: 10.599998}
 --- !u!1 &7358575603390302503
 GameObject:
   m_ObjectHideFlags: 0

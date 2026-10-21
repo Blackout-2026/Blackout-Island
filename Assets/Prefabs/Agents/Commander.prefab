@@ -531,6 +531,10 @@ PrefabInstance:
       propertyPath: muzzle
       value: 
       objectReference: {fileID: 4408658330155364498}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: gunfireChannel
+      value: 
+      objectReference: {fileID: 11400000, guid: 98d0adc7da0714458b8d4cd08ad6ef25, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -547,6 +551,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6061041094201253823}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8446911182530809122}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!1 &1488490957280755654 stripped
 GameObject:
@@ -597,6 +604,20 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 257
+--- !u!114 &8446911182530809122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 404001738c9ce5e4e92e42356027f6ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.ActorAudio
+  gunCue: 6
+  robot: 0
 --- !u!4 &8454537713324184309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}

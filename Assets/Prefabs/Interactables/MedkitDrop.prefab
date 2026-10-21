@@ -108,6 +108,7 @@ GameObject:
   - component: {fileID: 8738662881845254938}
   - component: {fileID: 7277587502353860401}
   - component: {fileID: 4409161037973237741}
+  - component: {fileID: 6211016067330009121}
   m_Layer: 9
   m_Name: MedkitDrop
   m_TagString: Untagged
@@ -169,6 +170,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.MedkitPickup
   visual: {fileID: 5125721337441479464}
   glow: {fileID: 8082360437107020161}
+  onPickedUp:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6211016067330009121}
+        m_TargetAssemblyTypeName: Blackout.Audio.InteractionAudio, Blackout.PlayerAndInteraction
+        m_MethodName: Pickup
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &6211016067330009121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007076304234251251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0ad2d17103bb8f4990a3c563a53d7c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.InteractionAudio
 --- !u!1 &7817047775203843961
 GameObject:
   m_ObjectHideFlags: 0

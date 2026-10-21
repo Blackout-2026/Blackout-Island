@@ -94,6 +94,8 @@ namespace Blackout.Weapons
         public event Action<WeaponData> WeaponChanged;
         /// <summary>The set of owned weapons changed: the storm took the guns, or the player took one from a dead enemy (the HUD's slots).</summary>
         public event Action LoadoutChanged;
+        /// <summary>A real switch request was accepted; audio does not replay when a checkpoint restores ownership.</summary>
+        public event Action SwitchStarted;
 
         /// <summary>Debug: every pellet's ray and what it hit (the Stress Test). Subscribe after Awake.</summary>
         public event Action<PelletTrace> PelletTraced
@@ -171,7 +173,7 @@ namespace Blackout.Weapons
             }
 
             loadout.Grant(index);
-            switcher.Request(index, weapons[index].Data.switchTime);
+            if (switcher.Request(index, weapons[index].Data.switchTime)) SwitchStarted?.Invoke();
             LoadoutChanged?.Invoke();
             return weapons[index].Data;
         }
@@ -383,7 +385,7 @@ namespace Blackout.Weapons
         {
             if (loadout.IsOwned(index))
             {
-                switcher.Request(index, weapons[index].Data.switchTime);
+                if (switcher.Request(index, weapons[index].Data.switchTime)) SwitchStarted?.Invoke();
             }
         }
 

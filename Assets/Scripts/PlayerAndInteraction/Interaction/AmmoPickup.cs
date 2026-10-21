@@ -4,6 +4,7 @@ using Blackout.Player;
 using Blackout.Shared;
 using Blackout.Weapons;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Blackout.Interaction
 {
@@ -17,6 +18,7 @@ namespace Blackout.Interaction
         [SerializeField] private Transform visual;
         [SerializeField] private Light glow;
         private Vector3 visualRest;
+        public UnityEvent onPickedUp = new UnityEvent();
 
         public bool IsTaken { get; private set; }
 
@@ -64,6 +66,7 @@ namespace Blackout.Interaction
             }
 
             IsTaken = true;
+            onPickedUp.Invoke();
             var messages = FindFirstObjectByType<HudMessages>();
             if (messages != null)
             {

@@ -68,6 +68,8 @@ namespace Blackout.Interaction
         public override string Key => IsLocked ? string.Empty : "E";
 
         public Vector3 Position => transform.position;
+        /// <summary>Full travel time, also used by the sound adapter to distinguish the heavy bunker door.</summary>
+        public float SlideSeconds => 1f / speed;
         public bool IsOpen => open > PassableOpen;
         public bool IsLocked => locked || combatLocked;
 
