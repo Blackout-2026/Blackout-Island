@@ -11,6 +11,7 @@ namespace Blackout.Interaction
     /// door refuses both. The panel slides sideways into the wall over 1 / speed seconds (eased), and stops
     /// blocking once it is 80 % open. Every open and close publishes a Door noise. While locked, a NavMeshObstacle
     /// carves the doorway so agents path around it; an unlocked door stays walkable so agents can reach it.
+    /// A double door (step D1) gives a second panel: it slides the same distance the other way, so the two leaves part.
     /// Optional fail-safe maglock: unlocks and opens itself a few seconds after an event (the lab door after
     /// GeneratorDisabled). Numbers: docs/reference/systems-engineer.md section 10.
     /// </summary>
@@ -22,6 +23,8 @@ namespace Blackout.Interaction
         [SerializeField] private string label = "door";
         [Tooltip("The moving panel. It slides along its parent's X axis.")]
         [SerializeField] private Transform panel;
+        [Tooltip("Optional second leaf of a double door: it slides the same distance along -X while the panel slides along +X.")]
+        [SerializeField] private Transform mirrorPanel;
         [Tooltip("Collider that blocks the doorway while mostly closed.")]
         [SerializeField] private Collider blocker;
         [Tooltip("Metres the panel slides: the width plus 0.05 m.")]
@@ -51,6 +54,7 @@ namespace Blackout.Interaction
         public UnityEvent onLockedUsed = new UnityEvent();
 
         private Vector3 closedPosition;
+        private Vector3 mirrorClosedPosition;
         private float open;
         private float target;
         private bool locked;
@@ -76,6 +80,11 @@ namespace Blackout.Interaction
             if (panel != null)
             {
                 closedPosition = panel.localPosition;
+            }
+
+            if (mirrorPanel != null)
+            {
+                mirrorClosedPosition = mirrorPanel.localPosition;
             }
 
             SetLocked(startLocked);
@@ -134,6 +143,7 @@ namespace Blackout.Interaction
                 // Close immediately so the player cannot slip through while the panel is sliding.
                 target = open = 0f;
                 if (panel != null) panel.localPosition = closedPosition;
+                if (mirrorPanel != null) mirrorPanel.localPosition = mirrorClosedPosition;
                 if (blocker != null) blocker.enabled = true;
             }
             ApplyLock();
@@ -192,9 +202,15 @@ namespace Blackout.Interaction
             }
 
             open = Mathf.MoveTowards(open, target, speed * dt);
+            float slide = slideDistance * Mathf.SmoothStep(0f, 1f, open);
             if (panel != null)
             {
-                panel.localPosition = closedPosition + Vector3.right * (slideDistance * Mathf.SmoothStep(0f, 1f, open));
+                panel.localPosition = closedPosition + Vector3.right * slide;
+            }
+
+            if (mirrorPanel != null)
+            {
+                mirrorPanel.localPosition = mirrorClosedPosition + Vector3.left * slide;
             }
 
             if (blocker != null)
