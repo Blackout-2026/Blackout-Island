@@ -146,7 +146,7 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Hero humanoid (the earlier rigid Patrol operator, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
 | Hero humanoid (the Patrol now: a downloaded skinned soldier, step PS4) | `SM_Char_PatrolSoldier` | 9,710 | **10,000** | 15,000 | 7 |
 | Hunter (a downloaded skinned model, step HV1) | `SM_Char_HunterL4D` | 5,046 | **6,000** | 9,000 | 2 |
-| Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
+| Weapon viewmodel with hands (the downloaded arms, step VM1) | `SM_Weapon_*` | 6,436 to 9,000 | **10,000** | 15,000 | 3 |
 | Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
 | Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
 | Prop, large (> 1.5 m): desk, lab bench, fuel tank, chamber | `SM_Prop_*` | | 3,000 | 4,500 | 4 |
@@ -603,6 +603,12 @@ position left it mostly below the screen edge. `preview_*.py` renders what the p
 local position to the held position above (the constants are in `WeaponDefinitions`), start the shot at `MuzzlePoint`, enable
 `MuzzleFlash` for a few frames and add the point light yourself. The flash material is `M_Weapon_Flash`, a stand-in for the
 prototype's additive flash texture.
+
+**The downloaded weapons and arms (step VM1).** The SMG is now the downloaded MP9, the knife the downloaded M9 and the hands the downloaded
+first-person arms, all in the same three files, so the weapon prefabs, the muzzle point and the Player prefab did not change. See
+`docs/viewmodels.md` for how they are built, held and animated. The viewmodel budget is now 10,000 triangles (hard maximum 15,000):
+the SMG is 9,000, the rifle 8,568 and the knife 6,436, of which each arm is about 2,400. The materials are `M_Weapon_Smg` or
+`M_Weapon_Knife` or `M_Weapon_Sniper` for the weapon and `M_Weapon_Hands` for both arms (2 of the 3 slots).
 
 ### 14.7 Props palette
 

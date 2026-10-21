@@ -78,6 +78,14 @@ namespace Blackout.Editor
 
         public const string GloveTexturePrefix = "T_WeaponGlove_";
 
+        /// <summary>
+        /// The player's arms of every viewmodel (step VM1): the downloaded first-person hands in fingerless tactical gloves and camouflage sleeves, one
+        /// material for the glove, the skin and the sleeve, from T_WeaponHands_BaseColor and _Normal (Art/Blender/Scripts/build_viewmodels.py).
+        /// </summary>
+        public static readonly ModelMaterialSpec Hands = new ModelMaterialSpec(Prefix + "Hands", "#8f744e", 0f, 0.25f, textured: true);
+
+        public const string HandsTexturePrefix = "T_WeaponHands_";
+
         public static PartMaterials BuildAll(string folder, string textureFolder)
         {
             PartMaterials set = PartMaterials.Build(Prefix, Specs, folder, textureFolder);
@@ -86,6 +94,7 @@ namespace Blackout.Editor
             set.Add(ModelMaterials.GetOrCreate(KnifeBody, folder, textureFolder, KnifeTexturePrefix));
             set.Add(ModelMaterials.GetOrCreate(GloveHands, folder, textureFolder, GloveTexturePrefix));
             set.Add(ModelMaterials.GetOrCreate(SniperBody, folder, textureFolder, SniperTexturePrefix));
+            set.Add(ModelMaterials.GetOrCreate(Hands, folder, textureFolder, HandsTexturePrefix));
             AssetDatabase.SaveAssets();
             return set;
         }

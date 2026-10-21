@@ -30,7 +30,7 @@ namespace Blackout.Editor
         // The gun points along the aim (the barrel runs towards the crosshair) and is turned only a little to the left, so its side and
         // the hand still show. The SMG has one hand only (the right hand on the pistol grip, its forearm coming in from the lower right);
         // the rifle has two (the left on the forend). A stronger yaw and roll made the gun look bent.
-        public static readonly Vector3 SmgPosition = new Vector3(0.14f, -0.10f, 0.48f);
+        public static readonly Vector3 SmgPosition = new Vector3(0.12f, -0.09f, 0.36f);
         public static readonly Vector3 SmgEuler = new Vector3(3f, -10f, -3f);
         public static readonly Vector3 RiflePosition = new Vector3(0.12f, -0.17f, 0.62f);
         public static readonly Vector3 RifleEuler = new Vector3(4f, -16f, -4f);
@@ -38,7 +38,7 @@ namespace Blackout.Editor
         // Where the Hand of the Knife sits and how it is turned: the blade points up and to the left across the screen and the fist
         // and the camouflaged forearm come in from below, so the knife is held ready to stab. The hand is a reverse grip (build_knife.py,
         // REVERSE): the fingers are curled towards the camera and the flat of the blade shows.
-        public static readonly Vector3 KnifeHandPosition = new Vector3(0.207f, -0.166f, 0.447f);
+        public static readonly Vector3 KnifeHandPosition = new Vector3(0.17f, -0.13f, 0.37f);
         public static readonly Vector3 KnifeHandEuler = new Vector3(-19f, -33f, 12f);
 
         private const string HolderPath = "CameraRig/CameraPivot/PlayerCamera/WeaponHolder";

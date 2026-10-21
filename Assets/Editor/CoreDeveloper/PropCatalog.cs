@@ -89,7 +89,7 @@ namespace Blackout.Editor
             {
                 if (Group == PropGroup.Weapon)
                 {
-                    return new ModelBudget(6000, 3);
+                    return new ModelBudget(10000, 3);
                 }
 
                 if (Group == PropGroup.Hero && ModelBudget.TryGet("SM_" + Name.Replace("_Visual", string.Empty), out ModelBudget hero))

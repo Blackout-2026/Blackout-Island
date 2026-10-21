@@ -53,6 +53,18 @@ only unless the team agrees. I used it because the owner asked for it; I could n
 `Char_Hunter_Visual.prefab`, and re-run **Blackout > Art > Use Character Models In Agents** after pointing the Hunter entry of `CharacterRig` back at the rigid `SM_Char_Hunter`
 (entirely my own, still in the project).
 
+## First-person weapons and hands (step VM1)
+
+The SMG, the knife and the player's hands are downloaded models. Each download came as a folder with `source/` and `textures/` and no licence
+text, so the author, page URL and licence cells are TODO: fill them from the page each folder was downloaded from. If a licence does not allow
+use in a public repository, keep the repository private or replace that model.
+
+| Files in the project | Source asset | URL | Licence | Author |
+| --- | --- | --- | --- | --- |
+| `Assets/Models/Custom/SM_Weapon_Smg.fbx` (the gun without its stock, thinned to 4,200 triangles by `Art/Blender/Scripts/build_viewmodels.py`) and `Assets/Textures/Models/T_WeaponSmg_BaseColor.png`, `_Normal.png`, `_MetalSmooth.png` (the downloaded maps halved to 2048; `_MetalSmooth` repacked from the metalness, ambient occlusion and roughness maps) | "MP9 free" (`mp9-free/source/MP9.fbx`, `mp9-free/textures/MP9_*.png`) | TODO: page URL | TODO: check before publishing the repo | TODO: confirm on the page |
+| `Assets/Models/Custom/SM_Weapon_Knife.fbx` (the M9, unchanged apart from its frame) and `T_WeaponKnife_BaseColor.png`, `_Normal.png`, `_MetalSmooth.png` (repacked the same way) | "M9 bayonet knife" (`m9-bayonet-knife/source/M9.fbx`, `m9-bayonet-knife/textures/M9_*.png`) | TODO: page URL | TODO: check before publishing the repo | TODO: confirm on the page |
+| the `GloveR`, `GloveL`, `SleeveR` and `SleeveL` meshes inside `SM_Weapon_Smg.fbx`, `SM_Weapon_Knife.fbx` and `SM_Weapon_Sniper.fbx` (the arms bent round the grips, thinned to about 2,400 triangles each) and `T_WeaponHands_BaseColor.png`, `T_WeaponHands_Normal.png` (the downloaded base colour and normal maps, halved to 2048) | "First person arm hand fingerless gloves" (`first-person-arm-hand-fingerless-gloves/source/hand final.fbx`, `textures/texture_basecolor.png` and `canvas.png`, which is the normal map) | TODO: page URL | TODO: check before publishing the repo | TODO: confirm on the page |
+
 ## Weapon viewmodels
 
 `Weapon_Smg_Visual`, `Weapon_Sniper_Visual` and `Weapon_Knife_Visual` are primitive placeholders built from the

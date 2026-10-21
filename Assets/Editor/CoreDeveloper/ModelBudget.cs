@@ -33,7 +33,9 @@ namespace Blackout.Editor
         private static readonly ModelBudget PatrolSoldierHero = new ModelBudget(10000, 7);
         // The Hunter is the downloaded Left 4 Dead model (docs/art-pipeline.md section 18.5): 5,046 triangles, one material.
         private static readonly ModelBudget HunterL4D = new ModelBudget(6000, 2);
-        private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
+        // The viewmodels carry the downloaded first-person arms (about 2,400 triangles each), the one thing always on screen, so they get more than a prop:
+        // docs/art-pipeline.md section 14.6 (step VM1). Before VM1 the target was 6,000.
+        private static readonly ModelBudget Weapon = new ModelBudget(10000, 3);
         private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
         /// <summary>Budget for a model asset name such as "SM_Generator" (extension optional).</summary>

@@ -36,9 +36,9 @@ namespace Blackout.Editor.Tests
         [TestCase("SM_Char_HunterRifle", 4500)]
         [TestCase("SM_Char_PatrolRifle", 4500)]
         [TestCase("SM_Char_Commander", 21000)]
-        [TestCase("SM_Weapon_Smg", 9000)]
-        [TestCase("SM_Weapon_Knife", 9000)]
-        [TestCase("SM_Weapon_Sniper", 9000)]
+        [TestCase("SM_Weapon_Smg", 15000)]
+        [TestCase("SM_Weapon_Knife", 15000)]
+        [TestCase("SM_Weapon_Sniper", 15000)]
         public void Categories_GetTheirOwnMaximum(string assetName, int expectedMax)
         {
             Assert.That(ModelBudget.TryGet(assetName, out ModelBudget budget), Is.True);
