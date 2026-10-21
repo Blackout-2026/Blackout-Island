@@ -57,14 +57,14 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d164d54cf31a13a4f82058b7d4406301, type: 3}
+--- !u!4 &5391281168480483042 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5559614083974579572, guid: d164d54cf31a13a4f82058b7d4406301, type: 3}
+  m_PrefabInstance: {fileID: 573674749559337878}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6635084923814408641 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6621017888819610199, guid: d164d54cf31a13a4f82058b7d4406301, type: 3}
-  m_PrefabInstance: {fileID: 573674749559337878}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &8019637335989225789 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7547298020652579499, guid: d164d54cf31a13a4f82058b7d4406301, type: 3}
   m_PrefabInstance: {fileID: 573674749559337878}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4344484393509515253
@@ -146,7 +146,7 @@ PrefabInstance:
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: muzzle
       value: 
-      objectReference: {fileID: 8019637335989225789}
+      objectReference: {fileID: 5391281168480483042}
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: config.range
       value: 34

@@ -40,6 +40,12 @@ namespace Blackout.Editor
 
         public static void Build(CharacterEntry entry, Dictionary<string, Material> materials)
         {
+            if (entry.Skinned)
+            {
+                PatrolSoldierBuilder.Build(entry, materials); // the downloaded soldier needs its pose and his rifle, not just the model
+                return;
+            }
+
             var fbx = AssetDatabase.LoadAssetAtPath<GameObject>(entry.FbxPath);
             if (fbx == null)
             {

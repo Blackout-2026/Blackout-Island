@@ -30,7 +30,7 @@
 - I replaced the capsules inside the Agent Controller's three prefabs through a menu tool. The change is the removed capsule, the nested model
   and one muzzle reference, but they should know.
 
-## The hero Patrol operator (steps PS1 to PS3) - added at the owner's request
+## The hero Patrol operator (steps PS1 to PS3, since replaced by the downloaded soldier) - added at the owner's request
 
 **What changed and why.** The Patrol was an old navy operator, and in fact the game still showed the blue capsule: `SecurityPatrol.prefab` had never been swapped. In PS1 the owner asked
 for a camouflaged soldier with a tan SCAR-style rifle, in PS2 for a desert-tan tactical operator from a new photo. My rigid-box version looked like building blocks next to that photo,
@@ -55,6 +55,30 @@ so in PS3 the Patrol got the Commander's hero treatment: `build_operator.py` bui
 - It is still a game character, not a scan: the face is painted on a simple head, the hands are blocky, the cloth is smooth tubes with creases and the helmet rails are boxes with painted teeth.
 - The decals are generic painted gear, and I have seen the model in Blender renders and Unity tests, not yet in a Play Mode fight.
 - The rifle's stock sits inside the vest volume (hidden), because the arms and the Gun socket are fixed by the rig table.
+
+## The downloaded Patrol soldier (step PS4) - added at the owner's request
+
+**What changed and why.** After the PS3 operator the owner supplied a finished, photographically textured, skinned soldier (a Mixamo-style export, 9,710 triangles, 65 bones) and asked for it as the Security Patrol.
+It is far more detailed than anything my scripts build, so the Patrol now uses it and the PS3 operator stays in the project, unused. The change is mostly integration: it is the first skinned human here, the soldier has no weapon
+and he is modelled in a T-pose.
+
+**Design decisions I can defend.**
+- **Keep the model unchanged.** The FBX is copied as it came, with the textures renamed to the repo's `T_<Name>_<Map>` convention. All my changes are around it: materials, pose, rifle, prefab.
+- **Import as Humanoid.** Rig type None looks simpler but throws the skin weights away (the first build showed it: bones moved, the body did not). Humanoid keeps the skin and gives a valid avatar for the Agent Controller's
+  humanoid animation later.
+- **Pose by maths, written into the prefab.** Two-bone IK for the arms and a finger curl, in a character frame taken from the skeleton, give a rifle-at-the-low-ready pose without any animation clip. It is stored as bone
+  rotations in the prefab, so the FBX is untouched and an Animator can take over later. The prefab is rebuilt from scratch each time, which keeps it deterministic (a test builds it twice and compares).
+- **The rifle is its own file.** `SM_Char_PatrolRifle.fbx` (`Gun` plus `MuzzlePoint`) hangs under the right hand, so the Agent Controller's shooter finds its muzzle by name exactly as before; the agent prefab did not change.
+- **Same prefab, same name.** `Char_Patrol_Visual.prefab` keeps its asset, so `SecurityPatrol.prefab` still nests it; only the content changed.
+- **Look at it in the engine.** `CharacterPreviewRenderer` renders the prefab in Unity itself. It showed two problems tests could not (the model faced -Z, the rifle was white), so I keep it as a review tool.
+
+**One number and why.** Both elbows must stay bent (about 100 and 145 degrees): a reach search over the measured arm lengths (0.27 m and 0.28 m) found the rifle hold where both hands reach their grips without straightening an arm.
+
+**Known weaknesses (say these before they ask).**
+- **Licence.** The download came without any licence text; `docs/credits/core-developer.md` has TODO cells that must be filled before the repository is published.
+- **No animation.** He stands in a fixed rifle-ready pose and slides along his path. The humanoid controller needs clips named Idle, Walk, Run, Aim_Idle, HitReact and Death.
+- **The rifle is the weakest part.** It is the plain box model from PS3 next to a photographic soldier.
+- **Not seen in a Play Mode fight yet.** I checked it in Unity-rendered pictures and EditMode tests, not in the game.
 
 ## The realistic Commander (step C10b) - added at the owner's request
 

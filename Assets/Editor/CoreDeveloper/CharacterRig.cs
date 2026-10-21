@@ -9,15 +9,19 @@ namespace Blackout.Editor
         public readonly string Name;
         public readonly string AgentPrefab; // the Agent Controller's prefab that gets this model in place of the capsule
         public readonly float MuzzleAhead;  // metres from the Gun socket to the muzzle (docs/reference/core-developer.md 4.4 and 4.5)
+        public readonly string FbxName;     // the model's file name when it is not SM_Char_<Name> (the Patrol is the downloaded soldier)
+        public readonly bool Skinned;       // a skinned humanoid (the Patrol, step PS4): the rigid-joint checks do not apply, PatrolSoldierBuilder builds its prefab
 
-        public CharacterEntry(string name, string agentPrefab, float muzzleAhead)
+        public CharacterEntry(string name, string agentPrefab, float muzzleAhead, string fbxName = null, bool skinned = false)
         {
             Name = name;
             AgentPrefab = agentPrefab;
             MuzzleAhead = muzzleAhead;
+            FbxName = fbxName ?? $"SM_Char_{name}";
+            Skinned = skinned;
         }
 
-        public string FbxPath => $"Assets/Models/Custom/SM_Char_{Name}.fbx";
+        public string FbxPath => $"Assets/Models/Custom/{FbxName}.fbx";
         public string VisualPrefabName => $"Char_{Name}_Visual";
         public string VisualPrefabPath => $"Assets/Prefabs/Models/{VisualPrefabName}.prefab";
     }
@@ -34,7 +38,7 @@ namespace Blackout.Editor
 
         public static readonly CharacterEntry[] Characters =
         {
-            new CharacterEntry("Patrol", "Assets/Prefabs/Agents/SecurityPatrol.prefab", 0.74f),
+            new CharacterEntry("Patrol", "Assets/Prefabs/Agents/SecurityPatrol.prefab", 0.74f, "SM_Char_PatrolSoldier", skinned: true),
             new CharacterEntry("Hunter", "Assets/Prefabs/Agents/Hunter.prefab", 0.74f),
             new CharacterEntry("Commander", "Assets/Prefabs/Agents/Commander.prefab", 0.22f),
         };

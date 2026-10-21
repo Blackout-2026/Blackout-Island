@@ -136,7 +136,8 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Generator G-1 | `SM_Generator` | 8,840 | **10,000** | 15,000 | 6 |
 | Security robot | `SM_SecurityRobot` | 3,216 | **5,000** | 7,500 | 4 |
 | Humanoid (if modelled) | `SM_Char_*` | 2,600 to 3,100 | 3,000 | 4,500 | 3 |
-| Hero humanoid (Security Patrol, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
+| Hero humanoid (the earlier rigid Patrol operator, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
+| Hero humanoid (the Patrol now: a downloaded skinned soldier, step PS4) | `SM_Char_PatrolSoldier` | 9,710 | **10,000** | 15,000 | 7 |
 | Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
 | Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
 | Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
@@ -773,11 +774,11 @@ and differ in clothes, head gear and weapon. The look comes from reference photo
 
 | | Security Patrol | Hunter | Commander |
 | --- | --- | --- | --- |
-| Look | desert-tan tactical operator from the owner's photo (steps PS2 and PS3), a hero model: a sculpted head under a tan balaclava with a painted skin band, blue eyes and brows; a beige high-cut helmet whose rim is lifted over the brow, with side rails with rail teeth, a front mount, a top rail, a rear pouch and a strap under the chin; a high-neck jacket with zips and a velcro patch on each sleeve, cloth with creases (weathered khaki tile `T_CharPatrol_BaseColor` and `_Normal`, box-projected, one tile per metre); a vest with painted PALS webbing front and back, four magazine pouches with flaps and buckles, a radio with a cable, buckles and shoulder straps; a brown belt with five ammo pouches and a holster; cargo trousers with knee pads, cargo pockets, two leather thigh straps and drop-leg pouches; bare hands with fingers; laced khaki boots under bunched cuffs; the arms are modelled bent so the soldier holds the rifle in both hands | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
-| Weapon | SCAR-style rifle from the owner's second photo: tan receiver, handguard, pistol grip and folding stock, black top, side and bottom rails, barrel with flash hider, flip-up front and rear sights and a straight magazine, 0.12 m right of the socket, held in both hands (our own shapes, no markings) | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
-| Muzzle | `MuzzlePoint` 0.74 m ahead of the Gun socket (the flash hider ends 0.745 m ahead) | 0.74 m | 0.22 m |
-| Triangles (target 3,000; the Patrol 12,000; the Commander 14,000) | 11,582 (1.91 m tall, 0.59 m wide) | 2,819 | 13,038 |
-| Materials | `M_Char_Patrol_Cloth` (textured), `_Kit` (the 1024 atlas `T_CharPatrolKit_BaseColor` and `_MetalSmooth`: swatches, painted decals and the face; the rifle's metal parts use the metal swatches) | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
+| Look | the downloaded soldier of step PS4 (section 18.4): a skinned Mixamo-style character with photographic textures: a woodland-camouflage jacket and trousers, a vest with pouches and straps, laced boots, a cap and a real face (`T_CharPatrolSoldier*`); he holds the rifle at the low ready in both hands (a pose baked into the prefab). The PS3 operator (section 18.3) is still in the project, unused | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
+| Weapon | the same SCAR-style rifle as before (tan receiver, handguard, pistol grip and folding stock, black rails with teeth, barrel with flash hider, flip-up sights, curved magazine), now its own file `SM_Char_PatrolRifle.fbx` nested under the soldier's right hand | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
+| Muzzle | `MuzzlePoint` 0.74 m ahead of the rifle's `Gun` (the flash hider ends 0.745 m ahead) | 0.74 m | 0.22 m |
+| Triangles (target 3,000; the Patrol 10,000; the Commander 14,000) | 9,710 for the soldier and 542 for the rifle (1.86 m tall) | 2,819 | 13,038 |
+| Materials | `M_Char_PatrolSoldier_Body`, `_Face`, `_Legs`, `_Hands`, `_Hair` (all textured, URP Lit) for the soldier and `M_Char_Patrol_Kit` for the rifle | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
 
 ### 18.1 How they are built (scripts in `Art/Blender/Scripts`)
 
@@ -845,7 +846,9 @@ operator and is the model nested in `SecurityPatrol.prefab` (the capsule was sti
 and a weathered cloth texture. The Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
 owners' work: the agents keep the placeholder walker until then.
 
-### 18.3 The hero Patrol operator (step PS3)
+### 18.3 The hero Patrol operator (step PS3), replaced by the downloaded soldier in step PS4
+
+*Since step PS4 the Security Patrol uses the downloaded soldier of section 18.4. The operator below is still in the project (`SM_Char_Patrol.fbx`, `M_Char_Patrol_Cloth`, built by `build_operator.py`), unused; only its rifle and `M_Char_Patrol_Kit` live on.*
 
 The owner's reference photo (a desert-tan tactical operator with a beige helmet, balaclava, webbing vest and laced boots) showed that the rigid boxes of
 `build_humans.py` look like building blocks next to it, so the Patrol got the Commander's treatment (section 18.2) instead of more boxes. Same rig and joints,
@@ -868,6 +871,40 @@ Gun socket and `MuzzlePoint` is 0.74 m ahead, so the muzzle contract and `Charac
 
 **Limits:** it is a low-poly game character, not a scan: the face is painted on a simple head, the hands are blocky fingers, the clothing is smooth tubes with creases, and the model
 has no animation (rigid parts, the humans still slide along their path). The decals are painted generic gear, not a copy of any product. The helmet rails are boxes with painted teeth.
+
+### 18.4 The downloaded Patrol soldier (step PS4)
+
+The owner supplied a finished model in the folder `american-soldier-rigged` (`army-soldier-character.zip`: `army3.fbx` and six `mott_var01_*` jpeg textures) and asked for it as the
+Security Patrol. It is a photographic, skinned character, much more detailed than anything built here, so it replaces the PS3 operator. Its licence and author are not known (the
+download had no licence text): see `docs/credits/core-developer.md`, whose row must be filled before the repository is published.
+
+| What | Measured |
+| --- | --- |
+| Skeleton | Mixamo names (`mott_var01:Hips`, `:RightArm`, `:RightHandIndex3` and so on), 65 bones including all fingers, standing in a T-pose with the arms sloping 50 degrees down |
+| Mesh | one skinned mesh, 9,710 triangles, 1.86 m tall, 7 material slots (`lambert1` to `lambert7`) |
+| Textures | body (jacket, vest, pouches) with a normal map, legs (trousers, boots, caps), hands, hair, and `eyerefmask`, which is really the whole face |
+| Orientation | after import it faces -Z, so the visual prefab turns the `Model` 180 degrees about Y; agents face +Z |
+
+| Step | What does it |
+| --- | --- |
+| Import | The FBX is copied unchanged to `Assets/Models/Custom/SM_Char_PatrolSoldier.fbx`, the textures to `Assets/Textures/Models/T_CharPatrolSoldier<Part>_BaseColor.jpg` (and `_Normal`). `PatrolSoldierBuilder.EnsureImportSettings` imports the FBX as a **Humanoid** (a rig type of None would drop the skin weights and make a static mesh), so a valid avatar exists for Mixamo clips later |
+| Rifle | `build_patrol_rifle.py` exports the rifle of `build_operator.py` by itself as `SM_Char_PatrolRifle.fbx` (542 triangles, 1.063 m): an object called `Gun` with the Empty `MuzzlePoint` 0.74 m ahead |
+| Materials | `CharacterMaterialBuilder` builds five URP Lit materials from the textures; `PatrolSoldierBuilder.SlotMaterials` maps the seven slot names to them (the eyes share the face, the cap shares the trousers' atlas) |
+| Pose | `PatrolSoldierPose` poses the arms to hold the rifle at the low ready: the rifle is placed across the chest, each arm is solved with analytic two-bone IK to a wrist that puts the palm on its grip, the hand is turned to face the grip and every finger is curled round it. The result is stored in the bone Transforms of the prefab; the FBX and its T-pose bind pose are untouched |
+| Prefab | `PatrolSoldierBuilder` rebuilds `Char_Patrol_Visual.prefab` every time (`Model`, with the rifle under the right hand), so the pose is deterministic. `SecurityPatrol.prefab` already nests that prefab, so it did not change structure; **Blackout > Art > Use Character Models In Agents** re-points the shooter's muzzle to the new `MuzzlePoint` |
+| Review | **Blackout > Art > Render Patrol Preview** (`CharacterPreviewRenderer`) renders front, three-quarter, side, back, head and rifle pictures of any visual prefab in Unity, outside the repository (needs a graphics device) |
+
+**Why the pose is computed, not keyed.** Everything is worked out in a character frame taken from the skeleton (toes give forward, up from the model, right follows), so it does not depend on how the importer
+turned the axes. The hold (butt 1.34 m up and 0.08 m right, 10 degrees to the character's left, 6 degrees muzzle-down) came from a reach search over the measured arm lengths (upper arm 0.27 m, forearm 0.28 m)
+that keeps both elbows bent, about 100 degrees on the right and 145 on the left.
+
+**Checks.** `PatrolSoldierTests` (EditMode): the FBX is a skinned, valid-Humanoid skeleton of about 1.87 m with its feet on the floor and inside its budget; the rifle has `Gun` and `MuzzlePoint`; the visual faces +Z, wears
+five textured materials on all seven slots, carries the rifle on the right hand with the muzzle 0.74 m ahead of `Gun` and in front of the chest; each palm is within a few centimetres of its grip with a bent elbow;
+the fingers curl towards the palm; two builds give the same pose; and the `SecurityPatrol` prefab has no capsule and shoots from the rifle's muzzle.
+
+**Limits.** There is still no animation: the soldier stands in his rifle-ready pose and slides along his path like the other humans. The Agent Controller's `AnimatorDriver` and `Agent_Humanoid.controller` need clips named `Idle`,
+`Walk`, `Run`, `Aim_Idle`, `HitReact` and `Death` in `Assets/Animations/Humanoid`; the Humanoid avatar is ready for Mixamo versions of them, and a controller would then replace the baked pose. The rifle is the plain box model from
+PS3, so it looks simpler than the soldier.
 
 ## 19. Realistic trees (step C11)
 
