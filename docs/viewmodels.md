@@ -4,6 +4,9 @@ The SMG is the downloaded **MP9**, the knife the downloaded **M9 bayonet**, and 
 (fingerless tactical gloves, camouflage sleeves). They went into the three viewmodel files that already existed, `SM_Weapon_Smg.fbx`, `_Knife.fbx` and
 `_Sniper.fbx`, retaining the existing weapon prefabs, muzzle contracts and weapon code. VM2 below adjusts the two guns' held poses.
 
+For the rifle's held right-mouse scope, see [Sniper hold-to-scope (SC1)](sniper-scope.md). It changes the camera/HUD and temporarily hides these meshes;
+the approved gun and arm transforms stay unchanged.
+
 ## What the downloads are
 
 | Download | What it is |

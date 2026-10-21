@@ -22,6 +22,7 @@ namespace Blackout.Weapons
         private Renderer[] parts;
         private bool[] enabledByDesign; // a renderer that the prefab keeps switched off stays off when the viewmodel comes back
         private bool shown = true;
+        private bool scopeHidden;
 
         /// <summary>True for the mesh objects of the arms: GloveR, GloveL, SleeveR and SleeveL.</summary>
         public static bool IsArmPart(string objectName)
@@ -64,7 +65,15 @@ namespace Blackout.Weapons
                 enabledByDesign[i] = !shown || parts[i].enabled; // while hidden every renderer reads as off
             }
 
-            Apply(true);
+            Apply(!scopeHidden && (motor == null || ShouldShow(motor.State)));
+        }
+
+        /// <summary>Hide renderers through the scope while leaving weapon simulation and firing active.</summary>
+        public void SetScopeHidden(bool hidden)
+        {
+            if (scopeHidden == hidden) return;
+            scopeHidden = hidden;
+            Apply(!hidden && (motor == null || ShouldShow(motor.State)));
         }
 
         /// <summary>Shows or hides every viewmodel renderer now.</summary>
@@ -97,7 +106,7 @@ namespace Blackout.Weapons
                 return;
             }
 
-            bool show = ShouldShow(motor.State);
+            bool show = !scopeHidden && ShouldShow(motor.State);
             if (show != shown)
             {
                 Apply(show);

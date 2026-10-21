@@ -24,6 +24,7 @@ namespace Blackout.Player
         private InputAction sprint;
         private InputAction pause;
         private InputAction fire;
+        private InputAction aim;
         private InputAction weapon1;
         private InputAction weapon2;
         private InputAction weapon3;
@@ -42,6 +43,7 @@ namespace Blackout.Player
         public bool PausePressed => pause.WasPressedThisFrame();
         public bool FirePressed => fire.WasPressedThisFrame();
         public bool FireHeld => fire.IsPressed();
+        public bool AimHeld => aim != null && aim.IsPressed();
         public bool InteractPressed => interact.WasPressedThisFrame();
         public bool InteractHeld => interact.IsPressed();
         public bool UseMedkitPressed => useMedkit != null && useMedkit.WasPressedThisFrame();
@@ -87,6 +89,7 @@ namespace Blackout.Player
             sprint = map.FindAction("Sprint", true);
             pause = map.FindAction("Pause", true);
             fire = map.FindAction("Fire", true);
+            aim = map.FindAction("Aim", false);
             weapon1 = map.FindAction("Weapon1", true);
             weapon2 = map.FindAction("Weapon2", true);
             weapon3 = map.FindAction("Weapon3", true);

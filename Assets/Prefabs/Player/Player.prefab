@@ -5310,6 +5310,71 @@ MonoBehaviour:
   motor: {fileID: 1044645646848375807}
   health: {fileID: 8498714324318633510}
   playerHealth: {fileID: 8270314839946786807}
+--- !u!1 &443386062586375490
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6571524703260705452}
+  - component: {fileID: 5574867767443564454}
+  - component: {fileID: 7356566196152284104}
+  m_Layer: 5
+  m_Name: SniperScope
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &6571524703260705452
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443386062586375490}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6937052387151285076}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &5574867767443564454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443386062586375490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76fe809b37aaff14e98fd7a074b9939a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Hud.ScopeOverlay
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!222 &7356566196152284104
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443386062586375490}
+  m_CullTransparentMesh: 1
 --- !u!1 &511816014035692865
 GameObject:
   m_ObjectHideFlags: 0
@@ -5927,6 +5992,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6571524703260705452}
   - {fileID: 2331985742073826261}
   - {fileID: 1837686255859954622}
   - {fileID: 5639594940297211307}
@@ -12994,6 +13060,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5639594940297211307}
+  - component: {fileID: 6536128552199527889}
   m_Layer: 5
   m_Name: Crosshair
   m_TagString: Untagged
@@ -13023,6 +13090,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &6536128552199527889
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5188857487693282185}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5261630421402004227
 GameObject:
   m_ObjectHideFlags: 0
@@ -16323,6 +16402,7 @@ GameObject:
   - component: {fileID: 7093629469916096188}
   - component: {fileID: 6214130571938756471}
   - component: {fileID: 3780103019779969711}
+  - component: {fileID: 3356447577754586015}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -16540,6 +16620,29 @@ MonoBehaviour:
   entrance:
     m_Center: {x: 0, y: 7.7499995, z: 59}
     m_Extent: {x: 6, y: 5.6499996, z: 10.599998}
+--- !u!114 &3356447577754586015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30560a349639cd44f98c4ab61805321a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Weapons.SniperScope
+  input: {fileID: 796301633198802300}
+  look: {fileID: 4260577954320442414}
+  motor: {fileID: 1044645646848375807}
+  weapons: {fileID: 466296247462174139}
+  rifle: {fileID: 11400000, guid: 5c67e39c604324206a4120fb6545433b, type: 2}
+  playerCamera: {fileID: 7960660481702232932}
+  hands: {fileID: 2405567711439170817}
+  overlay: {fileID: 443386062586375490}
+  crosshair: {fileID: 6536128552199527889}
+  scopedFieldOfView: 22
+  scopedSensitivity: 0.35
 --- !u!1 &7358575603390302503
 GameObject:
   m_ObjectHideFlags: 0

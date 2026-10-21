@@ -26,6 +26,8 @@ namespace Blackout.Player
         private float recoilYaw;
 
         public float Pitch => pitch;
+        /// <summary>Transient scope factor, separate from the player's chosen sensitivity.</summary>
+        public float ScopeSensitivityMultiplier { get; set; } = 1f;
 
         private void Awake()
         {
@@ -83,7 +85,7 @@ namespace Blackout.Player
             }
 
             // Mouse delta is already "pixels this frame", so it is not multiplied by deltaTime.
-            Vector2 delta = input.LookDelta * settings.lookSensitivity;
+            Vector2 delta = input.LookDelta * (settings.lookSensitivity * ScopeSensitivityMultiplier);
             // Yaw is read back from the body each frame, so a teleport that sets the rotation is respected.
             float yaw = transform.eulerAngles.y + delta.x;
             pitch = Mathf.Clamp(pitch - delta.y, -settings.pitchLimit, settings.pitchLimit);
