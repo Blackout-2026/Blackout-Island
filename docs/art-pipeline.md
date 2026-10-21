@@ -136,6 +136,7 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Generator G-1 | `SM_Generator` | 8,840 | **10,000** | 15,000 | 6 |
 | Security robot | `SM_SecurityRobot` | 3,216 | **5,000** | 7,500 | 4 |
 | Humanoid (if modelled) | `SM_Char_*` | 2,600 to 3,100 | 3,000 | 4,500 | 3 |
+| Hero humanoid (Security Patrol, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
 | Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
 | Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
 | Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
@@ -772,27 +773,27 @@ and differ in clothes, head gear and weapon. The look comes from reference photo
 
 | | Security Patrol | Hunter | Commander |
 | --- | --- | --- | --- |
-| Look | desert-tan tactical operator from the owner's photo (step PS2): a beige high-cut helmet with ear flanges, khaki rails, a front mount and a chin strap; a tan balaclava with only a skin band, dark eyes and brows showing; a high-neck tan jacket with zips and a velcro patch on each sleeve and cargo trousers with knee pads and bunched cuffs (weathered khaki cloth `T_CharPatrol_BaseColor` and `_Normal`, made by `make_patrol_cloth.py`, one tile per metre); a vest with webbing rows front and back, four leather magazine pouches, a radio with a cable, side panels with buckles, shoulder straps and a back panel; a brown belt with a row of ammo pouches and a holster; a drop-leg pouch with leather straps; bare hands with fingers; laced khaki boots; the arms are modelled bent so the soldier holds the rifle in both hands | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
+| Look | desert-tan tactical operator from the owner's photo (steps PS2 and PS3), a hero model: a sculpted head under a tan balaclava with a painted skin band, blue eyes and brows; a beige high-cut helmet whose rim is lifted over the brow, with side rails with rail teeth, a front mount, a top rail, a rear pouch and a strap under the chin; a high-neck jacket with zips and a velcro patch on each sleeve, cloth with creases (weathered khaki tile `T_CharPatrol_BaseColor` and `_Normal`, box-projected, one tile per metre); a vest with painted PALS webbing front and back, four magazine pouches with flaps and buckles, a radio with a cable, buckles and shoulder straps; a brown belt with five ammo pouches and a holster; cargo trousers with knee pads, cargo pockets, two leather thigh straps and drop-leg pouches; bare hands with fingers; laced khaki boots under bunched cuffs; the arms are modelled bent so the soldier holds the rifle in both hands | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
 | Weapon | SCAR-style rifle from the owner's second photo: tan receiver, handguard, pistol grip and folding stock, black top, side and bottom rails, barrel with flash hider, flip-up front and rear sights and a straight magazine, 0.12 m right of the socket, held in both hands (our own shapes, no markings) | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
 | Muzzle | `MuzzlePoint` 0.74 m ahead of the Gun socket (the flash hider ends 0.745 m ahead) | 0.74 m | 0.22 m |
-| Triangles (target 3,000; the Commander 14,000) | 2,495 (1.91 m tall, 0.62 m wide) | 2,819 | 13,038 |
-| Materials | `M_Char_Patrol_Cloth` (textured), `_Kit` (the 8-swatch atlas `T_CharPatrolKit_BaseColor`: skin, helmet tan, vest olive, dark, leather, webbing, khaki; every Kit face is moved onto a swatch, like the Hunter's skin), `_Metal` (flat) | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
+| Triangles (target 3,000; the Patrol 12,000; the Commander 14,000) | 11,582 (1.91 m tall, 0.59 m wide) | 2,819 | 13,038 |
+| Materials | `M_Char_Patrol_Cloth` (textured), `_Kit` (the 1024 atlas `T_CharPatrolKit_BaseColor` and `_MetalSmooth`: swatches, painted decals and the face; the rifle's metal parts use the metal swatches) | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
 
 ### 18.1 How they are built (scripts in `Art/Blender/Scripts`)
 
 | Order | Script | Does |
 | --- | --- | --- |
-| 1 | `build_humans.py` (uses `build_robot.py`'s kit) | One shared body (hips, torso, head with jaw, nose and ears, tapered limbs, hands, boots) plus the costume and weapon of each character. Merges the parts, removes faces hidden inside their joint, triangulates, unwraps UV0, splits back into 18 joint objects under one Empty root and exports `Assets/Models/Custom/SM_Char_<Name>.fbx` and `Art/Blender/SM_Char_<Name>.blend`. `-- Hunter` builds one character |
+| 1 | `build_humans.py` (uses `build_robot.py`'s kit) | One shared body (hips, torso, head with jaw, nose and ears, tapered limbs, hands, boots) plus the costume and weapon of each character. Merges the parts, removes faces hidden inside their joint, triangulates, unwraps UV0, splits back into 18 joint objects under one Empty root and exports `Assets/Models/Custom/SM_Char_<Name>.fbx` and `Art/Blender/SM_Char_<Name>.blend`. `-- Hunter` builds one character; `-- Patrol` and `-- Commander` hand over to their own scripts (`build_operator.py`, `build_commander.py`) |
 | 2 | `preview_humans.py` | Review renders (optional) |
 | 3 | Unity: **Blackout > Art > Use Character Models In Agents** | Builds the 9 flat materials and the 3 `Char_*_Visual.prefab` files, then replaces the capsule in the Agent Controller's SecurityPatrol, Hunter and Commander prefabs with the matching model and points `AgentShooter.muzzle` at its `MuzzlePoint` |
 
 ```
 python Art/Blender/Scripts/make_patrol_cloth.py
-python Art/Blender/Scripts/make_patrol_kit.py
+python Art/Blender/Scripts/make_patrol_textures.py
 "D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_humans.py
 ```
 
-The two `make_patrol_*.py` scripts need Python with numpy and Pillow (like `make_hunter_camo.py`) and give the same pixels on every run.
+`make_patrol_cloth.py` and `make_patrol_textures.py` need Python with numpy and Pillow (like `make_hunter_camo.py`) and give the same pixels on every run. On the owner's machine Blender is at `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`.
 
 **Rig:** the robot's method (section 16.2): rigid parts on pivots, every joint at rotation 0, rotation about the joint's local X, one
 Empty root cancelling the exporter's axis rotation. Joints (heights in metres): `Hips` 0.98 (root), `Spine` 1.08, `Chest` 1.28, `Neck` 1.55,
@@ -839,10 +840,34 @@ animator must rotate both together; the hair under the cap is trimmed to what sh
 
 **Not done, on purpose:** the models have no skin and no clips. The Agent Controller's humanoids are meant to use an Animator with free
 humanoid animations; these rigid-part models cannot play those, so the humans currently stand upright and slide along their path
-until a procedural humanoid animator (like `ProceduralRobotAnimator`, driving these joint names) is added. The Patrol soldier (steps PS1 and PS2) replaced the navy
-operator and is the model nested in `SecurityPatrol.prefab` (the capsule was still there until then); its Kit material is a swatch atlas,
-and its uniform has a weathered cloth texture. The Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
+until a procedural humanoid animator (like `ProceduralRobotAnimator`, driving these joint names) is added. The Patrol operator (steps PS1 to PS3) replaced the navy
+operator and is the model nested in `SecurityPatrol.prefab` (the capsule was still there until then); it is the second hero (section 18.3), with a painted atlas
+and a weathered cloth texture. The Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
 owners' work: the agents keep the placeholder walker until then.
+
+### 18.3 The hero Patrol operator (step PS3)
+
+The owner's reference photo (a desert-tan tactical operator with a beige helmet, balaclava, webbing vest and laced boots) showed that the rigid boxes of
+`build_humans.py` look like building blocks next to it, so the Patrol got the Commander's treatment (section 18.2) instead of more boxes. Same rig and joints,
+new meshes.
+
+| Script | Does |
+| --- | --- |
+| `patrol_atlas.py` | The atlas layout shared by Blender and the painter: nine swatches, the decal rectangles and the face's planar projection. |
+| `make_patrol_textures.py` (Python + Pillow, using the Commander painter's `Atlas` and `Canvas`) | Paints `T_CharPatrolKit_BaseColor` and `_MetalSmooth` (1024): swatches, vest webbing, magazine pouch, radio, velcro patch, zip, picatinny teeth, holster, boot laces and the balaclava face with painted eyes. Fixed seeds, no insignia. |
+| `make_patrol_cloth.py` | The weathered khaki tile `T_CharPatrol_BaseColor` and its normal map. |
+| `build_operator.py` | The geometry, with `build_commander.py` as its engine: sweeps for torso, legs, arms, hands, head and helmet; plates for pouches and rails; decals for the painted detail; custom normals cut per joint. `build_humans.py -- Patrol` calls it. |
+| Unity: **Blackout > Art > Use Character Models In Agents** | Builds `M_Char_Patrol_Cloth` and `_Kit`, retires the older Patrol materials through `CharacterMaterialBuilder`'s obsolete list (`AssetDatabase.DeleteAsset`), rebuilds `Char_Patrol_Visual.prefab`. |
+
+`build_commander.py` gained three backward-compatible hooks for this: a UV maker with `per_face = True` is called per corner with the face normal (a box projection for the
+cloth), `build_scene` takes a root name, a material list and a muzzle offset, and `make_material` has a neutral fallback colour. The Commander's defaults are unchanged.
+
+**Budget:** `ModelBudget` gives `SM_Char_Patrol` 12,000 triangles (hard maximum 18,000) and 3 materials, like the Commander's hero budget; the Hunter keeps 3,000.
+Measured: 11,582 triangles (heaviest joints: Head 1,828, Chest 1,700, Hips 944, hands 608 each), 1.91 m tall, 0.59 m wide, 2 materials. The flash hider ends 0.745 m ahead of the
+Gun socket and `MuzzlePoint` is 0.74 m ahead, so the muzzle contract and `CharacterFbxTests` hold.
+
+**Limits:** it is a low-poly game character, not a scan: the face is painted on a simple head, the hands are blocky fingers, the clothing is smooth tubes with creases, and the model
+has no animation (rigid parts, the humans still slide along their path). The decals are painted generic gear, not a copy of any product. The helmet rails are boxes with painted teeth.
 
 ## 19. Realistic trees (step C11)
 

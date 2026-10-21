@@ -40,9 +40,9 @@ def smoothstep(x, a, b):
 def main():
     big = periodic_noise(1.6, 2, 8)
     mid = periodic_noise(1.3, 5, 20)
-    khaki = np.array([0.520, 0.430, 0.310])    # base khaki, sRGB about (133, 110, 79)
-    dirt = np.array([0.390, 0.320, 0.230])     # dust and dirt stains
-    faded = np.array([0.610, 0.530, 0.400])    # sun-faded patches
+    khaki = np.array([0.560, 0.480, 0.360])    # base khaki, sRGB about (143, 122, 92)
+    dirt = np.array([0.430, 0.360, 0.270])     # dust and dirt stains
+    faded = np.array([0.650, 0.575, 0.445])    # sun-faded patches
 
     img = np.ones((SIZE, SIZE, 3)) * khaki
     dirt_mask = smoothstep(big, 0.50, 0.78) * 0.65 + smoothstep(mid, 0.62, 0.80) * 0.25

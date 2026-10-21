@@ -30,31 +30,31 @@
 - I replaced the capsules inside the Agent Controller's three prefabs through a menu tool. The change is the removed capsule, the nested model
   and one muzzle reference, but they should know.
 
-## The desert Patrol operator (steps PS1 and PS2) - added at the owner's request
+## The hero Patrol operator (steps PS1 to PS3) - added at the owner's request
 
-**What changed and why.** The Patrol was an old navy operator, and in fact the game still showed the blue capsule: `SecurityPatrol.prefab` had never been
-swapped. In PS1 the owner asked for a camouflaged soldier holding a tan SCAR-style rifle; in PS2 they replaced the soldier with a new photo, a desert-tan
-tactical operator (beige helmet, balaclava, vest with webbing, belt pouches, laced boots). `build_humans.py` builds it and the existing menu
+**What changed and why.** The Patrol was an old navy operator, and in fact the game still showed the blue capsule: `SecurityPatrol.prefab` had never been swapped. In PS1 the owner asked
+for a camouflaged soldier with a tan SCAR-style rifle, in PS2 for a desert-tan tactical operator from a new photo. My rigid-box version looked like building blocks next to that photo,
+so in PS3 the Patrol got the Commander's hero treatment: `build_operator.py` builds it, `build_humans.py -- Patrol` hands over to it, and the existing menu
 **Blackout > Art > Use Character Models In Agents** nests it in the prefab.
 
 **Design decisions I can defend.**
-- **Same rig, new costume.** Same 18 joints, rotation 0 and MuzzlePoint contract (0.74 m ahead of the socket; the flash hider ends at 0.745 m), so
-  `CharacterFbxTests`, the swap tool and the shooter wiring needed no changes. The photo is an unarmed A-pose, so the rifle and the Hunter's bent-arm pose are my assumption.
-- **Two textures, three materials.** A weathered khaki cloth tile (`make_patrol_cloth.py`) for the jacket and trousers, and a 64x32 atlas of eight flat swatches
-  (`make_patrol_kit.py`: skin, helmet tan, vest olive, dark, leather, webbing, khaki) so face, helmet, vest, belt, rifle furniture and boots share one `M_Char_Patrol_Kit`; the third material
-  is the flat black metal. That keeps the 3-material budget while the kit still has six colours.
-- **Retiring a material safely.** The earlier camo material was removed by a small obsolete list in `CharacterMaterialBuilder`, which calls
-  `AssetDatabase.DeleteAsset`, so the .meta file and references go with it.
-- **Own shapes.** The rifle is my own SCAR-style box model (rails, flip-up sights, folding stock, straight magazine), with no markings.
+- **Reuse the Commander's engine, not a copy.** `build_operator.py` imports `build_commander.py` (sweeps, shells, plates, custom normals, per-joint split, FBX export), and I added three
+  backward-compatible hooks to it (per-face UVs, a configurable root/materials/muzzle, a neutral material fallback). The Commander's defaults do not change.
+- **Same rig, new surface.** Same 18 joints, rotation 0 and MuzzlePoint contract (the flash hider ends at 0.745 m, MuzzlePoint is 0.74 m ahead of the socket), so `CharacterFbxTests`, the swap tool
+  and the shooter wiring needed no changes. The photo is an unarmed A-pose, so the rifle and the bent-arm pose are my assumption.
+- **Detail from textures, not triangles.** A 1024 atlas holds swatches and painted decals (vest webbing, pouches, radio, patch, zip, rail teeth, holster, boot laces) and the balaclava face with
+  painted eyes, painted by `make_patrol_textures.py` with the same planar projection the head uses. The tan cloth is a 512 tile box-projected at one tile per metre.
+- **Two materials.** `M_Char_Patrol_Cloth` and `M_Char_Patrol_Kit` (with a metal map for buckles and the rifle), so the third material slot is free.
+- **A hero budget.** 12,000 triangles (18,000 maximum) for this one character (three patrols in the level), like the Commander's 14,000; `ModelBudget` and its test know about it.
+- **Retiring materials safely.** Old materials are removed by an obsolete list in `CharacterMaterialBuilder`, which calls `AssetDatabase.DeleteAsset`, so the .meta files and references go with them.
 
-**One number and why.** 2,495 triangles against a 3,000 target (4,500 maximum; `CharacterFbxTests` enforces the target): the small details (webbing, pouches, straps) are
-unbevelled boxes so they stay cheap.
+**One number and why.** 11,582 triangles against a 12,000 target: the head, chest and hips take most of them (1,828, 1,700 and 944), because that is where the eye goes at 10 to 30 m.
 
 **Known weaknesses.**
-- Rigid parts again, so no walking animation: the soldier slides along its path like the other humans.
-- The model is boxy at close range: the helmet, mask and pouches are simple blocks, and the face is a skin band with dark eyes, not a painted face.
-- The weathering is generated noise, not a hand-painted texture, and the model has been checked in Blender renders and Unity tests, not yet in a Play Mode fight.
-- The rifle's stock sits inside the vest volume (hidden), like the Hunter's, because the arms and the Gun socket are fixed by the rig table.
+- Rigid parts again, so no walking animation: the operator slides along its path like the other humans.
+- It is still a game character, not a scan: the face is painted on a simple head, the hands are blocky, the cloth is smooth tubes with creases and the helmet rails are boxes with painted teeth.
+- The decals are generic painted gear, and I have seen the model in Blender renders and Unity tests, not yet in a Play Mode fight.
+- The rifle's stock sits inside the vest volume (hidden), because the arms and the Gun socket are fixed by the rig table.
 
 ## The realistic Commander (step C10b) - added at the owner's request
 

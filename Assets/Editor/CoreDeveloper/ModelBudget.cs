@@ -27,6 +27,8 @@ namespace Blackout.Editor
         private static readonly ModelBudget Character = new ModelBudget(3000, 3);
         // The Commander is the one realistic hero character (sculpted face, hair cards, a detailed uniform): docs/art-pipeline.md section 18.2.
         private static readonly ModelBudget CommanderHero = new ModelBudget(14000, 3);
+        // The Security Patrol is the second hero humanoid (sculpted head, balaclava, painted gear atlas, laced boots): docs/art-pipeline.md section 18.3.
+        private static readonly ModelBudget PatrolHero = new ModelBudget(12000, 3);
         private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
         private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
@@ -51,6 +53,10 @@ namespace Blackout.Editor
             else if (Matches(assetName, "SM_Char_Commander"))
             {
                 budget = CommanderHero;
+            }
+            else if (Matches(assetName, "SM_Char_Patrol"))
+            {
+                budget = PatrolHero;
             }
             else if (assetName.StartsWith("SM_Char_", StringComparison.Ordinal))
             {

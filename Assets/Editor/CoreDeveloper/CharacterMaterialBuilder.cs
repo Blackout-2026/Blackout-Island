@@ -27,8 +27,7 @@ namespace Blackout.Editor
         public static readonly ModelMaterialSpec[] Specs =
         {
             new ModelMaterialSpec("M_Char_Patrol_Cloth", "#84694f", 0f, 0.1f, textured: true), // T_CharPatrol_BaseColor and _Normal (make_patrol_cloth.py)
-            new ModelMaterialSpec("M_Char_Patrol_Kit", "#4d4a30", 0f, 0.2f, textured: true),   // T_CharPatrolKit: eight colour swatches (make_patrol_kit.py)
-            new ModelMaterialSpec("M_Char_Patrol_Metal", "#161718", 0.6f, 0.6f),
+            new ModelMaterialSpec("M_Char_Patrol_Kit", "#4d4a30", 0f, 0.2f, textured: true),   // T_CharPatrolKit_BaseColor and _MetalSmooth: swatches, decals and the face (make_patrol_textures.py)
             new ModelMaterialSpec("M_Char_Hunter_Camo", "#27301e", 0f, 0.1f, textured: true), // T_CharHunter_BaseColor (make_hunter_camo.py)
             new ModelMaterialSpec("M_Char_Hunter_Skin", "#b08368", 0f, 0.3f, textured: true), // T_CharHunterSkin: skin, eye white, iris and pupil swatches (make_hunter_skin.py)
             new ModelMaterialSpec("M_Char_Hunter_Gear", "#161718", 0.3f, 0.4f),
@@ -40,7 +39,7 @@ namespace Blackout.Editor
 
         // Materials of an earlier look that no model uses any more. BuildAll deletes them through the AssetDatabase, so their GUIDs
         // and .meta files go with them and nothing is removed by hand.
-        private static readonly string[] ObsoleteMaterials = { "M_Char_Patrol_Camo" };
+        private static readonly string[] ObsoleteMaterials = { "M_Char_Patrol_Camo", "M_Char_Patrol_Metal" };
 
         /// <summary>The texture name up to the map: M_Char_Commander_Skin looks for T_CharCommanderSkin_BaseColor.</summary>
         private static string PrefixOf(string materialName)

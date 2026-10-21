@@ -640,7 +640,8 @@ def assemble():
     for part in PARTS:
         verts, polys, loops, normals = finalize_part(part)
         # part.params only exist for the original vertices; triangulation adds none, so indices still match
-        uvs = uv_for(part, verts)
+        per_face = getattr(part.uv, "per_face", False)   # a UV maker with per_face = True is called per corner with the face normal (box projection)
+        uvs = None if per_face else uv_for(part, verts)
         for pi, poly in enumerate(polys):
             c = sum((verts[i] for i in poly), Vector((0.0, 0.0, 0.0))) / len(poly)
             joint = part.joint
@@ -658,8 +659,15 @@ def assemble():
                     remap[vi] = len(tgt["verts"])
                     tgt["verts"].append(verts[vi])
             tgt["polys"].append(tuple(remap[vi] for vi in poly))
+            if per_face:
+                nb = (verts[poly[1]] - verts[poly[0]]).cross(verts[poly[2]] - verts[poly[0]])
+                nb = nb.normalized() if nb.length > 1e-12 else Vector((0.0, 0.0, 1.0))
+                face_n = Vector((nb.x, nb.z, nb.y))
             for corner, vi in enumerate(poly):
-                tgt["uvs"].append(uvs[vi])
+                if per_face:
+                    tgt["uvs"].append(part.uv(Vector((verts[vi].x, verts[vi].z, verts[vi].y)), face_n, 0.0, 0.0))
+                else:
+                    tgt["uvs"].append(uvs[vi])
                 tgt["normals"].append(normals[loops[pi][corner]])
             tgt["slots"].append(part.slot)
     return per_joint
@@ -700,18 +708,20 @@ def make_material(name, key, prefix):
             nt.links.new(mtex.outputs["Alpha"], invert.inputs[1])
             nt.links.new(invert.outputs["Value"], bsdf.inputs["Roughness"])
     else:
-        bsdf.inputs["Base Color"].default_value = srgb_to_linear({"uniform": "#e9e9e4", "skin": A.SKIN_HEX, "hair": "#8a6a42"}[key])
+        bsdf.inputs["Base Color"].default_value = srgb_to_linear({"uniform": "#e9e9e4", "skin": A.SKIN_HEX, "hair": "#8a6a42"}.get(key, "#808080"))
     if key == "skin":
         bsdf.inputs["Roughness"].default_value = 0.65
     return mat
 
 
-def build_scene(per_joint):
-    root = bpy.data.objects.new("CharCommander", None)
+def build_scene(per_joint, root_name="CharCommander", materials=None, muzzle_offset=None):
+    """root_name, materials ((name, key, texture prefix) list) and muzzle_offset ((x offset from the Gun socket, y offset, metres ahead)) let another
+    character (build_operator.py) reuse this builder; the defaults are the Commander's."""
+    root = bpy.data.objects.new(root_name, None)
     root.empty_display_type = 'PLAIN_AXES'
     root.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     bpy.context.scene.collection.objects.link(root)
-    mats = [make_material(*m) for m in MATERIALS]
+    mats = [make_material(*m) for m in (materials or MATERIALS)]
     objs = {}
     total = 0
     rot = Matrix.Rotation(math.radians(-90.0), 3, 'X')
@@ -754,7 +764,8 @@ def build_scene(per_joint):
     muzzle.empty_display_size = 0.05
     bpy.context.scene.collection.objects.link(muzzle)
     muzzle.parent = objs["Gun"]
-    muzzle.location = (PISTOL_X - WORLD["Gun"].x, BORE_Y - WORLD["Gun"].y, -0.22)     # the root's rotated frame: z mirrored
+    mx, my, ahead = muzzle_offset if muzzle_offset else (PISTOL_X - WORLD["Gun"].x, BORE_Y - WORLD["Gun"].y, 0.22)
+    muzzle.location = (mx, my, -ahead)                                                  # the root's rotated frame: z mirrored
     return root, objs, total
 
 

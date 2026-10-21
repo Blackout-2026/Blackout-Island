@@ -29,7 +29,8 @@ namespace Blackout.Editor.Tests
             Assert.That(budget.MaxTriangles, Is.EqualTo(4500));
         }
 
-        [TestCase("SM_Char_Patrol", 4500)]
+        [TestCase("SM_Char_Hunter", 4500)]
+        [TestCase("SM_Char_Patrol", 18000)]
         [TestCase("SM_Char_Commander", 21000)]
         [TestCase("SM_Weapon_Smg", 9000)]
         [TestCase("SM_Weapon_Knife", 9000)]
