@@ -5,11 +5,12 @@
 
 The three agents share ONE body and one skeleton (docs/reference/core-developer.md section 4.1) and differ in clothes, head gear
 and weapon:
-  Patrol    a woodland-camouflage soldier (the owner's photo): a camo-covered helmet with a chin strap and a night-vision mount, a bare
-            face, a camo jacket and trousers (a camouflage texture, T_CharPatrol_BaseColor), an olive plate-carrier vest with three
-            pouches and a radio, knee pads, gloves, boots, a holstered pistol and a SCAR-style rifle (tan, with rails, flip-up sights, a
-            folding stock and a straight magazine) held in both hands like the Hunter's. Three materials: Camo, Kit (a 4-swatch atlas,
-            T_CharPatrolKit_BaseColor, for skin, tan, olive and dark) and Metal.
+  Patrol    a desert-tan tactical operator (the owner's photo): a beige high-cut helmet with rails, a tan balaclava with only the eyes
+            showing, a high-neck tan jacket and cargo trousers (a weathered cloth texture, T_CharPatrol_BaseColor), a vest with
+            webbing rows, four magazine pouches and a radio, a brown belt with an ammo-pouch row and a holster, a drop-leg pouch with
+            straps, laced khaki boots, and a SCAR-style rifle (tan, with rails, flip-up sights, a folding stock and a straight
+            magazine) held in both hands like the Hunter's. Three materials: Cloth, Kit (an 8-swatch atlas, T_CharPatrolKit_BaseColor:
+            skin, tan, olive, dark, leather, webbing, khaki) and Metal.
   Hunter    a field soldier in camouflage like the owner's photo: a tan cap with a patch and a brim, sunglasses, a black hood over
             the whole head and face, a dark forest camouflage jacket and trousers (a camouflage texture, T_CharHunter_BaseColor) with leaf and cloth strips hanging from
             the shoulders, arms, waist, thighs, cap and rifle, a dark olive chest rig
@@ -137,7 +138,7 @@ def apply_swatches(ob):
 
 def apply_kit_swatches(ob, kit_slot):
     """The Patrol's Kit material: EVERY face of that slot gets its UVs moved onto one swatch of T_CharPatrolKit_BaseColor, by its mask
-    tag (skin, tan, dark); an untagged face gets the olive swatch. So the whole slot is flat colour from one 64 px texture."""
+    tag (see KIT_UV); an untagged face gets the olive swatch. So the whole slot is flat colour from one small texture."""
     me = ob.data
     attr = me.color_attributes.get("Mask")
     uv = me.uv_layers.active
@@ -151,8 +152,8 @@ def apply_kit_swatches(ob, kit_slot):
             if sum(c) < 0.5:
                 uv.data[li].uv = KIT_DEFAULT
                 continue
-            best = min(SWATCH_UV, key=lambda k: sum((a - b) ** 2 for a, b in zip(k, c)))
-            uv.data[li].uv = SWATCH_UV[best]
+            best = min(KIT_UV, key=lambda k: sum((a - b) ** 2 for a, b in zip(k, c)))
+            uv.data[li].uv = KIT_UV[best]
 
 
 def wbox(j, slot, c, s, bevel=0.0, seg=1, tilt=None):
@@ -224,10 +225,14 @@ def body(s):
 
 # --------------------------------------------------------------------------- Security Patrol
 
-# Material slots of the Patrol, and the swatches of its Kit atlas (make_patrol_kit.py). The swatch tags reuse the Hunter's mask colours.
-P_CAMO, P_KIT, P_METAL = 0, 1, 2
-K_SKIN, K_TAN, K_OLIVE, K_DARK = SW_SKIN, SW_WHITE, SW_IRIS, SW_BLACK
-KIT_DEFAULT = SWATCH_UV[K_OLIVE[:3]]   # an untagged Kit face is vest olive
+# Material slots of the Patrol, and the swatches of its Kit atlas (make_patrol_kit.py: 8 cells, 4 columns by 2 rows). A Kit face is
+# tagged with one of these mask colours; apply_kit_swatches() moves its UVs onto the matching cell. An untagged Kit face is vest olive.
+P_CLOTH, P_KIT, P_METAL = 0, 1, 2
+K_SKIN, K_TAN, K_OLIVE, K_DARK = (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (1, 1, 1, 0)
+K_LEATHER, K_WEB, K_KHAKI = (1, 1, 0, 0), (0, 1, 1, 0), (1, 0, 1, 0)
+KIT_UV = {K_SKIN[:3]: (0.125, 0.75), K_TAN[:3]: (0.375, 0.75), K_OLIVE[:3]: (0.625, 0.75), K_DARK[:3]: (0.875, 0.75),
+          K_LEATHER[:3]: (0.125, 0.25), K_WEB[:3]: (0.375, 0.25), K_KHAKI[:3]: (0.625, 0.25)}
+KIT_DEFAULT = KIT_UV[K_OLIVE[:3]]
 
 RIFLE_DX = 0.12   # the rifle sits this far to the right of the Gun socket, in front of the right chest (the Hunter's value too)
 
@@ -276,51 +281,63 @@ def scar_rifle(dx=RIFLE_DX):
 
 
 def build_patrol():
-    """The Security Patrol soldier. Same arm pose as the Hunter (bent arms, rifle held in both hands), the same joints."""
-    # --- trousers, belt and jacket: smooth rounded shells in camouflage
-    loft("Hips", P_CAMO, [(-0.10, rrect(0.36, 0.265, 0.10)), (0.0, rrect(0.39, 0.275, 0.11)), (0.10, rrect(0.38, 0.27, 0.10))])
-    R.cyl("Hips", P_KIT, (0.0, 0.035, 0.0), 'y', 0.200, 0.05, segs=12, mask=K_DARK)                    # belt
-    for u in (-1, 1):
-        kit_box("Hips", (0.14 * u, 0.045, 0.165), (0.07, 0.09, 0.05), bevel=0.006)                    # belt pouches
-    loft("Spine", P_CAMO, [(-0.04, rrect(0.37, 0.275, 0.10)), (0.10, rrect(0.385, 0.285, 0.105)), (0.22, rrect(0.405, 0.29, 0.105))])
-    loft("Chest", P_CAMO, [(-0.02, rrect(0.41, 0.29, 0.10)), (0.07, rrect(0.45, 0.31, 0.11)), (0.20, rrect(0.48, 0.32, 0.12)),
-                           (0.27, rrect(0.35, 0.26, 0.10))])
-    R.cyl("Chest", P_CAMO, (0.0, 0.285, 0.0), 'y', 0.095, 0.05, segs=10, r2=0.082)                    # jacket collar
-    # --- olive plate-carrier vest: a shell, three tan magazine pouches, a flap pocket, a radio, shoulder straps and a back panel
+    """The Security Patrol: a desert-tan tactical operator (the owner's photo) with the SCAR-style rifle. Same arm pose as the Hunter
+    (bent arms, rifle held in both hands) and the same joints."""
+    # --- trousers, belt and jacket: smooth rounded shells in tan cloth
+    loft("Hips", P_CLOTH, [(-0.10, rrect(0.36, 0.265, 0.10)), (0.0, rrect(0.39, 0.275, 0.11)), (0.10, rrect(0.38, 0.27, 0.10))])
+    R.cyl("Hips", P_KIT, (0.0, 0.035, 0.0), 'y', 0.200, 0.05, segs=12, mask=K_LEATHER)                 # brown belt
+    metal_box("Hips", (0.0, 0.035, 0.205), (0.05, 0.04, 0.012))                                        # buckle
+    for a in (25.0, 45.0, 65.0, 85.0):                                                                 # a row of ammo pouches on the left hip
+        x, z = -0.215 * math.sin(math.radians(a)), 0.215 * math.cos(math.radians(a))
+        kit_box("Hips", (x, 0.03, z), (0.04, 0.07, 0.04), K_LEATHER)
+    kit_box("Hips", (0.205, -0.06, 0.03), (0.04, 0.14, 0.07), K_DARK)                                  # holster on the right hip
+    metal_box("Hips", (0.205, 0.03, 0.0), (0.03, 0.04, 0.05))                                          # the pistol's grip
+    loft("Spine", P_CLOTH, [(-0.04, rrect(0.37, 0.275, 0.10)), (0.10, rrect(0.385, 0.285, 0.105)), (0.22, rrect(0.405, 0.29, 0.105))])
+    kit_box("Spine", (0.0, 0.10, 0.145), (0.012, 0.18, 0.006), K_DARK)                                 # jacket zip below the vest
+    loft("Chest", P_CLOTH, [(-0.02, rrect(0.41, 0.29, 0.10)), (0.07, rrect(0.45, 0.31, 0.11)), (0.20, rrect(0.48, 0.32, 0.12)),
+                            (0.27, rrect(0.35, 0.26, 0.10))])
+    R.cyl("Chest", P_CLOTH, (0.0, 0.31, 0.0), 'y', 0.092, 0.10, segs=10, r2=0.082)                    # high neck collar
+    kit_box("Chest", (0.0, 0.31, 0.090), (0.012, 0.08, 0.006), K_DARK)                                 # collar zip
+    # --- plate-carrier vest: an olive shell with horizontal webbing rows, four leather magazine pouches, a radio and its cable,
+    # side panels with buckles, shoulder straps and a back panel
     R.loft("Chest", P_KIT, [(-0.05, rrect(0.43, 0.335, 0.11, cz=0.012)), (0.07, rrect(0.48, 0.355, 0.12, cz=0.014)),
                             (0.19, rrect(0.48, 0.35, 0.12, cz=0.012)), (0.23, rrect(0.41, 0.30, 0.10, cz=0.008))])
-    for x in (-0.115, 0.0, 0.115):
-        kit_box("Chest", (x, 0.00, 0.215), (0.095, 0.110, 0.055), K_TAN, bevel=0.007)                  # magazine pouches
-    kit_box("Chest", (0.0, 0.14, 0.210), (0.23, 0.09, 0.032), bevel=0.006)                             # upper pocket
-    kit_box("Chest", (-0.17, 0.15, 0.200), (0.06, 0.10, 0.045), K_DARK, bevel=0.005)                   # radio
-    R.cyl("Chest", P_METAL, (-0.17, 0.27, 0.19), 'y', 0.005, 0.12, segs=5)                              # its antenna
-    kit_box("Chest", (0.0, 0.12, -0.175), (0.34, 0.26, 0.03), bevel=0.006)                             # back panel
+    for y in (0.075, 0.135, 0.195):
+        kit_box("Chest", (0.0, y, 0.195), (0.34, 0.020, 0.012), K_WEB)                                 # webbing rows, front
+    for y in (0.10, 0.17):
+        kit_box("Chest", (0.0, y, -0.197), (0.30, 0.020, 0.012), K_WEB)                                # and back
+    for x in (-0.135, -0.055, 0.055, 0.135):
+        kit_box("Chest", (x, 0.0, 0.215), (0.065, 0.10, 0.045), K_LEATHER)                             # magazine pouches
+    kit_box("Chest", (0.14, 0.17, 0.205), (0.06, 0.09, 0.04), K_DARK)                                  # radio
+    R.cyl("Chest", P_KIT, (0.14, 0.08, 0.215), 'y', 0.004, 0.14, segs=4, mask=K_DARK)                  # its cable
     for u in (-1, 1):
-        kit_box("Chest", (0.115 * u, 0.236, 0.0), (0.085, 0.032, 0.28), bevel=0.005)                  # shoulder straps
-    # --- neck and a bare head: jaw, nose, ears, dark eyes and brows
-    R.cyl("Neck", P_KIT, (0.0, 0.05, 0.0), 'y', 0.050, 0.12, segs=8, r2=0.055, mask=K_SKIN)
-    R.ellipsoid("Head", P_KIT, (0.0, 0.07, 0.0), (0.097, 0.118, 0.105), u=10, v=6, mask=K_SKIN)
-    kit_box("Head", (0.0, 0.01, 0.03), (0.13, 0.07, 0.12), K_SKIN, bevel=0.01)
-    kit_box("Head", (0.0, 0.065, 0.105), (0.03, 0.04, 0.04), K_SKIN)
+        kit_box("Chest", (0.235 * u, 0.02, 0.0), (0.04, 0.17, 0.20))                                  # side panels
+        metal_box("Chest", (0.258 * u, 0.0, 0.05), (0.012, 0.04, 0.03))                               # buckles
+        kit_box("Chest", (0.115 * u, 0.236, 0.0), (0.085, 0.032, 0.28))                               # shoulder straps
+    kit_box("Chest", (0.0, 0.12, -0.175), (0.34, 0.26, 0.03))                                          # back panel
+    # --- neck gaiter and a balaclava: only a band round the eyes shows skin, with dark eyes and brows
+    R.cyl("Neck", P_KIT, (0.0, 0.05, 0.0), 'y', 0.050, 0.12, segs=8, r2=0.055, mask=K_KHAKI)
+    R.ellipsoid("Head", P_KIT, (0.0, 0.07, 0.0), (0.097, 0.118, 0.105), u=10, v=6, mask=K_KHAKI)
+    kit_box("Head", (0.0, 0.01, 0.03), (0.13, 0.07, 0.12), K_KHAKI)
+    kit_box("Head", (0.0, 0.065, 0.105), (0.03, 0.04, 0.04), K_KHAKI)                                  # nose under the mask
+    R.ellipsoid("Head", P_KIT, (0.0, 0.10, 0.085), (0.052, 0.022, 0.022), u=8, v=4, mask=K_SKIN)      # the skin band round the eyes
     for u in (-1, 1):
-        kit_box("Head", (0.098 * u, 0.065, 0.0), (0.02, 0.045, 0.03), K_SKIN)                          # ears
-        R.ellipsoid("Head", P_KIT, (0.036 * u, 0.085, 0.098), (0.011, 0.007, 0.006), u=6, v=3, mask=K_DARK)   # eyes
-        kit_box("Head", (0.036 * u, 0.100, 0.095), (0.038, 0.008, 0.010), K_DARK)                     # brows
-    # --- helmet with a camouflage cover, a night-vision mount, chin strap and cup. It sits high, so the face shows below it.
-    R.ellipsoid("Head", P_CAMO, (0.0, 0.152, -0.012), (0.122, 0.088, 0.138), u=12, v=6)
-    R.box("Head", P_CAMO, (0.0, 0.118, 0.118), (0.19, 0.014, 0.045), bevel=0.004)                       # front brim
+        kit_box("Head", (0.098 * u, 0.065, 0.0), (0.02, 0.045, 0.03), K_KHAKI)                        # ears
+        R.ellipsoid("Head", P_KIT, (0.027 * u, 0.1025, 0.1025), (0.0105, 0.006, 0.0045), u=6, v=3, mask=K_DARK)   # eyes
+        kit_box("Head", (0.029 * u, 0.118, 0.098), (0.032, 0.007, 0.008), K_DARK)                     # brows
+    # --- helmet: a beige high-cut shell with side flanges over the ears, khaki rails and a front mount, and a chin strap
+    R.ellipsoid("Head", P_KIT, (0.0, 0.160, -0.012), (0.122, 0.092, 0.138), u=12, v=6, mask=K_TAN)
+    kit_box("Head", (0.0, 0.250, 0.04), (0.016, 0.012, 0.10), K_KHAKI)                                 # top rail
+    kit_box("Head", (0.0, 0.212, 0.118), (0.05, 0.035, 0.022), K_KHAKI)                                # front mount
     for u in (-1, 1):
-        R.box("Head", P_CAMO, (0.108 * u, 0.085, -0.015), (0.022, 0.090, 0.17), bevel=0.004)            # side skirts down to the ears
-    R.box("Head", P_CAMO, (0.0, 0.085, -0.122), (0.20, 0.090, 0.030), bevel=0.004)                      # back skirt
-    metal_box("Head", (0.0, 0.190, 0.125), (0.045, 0.040, 0.030), bevel=0.004)
-    for u in (-1, 1):
-        kit_box("Head", (0.092 * u, 0.017, 0.02), (0.010, 0.094, 0.014), K_DARK)                      # chin strap
-    kit_box("Head", (0.0, -0.032, 0.075), (0.05, 0.012, 0.035), K_DARK)                                # chin cup
+        kit_box("Head", (0.115 * u, 0.12, -0.015), (0.018, 0.07, 0.13), K_TAN)                        # side flange over the ear
+        kit_box("Head", (0.128 * u, 0.13, -0.015), (0.010, 0.026, 0.10), K_KHAKI)                     # rail on it
+        kit_box("Head", (0.095 * u, 0.02, 0.03), (0.008, 0.09, 0.012), K_DARK)                        # chin strap
 
     # --- the rifle, held in both hands
     scar_rifle()
 
-    # --- arms: camouflage sleeves bent to hold the rifle (world points: shoulder, elbow, wrist), dark gloves with fingers
+    # --- arms: tan sleeves bent to hold the rifle (world points: shoulder, elbow, wrist), bare hands with fingers
     rdx = RIFLE_DX - 0.04                        # world x of the rifle's centre line
     arms = {
         "R": dict(sh=(0.20, 1.47, 0.0), el=(0.265, 1.165, -0.02), wr=(0.160, 1.290, 0.165), hand=(rdx + 0.065, 1.300, 0.195)),
@@ -328,30 +345,34 @@ def build_patrol():
     }
     for side, a in arms.items():
         up, fore, hand = f"UpperArm_{side}", f"ForeArm_{side}", f"Hand_{side}"
-        wellipsoid(up, P_CAMO, a["sh"], (0.090, 0.090, 0.090), u=8, v=4)                             # shoulder cap
-        limb_w(up, P_CAMO, a["sh"], a["el"], 0.080, 0.064, sides=8)                                  # upper arm
-        wellipsoid(fore, P_CAMO, a["el"], (0.066, 0.066, 0.066), u=8, v=4)                           # elbow
-        limb_w(fore, P_CAMO, a["el"], a["wr"], 0.064, 0.052, sides=8)                                # forearm
-        R.ellipsoid(hand, P_KIT, tuple(Vector(a["hand"]) - R.WORLD[hand]), (0.056, 0.050, 0.062), u=8, v=5, mask=K_DARK)   # gloved fist
-        kit_wbox(f"ForeArm_{side}", (a["el"][0], a["el"][1], a["el"][2] - 0.045), (0.07, 0.07, 0.03), K_DARK, bevel=0.008)  # elbow pad
+        wellipsoid(up, P_CLOTH, a["sh"], (0.090, 0.090, 0.090), u=8, v=4)                             # shoulder cap
+        limb_w(up, P_CLOTH, a["sh"], a["el"], 0.080, 0.064, sides=8)                                  # upper arm
+        wellipsoid(fore, P_CLOTH, a["el"], (0.066, 0.066, 0.066), u=8, v=4)                           # elbow
+        limb_w(fore, P_CLOTH, a["el"], a["wr"], 0.064, 0.052, sides=8)                                # forearm
+        R.ellipsoid(hand, P_KIT, tuple(Vector(a["hand"]) - R.WORLD[hand]), (0.056, 0.050, 0.062), u=8, v=5, mask=K_SKIN)   # fist
+    for u, x in ((-1, -0.27), (1, 0.29)):
+        kit_wbox("UpperArm_L" if u < 0 else "UpperArm_R", (x, 1.40, 0.04), (0.022, 0.075, 0.065), K_DARK)   # velcro patch on each sleeve
     for k in range(4):                                                                                  # the right hand wraps the grip, the left curls under the handguard
-        limb_w("Hand_R", P_KIT, (rdx + 0.075, 1.335 - 0.022 * k, 0.210), (rdx - 0.040, 1.335 - 0.022 * k, 0.205), 0.0115, 0.0105, sides=5, mask=K_DARK)
-        limb_w("Hand_L", P_KIT, (rdx - 0.040, 1.352, 0.425 + 0.0255 * k), (rdx + 0.060, 1.352, 0.425 + 0.0255 * k), 0.0115, 0.0105, sides=5, mask=K_DARK)
-    limb_w("Hand_R", P_KIT, (rdx + 0.085, 1.335, 0.130), (rdx + 0.060, 1.372, 0.200), 0.0135, 0.0115, sides=5, mask=K_DARK)   # right thumb
+        limb_w("Hand_R", P_KIT, (rdx + 0.075, 1.335 - 0.022 * k, 0.210), (rdx - 0.040, 1.335 - 0.022 * k, 0.205), 0.0115, 0.0105, sides=5, mask=K_SKIN)
+        limb_w("Hand_L", P_KIT, (rdx - 0.040, 1.352, 0.425 + 0.0255 * k), (rdx + 0.060, 1.352, 0.425 + 0.0255 * k), 0.0115, 0.0105, sides=5, mask=K_SKIN)
+    limb_w("Hand_R", P_KIT, (rdx + 0.085, 1.335, 0.130), (rdx + 0.060, 1.372, 0.200), 0.0135, 0.0115, sides=5, mask=K_SKIN)   # right thumb
 
-    # --- legs: camouflage trousers, a cargo pocket (left), a holstered pistol (right), knee pads, olive boots
+    # --- legs: cargo trousers with knee pads, bunched cuffs, a drop-leg pouch with leather straps, laced khaki boots
     for u, side in ((-1, "L"), (1, "R")):
         thigh, shin, foot = f"Thigh_{side}", f"Shin_{side}", f"Foot_{side}"
         x = 0.105 * u
-        limb_w(thigh, P_CAMO, (x, 0.93, 0.0), (x, 0.50, 0.012), 0.116, 0.090, sides=9)
-        wellipsoid(shin, P_CAMO, (x, 0.50, 0.012), (0.090, 0.090, 0.090), u=8, v=4)
-        limb_w(shin, P_CAMO, (x, 0.50, 0.012), (x, 0.13, 0.0), 0.086, 0.076, sides=9)
-        kit_wbox(shin, (x, 0.50, 0.095), (0.11, 0.11, 0.06), K_DARK, bevel=0.01)                      # knee pad
-        kit_box(foot, (0.0, -0.012, 0.065), (0.130, 0.095, 0.295), bevel=0.014)                        # boot
-        R.cyl(foot, P_KIT, (0.0, 0.075, -0.005), 'y', 0.082, 0.15, segs=10)                            # boot shaft
-    R.box("Thigh_L", P_CAMO, (-0.115, -0.19, 0.02), (0.045, 0.15, 0.125), bevel=0.008)                  # cargo pocket
-    kit_wbox("Thigh_R", (0.222, 0.76, 0.02), (0.05, 0.17, 0.10), K_DARK, bevel=0.006)                   # holster
-    R.box("Thigh_R", P_METAL, (0.115, -0.03, 0.02), (0.03, 0.06, 0.07))                                 # the pistol's grip above it
+        limb_w(thigh, P_CLOTH, (x, 0.93, 0.0), (x, 0.50, 0.012), 0.116, 0.090, sides=9)
+        wellipsoid(shin, P_CLOTH, (x, 0.50, 0.012), (0.090, 0.090, 0.090), u=8, v=4)
+        limb_w(shin, P_CLOTH, (x, 0.50, 0.012), (x, 0.13, 0.0), 0.086, 0.076, sides=9)
+        R.box(shin, P_CLOTH, (0.0, 0.0, 0.09), (0.10, 0.11, 0.04))                                      # knee pad
+        R.cyl(shin, P_CLOTH, (0.0, -0.33, 0.0), 'y', 0.094, 0.06, segs=9)                               # cuff bunched over the boot
+        R.cyl(thigh, P_KIT, (0.0, -0.12, 0.0), 'y', 0.113, 0.025, segs=9, mask=K_LEATHER)               # leg strap
+        R.box(thigh, P_CLOTH, (0.115 * u, -0.20, 0.02), (0.045, 0.15, 0.125))                           # cargo pocket
+        kit_box(foot, (0.0, -0.012, 0.065), (0.130, 0.095, 0.295), K_KHAKI, bevel=0.014)                # boot
+        R.cyl(foot, P_KIT, (0.0, 0.075, -0.005), 'y', 0.082, 0.15, segs=10, mask=K_KHAKI)               # boot shaft
+        kit_box(foot, (0.0, 0.04, 0.09), (0.05, 0.012, 0.12), K_DARK)                                   # laces over the instep
+        kit_box(foot, (0.0, 0.09, 0.08), (0.03, 0.10, 0.012), K_DARK)                                   # and up the shaft
+    kit_box("Thigh_R", (0.128, -0.06, 0.0), (0.05, 0.09, 0.11))                                         # drop-leg pouch
 
 
 # --------------------------------------------------------------------------- Hunter
@@ -512,7 +533,7 @@ def build_hunter():
 CHARACTERS = {
     "Patrol": dict(build=build_patrol, muzzle_z=0.74, muzzle_y=0.0, muzzle_x=RIFLE_DX, root="CharPatrol", fbx="SM_Char_Patrol",
                    cube_uv=True, camo_texture="T_CharPatrol_BaseColor.png", skin_texture="T_CharPatrolKit_BaseColor.png", kit_slot=P_KIT,
-                   mats=[("M_Char_Patrol_Camo", "#5f7346", 0.0, 0.9), ("M_Char_Patrol_Kit", "#4d5230", 0.0, 0.8),
+                   mats=[("M_Char_Patrol_Cloth", "#84694f", 0.0, 0.9), ("M_Char_Patrol_Kit", "#4d4a30", 0.0, 0.8),
                          ("M_Char_Patrol_Metal", "#161718", 0.6, 0.4)]),
     "Hunter": dict(build=build_hunter, muzzle_z=0.74, muzzle_y=0.0, muzzle_x=RIFLE_DX, root="CharHunter", fbx="SM_Char_Hunter",
                    cube_uv=True, camo_texture="T_CharHunter_BaseColor.png", skin_texture="T_CharHunterSkin_BaseColor.png", swatches=True,

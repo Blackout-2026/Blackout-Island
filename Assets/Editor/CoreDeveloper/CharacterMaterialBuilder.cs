@@ -15,7 +15,7 @@ namespace Blackout.Editor
         public const string Folder = "Assets/Materials/Models";
         public const string TextureFolder = "Assets/Textures/Models";
         private const string TexturePrefix = "T_Char_";
-        private const string PatrolCamoTexturePrefix = "T_CharPatrol_";
+        private const string PatrolClothTexturePrefix = "T_CharPatrol_";
         private const string PatrolKitTexturePrefix = "T_CharPatrolKit_";
         private const string HunterCamoTexturePrefix = "T_CharHunter_";
         private const string HunterSkinTexturePrefix = "T_CharHunterSkin_";
@@ -26,8 +26,8 @@ namespace Blackout.Editor
         // Smoothness = 1 - roughness of the Blender material (build_humans.py).
         public static readonly ModelMaterialSpec[] Specs =
         {
-            new ModelMaterialSpec("M_Char_Patrol_Camo", "#5f7346", 0f, 0.1f, textured: true), // T_CharPatrol_BaseColor and _Normal (make_patrol_camo.py)
-            new ModelMaterialSpec("M_Char_Patrol_Kit", "#4d5230", 0f, 0.2f, textured: true),  // T_CharPatrolKit: skin, tan, olive and dark swatches (make_patrol_kit.py)
+            new ModelMaterialSpec("M_Char_Patrol_Cloth", "#84694f", 0f, 0.1f, textured: true), // T_CharPatrol_BaseColor and _Normal (make_patrol_cloth.py)
+            new ModelMaterialSpec("M_Char_Patrol_Kit", "#4d4a30", 0f, 0.2f, textured: true),   // T_CharPatrolKit: eight colour swatches (make_patrol_kit.py)
             new ModelMaterialSpec("M_Char_Patrol_Metal", "#161718", 0.6f, 0.6f),
             new ModelMaterialSpec("M_Char_Hunter_Camo", "#27301e", 0f, 0.1f, textured: true), // T_CharHunter_BaseColor (make_hunter_camo.py)
             new ModelMaterialSpec("M_Char_Hunter_Skin", "#b08368", 0f, 0.3f, textured: true), // T_CharHunterSkin: skin, eye white, iris and pupil swatches (make_hunter_skin.py)
@@ -38,12 +38,16 @@ namespace Blackout.Editor
             new ModelMaterialSpec("M_Char_Commander_Hair", "#8c683b", 0f, 0.25f, textured: true, alphaClip: true, doubleSided: true),
         };
 
+        // Materials of an earlier look that no model uses any more. BuildAll deletes them through the AssetDatabase, so their GUIDs
+        // and .meta files go with them and nothing is removed by hand.
+        private static readonly string[] ObsoleteMaterials = { "M_Char_Patrol_Camo" };
+
         /// <summary>The texture name up to the map: M_Char_Commander_Skin looks for T_CharCommanderSkin_BaseColor.</summary>
         private static string PrefixOf(string materialName)
         {
             switch (materialName)
             {
-                case "M_Char_Patrol_Camo": return PatrolCamoTexturePrefix;
+                case "M_Char_Patrol_Cloth": return PatrolClothTexturePrefix;
                 case "M_Char_Patrol_Kit": return PatrolKitTexturePrefix;
                 case "M_Char_Hunter_Camo": return HunterCamoTexturePrefix;
                 case "M_Char_Hunter_Skin": return HunterSkinTexturePrefix;
@@ -86,6 +90,15 @@ namespace Blackout.Editor
 
         public static Dictionary<string, Material> BuildAll(string folder, string textureFolder)
         {
+            foreach (string obsolete in ObsoleteMaterials)
+            {
+                string path = $"{folder}/{obsolete}.mat";
+                if (AssetDatabase.LoadAssetAtPath<Material>(path) != null)
+                {
+                    AssetDatabase.DeleteAsset(path);
+                }
+            }
+
             var set = new Dictionary<string, Material>();
             foreach (ModelMaterialSpec spec in Specs)
             {
