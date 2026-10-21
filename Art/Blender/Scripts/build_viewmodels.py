@@ -2,6 +2,8 @@
 
 Run: blender -b --factory-startup --python build_viewmodels.py -- <folder with the three download folders> <repo root> [preview folder]
   <folder> holds mp9-free, m9-bayonet-knife and first-person-arm-hand-fingerless-gloves, each with source/ and textures/ as downloaded.
+  VM_GUNS_ONLY=1 VM_SKIP_TEXTURES=1 rebuilds only the two gun exports and the combined Blender source (step VM2).
+  VM_EXPORT_ONLY=Smg limits exports to the SMG while keeping all three weapons in the combined Blender source.
 
 The downloads are static meshes: the MP9 (15,001 triangles, with a long stock), the M9 knife, and one mesh with two open forearms and hands in
 sleeves (16,432 triangles, no skeleton). This script turns them into the three viewmodels the game already has slots for, in the frames
@@ -11,8 +13,8 @@ docs/art-pipeline.md section 14.6 sets (origin near the receiver or the grip, th
   SM_Weapon_Knife.fbx   Knife (the M9), GloveR, SleeveR (round the handle), GloveL, SleeveL (open, below the blade, so the left hand is seen too).
   SM_Weapon_Sniper.fbx  Sniper (the existing rifle, kept), and the same arms on its pistol grip and forend instead of its old gloves.
 
-The arms are bent here: the fingers are curled round a rod of the right size (a rod through the bend), then the arm is scaled, thinned to a
-budget, cut in two at the wrist (Glove: the hand and the forearm, Sleeve: the cuff and the sleeve) and moved to the grip. Textures: the
+The gun arms keep the downloaded shape: only a uniform real-world scale, budget reduction and rigid placement are applied (VM2). The knife
+keeps VM1's finger curl. Each arm is cut at the cuff into Glove (hand and forearm) and Sleeve and moved to the grip. Textures: the
 downloaded maps are halved to 2048 and the mask maps repacked (R metallic, G occlusion, A smoothness) into T_WeaponSmg_*, T_WeaponKnife_* and
 T_WeaponHands_* in Assets/Textures/Models.
 """
@@ -43,11 +45,13 @@ MP9_TRIS = 4200
 MUZZLE_Y = 0.33            # the SMG's muzzle point in the gun frame (WeaponDefinitions)
 BORE_Z = 0.004
 # Where the hands grip, in the gun frame (X right, Y forward, Z up, metres): the point the finger arc is round, the way the palm faces, and the
-# way the forearm points to the fingers. rho is the finger arc's radius in arm units (rod radius = rho - 0.023).
+# way the forearm points to the fingers. rho is the anchor offset in arm units (also the knife's finger arc radius).
+# Gun arms keep their original open fingers; rotation brings the palm against the gun without deforming the mesh.
 GRIPS = {
     "Smg": {
-        "R": {"at": (0.0, 0.147, -0.075), "palm": (-1, 0, 0), "fingers": (-0.25, 0.9, 0.35), "rho": 0.075},
-        "L": {"at": (0.0, 0.268, -0.075), "palm": (1, 0, 0), "fingers": (0.50, 0.85, 0.30), "rho": 0.075},
+        "R": {"at": (-0.015, 0.147, -0.075), "palm": (-0.95, 0, -0.3), "fingers": (-0.25, 0.55, 0.8), "rho": 0.075, "curl": False},
+        # Turn the support hand inward and seat its thumb against the receiver above the foregrip.
+        "L": {"at": (-0.006, 0.179, -0.0295), "palm": (-0.520, 0.235, 0.689), "fingers": (0.777, -0.106, 0.622), "rho": 0.075, "curl": False},
     },
     # A reverse grip: the handle lies across the fingers along the knuckle line, the thumb towards the pommel, the forearm coming in from below
     # and the right. The left hand is open and low, seen at the edge of the screen.
@@ -56,17 +60,17 @@ GRIPS = {
         "L": {"holder": True, "at": (-0.09, -0.12, 0.33), "palm": (0.55, 0.8, 0.1), "fingers": (0.3, 0.25, 0.92), "rho": 0.28},
     },
     "Sniper": {
-        "R": {"at": (0.0, -0.10, -0.11), "palm": (-1, 0, 0), "fingers": (-0.25, 0.9, 0.35), "rho": 0.075},
-        "L": {"at": (-0.01, 0.28, -0.03), "palm": (1, 0, 0), "fingers": (0.50, 0.85, 0.30), "rho": 0.085},
+        "R": {"at": (-0.015, -0.11, -0.08), "palm": (-0.95, 0, -0.3), "fingers": (-0.25, 0.55, 0.8), "rho": 0.075, "curl": False},
+        "L": {"at": (-0.02, 0.05, -0.035), "palm": (-0.65, 0, 0.7), "fingers": (0.7, 0.5, 0.65), "rho": 0.085, "curl": False},
     },
 }
 
 # How the game holds each weapon (PlayerViewmodelSwap): the weapon's position and Euler angles in the holder, Unity axes. The preview puts the
 # camera where the player's camera is, so the picture is the player's view.
 FRAMING = {
-    "Smg": ((0.12, -0.09, 0.36), (3.0, -10.0, -3.0)),
+    "Smg": ((0.16, -0.10, 0.28), (3.0, -16.0, -4.0)),
     "Knife": ((0.17, -0.13, 0.37), (-19.0, -33.0, 12.0)),
-    "Sniper": ((0.12, -0.17, 0.62), (4.0, -16.0, -4.0)),
+    "Sniper": ((0.12, -0.14, 0.58), (-5.0, -20.0, -4.0)),
 }
 
 
@@ -213,8 +217,9 @@ def to_weapon_frame(label, spec):
 def build_arm(side, spec):
     bm = arm_source(side)
     x0, yc = arm_anchor(bm)
-    bend_fingers(bm, x0, spec["rho"])
-    # the finger arc's centre is the origin of the arm's own frame
+    if spec.get("curl", True):
+        bend_fingers(bm, x0, spec["rho"])
+    # Anchor at the knuckles, offset towards the palm (also the knife's finger-arc centre).
     centre = mathutils.Vector((x0 - spec["rho"], yc, KNUCKLE_Z))
     for v in bm.verts:
         v.co = v.co - centre
@@ -489,6 +494,10 @@ for label, make_body, body_mat, fbx in WEAPONS:
     for o in objects.values():
         o.hide_render = False
 for fbx, objects in built.items():
+    if os.environ.get("VM_EXPORT_ONLY") and fbx != "SM_Weapon_" + os.environ["VM_EXPORT_ONLY"] + ".fbx":
+        continue
+    if os.environ.get("VM_GUNS_ONLY") and fbx == "SM_Weapon_Knife.fbx":
+        continue
     export(fbx, objects)
     print("[Viewmodels]", fbx, {n: tri_count(o) for n, o in objects.items()}, "total", sum(tri_count(o) for o in objects.values()))
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(REPO, "Art", "Blender", "SM_Viewmodels.blend"))

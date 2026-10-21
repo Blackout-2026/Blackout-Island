@@ -27,13 +27,12 @@ namespace Blackout.Editor
         // tube with its hands hidden or foreshortened to nubs, so every weapon is turned inward (yaw) like a real first-person model,
         // which shows its left side, the supporting hand, and the right hand at the grip. Found with Art/Blender/Scripts/preview_game.py
         // (the 72 degree game camera); run it with the same numbers to see the same picture.
-        // The gun points along the aim (the barrel runs towards the crosshair) and is turned only a little to the left, so its side and
-        // the hand still show. The SMG has one hand only (the right hand on the pistol grip, its forearm coming in from the lower right);
-        // the rifle has two (the left on the forend). A stronger yaw and roll made the gun look bent.
-        public static readonly Vector3 SmgPosition = new Vector3(0.12f, -0.09f, 0.36f);
-        public static readonly Vector3 SmgEuler = new Vector3(3f, -10f, -3f);
-        public static readonly Vector3 RiflePosition = new Vector3(0.12f, -0.17f, 0.62f);
-        public static readonly Vector3 RifleEuler = new Vector3(4f, -16f, -4f);
+        // VM2: use the downloaded gun arms without finger curling or forearm deformation; build_viewmodels.py only places/rotates them.
+        // Bring the MP9 closer and frame partial arms at the bottom of the view. Keep FRAMING in that script in sync.
+        public static readonly Vector3 SmgPosition = new Vector3(0.16f, -0.10f, 0.28f);
+        public static readonly Vector3 SmgEuler = new Vector3(3f, -16f, -4f);
+        public static readonly Vector3 RiflePosition = new Vector3(0.12f, -0.14f, 0.58f);
+        public static readonly Vector3 RifleEuler = new Vector3(-5f, -20f, -4f);
 
         // Where the Hand of the Knife sits and how it is turned: the blade points up and to the left across the screen and the fist
         // and the camouflaged forearm come in from below, so the knife is held ready to stab. The hand is a reverse grip (build_knife.py,
