@@ -37,6 +37,7 @@ namespace Blackout.Mission
         private CheckpointTracker checkpoints;
         private WeaponController weapons;
         private IDoor bunkerDoor;
+        private GeneratorInteractable navigationConsole;
         private float startTime;
         private bool running;
         private bool paused;
@@ -46,6 +47,20 @@ namespace Blackout.Mission
         public int Kills { get; private set; }
         public int Deaths { get; private set; }
         public float ElapsedTime => running ? Time.time - startTime : 0f;
+
+        /// <summary>Current compass target. Marker references are discovered after the additive scenes load.</summary>
+        public bool TryGetNavigationTarget(out Vector3 position, out string label)
+        {
+            position = default;
+            label = string.Empty;
+            if (!running || player == null) return false;
+            string id = MissionNavigation.TargetMarker(mission.Phase, mission.CureTaken, mission.BunkerDoorOpen,
+                player.transform.position, out label);
+            if (id == null || !markers.TryGetValue(id, out Marker marker) || marker == null) return false;
+            position = mission.Phase == MissionPhase.GeneratorRoom && !mission.CureTaken && navigationConsole != null
+                ? navigationConsole.transform.position : marker.transform.position;
+            return true;
+        }
 
         private sealed class Checkpoint
         {
@@ -120,6 +135,7 @@ namespace Blackout.Mission
 
             FindMarkers();
             bunkerDoor = FindBunkerDoor();
+            navigationConsole = FindFirstObjectByType<GeneratorInteractable>();
             startTime = Time.time;
             running = true;
             Apply(MissionChange.Objective | MissionChange.Checkpoint);

@@ -207,6 +207,10 @@ checkpoint directly instead.
 
 ## 9. HUD (`ui/hud.js`, `ui/style.css`)
 
+Current solo addition: MC1 implements the compass and objective distance, plus
+stored enemy medkits used with Q for 25 HP. The original extraction and historical
+port limits below are retained; see [medkits and compass](../medkits-compass.md).
+
 Colours: text `rgba(226,232,226,0.92)`, dim text `rgba(200,210,205,0.55)`, accent `#d9a521`, danger
 `#ff3b2a`, good `#47d1d6`, panel `rgba(8,11,14,0.62)`. Font: Bahnschrift/DIN-style condensed sans,
 letter-spaced capitals. Margins 34 px from the screen edges, 30 px from top and bottom.

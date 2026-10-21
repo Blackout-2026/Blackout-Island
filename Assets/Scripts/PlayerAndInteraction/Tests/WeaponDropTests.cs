@@ -275,11 +275,15 @@ namespace Blackout.Interaction.Tests
         }
 
         [Test]
-        public void TheRobotGuardDropsNothing()
+        public void TheRobotGuardDropsAMedkitButNoGun()
         {
             var robot = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Agents/TacticalGuard.prefab");
 
-            Assert.IsNull(robot.GetComponent<EnemyWeaponDrop>());
+            var drops = robot.GetComponent<EnemyWeaponDrop>();
+            Assert.IsNotNull(drops);
+            var fields = new SerializedObject(drops);
+            Assert.IsNull(fields.FindProperty("dropPrefab").objectReferenceValue);
+            Assert.IsNotNull(fields.FindProperty("medkitPrefab").objectReferenceValue);
         }
     }
 }

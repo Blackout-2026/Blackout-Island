@@ -23,13 +23,13 @@ cannot save a dead player.
 
 | System | Saved gameplay state |
 | --- | --- |
-| Player | Health and invulnerability; weapon ownership, active/pending switch, cooldown, gun bloom and tracer shot counter |
+| Player | Health and invulnerability; weapon ownership, active/pending switch, cooldown, gun bloom and tracer shot counter; stored medkit count (MC1) |
 | Mission | Phase, objective, checkpoint ID, generator/cure flags, door progress flag, kills, deaths and elapsed mission time |
 | Enemies | Each original slot's alive/dead state, exact health, position and facing; whether the cure wave was used |
 | Squad | World flags, alert/buff, last sighting with its age, squad readiness and existing orders |
 | Doors | Both leaves' open fraction/target, power/combat locks and remaining unlock delay |
 | Generator | Console state, core material/hum state, blackout progress, screens, fixtures, emergency lights and beacons |
-| Items | Cure and medkit availability; collected/uncollected weapon drops that existed at the checkpoint |
+| Items | Cure and placed health pickup availability; collected/uncollected weapon and stored medkit drops that existed at the checkpoint |
 | Crate | Rigidbody position, rotation, linear/angular velocity and remaining push/scrape timing |
 | HUD/effects | Saved alert state; clear failed-attempt toast, tracers, impact particles and viewmodel kick |
 

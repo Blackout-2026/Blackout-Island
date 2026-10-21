@@ -96,6 +96,15 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "UseMedkit",
+                    "type": "Button",
+                    "id": "a801b781-dd76-4e57-9828-b7e4980bb3c1",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Interact",
                     "type": "Button",
                     "id": "82b0adbf-befb-444c-8aee-947abaa2cae5",
@@ -257,6 +266,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "WeaponScroll",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3cda9cea-2c69-4377-b116-7055d6fc450a",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UseMedkit",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

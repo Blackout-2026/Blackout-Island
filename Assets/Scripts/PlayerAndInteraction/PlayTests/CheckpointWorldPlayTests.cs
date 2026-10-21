@@ -15,6 +15,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Blackout.Diagnostics.PlayTests
@@ -29,6 +30,7 @@ namespace Blackout.Diagnostics.PlayTests
         private Health health;
         private CheckpointTracker tracker;
         private WeaponController weapons;
+        private MedkitInventory medkits;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -48,6 +50,7 @@ namespace Blackout.Diagnostics.PlayTests
             health = player.GetComponent<Health>();
             tracker = player.GetComponent<CheckpointTracker>();
             weapons = player.GetComponentInChildren<WeaponController>(true);
+            medkits = player.GetComponent<MedkitInventory>();
             weapons.LoseStartingLoadout();
             // Begin the real mission without the unrelated cinematic introduction.
             directorObject = new GameObject("Checkpoint test mission");
@@ -72,6 +75,43 @@ namespace Blackout.Diagnostics.PlayTests
             if (directorObject != null) Object.Destroy(directorObject);
             if (player != null) Object.Destroy(player);
             yield return null;
+        }
+
+        [UnityTest, Timeout(120000)]
+        public IEnumerator Medkits_RewindStoredCountAndCollectedDrops_WithoutDuplicateLoot()
+        {
+            director.DebugJump(MissionPhase.GeneratorRoom);
+            Kill(Agent("Hunter-1"));
+            var savedDrop = Object.FindFirstObjectByType<MedkitPickup>();
+            Assert.That(savedDrop, Is.Not.Null);
+            medkits.AddMedkit();
+            tracker.SetCheckpoint(tracker.Current);
+            yield return null;
+            player.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            yield return null;
+            Assert.That(player.transform.Find("HUD/Compass").gameObject.activeSelf, Is.True);
+            Assert.That(player.transform.Find("HUD/Compass/Heading").GetComponent<Text>().text, Is.EqualTo("090°"));
+            StringAssert.StartsWith("GENERATOR", player.transform.Find("HUD/Compass/Destination").GetComponent<Text>().text);
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                Assert.That(savedDrop.TryCollect(medkits), Is.True);
+                Assert.That(medkits.Count, Is.EqualTo(2));
+                health.Tick(10000f);
+                Damage(health, 50f);
+                Assert.That(medkits.TryUse(), Is.EqualTo(25f));
+                Assert.That(medkits.TryUse(), Is.EqualTo(25f));
+                Kill(Agent("Hunter-2"));
+                Assert.That(Object.FindObjectsByType<MedkitPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
+                    Is.EqualTo(2));
+                yield return DieAndRespawn();
+                Assert.That(medkits.Count, Is.EqualTo(1));
+                Assert.That(savedDrop.gameObject.activeSelf, Is.True);
+                Assert.That(savedDrop.IsTaken, Is.False);
+                Assert.That(Object.FindObjectsByType<MedkitPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
+                    Is.EqualTo(1), "later drops discarded; restoring dead enemies must not create another drop");
+                Assert.That(director.TryGetNavigationTarget(out _, out string label), Is.True);
+                Assert.That(label, Is.EqualTo("GENERATOR"));
+            }
         }
 
         [UnityTest, Timeout(120000)]

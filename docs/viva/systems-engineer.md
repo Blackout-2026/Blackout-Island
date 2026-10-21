@@ -20,6 +20,7 @@ This file covers the three topics step Y7 asks for. Each earlier step has its ow
 | H2 | [systems-engineer-h2-sound-propagation.md](systems-engineer/systems-engineer-h2-sound-propagation.md) | Hunter hearing: attenuation formula, wall raycasts, noise memory and decay, config asset |
 | H3 | [systems-engineer-h3-hunter-tree.md](systems-engineer/systems-engineer-h3-hunter-tree.md) | HunterBrain and its tree: reactions by noise type, camouflage, cover, Commander orders, prefab wiring |
 | H4 | [hunter.md](hunter.md) | The Hunter viva: behaviour tree vs FSM, sound vs a detection radius, the attenuation formula, a weakness; debug text and gizmos |
+| MC1 | [medkits-compass.md](../medkits-compass.md) | Enemy medkit inventory, Q healing, checkpoint recovery and objective compass |
 
 ---
 

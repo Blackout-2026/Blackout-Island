@@ -8,7 +8,9 @@
         "Blackout.PlayerAndInteraction",
         "Blackout.AI.Hunter",
         "Blackout.Agents",
-        "Blackout.Environment"
+        "Blackout.Environment",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
