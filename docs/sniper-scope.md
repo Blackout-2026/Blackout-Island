@@ -21,7 +21,8 @@ the player's movement settings. The ring is a simple mesh edge rather than the p
   also reset the FOV, sensitivity, mask and scope visibility request. The LateUpdate guard handles state changes later in the frame before rendering.
 
 No new event channels, cross-scene references, packages, global settings or AI changes are needed. The scope is not checkpoint inventory: a restore clears it,
-and a held right button may aim again when the rifle is ready. Reloading retains the held scope; the existing ammo system controls whether the gun can fire.
+and a held right button may aim again when the rifle is ready. RL1 lowers the scope during reload so the fitted hand/magazine animation is visible;
+holding RMB aims again after refill. See [player-reloads.md](player-reloads.md). The existing ammo system controls whether the gun can fire.
 
 ## Rebuild and review
 

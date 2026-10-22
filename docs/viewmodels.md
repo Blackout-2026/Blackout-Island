@@ -115,6 +115,8 @@ die/respawn and restart. Check the knife swing, dropped guns without arms, the m
 
 ## Not checked
 
+RL1 adds separate rigged copies for gun reloads only; see [player-reloads.md](player-reloads.md). The original holding models below remain static.
+
 - Play Mode: how it feels (framing under the real field of view while walking, jumping and landing, the swing against an enemy, switching weapons).
 - Gun fingers retain the source open pose; the knife fingers retain VM1's block curl. Neither has animated finger grips. The arms have no skeleton,
   so there is no idle sway apart from the weapon holder's own.

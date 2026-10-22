@@ -73,6 +73,7 @@ namespace Blackout.Weapons
                 && input.isActiveAndEnabled && look.isActiveAndEnabled && motor.isActiveAndEnabled
                 && mouseCaptured && !input.PausePressed
                 && weapons.isActiveAndEnabled && !weapons.IsSwitching && weapons.ActiveWeapon == rifle
+                && !(weapons.AmmoOf(rifle)?.Reloading ?? false)
                 && motor.State != MovementState.Sprint;
         }
 

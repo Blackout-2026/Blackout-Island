@@ -101,6 +101,24 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ReloadLowersScope_AndHeldRmbAimsAgainWhenTheMagazineIsReady()
+        {
+            yield return HoldScope();
+            WeaponAmmo ammo = weapons.AmmoOf(weapons.ActiveWeapon);
+            int rounds = ammo.Loaded;
+            for (int i = 0; i < rounds; i++) ammo.Consume();
+            scope.Tick(0.1f, true);
+            AssertNormal();
+            yield return null; yield return null;
+            Assert.That(weapons.GetComponentInChildren<ViewmodelReload>().ShowingReload, Is.True);
+            yield return new WaitForSeconds(1.05f);
+            scope.Tick(0.45f, true);
+            Assert.That(scope.IsScoped, Is.True);
+            Assert.That(ammo.Loaded, Is.EqualTo(ammo.MagazineSize));
+            Assert.That(weapons.GetComponentInChildren<ViewmodelReload>().ShowingReload, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator HoldingRmb_ZoomsAndHidesViewmodel_ReleasingRestoresEverything()
         {
             yield return HoldScope();
