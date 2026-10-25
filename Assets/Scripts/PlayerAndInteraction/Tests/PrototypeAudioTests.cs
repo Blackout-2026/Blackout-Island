@@ -15,7 +15,7 @@ namespace Blackout.Player.Tests
         private static GameObject Prefab(string name) => AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/" + name + ".prefab");
 
         [Test]
-        public void EveryRecipeHasAnImportedNonSilentMonoClip()
+        public void EveryCueHasAnImportedNonSilentMonoClip()
         {
             var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
             Assert.That(bank, Is.Not.Null);
@@ -24,7 +24,7 @@ namespace Blackout.Player.Tests
                 AudioClip clip = bank.Get(cue);
                 Assert.That(clip, Is.Not.Null, cue.ToString());
                 Assert.That(clip.channels, Is.EqualTo(1), cue.ToString());
-                Assert.That(clip.frequency, Is.EqualTo(22050), cue.ToString());
+                Assert.That(clip.frequency, Is.EqualTo(PrototypeAudioBank.IsGunshot(cue) ? 44100 : 22050), cue.ToString());
                 Assert.That(clip.length, Is.InRange(0.02f, 8.01f), cue.ToString());
                 clip.LoadAudioData();
                 var samples = new float[clip.samples];
@@ -33,6 +33,81 @@ namespace Blackout.Player.Tests
                 foreach (float sample in samples) peak = Mathf.Max(peak, Mathf.Abs(sample));
                 Assert.That(peak, Is.GreaterThan(0.0001f).And.LessThanOrEqualTo(1f), cue.ToString());
             }
+        }
+
+        [TestCase(AudioCue.StepSand)]
+        [TestCase(AudioCue.StepGrass)]
+        [TestCase(AudioCue.StepDirt)]
+        [TestCase(AudioCue.StepMetal)]
+        [TestCase(AudioCue.StepWood)]
+        [TestCase(AudioCue.StepConcrete)]
+        public void FootstepsHaveTwoRecordedTakesWithSofterHeadroom(AudioCue cue)
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
+            AudioClip first = bank.GetFootstep(cue, false), second = bank.GetFootstep(cue, true);
+            Assert.That(first, Is.SameAs(bank.Get(cue)));
+            Assert.That(second, Is.Not.Null.And.Not.SameAs(first), cue.ToString());
+            Assert.That(AssetDatabase.GetAssetPath(second), Is.EqualTo("Assets/Audio/Prototype/" + cue + "Alt.wav"));
+            foreach (AudioClip clip in new[] { first, second })
+            {
+                Assert.That(clip.channels, Is.EqualTo(1));
+                Assert.That(clip.frequency, Is.EqualTo(22050));
+                Assert.That(clip.length, Is.InRange(0.2f, 0.6f), clip.name);
+                clip.LoadAudioData();
+                var data = new float[clip.samples];
+                Assert.That(clip.GetData(data, 0), Is.True);
+                float peak = 0f;
+                foreach (float value in data) peak = Mathf.Max(peak, Mathf.Abs(value));
+                Assert.That(peak, Is.InRange(0.1f, 0.17f), clip.name);
+            }
+        }
+
+        [Test]
+        public void AlternateFootstepLookupKeepsOtherCuesUnchanged()
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
+            foreach (AudioCue cue in new[] { AudioCue.Smg, AudioCue.Jump, AudioCue.GeneratorHum })
+                Assert.That(bank.GetFootstep(cue, true), Is.SameAs(bank.Get(cue)));
+        }
+
+        [TestCase(AudioCue.Smg)]
+        [TestCase(AudioCue.Sniper)]
+        [TestCase(AudioCue.PatrolGun)]
+        [TestCase(AudioCue.HunterGun)]
+        [TestCase(AudioCue.GuardGun)]
+        [TestCase(AudioCue.CommanderGun)]
+        public void GunshotsHaveDistinctRecordedTakesAndRetainDecay(AudioCue cue)
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
+            AudioClip first = bank.GetGunshot(cue, false), second = bank.GetGunshot(cue, true);
+            Assert.That(first, Is.SameAs(bank.Get(cue)));
+            Assert.That(second, Is.Not.Null.And.Not.SameAs(first));
+            Assert.That(AssetDatabase.GetAssetPath(second), Is.EqualTo("Assets/Audio/Prototype/" + cue + "Alt.wav"));
+            foreach (AudioClip clip in new[] { first, second })
+            {
+                Assert.That(clip.channels, Is.EqualTo(1));
+                Assert.That(clip.frequency, Is.EqualTo(44100));
+                Assert.That(clip.length, Is.InRange(0.55f, 1.2f), clip.name);
+                clip.LoadAudioData();
+                var data = new float[clip.samples];
+                Assert.That(clip.GetData(data, 0), Is.True);
+                float peak = 0f, decay = 0f;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+                    if (i > clip.frequency * 0.15f) decay = Mathf.Max(decay, Mathf.Abs(data[i]));
+                }
+                Assert.That(peak, Is.InRange(0.48f, 0.85f), clip.name);
+                Assert.That(decay, Is.GreaterThan(0.0001f), "The shot must retain its recorded decay: " + clip.name);
+            }
+        }
+
+        [Test]
+        public void AlternateGunshotLookupKeepsMeleeAndOtherCuesUnchanged()
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
+            foreach (AudioCue cue in new[] { AudioCue.Knife, AudioCue.StepSand, AudioCue.GeneratorHum })
+                Assert.That(bank.GetGunshot(cue, true), Is.SameAs(bank.Get(cue)));
         }
 
         [Test]

@@ -21,6 +21,14 @@ namespace Blackout.Editor
         private const string Clips = "Assets/Audio/Prototype/";
         private const string GeneratorVisual = "Assets/Prefabs/Models/Generator_Visual.prefab";
 
+        [MenuItem("Blackout/Systems/Refresh Audio Clips")]
+        public static void RefreshClips()
+        {
+            BuildBank();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Blackout] AU2: audio clips, six alternate footfalls and six gunshot takes refreshed; prefab wiring retained.");
+        }
+
         [MenuItem("Blackout/Systems/Build Prototype Audio")]
         public static void Build()
         {
@@ -111,32 +119,44 @@ namespace Blackout.Editor
             var cues = (AudioCue[])Enum.GetValues(typeof(AudioCue));
             var clips = new AudioClip[cues.Length];
             for (int i = 0; i < cues.Length; i++)
-            {
-                string path = Clips + cues[i] + ".wav";
-                var importer = AssetImporter.GetAtPath(path) as AudioImporter;
-                if (importer == null) throw new InvalidOperationException("Missing " + path + "; run tools/generate-prototype-audio.py first.");
-                AudioImporterSampleSettings settings = importer.defaultSampleSettings;
-                if (!importer.forceToMono || !settings.preloadAudioData || settings.loadType != AudioClipLoadType.DecompressOnLoad ||
-                    settings.compressionFormat != AudioCompressionFormat.PCM || settings.sampleRateSetting != AudioSampleRateSetting.PreserveSampleRate)
-                {
-                    importer.forceToMono = true;
-                    settings.preloadAudioData = true;
-                    settings.loadType = AudioClipLoadType.DecompressOnLoad;
-                    settings.compressionFormat = AudioCompressionFormat.PCM;
-                    settings.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
-                    importer.defaultSampleSettings = settings;
-                    importer.SaveAndReimport();
-                }
-                clips[i] = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-            }
+                clips[i] = LoadClip(cues[i] + ".wav");
             var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>(BankPath);
             if (bank == null) { bank = ScriptableObject.CreateInstance<PrototypeAudioBank>(); AssetDatabase.CreateAsset(bank, BankPath); }
             var fields = new SerializedObject(bank);
             var list = fields.FindProperty("clips");
             list.arraySize = clips.Length;
             for (int i = 0; i < clips.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = clips[i];
+            var alternates = fields.FindProperty("footstepAlternates");
+            alternates.arraySize = 6;
+            for (int i = 0; i < alternates.arraySize; i++)
+                alternates.GetArrayElementAtIndex(i).objectReferenceValue = LoadClip(((AudioCue)((int)AudioCue.StepSand + i)) + "Alt.wav");
+            var gunshots = fields.FindProperty("gunshotAlternates");
+            gunshots.arraySize = (int)AudioCue.CommanderGun + 1;
+            for (int i = 0; i < gunshots.arraySize; i++)
+                gunshots.GetArrayElementAtIndex(i).objectReferenceValue = PrototypeAudioBank.IsGunshot((AudioCue)i)
+                    ? LoadClip(((AudioCue)i) + "Alt.wav") : null;
             fields.ApplyModifiedPropertiesWithoutUndo();
             return bank;
+        }
+
+        private static AudioClip LoadClip(string name)
+        {
+            string path = Clips + name;
+            var importer = AssetImporter.GetAtPath(path) as AudioImporter;
+            if (importer == null) throw new InvalidOperationException("Missing " + path + "; check docs/prototype-audio.md for rebuild instructions.");
+            AudioImporterSampleSettings settings = importer.defaultSampleSettings;
+            if (!importer.forceToMono || !settings.preloadAudioData || settings.loadType != AudioClipLoadType.DecompressOnLoad ||
+                settings.compressionFormat != AudioCompressionFormat.PCM || settings.sampleRateSetting != AudioSampleRateSetting.PreserveSampleRate)
+            {
+                importer.forceToMono = true;
+                settings.preloadAudioData = true;
+                settings.loadType = AudioClipLoadType.DecompressOnLoad;
+                settings.compressionFormat = AudioCompressionFormat.PCM;
+                settings.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
+                importer.defaultSampleSettings = settings;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
         }
 
         private static void ReadVolumes(out Bounds bunker, out Bounds entrance)

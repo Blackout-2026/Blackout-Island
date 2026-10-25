@@ -1,13 +1,15 @@
 """Bake prototype/src/audio/audio.js recipes to mono PCM WAVs. Prototype is read-only.
 
-Python standard library only. Fixed seed per cue, no downloaded media. Filters,
+Python standard library only. Fixed seed per cue. Filters,
 exponential envelopes and oscillator recipes follow the prototype; Unity handles
-spatial playback instead of WebAudio. Re-running leaves identical files untouched.
+spatial playback instead of WebAudio. AU2 manifest entries protect downloaded
+replacements; this tool only synthesizes the remaining prototype cues.
 """
 import argparse
 import array
 import hashlib
 import io
+import json
 import math
 from pathlib import Path
 import random
@@ -170,15 +172,25 @@ def main():
     parser.add_argument('--verify',action='store_true',help='compare against files without writing')
     args=parser.parse_args()
     if not args.verify: DESTINATION.mkdir(parents=True,exist_ok=True)
+    manifest = ROOT / 'tools/gameplay-audio-sources.json'
+    sourced = json.loads(manifest.read_text(encoding='utf8'))['clips'] if manifest.exists() else {}
+    for name, recipe in sourced.items():
+        path = DESTINATION / (name + '.wav')
+        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != recipe['sha256']:
+            raise SystemExit('Missing or changed sourced audio: '+str(path)+'; rebuild with tools/import-gameplay-audio.py.')
     changed=0
     for name in (*RECIPES,*LOOPS):
-        data=bake(name);path=DESTINATION/(name+'.wav')
+        path=DESTINATION/(name+'.wav')
+        if name in sourced:
+            continue
+        data=bake(name)
         same=path.exists() and path.read_bytes()==data
         if not same:
             changed+=1
             if args.verify: raise SystemExit('Non-deterministic or missing audio: '+str(path))
             path.write_bytes(data)
-    print(f'{len(RECIPES)+len(LOOPS)} prototype-derived clips; {changed} changed; {RATE} Hz mono PCM16.')
+    generated = sum(name not in sourced for name in (*RECIPES, *LOOPS))
+    print(f'{generated} prototype clips at {RATE} Hz; {len(sourced)} protected sourced clips; {changed} changed; sourced formats retained.')
 
 
 if __name__ == '__main__': main()

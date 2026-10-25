@@ -1,6 +1,7 @@
 // Owner: Systems Engineer. Checks real gameplay callbacks and pooled playback requests, not audible quality.
 #if UNITY_EDITOR
 using System.Collections;
+using System.Reflection;
 using Blackout.Agents;
 using Blackout.Audio;
 using Blackout.Interaction;
@@ -121,6 +122,123 @@ namespace Blackout.Diagnostics.PlayTests
             int before = audio.PlayedCount;
             drop.Interact(player);
             Assert.That(audio.PlayedCount, Is.EqualTo(before));
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerGunshotsKeepTheirTailsWhenFeedbackVoicesAreFull()
+        {
+            weapons.TakeNextLootWeapon();
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>("Assets/ScriptableObjects/Audio/PrototypeAudio.asset");
+            AudioClip first = bank.GetGunshot(AudioCue.Smg, false), second = bank.GetGunshot(AudioCue.Smg, true);
+            var voices = GameObject.Find("Gameplay Audio Voices").GetComponentsInChildren<AudioSource>();
+            var noise = AssetDatabase.LoadAssetAtPath<NoiseEventChannel>("Assets/ScriptableObjects/Events/Noise.asset");
+            int shotNoises = 0;
+            void CountShot(NoiseEvent value)
+            {
+                if (value.source != player || value.type != NoiseType.Gunshot) return;
+                shotNoises++;
+                Assert.That(value.loudness, Is.EqualTo(weapons.ActiveWeapon.noiseRadius));
+            }
+            noise.OnRaised += CountShot;
+            try
+            {
+                // Diagnostic fire traverses the real weapon/noise/audio flow without waiting for cooldowns.
+                weapons.DebugFire();
+                weapons.DebugFire();
+                AudioSource firstVoice = null, secondVoice = null;
+                foreach (AudioSource voice in voices)
+                {
+                    if (voice.clip == first) firstVoice = voice;
+                    if (voice.clip == second) secondVoice = voice;
+                }
+                Assert.That(firstVoice, Is.Not.Null);
+                Assert.That(secondVoice, Is.Not.Null.And.Not.SameAs(firstVoice));
+                for (int i = 0; i < 16; i++)
+                {
+                    audio.Play(AudioCue.Hit);
+                    audio.Play(AudioCue.StepWood);
+                    audio.Play(AudioCue.Pickup);
+                }
+                Assert.That(firstVoice.clip, Is.SameAs(first), "Hit/footstep feedback must not steal player gun voices.");
+                Assert.That(secondVoice.clip, Is.SameAs(second));
+                Assert.That(firstVoice.isPlaying && secondVoice.isPlaying, Is.True);
+                Assert.That(firstVoice.spatialBlend, Is.Zero);
+                Assert.That(firstVoice.priority, Is.EqualTo(64));
+                Assert.That(firstVoice.pitch, Is.InRange(0.99f, 1.01f));
+                for (int i = 0; i < 7; i++) weapons.DebugFire(); // exhaust/reuse the bounded gun group
+                int gunSources = 0;
+                foreach (AudioSource voice in voices) if (voice.clip == first || voice.clip == second) gunSources++;
+                Assert.That(gunSources, Is.EqualTo(8));
+                Assert.That(voices.Length, Is.EqualTo(GameplayAudio.VoiceCount + 4));
+                Assert.That(shotNoises, Is.EqualTo(9), "Firing audio must not publish duplicate AI noise events.");
+                audio.RestoreCheckpoint(audio.CaptureCheckpoint());
+                weapons.DebugFire();
+                Assert.That(firstVoice.clip, Is.SameAs(first), "Recovery starts from the first recorded take.");
+            }
+            finally { noise.OnRaised -= CountShot; }
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator MotorFootstepsKeepAINoisesButUseSlowerAlternatingAudio()
+        {
+            // Controlled distance samples enter the real motor -> event -> audio/noise paths.
+            // Native keyboard capture and audible quality remain manual checks.
+            var motor = player.GetComponent<PlayerMotor>();
+            var motorType = typeof(PlayerMotor);
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            ((FootstepTracker)motorType.GetField("footsteps", flags).GetValue(motor)).Reset();
+            motorType.GetProperty(nameof(PlayerMotor.Grounded)).SetValue(motor, true);
+            motorType.GetProperty(nameof(PlayerMotor.HorizontalSpeed)).SetValue(motor, motor.Settings.walkSpeed);
+            motorType.GetProperty(nameof(PlayerMotor.LastMoveDistance)).SetValue(motor, motor.Settings.walkStride);
+            motorType.GetProperty(nameof(PlayerMotor.State)).SetValue(motor, MovementState.Walk);
+            MethodInfo tick = motorType.GetMethod("UpdateFootsteps", flags);
+            var noise = AssetDatabase.LoadAssetAtPath<NoiseEventChannel>("Assets/ScriptableObjects/Events/Noise.asset");
+            var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>("Assets/ScriptableObjects/Audio/PrototypeAudio.asset");
+            var voices = GameObject.Find("Gameplay Audio Voices").GetComponentsInChildren<AudioSource>();
+            int noiseCount = 0;
+            void CountNoise(NoiseEvent value)
+            {
+                if (value.source != player || value.type != NoiseType.Footstep) return;
+                noiseCount++;
+                Assert.That(value.loudness, Is.EqualTo(motor.Settings.walkNoise).Within(0.001f));
+            }
+            noise.OnRaised += CountNoise;
+            try
+            {
+                int before = audio.PlayedCount;
+                AudioCue surface = default;
+                for (int i = 0; i < 6; i++)
+                {
+                    tick.Invoke(motor, null);
+                    Assert.That(audio.PlayedCount - before, Is.EqualTo((i + 2) / 2));
+                    if ((i & 1) != 0) continue;
+                    if (i == 0) surface = audio.LastCue;
+                    Assert.That((int)surface, Is.InRange((int)AudioCue.StepSand, (int)AudioCue.StepConcrete));
+                    AudioClip expected = bank.GetFootstep(surface, (i / 2 & 1) != 0);
+                    bool found = false;
+                    foreach (AudioSource voice in voices)
+                        if (voice.clip == expected)
+                        {
+                            Assert.That(voice.volume, Is.LessThanOrEqualTo(0.7141f));
+                            Assert.That(voice.pitch, Is.InRange(0.98f, 1.02f));
+                            found = true;
+                        }
+                    Assert.That(found, Is.True, "The expected recorded footfall must reach the real voice pool.");
+                }
+                float simulatedSeconds = 6f * motor.Settings.walkStride / motor.Settings.walkSpeed;
+                Assert.That((audio.PlayedCount - before) / simulatedSeconds, Is.InRange(2f, 3f));
+                Assert.That(noiseCount, Is.EqualTo(6), "All motor hearing events retain their original radii and cadence.");
+                object checkpoint = audio.CaptureCheckpoint();
+                audio.RestoreCheckpoint(checkpoint);
+                before = audio.PlayedCount;
+                tick.Invoke(motor, null);
+                Assert.That(audio.PlayedCount, Is.EqualTo(before + 1), "Recovery starts a fresh audible step.");
+            }
+            finally { noise.OnRaised -= CountNoise; }
+            yield return null;
         }
 
         [UnityTest]

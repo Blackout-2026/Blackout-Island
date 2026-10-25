@@ -54,3 +54,18 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1bff64108d0c8b54287e38db728d5772, type: 3}
   - {fileID: 8300000, guid: d81365377f77f6f40ae2db5c788c2761, type: 3}
   - {fileID: 8300000, guid: 97d93ff68b2ebd94b8c9612a80c1c28f, type: 3}
+  footstepAlternates:
+  - {fileID: 8300000, guid: ae707e4133fb7ff4e9afab43a38bb33c, type: 3}
+  - {fileID: 8300000, guid: 45436e48ccd08064ea3ba4a25175b382, type: 3}
+  - {fileID: 8300000, guid: eff8f521112058b4a97c67a55d6f30e0, type: 3}
+  - {fileID: 8300000, guid: afc9a58745cfec84b92a8333ede5b498, type: 3}
+  - {fileID: 8300000, guid: f8fd0e8b33e84b548b92b117eb9015ae, type: 3}
+  - {fileID: 8300000, guid: a102345d6c9a23a4e977d54fc2ef6203, type: 3}
+  gunshotAlternates:
+  - {fileID: 8300000, guid: 0f9b7a3719971ca42be22a64a29ac90b, type: 3}
+  - {fileID: 8300000, guid: bb38946e3dfb27344bc5420a75239de1, type: 3}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 50c0692a8836fe046aacc65444a7149e, type: 3}
+  - {fileID: 8300000, guid: 4ab18ca9f3d7e7542871e0639031f7b5, type: 3}
+  - {fileID: 8300000, guid: 7add9f218531bf846a7e89d40ff45168, type: 3}
+  - {fileID: 8300000, guid: e51907c299fb1934d882c62d6ba9a8b4, type: 3}

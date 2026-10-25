@@ -1,0 +1,536 @@
+{
+  "step": "AU2",
+  "sample_rate": 22050,
+  "format": "mono PCM16 WAV; gunshots 44100 Hz, other clips 22050 Hz; FFmpeg 7.1 decoding",
+  "sources": {
+    "impact": {
+      "file": "impact/kenney_impact-sounds.zip",
+      "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "sha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8"
+    },
+    "rpg": {
+      "file": "rpg/kenney_rpg-audio.zip",
+      "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+      "page": "https://kenney.nl/assets/rpg-audio",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "sha256": "6dbeaf8544da958d8f2adcb4a4a4b76c1ade34a05f8ab9edccd327da7375f38b"
+    },
+    "scifi": {
+      "file": "scifi/kenney_sci-fi-sounds.zip",
+      "url": "https://kenney.nl/media/pages/assets/sci-fi-sounds/6b296f9ecf-1677589334/kenney_sci-fi-sounds.zip",
+      "page": "https://kenney.nl/assets/sci-fi-sounds",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "sha256": "119340f351a5098ad814f78719438c0da355a9ce8a4c8a3af6a8d48aa3d49e04"
+    },
+    "grunts": {
+      "file": "grunts/death pain grunts.wav",
+      "url": "https://opengameart.org/sites/default/files/death%20pain%20grunts.wav",
+      "page": "https://opengameart.org/content/grunts-male-death-and-pain",
+      "author": "thebardofblasphemy",
+      "license": "CC0-1.0",
+      "sha256": "3f00fba827f20ff9ccea1bc07d2c21ab8d3a36e81b48a6005cf8459f02779586"
+    },
+    "ocean": {
+      "file": "ocean/wave_01_cc0-18363__jasinski__alkaibeach.flac",
+      "url": "https://opengameart.org/sites/default/files/wave_01_cc0-18363__jasinski__alkaibeach.flac",
+      "page": "https://opengameart.org/content/beach-ocean-waves",
+      "author": "jasinski (submitted by qubodup)",
+      "license": "CC0-1.0",
+      "sha256": "fcfca178eca2eac536e8c2a4ed5cf8096e44c921acd587047b3d9f1d7845435c"
+    },
+    "generator": {
+      "file": "generator/loop_generator_1.mp3",
+      "url": "https://opengameart.org/sites/default/files/loop_generator_1.mp3",
+      "page": "https://opengameart.org/content/generator-loop",
+      "author": "YCbCr",
+      "license": "CC0-1.0",
+      "sha256": "c5989e33550cefb84e7e224c531662d02530e0484caa814a7fa7e7bed39f2062"
+    },
+    "wind": {
+      "file": "wind/wind.zip",
+      "url": "https://opengameart.org/sites/default/files/wind.zip",
+      "page": "https://opengameart.org/content/wind",
+      "author": "IgnasD",
+      "license": "CC0-1.0",
+      "sha256": "8f6185f6eb836a5c35c492e8dabd276e507ba3e4dca0e7d551d04c689d0c0d63"
+    },
+    "crickets": {
+      "file": "crickets/cricketsounds090613_0.mp3",
+      "url": "https://opengameart.org/sites/default/files/cricketsounds090613_0.mp3",
+      "page": "https://opengameart.org/content/cricket-sounds",
+      "author": "syncopika",
+      "license": "CC0-1.0",
+      "sha256": "ff4b4dea272038a22442b50bd3887548942fa3791fedc6a68e7bf99810e48b1d"
+    },
+    "footsteps": {
+      "file": "footsteps/Fantozzi-footsteps.7z",
+      "url": "https://opengameart.org/sites/default/files/Fantozzi-footsteps.7z",
+      "page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone",
+      "author": "Fantozzi (cuts by qubodup)",
+      "license": "CC0-1.0",
+      "sha256": "415d360e0911c1c1c5355ee94023b772e6f4044f59b9b580610e7dbffd1840fd"
+    },
+    "pistol": {
+      "file": "pistol/sounds.zip",
+      "url": "https://opengameart.org/sites/default/files/sounds.zip",
+      "page": "https://opengameart.org/content/gunshot-sounds",
+      "author": "Vincent Sevedge (Tabasco)",
+      "license": "CC-BY-3.0 (archive notice; current page also offers CC0)",
+      "sha256": "5b3960083a94e18ee47bc84376615a476debc884b18f25b93ea4b6ab3f278e4f"
+    },
+    "rifle-local": {
+      "file": "firearm-clips/Sounds/Weapons/Rifle/FireLocal.opus",
+      "url": "https://raw.githubusercontent.com/DeathByDenim/openspades-free-pak/1e6b28721a2e5e51f84a572d101079bf186c66d5/Sounds/Weapons/Rifle/FireLocal.opus",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "mirror_credits": "https://github.com/DeathByDenim/openspades-free-pak/blob/1e6b28721a2e5e51f84a572d101079bf186c66d5/License/Credits-pak001-Free.md",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney; OpenSpades edits by Jarno van der Kolk",
+      "license": "CC0-1.0",
+      "sha256": "3f7dbe48bf0a44dff112a1cdca4947e09f45d44a6053ee36663e47b3bb4304bf"
+    },
+    "rifle-world": {
+      "file": "firearm-clips/Sounds/Weapons/Rifle/Fire1.opus",
+      "url": "https://raw.githubusercontent.com/DeathByDenim/openspades-free-pak/1e6b28721a2e5e51f84a572d101079bf186c66d5/Sounds/Weapons/Rifle/Fire1.opus",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "mirror_credits": "https://github.com/DeathByDenim/openspades-free-pak/blob/1e6b28721a2e5e51f84a572d101079bf186c66d5/License/Credits-pak001-Free.md",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney; OpenSpades edits by Jarno van der Kolk",
+      "license": "CC0-1.0",
+      "sha256": "12509a71c836375723240eb93aecc965b48883cb3041f0b95b20f6969c6872ae"
+    },
+    "ar15": {
+      "file": "firearm-clips/Sounds/Weapons/SMG/FireStereo.opus",
+      "url": "https://raw.githubusercontent.com/DeathByDenim/openspades-free-pak/1e6b28721a2e5e51f84a572d101079bf186c66d5/Sounds/Weapons/SMG/FireStereo.opus",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "mirror_credits": "https://github.com/DeathByDenim/openspades-free-pak/blob/1e6b28721a2e5e51f84a572d101079bf186c66d5/License/Credits-pak001-Free.md",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney; OpenSpades edits by Jarno van der Kolk",
+      "license": "CC0-1.0",
+      "sha256": "b60c48633c51b0d9e662f09c56493700ea2d8a0e84c4486d338190d251968555"
+    },
+    "ak47": {
+      "file": "firearm-clips/Sounds/Weapons/SMG/V2Local1.opus",
+      "url": "https://raw.githubusercontent.com/DeathByDenim/openspades-free-pak/1e6b28721a2e5e51f84a572d101079bf186c66d5/Sounds/Weapons/SMG/V2Local1.opus",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "mirror_credits": "https://github.com/DeathByDenim/openspades-free-pak/blob/1e6b28721a2e5e51f84a572d101079bf186c66d5/License/Credits-pak001-Free.md",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney; OpenSpades edits by Jarno van der Kolk",
+      "license": "CC0-1.0",
+      "sha256": "57b8c23cd52ca2bf2660a5c7ea4dcb78e6d3d8946a47b158ee82107ee0a8cda0"
+    },
+    "recorded-footsteps": {
+      "file": "recorded-footsteps/footsteps_0.zip",
+      "url": "https://opengameart.org/sites/default/files/footsteps_0.zip",
+      "page": "https://opengameart.org/content/footsteps-on-different-surfaces",
+      "author": "congusbongus (edits); swuing (wood/grass recordings); Eelke (metal recording)",
+      "license": "CC-BY-3.0",
+      "sha256": "542564e7f6b3a0b89a0d08542438e030e77a46303855fe5bf1644a48185861e9",
+      "originals": {
+        "wood": "https://freesound.org/people/swuing/sounds/38876/",
+        "grass": "https://freesound.org/people/swuing/sounds/38874/",
+        "metal": "https://freesound.org/people/Eelke/sounds/462598/"
+      }
+    },
+    "close-smg": {
+      "file": "firearms-original/G_31P.wav",
+      "url": "https://raw.githubusercontent.com/buddingmonkey/FreeFirearmsSFXLibrary/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20SFX/Carl%20Gustav%20M45/G_31P.wav",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "recording_sheet": "https://github.com/buddingmonkey/FreeFirearmsSFXLibrary/blob/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20Master%20Sheet.csv",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney; original library mirror by buddingmonkey",
+      "license": "CC0-1.0",
+      "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158"
+    },
+    "close-rifle": {
+      "file": "firearms-original/W_29P.wav",
+      "url": "https://raw.githubusercontent.com/buddingmonkey/FreeFirearmsSFXLibrary/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20SFX/Tikka/W_29P.wav",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "recording_sheet": "https://github.com/buddingmonkey/FreeFirearmsSFXLibrary/blob/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20Master%20Sheet.csv",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney; original library mirror by buddingmonkey",
+      "license": "CC0-1.0",
+      "sha256": "b1ffe3c104391bf8ceb8337aa4d5a2ca47938fb88ccbd051cdd2b2e205d9e72b"
+    },
+    "close-ar15": {
+      "file": "firearms-original/D_32P.wav",
+      "url": "https://raw.githubusercontent.com/buddingmonkey/FreeFirearmsSFXLibrary/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20SFX/AR-15/D_32P.wav",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "recording_sheet": "https://github.com/buddingmonkey/FreeFirearmsSFXLibrary/blob/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20Master%20Sheet.csv",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney; original library mirror by buddingmonkey",
+      "license": "CC0-1.0",
+      "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+    },
+    "close-ak47": {
+      "file": "firearms-original/C_28P.wav",
+      "url": "https://raw.githubusercontent.com/buddingmonkey/FreeFirearmsSFXLibrary/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20SFX/AK-47/C_28P.wav",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "recording_sheet": "https://github.com/buddingmonkey/FreeFirearmsSFXLibrary/blob/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20Master%20Sheet.csv",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney; original library mirror by buddingmonkey",
+      "license": "CC0-1.0",
+      "sha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d"
+    },
+    "close-pistol": {
+      "file": "firearms-original/A_42P.wav",
+      "url": "https://raw.githubusercontent.com/buddingmonkey/FreeFirearmsSFXLibrary/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20SFX/1911/A_42P.wav",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "recording_sheet": "https://github.com/buddingmonkey/FreeFirearmsSFXLibrary/blob/beb2f4041f3d6740fa0aeaf0e71159bd65a78c1b/Prepared%20Master%20Sheet.csv",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney; original library mirror by buddingmonkey",
+      "license": "CC0-1.0",
+      "sha256": "8e84438e771c157155a6a1ff47a6a7a7d81b6f39b185d41e426c57337a82254a"
+    }
+  },
+  "clips": {
+    "Smg": {
+      "source": "close-smg",
+      "start": 0.28,
+      "seconds": 0.62,
+      "peak": 0.72,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "2083f729afac441e0156cf0104980d8ce3dfcae4efb9508b9a95ab0780db4ed9"
+    },
+    "Sniper": {
+      "source": "close-rifle",
+      "start": 0.54,
+      "seconds": 1.1,
+      "peak": 0.83,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "e8c982d033a6100dd2157c18686cae1b6a9b2430d29bc4e0180b95d48f0d3d42"
+    },
+    "PatrolGun": {
+      "source": "close-ar15",
+      "start": 0.67,
+      "seconds": 0.7,
+      "peak": 0.52,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "51e8f091bfac57d0b19f3033495b87c5da6714c8a1b5cb9b79819ef0cb0cb9ee"
+    },
+    "HunterGun": {
+      "source": "close-ak47",
+      "start": 0.58,
+      "seconds": 0.7,
+      "peak": 0.58,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "bed72eb4e887a2e46652cbcaba92eab3e68fe6fef092c7014617f05b44d4c7bb"
+    },
+    "GuardGun": {
+      "source": "close-ar15",
+      "start": 5.61,
+      "seconds": 0.7,
+      "peak": 0.62,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "e0fb00c46a81c6e45ab50147c85f852a91c82d8245c2fe46f056cbb4f77f65f6"
+    },
+    "CommanderGun": {
+      "source": "close-pistol",
+      "start": 0.91,
+      "seconds": 0.62,
+      "peak": 0.52,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "cb4ba8973854c16c216533ed61f61c67163d4f4c2dcb24a8f54e4635efb96ab6"
+    },
+    "Knife": {
+      "source": "rpg",
+      "member": "Audio/knifeSlice.ogg",
+      "seconds": 0.36,
+      "peak": 0.25,
+      "sha256": "037413471d74f7f9d2749e62b37d15ab29bca09e8ba5dc7403d021b534db30d0"
+    },
+    "StepSand": {
+      "source": "footsteps",
+      "member": "Fantozzi-footsteps/ogg/Fantozzi-SandL1.ogg",
+      "seconds": 0.6,
+      "peak": 0.13,
+      "sha256": "d482c9372d4a3a08ceafc731b4140eadc053e4faeb76727c934c58f6c847715b"
+    },
+    "StepGrass": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/grass/0.ogg",
+      "seconds": 0.6,
+      "peak": 0.13,
+      "sha256": "bb5da92abf37514897d78057a7cb2b35a5677214062947899e2ad57abdd29a30"
+    },
+    "StepDirt": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/grass/2.ogg",
+      "seconds": 0.6,
+      "peak": 0.12,
+      "filters": "lowpass=f=4000",
+      "sha256": "a6e3751ac31a11b3cb4ff0d3d5bef1ef49e1e338e863d0a4302cd980b18b8f35"
+    },
+    "StepMetal": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/metal/0.ogg",
+      "seconds": 0.6,
+      "peak": 0.16,
+      "sha256": "412ffd611401f183a9bdce129acffcb98cfb81dd6971d6621c28704e3d5ca91e"
+    },
+    "StepWood": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/wood/0.ogg",
+      "seconds": 0.6,
+      "peak": 0.15,
+      "sha256": "5fb46bab7efa04b291183335e81948b1d47a44c0cf7cd6344f36e91ee8334b58"
+    },
+    "StepConcrete": {
+      "source": "footsteps",
+      "member": "Fantozzi-footsteps/ogg/Fantozzi-StoneL1.ogg",
+      "seconds": 0.6,
+      "peak": 0.14,
+      "sha256": "809fdc2eda7a92f0245d20c9fce0f8a4dc8d1f634866e0506e2d8c80338f98b4"
+    },
+    "Jump": {
+      "source": "rpg",
+      "member": "Audio/cloth1.ogg",
+      "seconds": 0.3,
+      "peak": 0.12,
+      "sha256": "893fdc9bd5224a50f01160d765baff5a47fa6256f6e22a6d20f494de546a99c6"
+    },
+    "Land": {
+      "source": "impact",
+      "member": "Audio/impactSoft_heavy_000.ogg",
+      "seconds": 0.36,
+      "peak": 0.28,
+      "sha256": "f1eae548c8bcbf804879ff36eb09b34c0cf9c65ccf20f403eb70ad979c43c653"
+    },
+    "PlayerHurt": {
+      "source": "grunts",
+      "seconds": 0.65,
+      "peak": 0.42,
+      "start": 6.86,
+      "filters": "highpass=f=90",
+      "sha256": "634c6eaf3daa768116596f18ec49ead26f215dd19c5df5692d660fb1430a471e"
+    },
+    "PlayerDeath": {
+      "source": "grunts",
+      "seconds": 2.4,
+      "peak": 0.5,
+      "start": 3.9,
+      "filters": "highpass=f=90",
+      "sha256": "d6d07a8bd4f89ff8d8eed45a9132f303e393738c4b741d6344255b0346b6f632"
+    },
+    "HumanHurt": {
+      "source": "grunts",
+      "seconds": 0.92,
+      "peak": 0.4,
+      "start": 8.3,
+      "filters": "highpass=f=90",
+      "sha256": "eb5356d06b9afc7f25afb3a8fc1475d86385621cf3a0d3a18da1a3e398ee79e6"
+    },
+    "HumanDeath": {
+      "source": "grunts",
+      "seconds": 2.1,
+      "peak": 0.5,
+      "start": 10.2,
+      "filters": "highpass=f=90",
+      "sha256": "721e4fafb471ace669f3d8f44f37a741981874b4775b5a145c405b49a507f08d"
+    },
+    "RobotHurt": {
+      "source": "impact",
+      "member": "Audio/impactMetal_medium_000.ogg",
+      "seconds": 0.45,
+      "peak": 0.4,
+      "sha256": "ab83b2cb1954ab934c2e777a051d8c9bf9f3ff50c0a8111990ee57e988a765ae"
+    },
+    "RobotDeath": {
+      "source": "impact",
+      "member": "Audio/impactMetal_heavy_000.ogg",
+      "seconds": 1.1,
+      "peak": 0.5,
+      "sha256": "35a05e38f6b94f09a6b3c7df775f5978c48c054dc6a02232388fdc2107ee0a0c"
+    },
+    "WeaponSwitch": {
+      "source": "rpg",
+      "member": "Audio/metalLatch.ogg",
+      "seconds": 0.25,
+      "peak": 0.18,
+      "sha256": "57e9ea0cd6c37960f0fe1d85e2fd337046e5fc085bac3782e664944a3e7060fc"
+    },
+    "DoorSlide": {
+      "source": "scifi",
+      "member": "Audio/doorOpen_000.ogg",
+      "seconds": 0.92,
+      "peak": 0.34,
+      "filters": "atempo=0.6",
+      "sha256": "40274fb4ddf4c1b103e7563f7157330959d0ced276c2371aeef72c1efcb025cc"
+    },
+    "DoorHeavy": {
+      "source": "scifi",
+      "member": "Audio/doorOpen_002.ogg",
+      "seconds": 2.24,
+      "peak": 0.4,
+      "filters": "atempo=0.5,atempo=0.5,lowpass=f=4500",
+      "sha256": "a56078fb1c7b935e68ab9311be8757952543f11e7278858f79088fa94499b71c"
+    },
+    "Crate": {
+      "source": "rpg",
+      "member": "Audio/creak1.ogg",
+      "seconds": 0.32,
+      "peak": 0.25,
+      "filters": "atempo=0.8,lowpass=f=2500",
+      "sha256": "a6c74f992897973bc4b84c8adcf2ab648f1e3e6da7c5a6d299d984bc92901ad4"
+    },
+    "GeneratorStop": {
+      "source": "generator",
+      "seconds": 2.2,
+      "peak": 0.32,
+      "shutdown": true,
+      "sha256": "c65250c5291994738a2bbfe412d9b66a8cb329fdf3b1f97104492beb3ba10dd9"
+    },
+    "Insect": {
+      "source": "crickets",
+      "seconds": 0.55,
+      "peak": 0.035,
+      "start": 4,
+      "filters": "highpass=f=2800,lowpass=f=7000",
+      "sha256": "a8f7a6cc61c4e3ae09785ff0db97fc9faa31374859c2db6f4cb655d6db9f9df9"
+    },
+    "Waves": {
+      "source": "ocean",
+      "seconds": 4,
+      "peak": 0.55,
+      "loop": true,
+      "sha256": "f9a8237d7ea3062d971dfdd7c5ff838663abde6a4183a610243cdeb292e557fd"
+    },
+    "Wind": {
+      "source": "wind",
+      "member": "wind/Wind.ogg",
+      "seconds": 6.6,
+      "peak": 0.4,
+      "loop": true,
+      "sha256": "73764acd5c43dc00c56cf63af0a9337ce3dae9196e73d0f7ff2b1d6c2080936d"
+    },
+    "GeneratorHum": {
+      "source": "generator",
+      "seconds": 5.3,
+      "peak": 0.25,
+      "loop": true,
+      "sha256": "350858a71d009a80b2ddbc0026b5fbaa05f8df9eb8493058c0f64f3d50a57ff6"
+    },
+    "StepSandAlt": {
+      "source": "footsteps",
+      "member": "Fantozzi-footsteps/ogg/Fantozzi-SandR1.ogg",
+      "seconds": 0.6,
+      "peak": 0.13,
+      "sha256": "6a94c10d497fef24b313db832d279347e472ada2c118389daac8454409838582"
+    },
+    "StepConcreteAlt": {
+      "source": "footsteps",
+      "member": "Fantozzi-footsteps/ogg/Fantozzi-StoneR1.ogg",
+      "seconds": 0.6,
+      "peak": 0.14,
+      "sha256": "1892db1f8aeba53d2a292a1a278bd138c13a503cf3203b100c3166af51c3b5a0"
+    },
+    "StepGrassAlt": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/grass/1.ogg",
+      "seconds": 0.6,
+      "peak": 0.13,
+      "sha256": "845552bec93f90edd728953df01f248448626d24c66f27fa2bddfe5ab9cf1367"
+    },
+    "StepDirtAlt": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/grass/3.ogg",
+      "seconds": 0.6,
+      "peak": 0.12,
+      "filters": "lowpass=f=4000",
+      "sha256": "4e68258da953c806b42f7b719fe03446c8da6ce654bb931dac2c5333af0b8c67"
+    },
+    "StepMetalAlt": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/metal/1.ogg",
+      "seconds": 0.6,
+      "peak": 0.16,
+      "sha256": "5fd3482ea0b0b523a98d36b7307b85e22dd093958373df74daf18e4e8badb85a"
+    },
+    "StepWoodAlt": {
+      "source": "recorded-footsteps",
+      "member": "footsteps/wood/1.ogg",
+      "seconds": 0.6,
+      "peak": 0.15,
+      "sha256": "84e372fa8e7a6746a4d6c003f8fd60d100a68d993416cd555f5a9cdb13c0940f"
+    },
+    "SmgAlt": {
+      "source": "close-smg",
+      "start": 3.47,
+      "seconds": 0.62,
+      "peak": 0.72,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "00f348b6b52558f22cc0d5a54836be0c50eae5f34c4655ca2ee77ffabc51cf56"
+    },
+    "SniperAlt": {
+      "source": "close-rifle",
+      "start": 5.63,
+      "seconds": 1.1,
+      "peak": 0.83,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "f29aa6e4f298740fb15b052df1d371519e87203a1aed7e0b8224fd36c1d653be"
+    },
+    "PatrolGunAlt": {
+      "source": "close-ar15",
+      "start": 5.61,
+      "seconds": 0.7,
+      "peak": 0.52,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "998e3f7a253268ad4c0732c5d12e7fd4917da4d61667ab751de38512c8e35875"
+    },
+    "HunterGunAlt": {
+      "source": "close-ak47",
+      "start": 3.22,
+      "seconds": 0.7,
+      "peak": 0.58,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "39fbb710d10487ce823f22676e305db9e4ba6d46d0f6e64637c5808b3eef6fa9"
+    },
+    "GuardGunAlt": {
+      "source": "close-ar15",
+      "start": 0.67,
+      "seconds": 0.7,
+      "peak": 0.62,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "e0a5f5ab7e0cb2a8d942ecdefdfd5589551c4e510a4093431cd7d6a3a6ee6dac"
+    },
+    "CommanderGunAlt": {
+      "source": "close-pistol",
+      "start": 4.97,
+      "seconds": 0.62,
+      "peak": 0.52,
+      "sample_rate": 44100,
+      "attack": 0.0002,
+      "release": 0.06,
+      "filters": "pan=mono|c0=c0,highpass=f=35,acompressor=threshold=0.12:ratio=2:attack=0.1:release=70",
+      "sha256": "1d586fbf12052e01f7c2580d5fc62a21d3edead98224532828136f0a0e82682c"
+    }
+  }
+}

@@ -13,6 +13,7 @@ namespace Blackout.Audio
     public sealed class GameplayAudio : MonoBehaviour, ICheckpointState
     {
         public const int VoiceCount = 32;
+        private const int GunVoices = 8, FeedbackVoices = 4;
         [SerializeField] private PrototypeAudioBank bank;
         [SerializeField] private NoiseEventChannel noise;
         [SerializeField] private VoidEventChannel generatorDisabled, cureTaken, missionComplete;
@@ -24,11 +25,13 @@ namespace Blackout.Audio
 
         private GameObject poolRoot;
         private readonly AudioSource[] voices = new AudioSource[VoiceCount];
+        private readonly int[] gunSequences = new int[(int)AudioCue.CommanderGun + 1];
         private AudioSource waves, wind, room, alarm;
         private AudioSource generatorHum;
         private bool paused, completed, alarmActive, alertPlayed;
         private float alarmDelay, insectDelay;
         private int nextVoice;
+        private int footstepPulse, footstepSequence;
 
         public static GameplayAudio Current { get; private set; }
         public int PlayedCount { get; private set; }
@@ -143,13 +146,25 @@ namespace Blackout.Audio
             RefreshAmbience(0f);
         }
 
-        /// <summary>Reuse a voice; four slots reserved for 2D feedback, the rest for positional effects.</summary>
+        /// <summary>Eight local gun voices, four feedback voices, twenty stationary world voices.</summary>
         public bool Play(AudioCue cue, Vector3 position = default, bool spatial = false, float volume = 1f)
         {
+            bool gunshot = PrototypeAudioBank.IsGunshot(cue);
+            int sequence = gunshot ? gunSequences[(int)cue] : 0;
+            AudioClip clip = bank == null ? null : gunshot ? bank.GetGunshot(cue, (sequence & 1) != 0) : bank.Get(cue);
+            float pitch = gunshot ? 1f + (sequence % 3 - 1) * 0.008f : 1f;
+            bool played = PlayClip(cue, clip, position, spatial, volume, pitch);
+            if (played && gunshot) gunSequences[(int)cue]++;
+            return played;
+        }
+
+        private bool PlayClip(AudioCue cue, AudioClip clip, Vector3 position, bool spatial, float volume, float pitch)
+        {
             if (!isActiveAndEnabled || bank == null || poolRoot == null || (Time.timeScale <= 0f && cue != AudioCue.Complete)) return false;
-            AudioClip clip = bank.Get(cue);
             if (clip == null) return false;
-            int begin = spatial ? 4 : 0, end = spatial ? VoiceCount : 4;
+            bool localGun = !spatial && PrototypeAudioBank.IsGunshot(cue);
+            int begin = spatial ? GunVoices + FeedbackVoices : localGun ? 0 : GunVoices;
+            int end = spatial ? VoiceCount : localGun ? GunVoices : GunVoices + FeedbackVoices;
             int selected = begin + nextVoice++ % (end - begin);
             for (int i = begin; i < end; i++)
                 if (!voices[i].isPlaying) { selected = i; break; }
@@ -159,7 +174,8 @@ namespace Blackout.Audio
             source.transform.position = position;
             source.spatialBlend = spatial ? 1f : 0f;
             source.volume = Mathf.Clamp01(volume);
-            source.pitch = 1f;
+            source.pitch = pitch;
+            source.priority = PrototypeAudioBank.IsGunshot(cue) ? 64 : 128;
             source.ignoreListenerPause = cue == AudioCue.Complete;
             source.Play();
             LastCue = cue;
@@ -234,13 +250,25 @@ namespace Blackout.Audio
         private void OnCure() { if (!alertPlayed) { alertPlayed = true; Play(AudioCue.Alert); } }
         private void OnComplete() { completed = true; StopVoices(); RefreshAmbience(0f); Play(AudioCue.Complete); }
         private void OnSwitch() => Play(AudioCue.WeaponSwitch);
-        private void OnJump() => Play(AudioCue.Jump);
-        private void OnLand(float speed) { if (speed > 2.5f) { OnFootstep(MovementState.Walk); Play(AudioCue.Land); } }
+        private void OnJump() { footstepPulse = 0; Play(AudioCue.Jump); }
+        private void OnLand(float speed)
+        {
+            footstepPulse = 0;
+            if (speed > 2.5f) { PlayFootstep(MovementState.Walk); Play(AudioCue.Land); }
+        }
         private void OnHit(bool killed) { Play(AudioCue.Hit); if (killed) Play(AudioCue.Kill); }
         private void OnHurt(DamageInfo _) { if (health.IsAlive) Play(AudioCue.PlayerHurt); }
         private void OnDeath() => Play(AudioCue.PlayerDeath);
 
         private void OnFootstep(MovementState state)
+        {
+            // The prototype motor emits 5.5/6.7 pulses per second at walk/sprint speed.
+            // Voice every other pulse; keep the motor's AI noise events and camera bob intact.
+            if ((footstepPulse++ & 1) != 0) return;
+            PlayFootstep(state);
+        }
+
+        private void PlayFootstep(MovementState state)
         {
             Vector3 p = transform.position;
             AudioCue cue = MissionZones.IsInGeneratorRoom(p) ? AudioCue.StepMetal :
@@ -248,11 +276,16 @@ namespace Blackout.Audio
                 p.z < -97f && Mathf.Abs(p.x) < 1.6f && p.y > 1f ? AudioCue.StepWood :
                 p.z < -92f ? AudioCue.StepSand : AudioCue.StepDirt;
             float volume = motor != null && motor.Stance != Stance.Standing ? 0.32f : state == MovementState.Sprint ? 1f : 0.714f;
-            Play(cue, volume: volume);
+            int variation = footstepSequence++;
+            AudioClip clip = bank != null ? bank.GetFootstep(cue, (variation & 1) != 0) : null;
+            float pitch = 1f + (variation % 3 - 1) * 0.015f;
+            PlayClip(cue, clip, default, false, volume, pitch);
         }
 
         private void StopVoices()
         {
+            footstepPulse = footstepSequence = 0;
+            for (int i = 0; i < gunSequences.Length; i++) gunSequences[i] = 0;
             for (int i = 0; i < voices.Length; i++) if (voices[i] != null) voices[i].Stop();
         }
     }
