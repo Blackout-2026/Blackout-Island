@@ -185,10 +185,12 @@ namespace Blackout.Interaction.Tests
 
             Vector3 restPosition = group.localPosition;
             Quaternion restRotation = group.localRotation;
+            Vector3 bladeBefore = group.TransformPoint(Vector3.forward * 0.23f);
             Vector3 leftBefore = leftGlove.position;
             swing.SetHitDelay(0.11f);
             swing.ApplyAt(0.11f);
-            Assert.That((group.localPosition - restPosition).magnitude, Is.GreaterThan(0.1f), "the knife is well away from rest when it lands");
+            Assert.That(Vector3.Distance(group.TransformPoint(Vector3.forward * 0.23f), bladeBefore),
+                Is.GreaterThan(0.1f), "measure the blade's sweep around the elbow, rather than the group's origin");
             Assert.That(leftGlove.position, Is.EqualTo(leftBefore), "the left hand stays still");
 
             swing.ApplyAt(KnifeSwing.Duration(0.11f));
@@ -199,6 +201,45 @@ namespace Blackout.Interaction.Tests
         }
 
         // ---------------------------------------------------------------------------------------------------------- the Player prefab
+
+        [Test]
+        public void KnifeSleeve_CroppedEndStaysBelowCameraThroughoutSwing()
+        {
+            GameObject player = Instance(PlayerPath);
+            PrefabUtility.UnpackPrefabInstance(player, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            Transform holder = player.transform.Find(HolderPath);
+            Camera camera = holder.parent.GetComponent<Camera>();
+            camera.aspect = 16f / 9f;
+            camera.ResetProjectionMatrix();
+            var swing = holder.Find("Knife").GetComponent<KnifeSwing>();
+            Assert.That(swing.Prepare(), Is.True);
+            Assert.That(swing.Pivot, Is.EqualTo(KnifeSwing.DefaultPivot), "the saved prefab uses the fitted pivot");
+            Transform sleeve = swing.Group.Find("SleeveR");
+            // Read only in EditMode. The supplied sleeve's proximal rim runs along this model-space axis.
+            Vector3[] vertices = sleeve.GetComponent<MeshFilter>().sharedMesh.vertices;
+            Vector3 axis = new Vector3(0.5f, 0f, 0.85f).normalized;
+            float end = vertices.Max(v => Vector3.Dot(v, axis));
+            Vector3[] rim = vertices.Where(v => Vector3.Dot(v, axis) >= end - 0.015f).ToArray();
+            Assert.That(rim.Length, Is.GreaterThan(10), "sample the cropped rim, not a single point");
+            float highest = float.NegativeInfinity;
+            string worst = string.Empty;
+            for (int frame = 0; frame <= 120; frame++)
+            {
+                swing.ApplyAt(KnifeSwing.Duration(0.11f) * frame / 120f);
+                foreach (Vector3 point in rim)
+                {
+                    Vector3 projected = camera.WorldToViewportPoint(sleeve.TransformPoint(point));
+                    if (projected.y > highest)
+                    {
+                        highest = projected.y;
+                        worst = $"sample {frame}, vertex {point}, camera point {camera.transform.InverseTransformPoint(sleeve.TransformPoint(point))}, FOV {camera.fieldOfView}";
+                    }
+                }
+            }
+            Assert.That(highest, Is.LessThan(0f), "cut sleeve end entered the view: " + worst);
+            Assert.That(holder.Find("Knife").GetComponent<MeleeWeapon>().Data.kickRotate, Is.Zero,
+                "the obsolete holder kick must not lift both cropped arms during a swing");
+        }
 
         [Test]
         public void PlayerPrefab_HasTheHandsAndTheSwingWired()

@@ -51,6 +51,14 @@ namespace Blackout.Editor
                 swingFields.FindProperty("pivot").vector3Value = KnifeSwing.DefaultPivot;
                 swingFields.ApplyModifiedPropertiesWithoutUndo();
 
+                // Replace the pre-animation fallback kick; moving the holder as well lifts the cut arm end into view.
+                WeaponData knifeData = knife.GetComponent<MeleeWeapon>().Data;
+                if (knifeData != null && knifeData.kickRotate != 0f)
+                {
+                    knifeData.kickRotate = 0f;
+                    EditorUtility.SetDirty(knifeData);
+                }
+
                 PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabBuilder.PrefabPath);
             }
             finally

@@ -12442,7 +12442,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Weapons.KnifeSwing
   weapon: {fileID: 741381846974711831}
   hand: {fileID: 5850139400157478280}
-  pivot: {x: 0.24, y: -0.28, z: 0.22}
+  pivot: {x: 0.35, y: -0.51, z: 0.57}
 --- !u!1 &4314879192628018432
 GameObject:
   m_ObjectHideFlags: 0

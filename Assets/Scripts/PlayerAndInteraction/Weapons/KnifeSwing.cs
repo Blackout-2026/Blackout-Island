@@ -13,17 +13,19 @@ namespace Blackout.Weapons
     {
         public static readonly string[] SwingingParts = { "Knife", "GloveR", "SleeveR" };
 
-        /// <summary>Where the elbow is, in the holder's frame: below and behind the hand, a little to the right.</summary>
-        public static readonly Vector3 DefaultPivot = new Vector3(0.24f, -0.28f, 0.22f);
+        /// <summary>The downloaded sleeve's cropped elbow, in the holder's frame and below the camera view.</summary>
+        public static readonly Vector3 DefaultPivot = new Vector3(0.35f, -0.51f, 0.57f);
+        // Only the swinging right arm rests lower; the free left hand keeps its existing framing.
+        private static readonly Vector3 RestOffset = new Vector3(0f, -0.15f, 0f);
 
         // The keys, as multiples of the hit delay: wind-up, the blade lands, follow-through, back at rest.
         // Angles are Unity Euler degrees about the elbow point (roll is anticlockwise as the player sees it), shifts are metres in the holder's frame.
         private static readonly Key[] Keys =
         {
             new Key(0f, Vector3.zero, Vector3.zero),
-            new Key(0.35f, new Vector3(-6f, 10f, -14f), new Vector3(0.04f, 0.04f, -0.04f)),
-            new Key(1f, new Vector3(8f, -18f, 18f), new Vector3(-0.12f, -0.02f, 0.07f)),
-            new Key(1.5f, new Vector3(10f, -26f, 26f), new Vector3(-0.17f, -0.04f, 0.09f)),
+            new Key(0.35f, new Vector3(-6f, 10f, -14f), new Vector3(0.04f, 0f, -0.04f)),
+            new Key(1f, new Vector3(8f, -18f, 0f), new Vector3(-0.12f, -0.04f, 0.07f)),
+            new Key(1.5f, new Vector3(10f, -26f, 0f), new Vector3(-0.17f, -0.07f, 0.09f)),
             new Key(3.3f, Vector3.zero, Vector3.zero),
         };
 
@@ -58,7 +60,7 @@ namespace Blackout.Weapons
         [Tooltip("The knife weapon's Hand: the parent of the knife model.")]
         [SerializeField] private Transform hand;
         [Tooltip("The elbow: the point the swing turns about, in the holder's frame.")]
-        [SerializeField] private Vector3 pivot = new Vector3(0.24f, -0.28f, 0.22f);
+        [SerializeField] private Vector3 pivot = DefaultPivot;
 
         private Transform group;
         private Vector3 restPosition;
@@ -135,12 +137,12 @@ namespace Blackout.Weapons
                 return false;
             }
 
-            restPosition = hand.localPosition;
+            restPosition = hand.localPosition + RestOffset;
             restRotation = hand.localRotation;
             var made = new GameObject("Swing");
             group = made.transform;
             group.SetParent(transform, false);
-            group.SetLocalPositionAndRotation(restPosition, restRotation);
+            group.SetLocalPositionAndRotation(hand.localPosition, restRotation);
             foreach (Transform part in parts)
             {
                 if (part != null)
@@ -148,6 +150,8 @@ namespace Blackout.Weapons
                     part.SetParent(group, true);
                 }
             }
+
+            group.localPosition = restPosition;
 
             return true;
         }

@@ -160,7 +160,7 @@ namespace Blackout.Editor
             d.recoilPitch = 0f;
             d.recoilYaw = 0f;
             d.kickBack = 0f;
-            d.kickRotate = 12f; // [GUESS] stands in for the swing animation, which is not ported
+            d.kickRotate = 0f; // KnifeSwing animates the arm; a second holder kick exposes its cropped elbow.
             d.noiseRadius = 3f;
             d.tracerEvery = 0;
             d.muzzleFlashScale = 0f;

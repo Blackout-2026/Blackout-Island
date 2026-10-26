@@ -34,7 +34,7 @@ MonoBehaviour:
   recoilPitch: 0
   recoilYaw: 0
   kickBack: 0
-  kickRotate: 12
+  kickRotate: 0
   meleeConeAngle: 51.7
   meleeHitDelay: 0.11
   switchTime: 0.4

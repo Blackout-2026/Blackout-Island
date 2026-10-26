@@ -88,6 +88,23 @@ published or handed in.**
 
 Not used from the download: its terrain, logs, the 440 scattered tree copies and the two large grass meshes.
 
+## Gislinge boat (B1)
+
+[Gislinge Viking Boat](https://sketchfab.com/3d-models/gislinge-viking-boat-01098ad7973647a9b558f41d2ebc5193)
+by **Opus Poly** (Alberto Foglia), licensed under
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+The creator's [portfolio page](https://albertofoglia.artstation.com/projects/Kr2EOy)
+also describes the reconstruction, based on the Roskilde Viking Ship Museum's
+Gislinge Boat Open Source Project. The Sketchfab listing carries a NoAI label.
+
+User-supplied source: `D:/model/gislinge-viking-boat/source/Gislinge_Boat.zip`.
+Used: the complete FBX, hull and sail colour/normal/metallic/roughness maps,
+and hull AO. Changes: texture resizing to 2048px, conversion to PNG, packed
+metallic/occlusion/smoothness channels, URP materials and Unity placement/collision.
+The FBX geometry and UVs are unchanged. Sail transmission is not implemented.
+See [integration and rebuild notes](../gislinge-boat.md). This is a third-party
+environment prop and is not claimed as either student-modelled hero asset.
+
 ## How to add a vegetation model
 
 1. Use a CC0 low-poly pack (for example Kenney or Quaternius, both CC0 1.0). Put its files in

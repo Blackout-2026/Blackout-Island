@@ -1,4 +1,4 @@
-# First-person weapons and hands (steps VM1, VM2)
+# First-person weapons and hands (steps VM1, VM2, K1)
 
 The SMG is the downloaded **MP9**, the knife the downloaded **M9 bayonet**, and the player's two hands the downloaded **first-person arms**
 (fingerless tactical gloves, camouflage sleeves). They went into the three viewmodel files that already existed, `SM_Weapon_Smg.fbx`, `_Knife.fbx` and
@@ -34,6 +34,63 @@ Run with Blender 5.2 in the background (`blender -b --factory-startup --python b
 
 The numbers: SMG 9,000 triangles (gun 4,200 and four arm parts), rifle 8,568, knife 6,436. The viewmodel budget is now **10,000** (hard maximum 15,000),
 up from 6,000, because the arms are the one thing always on screen (`ModelBudget`, `PropCatalog`, the budget tests and `docs/art-pipeline.md` agree).
+
+## Knife arm continuity fix (K1)
+
+The rigid downloaded forearm ends at the elbow. The old swing turned around an
+estimated pivot near the wrist and rolled the short arm sideways, exposing its
+cut end. A leftover `Knife.kickRotate = 12` also pitched the entire holder during
+every slash, even after the dedicated swing had been added.
+
+`KnifeSwing` now keeps only the knife/right-glove/right-sleeve group 0.15 m lower
+at rest, with an elbow pivot at holder-local (0.35,-0.51,0.57). The left hand keeps
+its original framing. The strike and follow-through avoid the old sideways roll
+and move down slightly as they move forward. The cropped sleeve rim stays below
+the camera throughout the swing. The original FBX geometry, arm proportions,
+materials, gun poses and reload rigs are retained.
+
+The existing `ViewmodelBuilder.Build` writes the fitted pivot to the Player
+prefab and sets the knife's holder kick to zero. `PlayerWeaponsBuilder` also uses
+zero for a newly created knife asset, so rebuilding cannot restore the old
+fallback. Run **Blackout > Systems > Build Viewmodel Hands And Knife Swing** to
+reapply the setup. `ViewmodelBuilder.RenderPreview` renders the existing static
+review poses without modifying the saved prefab.
+
+Damage, reach, sound and cadence still come from the same MeleeWeapon and
+WeaponData: the hit lands at 0.11 s, the visual returns after 0.363 s, and the
+cooldown remains 0.48 s. No runtime mesh stretching, rig or IK is added. The
+existing disable/re-enable path restores the new rest pose without creating
+another Swing group.
+
+`ViewmodelTests` samples 121 poses of the actual saved Player prefab and projects
+vertices near the imported sleeve's cropped rim through its 72-degree camera.
+`KnifeSwingPlayTests` uses the real WeaponController.Fire -> MeleeWeapon.Swung
+path through DebugFire, checks the holder remains still, and exercises pause,
+disable/re-enable and repeated swings. Optional graphics captures are written
+outside the repository under `%TEMP%/blackout-K1/runtime-preview/`.
+
+Verified in Unity 6000.3.25f1 on 2026-10-26: final builder/import and repeat exited
+0; Player.prefab, Knife.asset and both metadata files were byte-identical on
+repeat. EditMode passed 15/15 (`editmode-final2.log`/`.xml`); PlayMode passed 2/2
+(`playmode.log`/`.xml`), both exit 0. All six runtime camera captures were
+inspected, including the return to rest. Evidence is under `%TEMP%/blackout-K1/`.
+Protected-file hashes show only the intended Player prefab change among the
+checked models, prefabs, scenes, boat assets, materials, textures and settings.
+The knife data differs only in kickRotate 12 -> 0. Final logs contain no C#
+compiler warnings/errors or exceptions; existing licensing diagnostics remain.
+Earlier framing experiments and failing rim samples remain in the evidence
+folder. The PlayMode captures use a fixed 120 Hz step and DebugFire; they do not
+verify native mouse capture, human timing or complete gameplay.
+
+Manual check: in Bootstrap, hold LMB for repeated knife attacks, switch away and
+back mid-swing after acquiring a gun, sprint/stop, crouch/prone, pause/resume,
+and die/respawn. Check both the arm edge and blade visibility at your usual Game
+view size, then Restart and check the Console. Native input feel, stance camera
+motion and a complete mission remain manual checks.
+
+Viva: keep the original static arm, frame its cut end outside the view, rotate
+around the elbow, and use one swing animation rather than stacking a placeholder
+holder kick. This is a rigid visual fix; it does not add shoulder articulation.
 
 ## In the game
 

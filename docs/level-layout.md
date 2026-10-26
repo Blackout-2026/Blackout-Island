@@ -1669,6 +1669,12 @@ builder when supplied; no external assets are required to run it.
 
 ## Weathered rowboat replacement (W13)
 
+**B1 supersedes the visual assets and collision profile in this historical section:**
+the saved boat now uses the supplied Gislinge sailboat through the same visual
+prefab GUID and scene root. See [Gislinge boat replacement](gislinge-boat.md) for
+the current offsets, 22 enabled collision boxes, materials and rebuild procedure.
+The dock, torch and BoatExit remain connected through the existing systems.
+
 The user requested an original wooden rowboat based on their supplied image and approved additions in the
 Core Developer's model, texture, material and visual-prefab folders. `Environment.unity` now contains this
 linked visual at `Beach/Boat/RowboatVisual`. It replaces the cabin motorboat's appearance with a curved plank

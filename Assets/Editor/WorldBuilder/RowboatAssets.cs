@@ -7,24 +7,21 @@ using UnityEngine.SceneManagement;
 
 namespace Blackout.Editor
 {
-    /// <summary>Builds the approved Core Developer visual assets. Does not change any game scene.
-    /// Blender source stays outside Assets; the FBX contains one mesh for each distance level.</summary>
+    /// <summary>Installs the supplied Gislinge model in the existing visual prefab, keeping its GUID.
+    /// Only the labelled generated Model child is replaced; scenes and gameplay stay separate.</summary>
     public static class RowboatAssets
     {
-        public const string ModelPath = "Assets/Models/Custom/SM_Rowboat.fbx";
-        public const string BasePath = "Assets/Textures/Models/T_Rowboat_BaseColor.png";
-        public const string MetalPath = "Assets/Textures/Models/T_Rowboat_MetalSmooth.png";
-        public const string MaterialPath = "Assets/Materials/Models/M_Rowboat_Weathered.mat";
+        public const string ModelPath = "Assets/Models/Custom/SM_GislingeBoat.fbx";
+        private const string PreviousModelPath = "Assets/Models/Custom/SM_Rowboat.fbx";
         public const string PrefabPath = "Assets/Prefabs/Models/Rowboat_Visual.prefab";
         private const string GeneratedLabel = "BlackoutGeneratedRowboat";
 
         [MenuItem("Blackout/World/Build Rowboat Visual Assets")]
         public static void Build()
         {
-            ConfigureTexture(BasePath, true, 2048);
-            ConfigureTexture(MetalPath, false, 1024);
             GameObject model = Required<GameObject>(ModelPath);
-            Material material = BuildMaterial();
+            Material hull = BuildMaterial("Hull");
+            Material sail = BuildMaterial("Sail");
             bool exists = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath) != null;
             if (exists) RequireGenerated(Required<GameObject>(PrefabPath));
             Scene preview = default;
@@ -39,6 +36,16 @@ namespace Blackout.Editor
             try
             {
                 Transform child = root.transform.Find("Model");
+                if (child != null && PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) != model)
+                {
+                    if (PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) != Required<GameObject>(PreviousModelPath)
+                        || PrefabUtility.GetAddedGameObjects(child.gameObject).Count != 0
+                        || PrefabUtility.GetAddedComponents(child.gameObject).Count != 0)
+                        throw new InvalidOperationException("Unexpected Model source or custom additions; inspect the boat prefab before rebuilding.");
+                    // Unity APIs preserve the outer prefab's GUID, root and scene/cinematic references.
+                    UnityEngine.Object.DestroyImmediate(child.gameObject);
+                    child = null;
+                }
                 if (child == null)
                 {
                     GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(model, root.scene);
@@ -46,31 +53,30 @@ namespace Blackout.Editor
                     child.SetParent(root.transform, false);
                     child.name = "Model";
                 }
-                else if (PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) != model)
-                    throw new InvalidOperationException("The rowboat Model has a different source; inspect it before rebuilding.");
-
                 child.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 child.localScale = Vector3.one;
                 MeshRenderer[] renderers = child.GetComponentsInChildren<MeshRenderer>(true);
-                if (renderers.Length != 2) throw new InvalidOperationException("Expected exactly two rowboat LOD meshes.");
+                if (renderers.Length != 21) throw new InvalidOperationException("Expected the supplied boat's 21 meshes.");
                 foreach (MeshRenderer renderer in renderers)
                 {
-                    renderer.sharedMaterials = new[] { material };
+                    renderer.sharedMaterials = new[] { renderer.name == "Sail Full" ? sail : hull };
                     PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
                 }
-                MeshRenderer near = renderers.Single(renderer => renderer.name == "Rowboat_LOD0");
-                MeshRenderer far = renderers.Single(renderer => renderer.name == "Rowboat_LOD1");
                 LODGroup group = root.GetComponent<LODGroup>();
                 if (group == null) group = root.AddComponent<LODGroup>();
-                // Relative screen height: retain the net/oars nearby; use the simpler hull farther away.
-                group.SetLODs(new[] { new LOD(0.16f, new Renderer[] { near }), new LOD(0.025f, new Renderer[] { far }) });
+                // The download has one detail level. Keep the existing final cull threshold.
+                group.SetLODs(new[] { new LOD(0.025f, renderers) });
                 group.RecalculateBounds();
                 GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
                 AssetDatabase.SetLabels(saved, new[] { GeneratedLabel });
-                int nearTriangles = (int)near.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3;
-                int farTriangles = (int)far.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3;
-                Debug.Log($"[World] Rowboat visual: LOD0 {nearTriangles} triangles, LOD1 {farTriangles} triangles; "
-                    + $"one URP material per LOD; bounds {near.bounds.size:F3} m; no colliders or gameplay components.");
+                int triangles = renderers.Sum(r => (int)r.GetComponent<MeshFilter>().sharedMesh.GetIndexCount(0) / 3);
+                foreach (string part in new[] { "Planking", "Mast", "Rudder", "Sail Full" })
+                {
+                    MeshRenderer renderer = renderers.Single(r => r.name == part);
+                    Debug.Log($"[World] Gislinge {part}: centre {renderer.bounds.center:F3}, size {renderer.bounds.size:F3}");
+                }
+                Debug.Log($"[World] Gislinge boat: {triangles} triangles, {renderers.Length} meshes, two URP materials; "
+                    + "original geometry/UVs, no colliders or gameplay components in the visual prefab.");
             }
             finally
             {
@@ -81,39 +87,49 @@ namespace Blackout.Editor
             Debug.Log("[World] Rowboat visual assets ready. Environment scene unchanged.");
         }
 
-        private static Material BuildMaterial()
+        private static Material BuildMaterial(string part)
         {
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            string texture = "Assets/Textures/Models/T_Gislinge_" + part;
+            string path = "Assets/Materials/Models/M_Gislinge_" + part + ".mat";
+            ConfigureTexture(texture + "_BaseColor.png", true);
+            ConfigureTexture(texture + "_Normal.png", false, true);
+            ConfigureTexture(texture + "_MetalSmooth.png", false);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool create = material == null;
-            if (create) material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "M_Rowboat_Weathered" };
+            if (create) material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "M_Gislinge_" + part };
             else RequireGenerated(material);
-            material.SetTexture("_BaseMap", Required<Texture2D>(BasePath));
+            material.SetTexture("_BaseMap", Required<Texture2D>(texture + "_BaseColor.png"));
             material.SetColor("_BaseColor", Color.white);
-            material.SetTexture("_MetallicGlossMap", Required<Texture2D>(MetalPath));
+            material.SetTexture("_BumpMap", Required<Texture2D>(texture + "_Normal.png"));
+            material.SetFloat("_BumpScale", 1f);
+            material.SetTexture("_MetallicGlossMap", Required<Texture2D>(texture + "_MetalSmooth.png"));
+            material.SetTexture("_OcclusionMap", Required<Texture2D>(texture + "_MetalSmooth.png"));
+            material.SetFloat("_OcclusionStrength", 1f);
             material.SetFloat("_Metallic", 1f);
             material.SetFloat("_Smoothness", 1f);
             material.SetFloat("_SmoothnessTextureChannel", 0f); // Smoothness from metallic texture alpha, not albedo.
+            material.SetFloat("_Cull", part == "Sail" ? 0f : 2f); // The source sail is a single surface.
             BaseShaderGUI.SetMaterialKeywords(material);
             material.EnableKeyword("_METALLICSPECGLOSSMAP");
-            if (create) AssetDatabase.CreateAsset(material, MaterialPath);
+            if (create) AssetDatabase.CreateAsset(material, path);
             else EditorUtility.SetDirty(material);
             AssetDatabase.SetLabels(material, new[] { GeneratedLabel });
             AssetDatabase.SaveAssetIfDirty(material);
             return material;
         }
 
-        private static void ConfigureTexture(string path, bool colour, int maximumSize)
+        private static void ConfigureTexture(string path, bool colour, bool normal = false)
         {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null) throw new InvalidOperationException("Missing baked rowboat texture: " + path);
-            importer.textureType = TextureImporterType.Default;
+            importer.textureType = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
             importer.sRGBTexture = colour;
             importer.alphaSource = colour ? TextureImporterAlphaSource.None : TextureImporterAlphaSource.FromInput;
             importer.alphaIsTransparency = false;
             importer.mipmapEnabled = true;
             importer.isReadable = false;
-            importer.maxTextureSize = maximumSize;
-            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.maxTextureSize = 2048;
+            importer.wrapMode = TextureWrapMode.Repeat;
             importer.filterMode = FilterMode.Trilinear;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
             importer.SaveAndReimport();

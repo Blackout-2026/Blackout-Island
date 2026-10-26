@@ -10,6 +10,11 @@ visuals, run **Blackout > Agents > Apply Soldier Animations**. See
 Owner: Core Developer. Applies to every custom model in the game (generator, security robot, props,
 weapon viewmodels). Unity 6000.3.25f1, URP, Blender 4.2 LTS or newer (menu names below are from 4.x).
 
+B1 imports the supplied Gislinge boat as a credited third-party environment prop.
+The original FBX/UVs are preserved; converted 2048px maps use this pipeline's
+URP channel conventions. See [boat integration and rebuild notes](gislinge-boat.md)
+and [source attribution](credits/world-builder.md#gislinge-boat-b1).
+
 Reference for sizes and parts: `docs/reference/core-developer.md`. Import rules in this document are
 enforced by `Assets/Editor/CoreDeveloper` (section 9), so a model that follows the checklist in section 8
 imports with the right settings without clicking anything in the Inspector.
