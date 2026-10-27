@@ -33,6 +33,8 @@ namespace Blackout.Agents
         private int burstShotsFired;
 
         public AgentWeaponConfig Config => config;
+        /// <summary>Active attack intent, including reaction delay and the pauses between bursts.</summary>
+        public bool IsEngaging => engaging && currentIntent.fire;
 
         /// <summary>
         /// Overrides the Inspector-assigned fields. The real prefab never calls this (its serialized values

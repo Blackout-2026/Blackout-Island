@@ -112,6 +112,18 @@ namespace Blackout.Agents
             tracker.Clear();
         }
 
+        /// <summary>Temporary cinematic control: discard residual movement and rebase facing to the root.</summary>
+        public void StopImmediately()
+        {
+            Stop();
+            velocity = Vector2.zero;
+            yaw = transform.eulerAngles.y;
+            hasLookTarget = false;
+            aiming = false;
+            stuckTimer = 0f;
+            stuckReferencePosition = transform.position;
+        }
+
         /// <summary>One movement step. Update calls it every frame; public so tests can drive time.</summary>
         public void Tick(float dt)
         {

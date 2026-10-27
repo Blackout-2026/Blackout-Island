@@ -2,6 +2,7 @@
 using System;
 using Blackout.Player;
 using Blackout.Shared;
+using Blackout.Takedowns;
 using UnityEngine;
 
 namespace Blackout.Weapons
@@ -40,6 +41,7 @@ namespace Blackout.Weapons
         [SerializeField] private LayerMask hitMask = PhysicsLayers.PlayerShots;
         [Tooltip("Index of the weapon held at the start, in slot order.")]
         [SerializeField, Min(0)] private int startIndex;
+        [SerializeField] private TakedownController takedown;
 
         private IWeapon[] weapons;
         private WeaponSwitcher switcher;
@@ -298,16 +300,18 @@ namespace Blackout.Weapons
             WeaponChanged?.Invoke(ActiveWeapon);
         }
 
-        private void Update()
+        private void Update() => Tick(Time.deltaTime, Cursor.lockState == CursorLockMode.Locked);
+
+        /// <summary>Normal weapon update; tests supply cursor capture because batch mode cannot capture the mouse.</summary>
+        public void Tick(float dt, bool inputCaptured)
         {
             if (switcher == null) return;
-            float dt = Time.deltaTime;
             if (dt <= 0f)
             {
                 return; // paused
             }
 
-            bool hasInput = input.isActiveAndEnabled && Cursor.lockState == CursorLockMode.Locked;
+            bool hasInput = input.isActiveAndEnabled && inputCaptured;
             cooldown.Tick(dt);
             TickAmmo(dt);
             if (hasInput)
@@ -329,6 +333,7 @@ namespace Blackout.Weapons
 
             if (hasInput && WantsToFire(weapon.Data) && CanFire(weapon.Data))
             {
+                if (weapon.Data.kind == WeaponKind.Melee && takedown != null && takedown.TryBegin()) return;
                 Fire(weapon);
                 if (ammo[switcher.ActiveIndex].Consume())
                 {
@@ -411,9 +416,19 @@ namespace Blackout.Weapons
         private bool CanFire(WeaponData data)
         {
             bool sprinting = motor.State == MovementState.Sprint;
-            return cooldown.IsReady && switcher.IsReady && ammo[switcher.ActiveIndex].CanFire
+            return (takedown == null || (!takedown.IsBusy && !takedown.WaitingForRelease))
+                && cooldown.IsReady && switcher.IsReady && ammo[switcher.ActiveIndex].CanFire
                 && (data.kind == WeaponKind.Melee || !sprinting);
         }
+
+        public bool CanStartTakedown => ActiveWeapon != null && ActiveWeapon.kind == WeaponKind.Melee
+            && switcher.IsReady && cooldown.IsReady;
+        internal void StartTakedownCooldown() => cooldown.Start(ActiveWeapon.cooldown);
+        internal void PublishTakedownNoise() => context.PublishNoise(ActiveWeapon.noiseRadius, NoiseType.Melee);
+        internal void ApplyTakedownDamage(Health target, Vector3 point) => context.ApplyDamage(target,
+            new DamageInfo(target.Current, point, motor.transform.forward, motor.gameObject, DamageType.Melee));
+        internal void ApplyTakedownDamage(Health target, Vector3 point, float damage) => context.ApplyDamage(target,
+            new DamageInfo(damage, point, motor.transform.forward, motor.gameObject, DamageType.Melee));
 
         // Every gun reloads in the background, so switching away from an emptied gun does not cancel its reload.
         private void TickAmmo(float dt)
@@ -432,6 +447,7 @@ namespace Blackout.Weapons
 
         private void Fire(IWeapon weapon)
         {
+            if (takedown != null && takedown.IsBusy) return;
             WeaponData data = weapon.Data;
             cooldown.Start(data.cooldown);
             weapon.Fire();

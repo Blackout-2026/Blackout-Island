@@ -1563,6 +1563,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 7391099582985411380}
   m_SourcePrefab: {fileID: 100100000, guid: 727c8f07c0409e94a88028ee1e8dfca6, type: 3}
+--- !u!4 &6769748687898647683 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7494390880598678494, guid: 727c8f07c0409e94a88028ee1e8dfca6, type: 3}
+  m_PrefabInstance: {fileID: 3887616229105420125}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &6810711192043806938 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7743684345651734407, guid: 727c8f07c0409e94a88028ee1e8dfca6, type: 3}
@@ -1607,6 +1612,11 @@ MonoBehaviour:
   weaponHand: {fileID: 0}
   weaponGripPosition: {x: 0, y: 0, z: 0}
   weaponGripRotation: {x: 0, y: 0, z: 0, w: 1}
+--- !u!23 &8125440675669816779 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4985708411851141782, guid: 727c8f07c0409e94a88028ee1e8dfca6, type: 3}
+  m_PrefabInstance: {fileID: 3887616229105420125}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8504286359072404351 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4897344903881339938, guid: 727c8f07c0409e94a88028ee1e8dfca6, type: 3}
@@ -1700,6 +1710,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2252677507063607119}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9047705487044437083}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!1 &1168188939965512170 stripped
 GameObject:
@@ -1767,6 +1780,60 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.ActorAudio
   gunCue: 4
   robot: 0
+--- !u!114 &9047705487044437083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168188939965512170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3baab13dd9b8254f925fd1145e5957f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentTakedownTarget
+  eligible: 1
+  actorAnimator: {fileID: 3325433436495885202}
+  agent: {fileID: 3699794022233078499}
+  mover: {fileID: 7557986575997534908}
+  shooter: {fileID: 2090610262482104809}
+  driver: {fileID: 7391099582985411380}
+  carriedWeapon:
+  - {fileID: 8125440675669816779}
+  disarmWeapon: {fileID: 6769748687898647683}
+--- !u!114 &2090610262482104809 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8199370502000358389}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168188939965512170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acaa9dad5955d24459ff643b0b38ba0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentShooter
+--- !u!114 &3699794022233078499 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4796979051319052566, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8199370502000358389}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168188939965512170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f48f64bd2d4f74c9abcf543127060e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentRoot
+--- !u!114 &7557986575997534908 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8199370502000358389}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168188939965512170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a530e23354a29b4487c45668ab53670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.PathFollower
 --- !u!4 &8199540090568070361 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}

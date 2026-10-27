@@ -186,6 +186,15 @@ namespace Blackout.Player
             EyeHeight = settings.EyeHeight;
         }
 
+        /// <summary>Temporary cinematic ownership must not resume a pre-cutscene sprint or falling velocity.</summary>
+        public void StopMotion()
+        {
+            horizontalVelocity = Vector2.zero;
+            verticalVelocity = Grounded ? -GroundedStickSpeed : 0f;
+            HorizontalSpeed = LastMoveDistance = 0f;
+            footsteps.Reset();
+        }
+
         /// <summary>
         /// Walking off a step or down a ramp would start a fall. If ground is within the snap distance below,
         /// move straight down onto it instead (the prototype's 0.35 m ground snap).

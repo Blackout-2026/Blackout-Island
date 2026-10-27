@@ -11393,6 +11393,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1921
   startIndex: 0
+  takedown: {fileID: 3641756449110700562}
 --- !u!114 &2405567711439170817
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16445,6 +16446,7 @@ GameObject:
   - component: {fileID: 6214130571938756471}
   - component: {fileID: 3780103019779969711}
   - component: {fileID: 3356447577754586015}
+  - component: {fileID: 3641756449110700562}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -16685,6 +16687,33 @@ MonoBehaviour:
   crosshair: {fileID: 6536128552199527889}
   scopedFieldOfView: 22
   scopedSensitivity: 0.35
+--- !u!114 &3641756449110700562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 026f40b0f686f6748b067c61f02453e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Takedowns.TakedownController
+  profile: {fileID: 11400000, guid: 43a0324431d7cbc4f88c07ba5deb4a3f, type: 2}
+  frontalProfile: {fileID: 11400000, guid: c0fbfa0dcae994b488ca8836403de7f1, type: 2}
+  cinematicActorPrefab: {fileID: 3512884856232612601, guid: fa96cae650529b5459e87cd12d4a2ca0, type: 3}
+  input: {fileID: 796301633198802300}
+  motor: {fileID: 1044645646848375807}
+  weapons: {fileID: 466296247462174139}
+  hands: {fileID: 2405567711439170817}
+  playerCamera: {fileID: 7960660481702232932}
+  suspendDuringTakedown:
+  - {fileID: 1044645646848375807}
+  - {fileID: 4260577954320442414}
+  - {fileID: 5877640492430380685}
+  - {fileID: 8813139205175220179}
+  - {fileID: 3356447577754586015}
+  - {fileID: 466296247462174139}
 --- !u!1 &7358575603390302503
 GameObject:
   m_ObjectHideFlags: 0

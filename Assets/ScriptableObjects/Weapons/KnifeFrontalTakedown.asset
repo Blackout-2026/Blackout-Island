@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66bad7ee28ab1a4a88ef0ddab272e0d, type: 3}
+  m_Name: KnifeFrontalTakedown
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Takedowns.TakedownProfile
+  style: 1
+  playerAttack: {fileID: -203655887218126122, guid: fdcad00af633a7c4bb6cf20e2f00924c, type: 3}
+  victimReaction: {fileID: 4050334072264406587, guid: cb39cc081e8c25949933de84478f43a8, type: 3}
+  kick: {fileID: -203655887218126122, guid: 25ae84922b2d4264fa5bb4d0c286e8f4, type: 3}
+  victimIdle: {fileID: -1561750860778243614, guid: 9f48806bfc583234ebb98dcd73323854, type: 3}
+  victimDeath: {fileID: -6298473264308222846, guid: 467a90ea10589e644a7cd6578adc8fb7, type: 3}
+  stabSpeed: 3.5
+  range: 1.5
+  playerOffset: {x: 0, y: 0, z: 1.1}
+  forwardClearance: 0.8
+  playerYaw: 180
+  alignmentTime: 0.3
+  cameraReturnTime: 0.35
+  cameraOffset: {x: 2.3, y: 1.5, z: 0.6}
+  cameraEndOffset: {x: 2, y: 1.4, z: -0.7}
+  focusHeight: 1
+  fieldOfView: 55
+  timeScale: 1

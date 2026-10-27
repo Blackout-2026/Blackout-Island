@@ -417,6 +417,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 134438824183303437, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
   m_PrefabInstance: {fileID: 2562181734251592024}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &3328815303011139779 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 989913785161644443, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+  m_PrefabInstance: {fileID: 2562181734251592024}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4408658330155364498 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2206765822908910026, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
@@ -554,6 +559,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8446911182530809122}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2482706415362468062}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!1 &1488490957280755654 stripped
 GameObject:
@@ -618,6 +626,60 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.ActorAudio
   gunCue: 6
   robot: 0
+--- !u!114 &2482706415362468062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3baab13dd9b8254f925fd1145e5957f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentTakedownTarget
+  eligible: 1
+  actorAnimator: {fileID: 4758226041052627388}
+  agent: {fileID: 4019000919527423183}
+  mover: {fileID: 7817492189855319184}
+  shooter: {fileID: 1845708321235843013}
+  driver: {fileID: 6251644273316088423}
+  carriedWeapon:
+  - {fileID: 3328815303011139779}
+  disarmWeapon: {fileID: 8284147311069382773}
+--- !u!114 &1845708321235843013 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acaa9dad5955d24459ff643b0b38ba0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentShooter
+--- !u!114 &4019000919527423183 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4796979051319052566, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f48f64bd2d4f74c9abcf543127060e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentRoot
+--- !u!114 &7817492189855319184 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a530e23354a29b4487c45668ab53670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.PathFollower
 --- !u!4 &8454537713324184309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}

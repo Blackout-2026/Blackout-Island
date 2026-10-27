@@ -62,3 +62,51 @@ their creator credits and provenance are retained here.
 
 Fill the TODO cells from the page the folder was downloaded from. If its licence does not allow use in a public repository, keep the repository private
 or replace the door.
+
+## Cinematic takedown animations (TD1)
+
+Adobe Mixamo, **Stealth Assassination** attacker and victim, downloaded by the user
+with X Bot and supplied in `D:/model/knife-takedown`. Source:
+[Mixamo](https://www.mixamo.com/), with use in personal/commercial games described
+in [Adobe's Mixamo FAQ](https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html).
+These are Mixamo assets, not CC0 or original project-authored animations.
+
+| Project file under `Assets/Animations/Takedowns/` | Original filename | Original SHA-256 |
+| --- | --- | --- |
+| `StealthAssassination_Attacker.fbx` | `Stealth Assassination (1).fbx` | `f9842b59561a759aa91bed1a78c02751be6f574e4babd70dbfc1a0d952ad17d8` |
+| `StealthAssassination_Victim.fbx` | `Stealth Assassination.fbx` | `50a596a9745bf6538168a96666d5fc662e601f72589db9654fdb8e146547e9b0` |
+| `Takedown_Kick.fbx` | `Kicking.fbx` | `6d8a231743de42bbe97a9cb599139053e07fdffe162a27d6133528c32be6a4c4` |
+| `Takedown_DoubleStab.fbx` | `Stabbing.fbx` | `7d56338019d09e2c94c6878f7b03da7792851f2e306dcf8221a6d21f295e917e` |
+
+FBX contents are unchanged. Unity metadata adds Humanoid import settings, bakes
+source movement into the visual pose, disables looping and adds the player's
+sound/impact events. The X Bot mesh included in the downloads is not used as the
+cinematic player: playback now retargets onto the user-supplied Winter Soldier below.
+The free source is a jumping rear assassination/neck hold, not a dedicated
+military knife-stab capture. Existing soldier and knife model/material credits
+remain in [Core Developer credits](core-developer.md).
+
+The frontal Kicking and Stabbing motions were supplied by the user from the same
+local Mixamo download folder. Stabbing contains two thrusts and is played once;
+Unity metadata trims its initial six frames and adds two indexed impact/sound
+events. Frontal victim aim, hit and death reuse the existing credited Kevin
+Iglesias Human Animations clips, not a newly authored matching victim capture.
+
+### Supplied cinematic player model
+
+Source folder: `D:/model/winter-soldierfreetexturedrigged`. No author, source-page
+URL or licence document was present in the supplied folder; these are not claimed
+as original project artwork or CC0. Retain the source creator's attribution when
+the download-page details are supplied.
+
+| Project file | Original relative path | Original SHA-256 |
+| --- | --- | --- |
+| `Assets/Models/Custom/SM_Player_WinterSoldier.fbx` | `source/00000036.fbx` | `29593f034f8f27369242e28535ebb7e4f1de7528578038437b03a27c0a364292` |
+| `Assets/Textures/Models/T_PlayerWinter_Body.png` | `textures/00000037.png` | `bb2ed7a13c898de4f20d075d865bf6ec00f752cc1675379fbd9c37521fa19849` |
+| `Assets/Textures/Models/T_PlayerWinter_Weapon.png` | `textures/00000039.png` | `24b7e3927da7528db45248563983a34a5d8027baf6bdcca7504a5426b0e35830` |
+
+These file contents are unchanged. Unity supplies explicit Biped-to-Humanoid
+mapping and URP materials. The cinematic prefab scales the visual uniformly and
+hides the source's loose gun/stray submeshes using a transparent material. The
+existing credited knife remains the held weapon. The original Patrol template
+is retained inactive in the cinematic prefab; its historical credits remain.
