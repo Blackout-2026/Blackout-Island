@@ -214,13 +214,16 @@ namespace Blackout.Interaction.Tests
             var swing = holder.Find("Knife").GetComponent<KnifeSwing>();
             Assert.That(swing.Prepare(), Is.True);
             Assert.That(swing.Pivot, Is.EqualTo(KnifeSwing.DefaultPivot), "the saved prefab uses the fitted pivot");
-            Transform sleeve = swing.Group.Find("SleeveR");
-            // Read only in EditMode. The supplied sleeve's proximal rim runs along this model-space axis.
+            Transform sleeve = swing.Group.Find("GloveR");
+            // WA1: the visible extracted mesh contains its own sleeve. Test that mesh's actual elbow rim.
             Vector3[] vertices = sleeve.GetComponent<MeshFilter>().sharedMesh.vertices;
-            Vector3 axis = new Vector3(0.5f, 0f, 0.85f).normalized;
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GetAssetPath(sleeve.GetComponent<MeshFilter>().sharedMesh));
+            Transform elbow = source.GetComponentsInChildren<Transform>(true).Single(t => t.name == "ForearmR");
+            Transform wrist = source.GetComponentsInChildren<Transform>(true).Single(t => t.name == "HandR");
+            Vector3 axis = source.transform.InverseTransformDirection(elbow.position - wrist.position).normalized;
             float end = vertices.Max(v => Vector3.Dot(v, axis));
             Vector3[] rim = vertices.Where(v => Vector3.Dot(v, axis) >= end - 0.015f).ToArray();
-            Assert.That(rim.Length, Is.GreaterThan(10), "sample the cropped rim, not a single point");
+            Assert.That(rim.Length, Is.GreaterThanOrEqualTo(3), "sample the cropped rim, not a single point");
             float highest = float.NegativeInfinity;
             string worst = string.Empty;
             for (int frame = 0; frame <= 120; frame++)

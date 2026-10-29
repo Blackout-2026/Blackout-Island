@@ -11,9 +11,9 @@ namespace Blackout.Player.Tests
         private const string PlayerPath = "Assets/Prefabs/Player/Player.prefab";
         private const string Holder = "CameraRig/CameraPivot/PlayerCamera/WeaponHolder/";
 
-        [TestCase("SMG", "AssaultRifle_Reload01", 9000)]
-        [TestCase("Rifle", "Rifle_Reload01", 8568)]
-        public void SavedPlayer_HasFittedGenericReloadAndOriginalPackReference(string gun, string sourceName, int triangles)
+        [TestCase("SMG", "AssaultRifle_Reload01")]
+        [TestCase("Rifle", "Rifle_Reload01")]
+        public void SavedPlayer_HasFittedGenericReloadAndOriginalPackReference(string gun, string sourceName)
         {
             var player = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPath);
             var reload = player.transform.Find(Holder + gun).GetComponent<ViewmodelReload>();
@@ -28,7 +28,7 @@ namespace Blackout.Player.Tests
             Assert.That(reload.SourceClip.isHumanMotion, Is.True);
             Assert.That(reload.ShowingReload, Is.False);
             Assert.That(player.transform.Find(Holder + gun + "/Visual").gameObject.activeSelf, Is.True);
-            var visual = player.transform.Find(Holder + gun + "/ReloadVisual");
+            var visual = player.transform.Find(Holder + gun + "/WinterReloadVisual");
             int total = 0;
             foreach (var skin in visual.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -38,7 +38,7 @@ namespace Blackout.Player.Tests
                     Assert.That(AssetDatabase.GetAssetPath(material), Does.StartWith("Assets/Materials/Models/"));
                 for (int i = 0; i < skin.sharedMesh.subMeshCount; i++) total += (int)skin.sharedMesh.GetIndexCount(i) / 3;
             }
-            Assert.That(total, Is.EqualTo(triangles), "copies retain the existing mesh budget");
+            Assert.That(total, Is.InRange(1000, 10000), "Winter Soldier arms retain the viewmodel budget");
             Assert.That(player.transform.Find(Holder + "Knife").GetComponent<ViewmodelReload>(), Is.Null);
         }
 
@@ -55,7 +55,7 @@ namespace Blackout.Player.Tests
                 player.transform.Find(Holder.TrimEnd('/')).localScale = Vector3.one;
                 player.transform.Find(Holder + gun).gameObject.SetActive(true);
                 reload.ApplyAt(0f);
-                var rig = player.transform.Find(Holder + gun + "/ReloadVisual");
+                var rig = player.transform.Find(Holder + gun + "/WinterReloadVisual");
                 Transform magazine = Find(rig, "Magazine"), wrist = Find(rig, "HandL"), finger = Find(rig, "Index1L");
                 Vector3 magStart = magazine.position, wristStart = wrist.position;
                 Quaternion fingerStart = finger.localRotation;

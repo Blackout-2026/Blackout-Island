@@ -1,5 +1,9 @@
 # First-person weapons and hands (steps VM1, VM2, K1)
 
+WA1 overrides the active Player's arms with Winter Soldier derivatives for
+holding, knife swings and reloads. Original assets and historical notes below
+remain intact. See [matching FPS arms](winter-fps-arms.md).
+
 The SMG is the downloaded **MP9**, the knife the downloaded **M9 bayonet**, and the player's two hands the downloaded **first-person arms**
 (fingerless tactical gloves, camouflage sleeves). They went into the three viewmodel files that already existed, `SM_Weapon_Smg.fbx`, `_Knife.fbx` and
 `_Sniper.fbx`, retaining the existing weapon prefabs, muzzle contracts and weapon code. VM2 below adjusts the two guns' held poses.

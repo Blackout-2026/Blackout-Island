@@ -1,5 +1,9 @@
 # Player reload animations (RL1)
 
+WA1 uses retargeted Winter Soldier arm derivatives in the active Player while
+retaining these original RL1 models, clips and source references. See
+[matching FPS arms](winter-fps-arms.md) for the current installer and limits.
+
 The active `Assets/Prefabs/Player/Player.prefab` has a fitted reload for the MP9 SMG and R-700 rifle. Emptying a magazine with spare magazines available starts
 the existing automatic reload. `ViewmodelReload` shows the animated copy during that reload and restores the approved normal holding model afterward.
 The knife keeps its existing swing. This step adds no manual reload key or new reload sounds.

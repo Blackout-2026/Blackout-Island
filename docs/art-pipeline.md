@@ -1,5 +1,9 @@
 # Art pipeline: Blender to Unity 6
 
+WA1 adds rigged FPS arm derivatives of the existing cinematic Winter Soldier.
+Scoped Generic import rules supersede static-prop defaults for these new FBXs.
+See [matching FPS arms](winter-fps-arms.md) for extraction and offline retargeting.
+
 Current animation integration (AN1): all four gameplay agent prefabs use the
 imported Human Soldier Animations package. The Hunter now imports as Humanoid;
 the rigid Commander and robot use generated avatars. This supersedes the older

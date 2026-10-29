@@ -77,7 +77,9 @@ namespace Blackout.Diagnostics.PlayTests
                 yield return null; yield return null;
                 Assert.That(Visual.ShowingReload, Is.True);
                 CaptureCamera(slot + "-start");
-                Transform magazine = Find(Visual.transform, "Magazine");
+                // WA1 retains an inactive legacy rig: inspect the visual actually driven by this component.
+                var reloadRoot = (GameObject)new SerializedObject(Visual).FindProperty("reloadVisual").objectReferenceValue;
+                Transform magazine = Find(reloadRoot.transform, "Magazine");
                 Vector3 before = magazine.position;
                 yield return new WaitForSeconds(0.4f);
                 Assert.That(Vector3.Distance(magazine.position, before), Is.GreaterThan(0.01f), "real LateUpdate moves the rig");
@@ -123,7 +125,8 @@ namespace Blackout.Diagnostics.PlayTests
             Time.timeScale = 0f;
             yield return null; yield return null; // Let the current frame's LateUpdate catch up before measuring the frozen pose.
             float remaining = Ammo.ReloadRemaining;
-            Transform wrist = Find(Visual.transform, "HandL");
+            var reloadRoot = (GameObject)new SerializedObject(Visual).FindProperty("reloadVisual").objectReferenceValue;
+            Transform wrist = Find(reloadRoot.transform, "HandL");
             Vector3 before = wrist.localPosition;
             yield return new WaitForSecondsRealtime(0.15f);
             Assert.That(Ammo.ReloadRemaining, Is.EqualTo(remaining));
