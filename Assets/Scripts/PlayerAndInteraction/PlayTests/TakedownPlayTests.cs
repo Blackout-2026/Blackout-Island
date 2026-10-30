@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Blackout.Agents;
+using Blackout.AI.Hunter;
 using Blackout.Mission;
 using Blackout.Player;
 using Blackout.Shared;
@@ -513,6 +514,69 @@ namespace Blackout.Diagnostics.PlayTests
             Assert.That(swings, Is.EqualTo(1));
             Assert.That(takedown.IsBusy, Is.False);
             Assert.That(weapons.GetComponent<ViewmodelHands>().Shown, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator SavedRanges_AllowRearAt3Point5Metres_AndKeepFrontAndSideAt1Point5()
+        {
+            foreach (var sample in new[]
+            {
+                (distance: 3.6f, yaw: 0f, allowed: false),
+                (distance: 3.5f, yaw: 0f, allowed: true),
+                (distance: 3.5f, yaw: 180f, allowed: false),
+                (distance: 1.6f, yaw: 180f, allowed: false),
+                (distance: 1.5f, yaw: 180f, allowed: true),
+                (distance: 1.6f, yaw: 90f, allowed: false),
+                (distance: 1.5f, yaw: 90f, allowed: true)
+            })
+            {
+                player.GetComponent<PlayerMotor>().Teleport(origin, 0f);
+                enemy.transform.rotation = Quaternion.Euler(0f, sample.yaw, 0f);
+                enemy.GetComponent<PathFollower>().StopImmediately();
+                for (int i = 0; i < 40; i++) yield return null; // Ground the player and finish any previous knife cooldown.
+                enemy.transform.position = player.transform.position + Vector3.forward * sample.distance;
+                Physics.SyncTransforms();
+                Assert.That(takedown.TryBegin(), Is.EqualTo(sample.allowed),
+                    $"distance={sample.distance}, yaw={sample.yaw}: {takedown.LastResult}");
+                if (sample.allowed)
+                {
+                    Assert.That(takedown.Style, Is.EqualTo(sample.yaw == 0f ? TakedownStyle.Rear : TakedownStyle.Frontal));
+                    takedown.Cancel();
+                }
+                Assert.That(target.Health.IsAlive && target.Available, Is.True);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RearAt3Point5Metres_ReservesLiveHunterBeforeCloseDetection_AndCompletes()
+        {
+            Object.Destroy(enemy);
+            yield return null;
+            // Keep the real Hunter brain active: the ordinary SpawnEnemy helper removes brains for executor tests.
+            enemy = Spawn("Assets/Prefabs/Agents/Hunter.prefab", player.transform.position + Vector3.forward * 3.5f);
+            target = enemy.GetComponent<AgentTakedownTarget>();
+            var hunter = enemy.GetComponent<HunterBrain>();
+            for (int i = 0; i < 20; i++) yield return null;
+            enemy.transform.position = player.transform.position + Vector3.forward * 3.5f;
+            enemy.GetComponent<PathFollower>().StopImmediately();
+            Physics.SyncTransforms();
+            Assert.That(enemy.GetComponent<AgentRoot>().enabled, Is.True);
+            Assert.That(hunter.Vision.Detected, Is.False);
+            Assert.That(hunter.Vision.Awareness, Is.Zero);
+            Assert.That(Vector3.Distance(player.transform.position, enemy.transform.position), Is.GreaterThan(hunter.Config.closeSenseRange));
+            Assert.That(takedown.TryBegin(), Is.True, takedown.LastResult);
+            Assert.That(takedown.Style, Is.EqualTo(TakedownStyle.Rear));
+            Assert.That(enemy.GetComponent<AgentRoot>().enabled, Is.False, "Reserve before approaching inside close-sense range.");
+            Assert.That(enemy.GetComponent<PathFollower>().enabled, Is.False);
+            Assert.That(enemy.GetComponent<AgentShooter>().enabled, Is.False);
+            yield return WaitForPlaying();
+            Assert.That(Vector3.Distance(player.transform.position, enemy.transform.position), Is.LessThan(hunter.Config.closeSenseRange));
+            Assert.That(hunter.Vision.Awareness, Is.Zero, "Alignment must not give the reserved Hunter another perception tick.");
+            for (int i = 0; i < 900 && takedown.IsBusy; i++) yield return null;
+            Assert.That(takedown.LastResult, Is.EqualTo("Completed"));
+            Assert.That(takedown.ImpactCount, Is.EqualTo(1));
+            Assert.That(target.Health.IsAlive, Is.False);
+            Assert.That(weapons.enabled && player.GetComponent<PlayerMotor>().enabled, Is.True);
         }
 
         [UnityTest]

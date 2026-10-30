@@ -18,8 +18,8 @@ namespace Blackout.Takedowns
         [Tooltip("Playback rate of the frontal double-stab clip only. Animation Events follow this speed.")]
         [Range(1f, 4f)] public float stabSpeed = 1f;
         [Header("Staging in metres; default is a rear takedown")]
-        [Range(0.5f, 1.5f)] public float range = 1.5f;
-        [Tooltip("Authored pair spacing; independent of the 1.5m activation range.")]
+        [Range(0.5f, 3.5f)] public float range = 1.5f;
+        [Tooltip("Authored pair spacing; independent of this profile's activation range.")]
         public Vector3 playerOffset = new Vector3(0f, 0f, -0.85f);
         [Tooltip("Extra level ground needed in front of the victim for baked approach/collapse motion.")]
         [Range(0f, 3f)] public float forwardClearance;

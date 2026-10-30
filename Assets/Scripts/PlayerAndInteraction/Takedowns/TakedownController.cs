@@ -104,11 +104,12 @@ namespace Blackout.Takedowns
                 return Reject("Player hands, camera or enabled CharacterController are missing.");
             LastResult = "No eligible living enemy within range and in front of the player.";
 
-            int count = Physics.OverlapSphereNonAlloc(transform.position + Vector3.up * 0.8f, profile.range + 0.5f,
+            float searchRange = Mathf.Max(profile.range, frontalProfile != null ? frontalProfile.range : 0f);
+            int count = Physics.OverlapSphereNonAlloc(transform.position + Vector3.up * 0.8f, searchRange + 0.5f,
                 nearby, 1 << PhysicsLayers.Enemy | 1 << PhysicsLayers.Hit, QueryTriggerInteraction.Ignore);
             ITakedownTarget chosen = null;
             TakedownProfile chosenProfile = null;
-            float best = profile.range * profile.range;
+            float best = searchRange * searchRange;
             Vector3 goal = default;
             Quaternion facing = default;
             for (int i = 0; i < count; i++)
@@ -130,6 +131,8 @@ namespace Blackout.Takedowns
                     { Reject("Frontal kick/stab clips are missing or invalid."); continue; }
                 }
                 else { Reject("This enemy has no frontal takedown adapter."); continue; }
+                // Each approach keeps its own reach: a longer rear range must not extend frontal attacks.
+                if (distance > settings.range * settings.range) continue;
                 Vector3 staging = settings.style == TakedownStyle.Frontal ? -flat : flat;
                 if (!TryStage(candidate, staging, settings, out Vector3 candidateGoal, out Quaternion candidateFacing)) continue;
                 chosen = candidate;

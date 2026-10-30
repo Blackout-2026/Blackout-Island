@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b66bad7ee28ab1a4a88ef0ddab272e0d, type: 3}
   m_Name: KnifeTakedown
   m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Takedowns.TakedownProfile
+  style: 0
   playerAttack: {fileID: -203655887218126122, guid: 7733bed79fb6e634aa79ec1b18993c76, type: 3}
   victimReaction: {fileID: -203655887218126122, guid: f60448e389c9b064fad3206fbebdedc6, type: 3}
-  range: 1.5
+  kick: {fileID: 0}
+  victimIdle: {fileID: 0}
+  victimDeath: {fileID: 0}
+  stabSpeed: 1
+  range: 3.5
   playerOffset: {x: 0, y: 0, z: -1.85}
   forwardClearance: 2.1
   playerYaw: 0

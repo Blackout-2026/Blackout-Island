@@ -39,7 +39,7 @@ namespace Blackout.Interaction.Tests
         {
             var profile = AssetDatabase.LoadAssetAtPath<TakedownProfile>(ProfilePath);
             Assert.That(profile, Is.Not.Null);
-            Assert.That(profile.range, Is.EqualTo(1.5f));
+            Assert.That(profile.range, Is.EqualTo(3.5f));
             Assert.That(profile.MissingRequirement, Is.Null);
             Assert.That(profile.playerAttack.humanMotion && profile.victimReaction.humanMotion, Is.True);
             Assert.That(profile.playerAttack.length, Is.EqualTo(7f).Within(0.04f));

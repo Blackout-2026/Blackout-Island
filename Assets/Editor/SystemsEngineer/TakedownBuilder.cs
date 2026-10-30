@@ -17,6 +17,7 @@ namespace Blackout.Editor
     {
         public const string ProfilePath = "Assets/ScriptableObjects/Weapons/KnifeTakedown.asset";
         public const string FrontProfilePath = "Assets/ScriptableObjects/Weapons/KnifeFrontalTakedown.asset";
+        public const float RearActivationRange = 3.5f;
         public const float FrontalStabSpeed = 3.5f;
         public const float FrontalSpacing = 1.1f;
         public const string ActorPath = "Assets/Prefabs/Player/TakedownActor.prefab";
@@ -24,6 +25,17 @@ namespace Blackout.Editor
         private const string VisualPath = "Assets/Prefabs/Models/Char_Patrol_Visual.prefab";
         private const string KnifePath = "Assets/Prefabs/Models/Weapon_Knife_Visual.prefab";
         private const string Label = "BlackoutGeneratedTakedownActor";
+
+        [MenuItem("Blackout/Systems/Apply Rear Takedown Range")]
+        public static void TuneRearRange()
+        {
+            var profile = AssetDatabase.LoadAssetAtPath<TakedownProfile>(ProfilePath);
+            if (profile == null) throw new InvalidOperationException("Build the rear takedown profile first.");
+            profile.range = RearActivationRange;
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[RT1] Rear takedown range={profile.range:F1}m; animation spacing is preserved.");
+        }
 
         [MenuItem("Blackout/Systems/Apply Quick Frontal Takedown Tuning")]
         public static void TuneFrontal()
@@ -44,6 +56,7 @@ namespace Blackout.Editor
             if (profile == null)
             {
                 profile = ScriptableObject.CreateInstance<TakedownProfile>();
+                profile.range = RearActivationRange;
                 AssetDatabase.CreateAsset(profile, ProfilePath);
             }
             TakedownAnimationBuilder.AssignIfMissing(profile);
