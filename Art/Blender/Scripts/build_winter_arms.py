@@ -14,6 +14,10 @@ import math
 from mathutils import Matrix, Vector
 
 REPO, SOURCE, EVIDENCE = sys.argv[sys.argv.index('--') + 1:]
+SMG_ONLY = os.environ.get('SG_EXPORT_ONLY') == 'Smg'
+with open(os.path.join(REPO, 'Art/Blender/SmgGrip.json')) as f:
+    smg_grip = json.load(f)
+swap = lambda p: Vector((p['x'], p['z'], p['y']))
 OUT = os.path.join(REPO, 'Assets/Models/Custom')
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=os.path.join(SOURCE, 'source/00000036.fbx'))
@@ -86,7 +90,8 @@ for b in list(native_rig.data.edit_bones):
 bpy.ops.object.mode_set(mode='OBJECT')
 for side, o in native.items():
     report['native'][side] = {'vertices': len(o.data.vertices), 'triangles': sum(len(p.vertices)-2 for p in o.data.polygons)}
-export(os.path.join(OUT, 'SM_WinterArms_Source.fbx'), [native_rig, *native.values()])
+if not SMG_ONLY:
+    export(os.path.join(OUT, 'SM_WinterArms_Source.fbx'), [native_rig, *native.values()])
 
 # Cache immutable source vertices, UV loops and exact input weights before loading the reference .blend.
 source_data = {}
@@ -152,7 +157,29 @@ def fitted(side, rig, name, wrist):
         # One anatomical wrist fit preserves proportions and continuous surfaces.
         # Finger pivots are fitted separately; source weights drive those joints during reload.
         local = axes.inverted() @ (p - joints['Hand']) * 3
-        coords.append(wrist @ local)
+        if name.startswith('WinterSmg'):
+            spec = smg_grip['left' if side == 'L' else 'right']
+            # Fit the oversized source palm/fingers to the compact grips. Blend back
+            # to the original sleeve through its existing weights, preserving the seam.
+            forearm_weight = mapping.get('Forearm' + side, 0)
+            hand_scale = spec.get('handScale', 1)
+            local *= hand_scale + (1 - hand_scale) * forearm_weight
+            elbow = axes.inverted() @ (joints['Forearm'] - joints['Hand'])
+            rotation = (wrist.to_3x3() @ elbow).rotation_difference(swap(spec['elbowDirection']))
+            hand_point = wrist @ local
+            lower_point = wrist.translation + rotation @ (hand_point - wrist.translation)
+            # Carry the cropped sleeve end behind the camera in wide ADS views.
+            # Only the elbow end extends; palm, fingers and wrist seam stay fitted.
+            direction = swap(spec['elbowDirection']).normalized()
+            length = (joints['Forearm'] - joints['Hand']).length * 3
+            distance = (lower_point - wrist.translation).dot(direction)
+            end_blend = max(0, min(1, (distance / length - .65) / .35))
+            end_blend = end_blend * end_blend * (3 - 2 * end_blend)
+            lower_point += direction * spec.get('sleeveExtension', 0) * end_blend
+            hand_point = hand_point.lerp(lower_point, forearm_weight)
+            coords.append(hand_point)
+        else:
+            coords.append(wrist @ local)
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(coords, [], faces)
     mesh.uv_layers.new(name='UVMap')
@@ -181,14 +208,20 @@ def copy_rig(original, label):
     return rig
 
 
-def anatomical_bind(rig, wrists):
+def anatomical_bind(rig, wrists, smg=False):
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode='EDIT')
     for side in ('L', 'R'):
         _, _, _, _, joints, axes = source_data[side]
-        point = lambda key: wrists[side] @ (axes.inverted() @ (joints[key] - joints['Hand']) * 3)
+        hand_scale = smg_grip['left' if side == 'L' else 'right'].get('handScale', 1) if smg else 1
+        point = lambda key: wrists[side] @ (axes.inverted() @ (joints[key] - joints['Hand']) * 3
+            * (1 if key == 'Forearm' else hand_scale))
         lower = rig.data.edit_bones['Forearm' + side]
         lower.head, lower.tail = point('Forearm'), point('Hand')
+        if smg:
+            spec = smg_grip['left' if side == 'L' else 'right']
+            lower.head = lower.tail + swap(spec['elbowDirection']).normalized() * (lower.head-lower.tail).length
+            rig.data.edit_bones['Hand' + side].matrix = wrists[side] @ Matrix.Rotation(math.pi/2, 4, 'Y')
         for finger in fingers:
             for j in (1, 2, 3):
                 key = finger + str(j)
@@ -200,7 +233,7 @@ def anatomical_bind(rig, wrists):
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def grip(rig, arms, sides, tight=False):
+def grip(rig, arms, sides, tight=False, smg=False):
     rest = {b.name: b.matrix_local.copy() for b in rig.data.bones}
     desired = {}
     for b in rig.data.bones:
@@ -210,10 +243,32 @@ def grip(rig, arms, sides, tight=False):
             if b.name.endswith(side) and any(b.name.startswith(f) for f in fingers):
                 amount = ((55, 75, 55) if tight else (30, 50, 35))[int(b.name[-2])-1]
                 if b.name.startswith('Thumb'): amount = ((30, 35, 25) if tight else (12, 20, 12))[int(b.name[-2])-1]
+                if smg:
+                    spec = smg_grip['left' if side == 'L' else 'right']
+                    finger = next(f for f in fingers if b.name.startswith(f))
+                    if finger in spec.get('fingerTargets', {}):
+                        # Explicit joints are posed once below; do not pre-curl their skin.
+                        break
+                    curls = spec.get(finger.lower() + 'Curl', spec['curl'])
+                    amount = curls[('x', 'y', 'z')[int(b.name[-2])-1]]
                 delta = Matrix.Rotation(math.radians(amount), 4, 'X')
+                if smg and b.name.startswith('Thumb1'):
+                    basis = (desired[b.parent.name] if b.parent else Matrix.Identity(4)) @ rel
+                    axis = basis.to_quaternion().inverted() @ swap(spec['back']).normalized()
+                    delta = Matrix.Rotation(math.radians(spec['thumbOpposition']),4,axis) @ delta
         desired[b.name] = (desired[b.parent.name] if b.parent else Matrix.Identity(4)) @ rel @ delta
-        rig.pose.bones[b.name].matrix = desired[b.name]
+        if smg:
+            # Set the local pose directly. Assigning world matrices down a chain before
+            # dependency evaluation uses stale parent matrices and stretches the fingers.
+            rig.pose.bones[b.name].matrix_basis = delta
+        else:
+            rig.pose.bones[b.name].matrix = desired[b.name]
     bpy.context.view_layer.update()
+    if smg:
+        error = max(abs(rig.pose.bones[name].matrix[row][col] - matrix[row][col])
+                    for name, matrix in desired.items() for row in range(4) for col in range(4))
+        report['smg_grip_matrix_error'] = error
+        assert error < 0.0001, 'SMG finger-chain pose differs from requested local rotations: ' + str(error)
     for arm in arms:
         evaluated = arm.evaluated_get(bpy.context.evaluated_depsgraph_get())
         for v, posed in zip(arm.data.vertices, evaluated.data.vertices): v.co = posed.co
@@ -225,7 +280,44 @@ def grip(rig, arms, sides, tight=False):
     bpy.context.view_layer.update()
 
 
-def bake(original, rig):
+def seat_fingers(rig, arm, side, targets):
+    """Author joint positions on the real grip, retaining the source skin/UVs.
+
+    Apply the same weighted rest-to-pose transform as skinning, once offline.
+    Scaling only along each phalanx fits its length without inflating its width.
+    """
+    rest = {b.name: b.matrix_local.copy() for b in rig.data.bones}
+    changes, poses = {}, {}
+    for finger, points in targets.items():
+        names = [finger + str(j) + side for j in (1, 2, 3)]
+        chain = [rest[names[0]].translation] + [swap(p) for p in points]
+        assert len(chain) == 4
+        for i, name in enumerate(names):
+            bone = rig.data.bones[name]
+            direction = chain[i+1] - chain[i]
+            assert .01 < direction.length < .08, 'Invalid fitted phalanx length: ' + name
+            assert .5 <= direction.length / bone.length <= 1.6, 'Excessive phalanx resizing: ' + name
+            turn = (rest[name].to_3x3() @ Vector((0, 1, 0))).rotation_difference(direction)
+            pose = (turn.to_matrix() @ rest[name].to_3x3()).to_4x4()
+            pose.translation = chain[i]
+            scale = Matrix.Diagonal((1, direction.length / bone.length, 1, 1))
+            changes[name] = pose @ scale @ rest[name].inverted()
+            poses[name] = (pose, direction.length)
+    identity = Matrix.Identity(4)
+    for vertex in arm.data.vertices:
+        original = vertex.co.copy()
+        vertex.co = sum(((changes.get(arm.vertex_groups[g.group].name, identity) @ original) * g.weight
+                         for g in vertex.groups), Vector())
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.mode_set(mode='EDIT')
+    for name, (pose, length) in poses.items():
+        rig.data.edit_bones[name].matrix = pose
+        rig.data.edit_bones[name].length = length
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.view_layer.update()
+
+
+def bake(original, rig, smg=False):
     rest = {b.name: b.matrix_local.copy() for b in rig.data.bones}
     old_rest = {b.name: b.matrix_local.copy() for b in original.data.bones}
     for p in rig.pose.bones: p.rotation_mode = 'QUATERNION'
@@ -245,6 +337,13 @@ def bake(original, rig):
                 desired[b.name] = desired[b.parent.name] @ rel @ Matrix.Rotation(bend, 4, 'X')
             else:
                 desired[b.name] = old.matrix @ old_rest[b.name].inverted() @ rest[b.name]
+                if smg and b.name in ('HandR', 'ForearmR'):
+                    desired[b.name] = original.pose.bones['Motion'].matrix @ rest[b.name]
+                if smg and b.name == 'HandL':
+                    t = (frame - 1) / 60
+                    smooth = lambda t: max(0, min(1, t))**2 * (3-2*max(0, min(1,t)))
+                    release = smooth(t / .25) * (1-smooth((t-.75)/.25))
+                    desired[b.name].translation = desired[b.name].translation.lerp(old.matrix.translation, release)
             parent_pose = desired[b.parent.name] if b.parent else Matrix.Identity(4)
             rel = rest[b.parent.name].inverted() @ rest[b.name] if b.parent else rest[b.name]
             rig.pose.bones[b.name].matrix_basis = rel.inverted() @ parent_pose.inverted() @ desired[b.name]
@@ -256,13 +355,24 @@ def bake(original, rig):
 
 outputs = []
 for label in ('Smg', 'Rifle'):
+    if SMG_ONLY and label != 'Smg': continue
     original = bpy.data.objects[label + '_Rig']
     rig = copy_rig(original, label)
     # Existing align_roll points the bone's Z at the back of the hand, not its X.
     wrists = {s: original.data.bones['Hand' + s].matrix_local @ Matrix.Rotation(-math.pi/2, 4, 'Y') for s in ('L', 'R')}
-    anatomical_bind(rig, wrists)
+    if label == 'Smg':
+        for side in ('L', 'R'):
+            spec = smg_grip['left' if side == 'L' else 'right']
+            back, forward = swap(spec['back']).normalized(), swap(spec['fingers']).normalized()
+            wrists[side] = Matrix((back, forward, back.cross(forward))).transposed().to_4x4()
+            wrists[side].translation = swap(spec['wrist'])
+    anatomical_bind(rig, wrists, label == 'Smg')
     arms = [fitted(s, rig, 'Winter' + label + s, wrists[s]) for s in ('L', 'R')]
-    grip(rig, arms, ('L', 'R'))
+    grip(rig, arms, ('L', 'R'), smg=label == 'Smg')
+    if label == 'Smg':
+        for side, arm in zip(('L', 'R'), arms):
+            targets = smg_grip['left' if side == 'L' else 'right'].get('fingerTargets', {})
+            if targets: seat_fingers(rig, arm, side, targets)
     parts = []
     for name in ('Gun', 'Magazine'):
         part = bpy.data.objects[label + '_' + name].copy()
@@ -273,11 +383,19 @@ for label in ('Smg', 'Rifle'):
             if mod.type == 'ARMATURE': mod.object = rig
         bpy.context.scene.collection.objects.link(part)
         parts.append(part)
-    bake(original, rig)
+    bake(original, rig, label == 'Smg')
     bpy.context.scene.frame_set(1)
     export(os.path.join(OUT, 'SM_WinterArms_' + label + '.fbx'), [rig, *arms, *parts], True)
     outputs += [rig, *arms, *parts]
     report['fitted'][label] = {s: len(o.data.vertices) for s, o in zip(('L', 'R'), arms)}
+
+if SMG_ONLY:
+    bpy.context.preferences.filepaths.save_version = 0
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(REPO, 'Art/Blender/SM_SmgGrip.blend'))
+    os.makedirs(EVIDENCE, exist_ok=True)
+    with open(os.path.join(EVIDENCE, 'extraction.json'), 'w') as f: json.dump(report, f, indent=2)
+    print('[SG1]', json.dumps(report))
+    sys.exit(0)
 
 # Knife retains its original grip frame and rigid elbow swing. Rotate both bind bones and mesh.
 original = bpy.data.objects['Smg_Rig']

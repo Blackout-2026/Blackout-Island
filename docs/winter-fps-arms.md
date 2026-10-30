@@ -1,5 +1,10 @@
 # Matching Winter Soldier FPS arms (WA1)
 
+SG1 corrects only the SMG grip/wrist frames and adds its own RMB sight pose.
+Its gun/magazine reload motion stays intact; right-grip and support-hand motion
+now follow the weapon-specific fit. See [SMG grip](smg-grip.md) for current
+parameters and the scoped rebuild. WA1 details below remain historical context.
+
 The Player prefab now uses arms from the same supplied Winter Soldier as the
 cinematic actor. The left retains its metal sleeve/glove and the right its skin
 and dark clothing. They share the existing `M_PlayerWinter_Body.mat` and its

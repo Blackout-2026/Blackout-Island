@@ -28,7 +28,8 @@ namespace Blackout.Player.Tests
             Assert.That(player.transform.Find("HUD/Crosshair").GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f));
             Transform holder = player.transform.Find("CameraRig/CameraPivot/PlayerCamera/WeaponHolder");
             Assert.That(holder.Find("Rifle").localPosition, Is.EqualTo(new Vector3(0.12f, -0.14f, 0.58f)), "preserve approved VM2 pose");
-            Assert.That(holder.Find("SMG").localPosition, Is.EqualTo(new Vector3(0.16f, -0.10f, 0.28f)));
+            // SG1 owns SMG framing independently; the rifle retains its approved VM2 pose above.
+            Assert.That(holder.Find("SMG").GetComponent<SmgAimPose>(), Is.Not.Null);
         }
 
         [Test]

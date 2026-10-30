@@ -1,5 +1,8 @@
 # First-person weapons and hands (steps VM1, VM2, K1)
 
+SG1 fits the SMG's two grips separately and adds visual RMB sight alignment;
+other weapon poses remain unchanged. See [SMG grip and sights](smg-grip.md).
+
 WA1 overrides the active Player's arms with Winter Soldier derivatives for
 holding, knife swings and reloads. Original assets and historical notes below
 remain intact. See [matching FPS arms](winter-fps-arms.md).

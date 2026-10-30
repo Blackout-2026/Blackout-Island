@@ -109,7 +109,8 @@ namespace Blackout.Player.Tests
                     float t = frame / 60f;
                     oldClip.SampleAnimation(original, t);
                     newClip.SampleAnimation(replacement, t);
-                    foreach (string bone in new[] { "Motion", "Magazine", "HandR", "HandL" })
+                    // SG1 deliberately fits new SMG wrist anchors; the original gun/magazine curves remain exact.
+                    foreach (string bone in label == "Smg" ? new[] { "Motion", "Magazine" } : new[] { "Motion", "Magazine", "HandR", "HandL" })
                     {
                         Transform a = Find(original.transform, bone), b = Find(replacement.transform, bone);
                         Assert.That(Vector3.Distance(a.position, b.position), Is.LessThan(0.001f), bone + " frame " + frame);
