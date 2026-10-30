@@ -99,6 +99,9 @@ namespace Blackout.Weapons
         /// <summary>A real switch request was accepted; audio does not replay when a checkpoint restores ownership.</summary>
         public event Action SwitchStarted;
 
+        /// <summary>A firearm actually fired; presentation listeners must not drive gameplay.</summary>
+        public event Action<WeaponData> ShotFired;
+
         /// <summary>Debug: every pellet's ray and what it hit (the Stress Test). Subscribe after Awake.</summary>
         public event Action<PelletTrace> PelletTraced
         {
@@ -465,6 +468,7 @@ namespace Blackout.Weapons
             WeaponData data = weapon.Data;
             cooldown.Start(data.cooldown);
             weapon.Fire();
+            if (data.kind != WeaponKind.Melee) ShotFired?.Invoke(data);
 
             look.AddRecoil(data.recoilPitch * UnityEngine.Random.Range(0.8f, 1.2f),
                 UnityEngine.Random.Range(-1f, 1f) * data.recoilYaw);

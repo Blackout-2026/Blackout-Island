@@ -18,7 +18,7 @@ namespace Blackout.Interaction.Tests
         // ---- the rules ------------------------------------------------------------------------------------------------
 
         [Test]
-        public void AnEmptyMagazine_WaitsForARequestThenReloadsForOneSecond()
+        public void AnEmptyMagazine_AutomaticallyReloadsForOneSecond()
         {
             var ammo = new WeaponAmmo(45, 2, 1f);
             Assert.That(ammo.Loaded, Is.EqualTo(45));
@@ -31,10 +31,8 @@ namespace Blackout.Interaction.Tests
             }
 
             Assert.That(ammo.Loaded, Is.Zero);
-            Assert.That(ammo.Reloading, Is.False, "emptying the gun does not reload it");
-            Assert.That(ammo.Tick(2f), Is.False);
-            Assert.That(ammo.Loaded, Is.Zero);
-            Assert.That(ammo.TryStartReload(), Is.True);
+            Assert.That(ammo.Reloading, Is.True, "the last round starts reload without R");
+            Assert.That(ammo.TryStartReload(), Is.False, "R cannot restart an automatic reload");
             Assert.That(ammo.CanFire, Is.False);
             Assert.That(ammo.Consume(), Is.False, "no round while reloading");
 
@@ -60,8 +58,7 @@ namespace Blackout.Interaction.Tests
             Assert.That(ammo.CanFire, Is.False);
 
             ammo.AddMagazines(1);
-            Assert.That(ammo.Reloading, Is.False, "pickup supplies reserves without reloading");
-            Assert.That(ammo.TryStartReload(), Is.True);
+            Assert.That(ammo.Reloading, Is.True, "pickup automatically reloads an empty gun");
             ammo.Tick(1.01f);
             Assert.That(ammo.Loaded, Is.EqualTo(10));
             Assert.That(ammo.SpareMagazines, Is.Zero);
@@ -125,7 +122,7 @@ namespace Blackout.Interaction.Tests
             Assert.That(empty.TryStartReload(), Is.False);
             var instant = new WeaponAmmo(1,1,0);
             instant.Consume();
-            Assert.That(instant.TryStartReload(), Is.True);
+            Assert.That(instant.Reloading, Is.True);
             Assert.That(instant.Tick(.001f), Is.True);
             Assert.That(instant.Tick(1), Is.False);
             Assert.That(instant.SpareMagazines, Is.Zero);
@@ -217,7 +214,7 @@ namespace Blackout.Interaction.Tests
                     ammo.Consume();
                 }
 
-                Assert.That(ammo.TryStartReload(), Is.True);
+                Assert.That(ammo.Reloading, Is.True);
                 slot.SetAmmo(ammo);
                 Assert.That(reserve.text, Is.EqualTo("RELOAD"));
 
@@ -227,7 +224,7 @@ namespace Blackout.Interaction.Tests
                     ammo.Consume();
                 }
 
-                Assert.That(ammo.TryStartReload(), Is.True);
+                Assert.That(ammo.Reloading, Is.True);
                 ammo.Tick(1.1f);
                 for (int i = 0; i < 45; i++)
                 {

@@ -56,11 +56,14 @@ forward into the support fingers; the left pads sit around the foregrip faces.
 Curl fields remain as the fallback for fingers without explicit target points.
 
 The existing Blender script fits native joints/skin weights offline. Normal
-holding uses static MeshFilters; there is no runtime IK or holding Animator.
+holding originally uses static MeshFilters; TF1 adds an index-only blend shape
+to the right holding arm (see [trigger finger motion](trigger-finger.md)).
+There is no runtime IK or holding Animator.
 `RightHandGrip`/`LeftHandGrip` are authoring references. Moving a marker alone
 will not deform a static holding mesh. Finger posing assigns local rotations
 and asserts the evaluated chain, avoiding stale parent matrices during baking.
-No animation package or runtime mesh work is introduced.
+No animation package is introduced. TF1 bakes its finger deformation in the
+Editor; gameplay changes only a blend-shape weight.
 
 The Generic reload retains the original Motion/Magazine curves and one-second
 ammo clock, baked at 60 Hz. The right wrist follows Motion; the left blends from
@@ -139,7 +142,8 @@ materials remain. Final visual acceptance is separate from automated tests.
 
 In Bootstrap, acquire the SMG and inspect standing, walking, crouching/prone,
 jumping and sprinting at your actual Game-view aspect. Fire hip/ADS, empty a
-magazine with RMB held, press R, switch away/back during reload, pause, alt-tab,
+magazine with RMB held and watch auto-reload; press R on a partial magazine.
+Switch away/back during reload, pause, alt-tab,
 die/respawn, restore a checkpoint, perform takedowns and Restart. Inspect finger
 pads, wrists, sleeve ends and support-hand release/return in motion. Retained
 low-poly geometry/materials limit how closely this can resemble the supplied

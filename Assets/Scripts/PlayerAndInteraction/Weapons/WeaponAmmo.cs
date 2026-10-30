@@ -2,9 +2,9 @@
 namespace Blackout.Weapons
 {
     /// <summary>
-    /// The rounds of one gun: a magazine, spare magazines and a requested reload. R requests a reload that takes
+    /// The rounds of one gun: a magazine, spare magazines and a reload. R requests a partial reload that takes
     /// <c>reloadTime</c> seconds (1 s for both guns), then replaces the current magazine with one spare magazine.
-    /// Emptying a gun or picking up reserves does not start a reload. A gun with a magazine size of 0 (the knife) has no ammunition and
+    /// Emptying a gun, or collecting reserves for an empty gun, starts the same reload automatically. A gun with a magazine size of 0 (the knife) has no ammunition and
     /// always fires. Pure C#, so the rules are tested without a scene; WeaponController owns one per weapon and the HUD reads it.
     /// </summary>
     public sealed class WeaponAmmo
@@ -52,7 +52,7 @@ namespace Blackout.Weapons
         /// <summary>True when the gun can fire a round now: it is not reloading and has a round (the knife always can).</summary>
         public bool CanFire => !IsLimited || (loaded > 0 && !Reloading);
 
-        /// <summary>Spends one round without automatically reloading. Returns false if there was no round.</summary>
+        /// <summary>Spends one round and reloads at zero if a spare is available. Returns false if there was no round.</summary>
         public bool Consume()
         {
             if (!IsLimited)
@@ -66,10 +66,11 @@ namespace Blackout.Weapons
             }
 
             loaded--;
+            if (loaded == 0) TryStartReload();
             return true;
         }
 
-        /// <summary>Adds spare magazines from a dead body; the player still needs to request a reload.</summary>
+        /// <summary>Adds spare magazines from a dead body, automatically reloading an empty gun.</summary>
         public void AddMagazines(int count)
         {
             if (!IsLimited || count <= 0)
@@ -78,6 +79,7 @@ namespace Blackout.Weapons
             }
 
             spareMagazines += count;
+            if (loaded == 0) TryStartReload();
         }
 
         /// <summary>Runs the reload. Returns true on the frame it finishes and the magazine is full again.</summary>

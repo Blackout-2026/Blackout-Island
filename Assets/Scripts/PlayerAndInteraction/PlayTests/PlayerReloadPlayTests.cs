@@ -116,7 +116,7 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator RRequiresCaptureAndReadyControls_AndPickupDoesNotAutoReload()
+        public IEnumerator RRequiresCaptureAndReadyControls_AndPickupReloadsAnEmptyGun()
         {
             Ammo.Consume();
             yield return Keys(Key.R);
@@ -144,11 +144,7 @@ namespace Blackout.Diagnostics.PlayTests
             weapons.AddMagazinesFromBody();
             yield return null;
             weapons.Tick(.001f,true);
-            Assert.That(Ammo.Reloading, Is.False, "pickup and held R do not start reload");
-            yield return Keys();
-            yield return Keys(Key.R);
-            weapons.Tick(.001f,true);
-            Assert.That(Ammo.Reloading, Is.True, "fresh R uses the collected magazine");
+            Assert.That(Ammo.Reloading, Is.True, "pickup starts an empty gun without a fresh R press");
         }
 
         [UnityTest]
@@ -184,7 +180,7 @@ namespace Blackout.Diagnostics.PlayTests
         {
             int loaded = Ammo.Loaded;
             for (int i = 0; i < loaded; i++) Assert.That(Ammo.Consume(), Is.True);
-            Assert.That(weapons.TryReload(), Is.EqualTo(Ammo.SpareMagazines > 0));
+            Assert.That(Ammo.Reloading, Is.EqualTo(Ammo.SpareMagazines > 0));
         }
 
         [UnityTest]
@@ -268,7 +264,7 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator NoSpareAndPickupWaitForRequest_DeathAndRespawnRestoreVisuals()
+        public IEnumerator NoSpareWaits_PickupAutoReloads_DeathAndRespawnRestoreVisuals()
         {
             Ammo.Restore(new WeaponAmmo.State { Loaded = 1, SpareMagazines = 0 });
             EmptyMagazine();
@@ -276,8 +272,7 @@ namespace Blackout.Diagnostics.PlayTests
             Assert.That(Visual.ShowingReload, Is.False);
             Assert.That(Ammo.CanFire, Is.False);
             weapons.AddMagazinesFromBody();
-            Assert.That(Ammo.Reloading, Is.False, "pickup still waits for R");
-            Assert.That(weapons.TryReload(), Is.True);
+            Assert.That(Ammo.Reloading, Is.True, "pickup reloads the empty gun without R");
             yield return null; yield return null;
             Assert.That(Visual.ShowingReload, Is.True);
             var reload = Visual;

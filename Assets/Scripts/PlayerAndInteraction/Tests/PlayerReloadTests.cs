@@ -133,6 +133,21 @@ namespace Blackout.Player.Tests
                     if (first) { bounds = new Bounds(world, Vector3.zero); first = false; } else bounds.Encapsulate(world);
                 }
             }
+            var baked = new Mesh();
+            try
+            {
+                foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    if (!skin.enabled) continue;
+                    skin.BakeMesh(baked);
+                    foreach (Vector3 p in baked.vertices)
+                    {
+                        Vector3 world = skin.transform.TransformPoint(p);
+                        if (first) { bounds = new Bounds(world, Vector3.zero); first = false; } else bounds.Encapsulate(world);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(baked); }
             return bounds;
         }
     }

@@ -4,27 +4,30 @@ WA1 uses retargeted Winter Soldier arm derivatives in the active Player while
 retaining these original RL1 models, clips and source references. See
 [matching FPS arms](winter-fps-arms.md) for the current installer and limits.
 
-The active `Assets/Prefabs/Player/Player.prefab` has a fitted reload for the MP9 SMG and R-700 rifle. A gun with spare magazines starts
-a reload only after the player presses **R** (MR1). `ViewmodelReload` shows the animated copy during that reload and restores the approved normal holding model afterward.
+The active `Assets/Prefabs/Player/Player.prefab` has a fitted reload for the MP9 SMG and R-700 rifle. With a spare magazine available, firing the last round
+starts a reload automatically (TF1 correction). Press **R** to reload a partial magazine. `ViewmodelReload` shows the animated copy during that reload and restores the approved normal holding model afterward.
 The knife keeps its existing swing. MR1 adds the manual reload key; no new sounds or animation assets are added.
 
-## Manual reload (MR1)
+## Manual and automatic reload (MR1 / TF1)
 
 - Press **R** once to reload the equipped SMG or rifle, whether partially loaded
   or empty. A full magazine, no spare magazine or an existing reload rejects it.
-- Emptying a gun and picking up spare magazines both wait for a fresh R press.
-  Holding R does not repeatedly reload or queue a request through a blocked state.
+- Firing the last round starts an automatic reload when a spare exists. An
+  empty gun with no spares stays empty; collecting spare magazines then starts
+  its reload automatically. Partial magazines still wait for R. Holding R
+  does not repeatedly reload or queue a request through a blocked state.
 - The existing inventory counts whole magazines. On completion one spare replaces
   the current magazine; remaining rounds in a partial magazine are discarded.
   Loaded/reserve counts change on completion, exactly once. Firing is blocked
   during the existing one-second reload.
-- Starting a reload requires captured, enabled player controls, normal time flow,
+- Starting a manual reload requires captured, enabled player controls, normal time flow,
   a ready weapon, and no sprint/takedown. An already requested reload keeps the
   existing background-switch behavior and checkpoint/pause/death handling.
 - `PlayerInputReader` reads the existing Player action map's `Reload` Button
   bound to `<Keyboard>/r`. `WeaponController` handles the request before firing;
   `WeaponAmmo.TryStartReload` owns validation/timing. `AmmoChanged` updates the
-  HUD at start and completion. ViewmodelReload and both sight systems read the
+  HUD at start and completion. `Consume`/`AddMagazines` start the same ammo
+  clock automatically at zero rounds. ViewmodelReload and both sight systems read the
   same ammo state, so their animations and release/resume behavior are reused.
 - **Blackout > Systems > Add Manual Reload Input** (batch method
   `Blackout.Editor.PlayerReloadBuilder.BuildManualReloadInput`) updates only the
@@ -32,7 +35,7 @@ The knife keeps its existing swing. MR1 adds the manual reload key; no new sound
   IDs and the importer GUID. It is safe to rerun; it does not rebuild the Player
   or overwrite the accepted hand poses. The R binding is already installed.
 
-MR1 verification on Unity 6000.3.25f1: compile/input import exited **0**;
+Historical MR1 verification (before TF1 restored automatic reload) on Unity 6000.3.25f1: compile/input import exited **0**;
 selected **EditMode 72/72** and **PlayMode 38/38** passed, both exit **0**.
 The selections cover ammo/HUD rules, the saved R binding, actual Input System
 keyboard events for both guns, one-press/held-key behavior, control/capture/pause,
@@ -93,12 +96,12 @@ the sampled rig. It saves no scene or prefab. These images inspect static pose s
 
 ## Manual checks before PR
 
-1. Play Bootstrap, recover both guns, empty each magazine and confirm it stays empty. Press R and watch the support hand remove/return the magazine. Ammo should refill once after one second;
+1. Play Bootstrap, recover both guns, empty each magazine and watch automatic reload without R. Watch the support hand remove/return the magazine. Ammo should refill once after one second;
    the original grip should return. Check at your usual Game view aspect ratio, while moving and crouching/prone.
 2. Press R on the partly loaded rifle while holding RMB. The scope should lower for reload and return if RMB stays held. Release RMB during reload and verify it stays lowered.
 3. Switch to the knife during reload, then back before and after completion. Sprint/stop and pause/resume mid-reload; no doubled arms or frozen pose.
-4. Test no-spare empty guns and ammunition pickup: pickup should wait for a fresh
-   R press. Check partial magazines, a full magazine and the knife; holding R
+4. Test no-spare empty guns and ammunition pickup: an empty gun should start
+   reloading automatically when a spare is collected. Check partial magazines, a full magazine and the knife; holding R
    must not repeat. Try R during sprinting, switching and pause: it must not
    queue a reload. Test death/respawn, checkpoint restore and Restart. Check
    firing, muzzle effects, ammo HUD, dropped guns and Console.
