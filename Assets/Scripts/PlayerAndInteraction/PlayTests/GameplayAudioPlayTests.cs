@@ -242,6 +242,73 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator CrouchAndProneMovementAreSilent_StandingStepsResumeWithoutStoredDistance()
+        {
+            // Controlled travel exercises the configured motor, audio subscription and shared AI noise channel.
+            var motor = player.GetComponent<PlayerMotor>();
+            var motorType = typeof(PlayerMotor);
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            MethodInfo tick = motorType.GetMethod("UpdateFootsteps", flags);
+            MethodInfo changeStance = motorType.GetMethod("TrySetStance", flags);
+            var distance = motorType.GetProperty(nameof(PlayerMotor.LastMoveDistance));
+            var speed = motorType.GetProperty(nameof(PlayerMotor.HorizontalSpeed));
+            var noise = AssetDatabase.LoadAssetAtPath<NoiseEventChannel>("Assets/ScriptableObjects/Events/Noise.asset");
+            motorType.GetProperty(nameof(PlayerMotor.Grounded)).SetValue(motor, true);
+            motorType.GetProperty(nameof(PlayerMotor.State)).SetValue(motor, MovementState.Walk);
+            int steps = 0, noises = 0;
+            NoiseEvent lastNoise = default;
+            void CountStep(MovementState _) => steps++;
+            void CountNoise(NoiseEvent value)
+            {
+                if (value.source != player) return;
+                noises++;
+                lastNoise = value;
+            }
+            motor.Footstep += CountStep;
+            noise.OnRaised += CountNoise;
+            try
+            {
+                foreach (Stance stance in new[] { Stance.Crouching, Stance.Prone })
+                {
+                    motor.StopMotion();
+                    audio.RestoreCheckpoint(audio.CaptureCheckpoint());
+                    int stepsBefore = steps, noisesBefore = noises, soundsBefore = audio.PlayedCount;
+                    // A partial standing stride must also be discarded when entering a silent stance.
+                    speed.SetValue(motor, motor.Settings.walkSpeed);
+                    distance.SetValue(motor, motor.Settings.walkStride * 0.75f);
+                    tick.Invoke(motor, null);
+                    Assert.That((bool)changeStance.Invoke(motor, new object[] { stance }), Is.True);
+                    speed.SetValue(motor, PlayerMovementLogic.TargetSpeed(MovementState.Walk, stance, motor.Settings));
+                    distance.SetValue(motor, motor.Settings.walkStride);
+                    for (int i = 0; i < 8; i++) tick.Invoke(motor, null);
+                    Assert.That(steps, Is.EqualTo(stepsBefore), stance.ToString());
+                    Assert.That(noises, Is.EqualTo(noisesBefore), "Silent movement must publish no AI stimulus.");
+                    Assert.That(audio.PlayedCount, Is.EqualTo(soundsBefore), "Silent movement must request no step audio.");
+
+                    Assert.That((bool)changeStance.Invoke(motor, new object[] { Stance.Standing }), Is.True);
+                    speed.SetValue(motor, motor.Settings.walkSpeed);
+                    distance.SetValue(motor, motor.Settings.walkStride * 0.5f);
+                    tick.Invoke(motor, null);
+                    Assert.That(steps, Is.EqualTo(stepsBefore), "Silent travel must not cause an early step after standing.");
+                    Assert.That(noises, Is.EqualTo(noisesBefore));
+                    Assert.That(audio.PlayedCount, Is.EqualTo(soundsBefore));
+                    tick.Invoke(motor, null);
+                    Assert.That(steps, Is.EqualTo(stepsBefore + 1));
+                    Assert.That(noises, Is.EqualTo(noisesBefore + 1));
+                    Assert.That(lastNoise.type, Is.EqualTo(NoiseType.Footstep));
+                    Assert.That(lastNoise.loudness, Is.EqualTo(motor.Settings.walkNoise).Within(0.001f));
+                    Assert.That(audio.PlayedCount, Is.EqualTo(soundsBefore + 1));
+                }
+            }
+            finally
+            {
+                motor.Footstep -= CountStep;
+                noise.OnRaised -= CountNoise;
+            }
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PauseRejectsNewGameplaySounds_ButCompletionCanPlay()
         {
             Time.timeScale = 0f;

@@ -52,9 +52,12 @@ alternate is unavailable. Enum values and existing main clip GUIDs are retained.
 
 `GameplayAudio` sounds every other motor pulse. At the existing 4.3/7 m/s speeds
 and 0.78/1.05 m stride settings this gives **2.76/3.33 audible steps per second**,
-instead of 5.51/6.67. The motor, movement settings, camera bob and **all AI noise
-events/radii are unchanged**. This is an intentional audio refinement to the
-prototype cadence. Crouch/prone remain quieter. Jump/landing and audio disable,
+instead of 5.51/6.67. Standing walk/sprint retain their movement settings, camera bob
+and AI noise radii/cadence. **SF1:** crouching and prone movement emit neither the
+motor's footstep callback nor its AI noise event, so both are silent in every direction.
+Silent travel clears the stride remainder before standing footsteps resume.
+This is an intentional stance rule alongside the audio refinement to the prototype cadence.
+Jump/landing impacts keep their existing behavior. Jump/landing and audio disable,
 checkpoint restore and completion reset the audible pulse phase; a landing
 contact plays immediately. Existing voice pooling and pause behaviour are reused.
 

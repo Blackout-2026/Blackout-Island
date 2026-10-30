@@ -27,10 +27,11 @@ A knife attack is still possible while sprinting (as before), so it can swing wi
   C from prone comes up to a crouch. Sprinting forward or jumping stands the player up.
 - Getting taller needs room: `PlayerMotor.TrySetStance` checks a capsule of the new height (`Physics.CheckCapsule`), so the player stays crouched under a low
   ceiling or a table and cannot sprint or jump there.
-- The camera pivot follows `PlayerMotor.EyeHeight`, which glides between the stances (`stanceEyeDamping`). The footstep noise follows the speed, so a crouched or
-  prone player is quieter for the Hunter's hearing without any new rule.
+- The camera pivot follows `PlayerMotor.EyeHeight`, which glides between the stances (`stanceEyeDamping`). **SF1:** crouching and prone movement are silent in
+  every direction: `PlayerMotor` emits neither footstep audio callbacks nor AI noise events. Silent travel resets the stride remainder, so standing resumes
+  with a fresh stride. Standing walk/sprint noise still follows speed; jump and landing impacts retain their existing sounds and hearing events.
 - The rules are pure functions in `PlayerMovementLogic` (`NextStance`, `StanceHeight`, `StanceSpeedMultiplier`); the numbers are in `PlayerMovementSettings`.
-  `MovementState` is unchanged: stance is a separate value, so the existing sprint, hand and noise code did not change.
+  `MovementState` is unchanged: stance is a separate value, so sprint and hand execution keep their existing movement states.
 
 ## Medkit counter
 
@@ -77,12 +78,21 @@ The generator room's walls and lintels were a flat `MetalPlate` (it has no textu
 
 ## Checks
 
+**SF1:** Unity 6000.3.25f1 compile/import exited 0. Selected movement and stance EditMode tests passed **25/25**;
+the existing standing-footstep and new silent-stance PlayMode tests passed **2/2**, all test exits 0.
+Controlled travel samples exercise the configured player motor, audio subscription and shared noise channel, including standing-stride resumption.
+Evidence: system temporary directory `blackout-SF1` (logs, test XML and protected-file hashes). These checks do not verify native keyboard capture or audible quality.
+
 EditMode, Unity 6000.3.25f1: the focused classes (viewmodel, stance, ammunition, door gate, path follower and provider, material rules, layout, NavMesh, hut, medkit,
 loadout and drops) 246 of 247; the Agents, World Editor, Player and Shared test assemblies 889 of 892. The three that fail are not from this step:
 `IntroLoadoutTests.ArrivalCameraUsesSharedPoseAndWidescreenFraming` (the cinematic's own camera test, failing before this step) and two `ScreenshotCaptureTests`
 that need graphics (`-nographics` was used). **Validate Layout** passes 145 of 145.
 
 ## Not checked
+
+For SF1, run Bootstrap: move forward with W after C (crouch) and Z (prone), then try backward/sideways movement. There should be no movement footsteps.
+Outside an enemy's line of sight, check that those movements create no new footstep-hearing reaction; prior sightings/noises can still be investigated.
+Stand up and confirm walking/sprinting footsteps and enemy hearing resume. Jump and fall impacts retain their existing sounds.
 
 Play Mode by hand: how crouch and prone feel and look (the camera drop, the capsule under real low ceilings and the prone view of the viewmodel), the new HUD in the real
 resolution, the medkit symbol, the ammo drops against dead bodies, agents opening real doors and waiting (headless tests use fake doors and a flat floor), the look of the

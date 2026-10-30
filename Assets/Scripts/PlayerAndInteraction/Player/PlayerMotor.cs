@@ -29,7 +29,7 @@ namespace Blackout.Player
 
         /// <summary>Downward speed (m/s) at the moment of landing.</summary>
         public event Action<float> Landed;
-        /// <summary>Raised on every footstep, with the state it was taken in (for footstep audio later).</summary>
+        /// <summary>Raised on standing walk/sprint footsteps for audio. Crouching and prone movement are silent.</summary>
         public event Action<MovementState> Footstep;
         public event Action Jumped;
 
@@ -231,6 +231,13 @@ namespace Blackout.Player
 
         private void UpdateFootsteps()
         {
+            if (Stance != Stance.Standing)
+            {
+                // Suppress both playback and AI hearing; do not carry silent travel into the next standing step.
+                footsteps.Reset();
+                return;
+            }
+
             bool sprinting = State == MovementState.Sprint;
             if (!footsteps.Advance(Grounded, sprinting, LastMoveDistance, HorizontalSpeed))
             {
