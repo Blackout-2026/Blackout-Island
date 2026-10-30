@@ -24,7 +24,7 @@ namespace Blackout.Player.Tests
             foreach (string side in new[] { "L", "R" })
             {
                 var glove = Find(normal, "Glove" + side).GetComponent<MeshFilter>();
-                Assert.That(AssetDatabase.GetAssetPath(glove.sharedMesh), Is.EqualTo(Prefix + model + ".fbx"));
+                Assert.That(AssetDatabase.GetAssetPath(glove.sharedMesh), Is.EqualTo(gun=="SMG" && side=="L" ? "Assets/Models/Custom/SM_SmgThumb.asset" : Prefix + model + ".fbx"));
                 Assert.That(glove.GetComponent<Renderer>().sharedMaterial, Is.SameAs(material));
                 if (side == "R" && gun != "Knife")
                 {
@@ -32,7 +32,7 @@ namespace Blackout.Player.Tests
                     Assert.That(glove.GetComponent<Renderer>().enabled, Is.False, "retained static arm cannot overlap TF1");
                     Assert.That(trigger.enabled, Is.True);
                     Assert.That(trigger.sharedMaterial, Is.SameAs(material));
-                    Assert.That(trigger.sharedMesh.vertices, Is.EqualTo(glove.sharedMesh.vertices), "holding shape retains the accepted geometry");
+                    Assert.That(trigger.sharedMesh.triangles, Is.EqualTo(glove.sharedMesh.triangles), "index fitting retains topology");
                 }
                 else Assert.That(glove.GetComponent<Renderer>().enabled, Is.True);
                 Assert.That(Find(normal, "Sleeve" + side).GetComponent<Renderer>().enabled, Is.False,
@@ -53,7 +53,8 @@ namespace Blackout.Player.Tests
             Assert.That(source.GetComponent<MeshRenderer>().enabled,Is.False,"no duplicate arm");
             Assert.That(skin.sharedMaterials,Is.EqualTo(source.GetComponent<MeshRenderer>().sharedMaterials));
             Mesh originalMesh = source.sharedMesh, shaped = skin.sharedMesh;
-            Assert.That(shaped.vertices,Is.EqualTo(originalMesh.vertices));
+            Vector3[] fitted = shaped.vertices, original = originalMesh.vertices;
+            BoneWeight[] nativeWeights = originalMesh.boneWeights;
             Assert.That(shaped.triangles,Is.EqualTo(originalMesh.triangles));
             Assert.That(shaped.uv,Is.EqualTo(originalMesh.uv));
             var delta = new Vector3[shaped.vertexCount];
@@ -74,7 +75,80 @@ namespace Blackout.Player.Tests
                 Assert.That(delta[i].magnitude,Is.LessThan(.012f));
             }
             Assert.That(moved,Is.GreaterThan(5));
-            Assert.That(delta.Sum(v=>v.z),Is.LessThan(0),"pulls toward the rear of the actual gun, not its muzzle");
+            for(int i=0;i<fitted.Length;i++)
+            {
+                var w=nativeWeights[i];
+                bool index=new[]{(w.boneIndex0,w.weight0),(w.boneIndex1,w.weight1),(w.boneIndex2,w.weight2),(w.boneIndex3,w.weight3)}
+                    .Any(p=>p.Item2>0 && native.bones[p.Item1].name.StartsWith("Index"));
+                if(!index) Assert.That(Vector3.Distance(fitted[i],original[i]),Is.LessThan(1e-6f),"only the index can be refitted");
+            }
+            if(gun=="SMG") Assert.That(fitted.Zip(original,Vector3.Distance).Max(),Is.GreaterThan(.01f),"saved SMG asset must retain its new index pose after reimport");
+            else Assert.That(fitted,Is.EqualTo(original),"rifle holding geometry is unchanged");
+            Vector3 contact=root.transform.Find(Holder+"/"+gun+"/RightIndexContact").localPosition;
+            var gunTransform=root.transform.Find(Holder+"/"+gun);
+            var meshToGun=gunTransform.worldToLocalMatrix*source.transform.localToWorldMatrix;
+            float nearest=float.PositiveInfinity;
+            int[] triangles=shaped.triangles;
+            for(int i=0;i<triangles.Length;i+=3)
+            {
+                Vector3 a=meshToGun.MultiplyPoint3x4(fitted[triangles[i]]),b=meshToGun.MultiplyPoint3x4(fitted[triangles[i+1]]),c=meshToGun.MultiplyPoint3x4(fitted[triangles[i+2]]);
+                Vector3 n=Vector3.Cross(b-a,c-a).normalized;
+                if(n.sqrMagnitude<.5f) continue;
+                Vector3 projected=contact-n*Vector3.Dot(contact-a,n);
+                if(Vector3.Dot(Vector3.Cross(b-a,projected-a),n)>=0 && Vector3.Dot(Vector3.Cross(c-b,projected-b),n)>=0 && Vector3.Dot(Vector3.Cross(a-c,projected-c),n)>=0)
+                    nearest=Mathf.Min(nearest,Vector3.Distance(contact,projected));
+            }
+            TestContext.WriteLine(gun+" trigger-to-skin surface distance: "+nearest);
+            if(gun=="SMG") Assert.That(nearest,Is.LessThan(.002f),"finger pad should meet the trigger without stretching its bones");
+            Assert.That(delta.Sum(v=>meshToGun.MultiplyVector(v).z),Is.LessThan(0),"pulls toward the rear of the actual gun, not its muzzle");
+        }
+
+        [Test]
+        public void SmgThumb_ChangesOnlyTheThumb_AndRetainsNativeTopologyAndMaterial()
+        {
+            var player=AssetDatabase.LoadAssetAtPath<GameObject>(Player);
+            var glove=player.transform.Find(Holder+"/SMG/Visual").GetComponentsInChildren<MeshFilter>(true).Single(m=>m.name=="GloveL");
+            var model=AssetDatabase.LoadAssetAtPath<GameObject>(Prefix+"Smg.fbx");
+            var native=model.GetComponentsInChildren<SkinnedMeshRenderer>(true).Single(r=>r.name=="WinterSmgL");
+            Vector3[] before=native.sharedMesh.vertices,after=glove.sharedMesh.vertices;
+            Assert.That(glove.sharedMesh.triangles,Is.EqualTo(native.sharedMesh.triangles));
+            Assert.That(glove.sharedMesh.uv,Is.EqualTo(native.sharedMesh.uv));
+            BoneWeight[] weights=native.sharedMesh.boneWeights;
+            int moved=0;
+            for(int i=0;i<before.Length;i++)
+            {
+                var w=weights[i];
+                bool thumb=new[]{(w.boneIndex0,w.weight0),(w.boneIndex1,w.weight1),(w.boneIndex2,w.weight2),(w.boneIndex3,w.weight3)}
+                    .Any(v=>v.Item2>0 && native.bones[v.Item1].name.StartsWith("Thumb"));
+                if(!thumb) Assert.That(Vector3.Distance(before[i],after[i]),Is.LessThan(1e-6f),"wrist, sleeves and support fingers stay fixed");
+                else if(Vector3.Distance(before[i],after[i])>.001f) moved++;
+            }
+            Assert.That(moved,Is.GreaterThan(5));
+            Assert.That(glove.GetComponent<MeshRenderer>().enabled,Is.True);
+            Assert.That(player.transform.Find(Holder+"/SMG/LeftThumbContact"),Is.Not.Null);
+            Transform gun=player.transform.Find(Holder+"/SMG");
+            Matrix4x4 toGun=gun.worldToLocalMatrix*glove.transform.localToWorldMatrix;
+            int distal=System.Array.FindIndex(native.bones,b=>b.name=="Thumb3L");
+            Vector3 centre=Vector3.zero;float total=0;
+            Bounds bounds=default;bool first=true;
+            for(int i=0;i<after.Length;i++)
+            {
+                var w=weights[i];
+                float amount=(w.boneIndex0==distal?w.weight0:0)+(w.boneIndex1==distal?w.weight1:0)
+                    +(w.boneIndex2==distal?w.weight2:0)+(w.boneIndex3==distal?w.weight3:0);
+                Vector3 point=toGun.MultiplyPoint3x4(after[i]);
+                centre+=point*amount;total+=amount;
+                bool thumb=new[]{(w.boneIndex0,w.weight0),(w.boneIndex1,w.weight1),(w.boneIndex2,w.weight2),(w.boneIndex3,w.weight3)}
+                    .Any(v=>v.Item2>.5f && native.bones[v.Item1].name.StartsWith("Thumb"));
+                if(!thumb) continue;
+                if(first) {bounds=new Bounds(point,Vector3.zero);first=false;} else bounds.Encapsulate(point);
+            }
+            centre/=total;
+            Vector3 contact=gun.Find("LeftThumbContact").localPosition;
+            TestContext.WriteLine("Thumb distal centre "+centre.ToString("F6")+"; bounds "+bounds.size.ToString("F6"));
+            Assert.That(centre.x,Is.GreaterThan(.004f),"tip must reach the opposite side of the grip");
+            Assert.That(centre.z,Is.LessThan(contact.z+.006f),"thumb must cross the back of the grip");
+            Assert.That(bounds.size.x,Is.GreaterThan(bounds.size.y*1.15f),"wrapped thumb must lie across the grip rather than stand upright");
         }
 
         [TestCase("SMG")]

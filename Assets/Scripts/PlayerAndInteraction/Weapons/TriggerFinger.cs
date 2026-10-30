@@ -17,6 +17,7 @@ namespace Blackout.Weapons
 
         private int shape = -1;
         private float remaining;
+        private float cycleTime;
         private int shotFrame = -1;
         public float Pull => shape < 0 ? 0 : fingerVisual.GetBlendShapeWeight(shape) / 100f;
 
@@ -55,7 +56,8 @@ namespace Blackout.Weapons
         private void OnShot(WeaponData fired)
         {
             if (fired != data || !weapons.isActiveAndEnabled || !hands.Shown || Time.timeScale <= 0) return;
-            remaining = returnTime;
+            cycleTime = Mathf.Min(returnTime, Mathf.Max(.02f,data.cooldown*.85f));
+            remaining = cycleTime;
             shotFrame = Time.frameCount;
             Apply(1);
         }
@@ -71,13 +73,13 @@ namespace Blackout.Weapons
             if (remaining <= 0) return;
             // Update fires before LateUpdate. Do not spend this entire frame's dt on a shot
             // that just happened: at low FPS that could erase the pull before rendering it.
-            if (shotFrame == Time.frameCount || (input.isActiveAndEnabled && input.FireHeld))
+            if (shotFrame == Time.frameCount)
             {
                 Apply(1);
                 return;
             }
             remaining = Mathf.Max(0, remaining - dt);
-            Apply(Mathf.SmoothStep(0, 1, remaining / returnTime));
+            Apply(Mathf.SmoothStep(0, 1, remaining / cycleTime));
         }
 
         private void OnAmmoChanged()

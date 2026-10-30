@@ -1,82 +1,86 @@
-# Trigger finger motion (TF1)
+# SMG thumb contact and trigger finger (TF1 / TF2)
 
-Both equipped guns flex the right index finger on an accepted shot. The first
-rendered firing frame always retains the pull, even if its frame time exceeds
-the release duration. After firing, holding LMB keeps the trigger pressed;
-releasing LMB returns the finger over 0.14 seconds. A held automatic trigger
-therefore does not vibrate between individual bullets. Dry fire, reload
-requests, pickups and knife swings cannot start a fresh pull.
+TF2 revises the SMG support thumb and right index finger. The thumb wraps around
+the back of the actual foregrip to its opposite side; the index pad sits on the camera-facing
+side of the trigger. Only these fingers change. Wrists, sleeves, support fingers,
+weapon/camera framing and the full-body actor remain unchanged.
 
-The initial 85 ms pulse could be consumed by LateUpdate in the same slow frame
-as firing, so a changed property/CPU bake did not guarantee visible motion.
-This revision guards the firing frame and checks live rendered pixels as well.
+The rejected straight/raised-finger fit changed phalanx lengths. The current
+Editor builder instead rotates the three existing finger joints using a small
+CCD solve. Knuckles remain fixed; each bone length is checked before/after.
+The index solver limits deviation to 40 degrees at the base and 65 degrees
+for its remaining segments. Its surface contact is refined through rotations.
+The thumb uses a complete wrap arc: left back corner, across the back face,
+then right back corner, preserving every source segment length. A tip-only
+contact solver was rejected because it left the middle joint upright. Neither
+fit stretches bones or pulls individual vertices.
+Source UVs, weights, topology, materials and original FBXs remain available.
+The rifle holding pose retains its original geometry.
 
-`WeaponController.ShotFired` reports the firearm after its existing `Fire()`.
-The separate `TriggerFinger` presentation component changes only the baked
-`TriggerPull` blend-shape weight. It resets on switch, checkpoint restoration,
-reload, pause, lost focus, hidden hands and disable; subscriptions are removed
-on disable. The existing reload visual disables the normal holding Visual,
-so its sampled Generic clip retains exclusive control of reload fingers.
-No firing/recoil/damage/camera/input settings change.
+## Mesh wiring and contact spaces
 
-## Mesh and prefab integration
+The source rigs/meshes are read-only Winter Soldier derivatives. Native bind
+positions come from inverse bind poses; contact rays use gun-local metres.
+The builder explicitly converts between the static holding mesh and gun spaces.
+The SMG trigger ray passes inside its guard at y=-0.036. The thumb ray points
+forward from z=0.21 at y=-0.055 to measure the foregrip back face (z=0.246733). Measured contacts are saved
+as RightIndexContact and LeftThumbContact under the gun.
 
-The accepted static right arm MeshFilters remain intact. Their MeshRenderers
-are disabled, and a child `GloveR/TriggerFingerVisual` renders the same vertices,
-UVs, triangles and body material with one additional blend shape. One rigid
-identity bone carries the holding mesh; no live finger skeleton or runtime mesh
-allocation is needed. The left arm, wrists, palm, sleeves and other fingers do
-not change. ViewmodelHands collects the new renderer through its existing
-sprint/scope/cinematic visibility gates. Knife and full-body actors are unchanged.
+Existing right-hand static renderers remain disabled for rollback; the separate
+TriggerFingerVisual renders the existing trigger blend-shape mesh. The left
+GloveL keeps its MeshRenderer/body material but uses the new static derivative
+Assets/Models/Custom/SM_SmgThumb.asset. Its original mesh remains in
+SM_WinterArms_Smg.fbx. Only Thumb1/2/3 weights affect the left derivative.
+No runtime IK, new skeleton, package or new FPS controller is added.
 
-`Blackout > Systems > Add Trigger Finger Motion` rebuilds only two mesh assets
-and their Player overrides via Unity APIs:
+Blackout > Systems > Wrap SMG Support Thumb (BuildThumbOnly) updates only
+the left thumb mesh and its Player override. BuildThumbAndPreview also saves
+review frames. The right trigger assets/runtime are hash-checked unchanged
+by this focused correction.
 
-- `Assets/Models/Custom/SM_TriggerFinger_Smg.asset`
-- `Assets/Models/Custom/SM_TriggerFinger_Rifle.asset`
+Blackout > Systems > Add Trigger Finger Motion rebuilds the existing generated
+meshes and Player overrides through Unity APIs. It updates native mesh buffers
+and reimports before wiring; it preserves existing GUIDs. Run it after older
+player/arm builders. BuildAndPreview creates disposable review cameras and
+writes hip/side/front rest and pulled images outside the repository.
 
-The builder reads the accepted `SM_WinterArms_Smg/Rifle.fbx` meshes and their
-existing Index2R/Index3R pivots/weights. It bakes joint flexion toward the rear
-of the gun (-Z), then stores the before/after vertex and normal deltas. The
-SMG uses 8/5 degree joint rotations (maximum travel 5.172 mm); the longer fitted
-rifle finger uses 2/1.5 degrees (5.886 mm). The base meshes, reload rigs/clips,
-FBXs, Blender sources, grip targets and original body remain untouched.
-Rebuilding older arm/player tools may restore the static renderer; rerun this
-scoped installer last. No Blender extraction or new package is required.
+## Shot and reload behavior
+
+Each accepted firearm shot pulls the finger, preserves the first rendered frame,
+then returns to rest even while LMB remains held. A subsequent automatic SMG
+shot retriggers the cycle. Release duration is min(140 ms, 85% of cooldown).
+The SMG uses a small 12/8-degree distal pull; the rifle retains its small pull
+and unchanged holding geometry. Dry fire and knife attacks start no cycle.
+WeaponController still owns fire rate, recoil, bullets and ammo. Only the visual
+blend weight changes during gameplay; no per-frame mesh baking is used.
+
+Automatic empty-magazine reload and R partial reload remain as committed in TF1.
+The original Generic reload clips/rigs remain untouched and own the hands while
+reload is active. Switching, hidden/sprint/scope/cinematic hands, pause/focus,
+checkpoint and disable reset the finger effect without accumulating listeners.
+Check the release/regrip transition into the corrected holding thumb manually.
 
 ## Verification
 
-Unity 6000.3.25f1 revision build exited **0**. Selected EditMode **74/74**
-and graphics-enabled PlayMode **43/43** passed, both exit **0**. The live GPU
-hand-renderer check measured **818 changed pixels** initially (**809** on the
-final focused rerun) between rest and held
-trigger, excluding camera movement and muzzle lighting. Its rest/held/released
-silhouettes were inspected. Tests also verify held/released input, a 250 ms
-firing-frame step without held input, both guns auto-reloading from a last
-actual shot without R, and the existing reload/visibility/checkpoint consumers.
-Evidence: `%TEMP%/blackout-TF1-revision/` contains `build.log`,
-`EditMode.log/xml`, `PlayMode.log/xml`, `live-finger/`, and runtime captures.
-Final focused graphics rerun: **5/5** passed, exit **0**, in
-`TriggerFinger-final.log/xml`. Builder repeat exited **0**; the Player prefab
-and both generated mesh/meta pairs were byte-identical (`repeat-result.json`).
-Selected first-person held/rest captures under `runtime/` were inspected.
-The production finger is small and partly occluded by the weapon, so perceived
-visibility/trigger contact at the actual Game-view resolution remains manual.
+Final evidence is outside the repository at %TEMP%/blackout-TF2-thumb-wrap/.
+Compilation/graphics build exited 0. Selected EditMode 75/75 and graphics
+PlayMode 43/43 passed, exits 0. The saved thumb distal centre is
+(0.015157,-0.059497,0.245281): opposite the original left-side base and across
+the measured back face. Its thumb bounds are wider than tall; the regression
+checks both this shape and unchanged non-thumb vertices/UVs/triangles.
+The builder rejects any change to thumb segment lengths. Side, front and
+complete-gun gameplay-camera previews were inspected. Right-hand mesh/runtime
+hashes remain unchanged by this correction. Files: build.log, EditMode.log/xml,
+PlayMode.log/xml, preview/, thumb-chain.txt, runtime/ and repeat-result.json.
+Repeat exited 0; the Player prefab and all three mesh/meta pairs were byte-identical. Earlier trigger-motion evidence
+under blackout-TF2-natural remains valid for the preserved right-hand effect.
 
-The previous selected 74 EditMode / 41 PlayMode checks and baked previews remain
-under `%TEMP%/blackout-TF1/`, but the user reported no visible firing motion.
-Those earlier checks did not establish a visible live-rendered finger change.
-The new graphics test compares the actual hand renderer before a shot, while
-LMB is held after the shot, and after release. It temporarily uses a plain
-unlit silhouette on a disposable Player instance; production material/assets
-are unchanged. Original geometry/UVs/weights are still checked in EditMode.
-These are controlled captures/selected tests, not complete gameplay acceptance;
-input tests supply captured-cursor state explicitly.
+Inspect in Bootstrap at the actual Game-view resolution: thumb against the
+foregrip; index visible on the trigger; single shots and sustained SMG bursts;
+ADS; automatic/R reload and regrip; switch/sprint/pause/focus; death/checkpoint/
+Restart and Console. Controlled captures and selected tests do not establish
+full gameplay feel, native pointer capture or subjective visual acceptance.
 
-Manual Bootstrap checks: acquire both guns, fire single shots and sustained
-SMG bursts, and inspect finger movement at the trigger and return without
-wrist motion or duplicate arms. Check ADS, dry fire, automatic empty reload,
-R partial reload, switching,
-sprint, pause/focus loss, death/respawn, checkpoint restore and Restart. During
-reload inspect the existing hand motion and clean return to the holding pose.
-The trigger mesh itself remains static; this change animates the index finger.
+Historical TF1 evidence remains under %TEMP%/blackout-TF1-revision/. Earlier
+TF2 fitting evidence under blackout-TF2/ includes the rejected stretched pose;
+its submillimetre contact result did not establish a natural-looking finger.

@@ -71,7 +71,13 @@ namespace Blackout.Diagnostics.PlayTests
                 Assert.That(finger.Pull,Is.EqualTo(1),"a slow firing frame must not erase the pull before it renders");
                 Assert.That(weapons.GetComponentsInChildren<TriggerFinger>(true).Where(f=>f!=finger).All(f=>f.Pull==0),Is.True);
                 yield return new WaitForSeconds(.2f);
-                Assert.That(finger.Pull,Is.EqualTo(1),"an accepted shot keeps the trigger pressed while LMB is held");
+                Assert.That(finger.Pull,Is.Zero,"each shot returns even while LMB remains held");
+                if(slot==1)
+                {
+                    weapons.Tick(.001f,true);
+                    Assert.That(finger.Pull,Is.EqualTo(1),"the next automatic shot pulls again");
+                    Assert.That(ammo.Loaded,Is.EqualTo(before-2));
+                }
                 Capture("held-"+slot);
                 InputSystem.QueueStateEvent(mouse,new MouseState());
                 yield return null;
@@ -150,7 +156,7 @@ namespace Blackout.Diagnostics.PlayTests
             var image = new Texture2D(256,256,TextureFormat.RGB24,false);
             camera.targetTexture=target;
             RenderTexture previous=RenderTexture.active;
-            string folder=Path.Combine(Path.GetTempPath(),"blackout-TF1-revision","live-finger");
+            string folder=Path.Combine(Path.GetTempPath(),"blackout-TF2-natural","live-finger");
             Directory.CreateDirectory(folder);
             Color32[] Read(string name)
             {
@@ -166,9 +172,9 @@ namespace Blackout.Diagnostics.PlayTests
                 InputSystem.QueueStateEvent(mouse,new MouseState().WithButton(MouseButton.Left));
                 yield return null;
                 weapons.Tick(.001f,true);
-                yield return new WaitForSeconds(.2f);
-                Assert.That(finger.Pull,Is.EqualTo(1));
-                Color32[] fired=Read("held");
+                yield return null;
+                Assert.That(finger.Pull,Is.GreaterThan(0));
+                Color32[] fired=Read("pulled");
                 int changed=before.Zip(fired,(a,b)=>a.Equals(b)?0:1).Sum();
                 Assert.That(changed,Is.GreaterThan(10),"the live GPU renderer must show movement, not just a changed property or CPU bake");
                 InputSystem.QueueStateEvent(mouse,new MouseState());
@@ -251,7 +257,7 @@ namespace Blackout.Diagnostics.PlayTests
             {
                 camera.targetTexture = target; camera.Render(); RenderTexture.active = target;
                 image.ReadPixels(new Rect(0,0,1280,720),0,0); image.Apply();
-                string folder = Path.Combine(Path.GetTempPath(),"blackout-TF1-revision","runtime");
+                string folder = Path.Combine(Path.GetTempPath(),"blackout-TF2-natural","runtime");
                 Directory.CreateDirectory(folder);
                 File.WriteAllBytes(Path.Combine(folder,name+".png"),image.EncodeToPNG());
             }
