@@ -116,7 +116,7 @@ bindings, finite deformation/return to rest and scope/cinematic visibility.
 It also compares 61 samples of gun/magazine/wrist motion against original clips.
 Existing reload, knife, scope and takedown suites exercise their lifecycle rules.
 
-In Bootstrap: acquire both guns; fire and empty their magazines; hold/release
+In Bootstrap: acquire both guns; fire, empty their magazines, then press R; hold/release
 RMB during rifle reload; switch mid-reload; walk, sprint, crouch/prone and jump;
 slash repeatedly; perform front/rear takedowns; pause, die/respawn, restore a
 checkpoint and Restart. Check Console and ensure the FPS hands stay hidden

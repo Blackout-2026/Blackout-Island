@@ -139,7 +139,7 @@ materials remain. Final visual acceptance is separate from automated tests.
 
 In Bootstrap, acquire the SMG and inspect standing, walking, crouching/prone,
 jumping and sprinting at your actual Game-view aspect. Fire hip/ADS, empty a
-magazine with RMB held, switch away/back during reload, pause, alt-tab,
+magazine with RMB held, press R, switch away/back during reload, pause, alt-tab,
 die/respawn, restore a checkpoint, perform takedowns and Restart. Inspect finger
 pads, wrists, sleeve ends and support-hand release/return in motion. Retained
 low-poly geometry/materials limit how closely this can resemble the supplied

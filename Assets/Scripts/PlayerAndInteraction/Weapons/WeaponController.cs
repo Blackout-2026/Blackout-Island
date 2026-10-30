@@ -331,6 +331,8 @@ namespace Blackout.Weapons
             context.Grounded = motor.Grounded;
             weapon.Tick(dt);
 
+            if (hasInput && input.ReloadPressed) TryReload();
+
             if (hasInput && WantsToFire(weapon.Data) && CanFire(weapon.Data))
             {
                 if (weapon.Data.kind == WeaponKind.Melee && takedown != null && takedown.TryBegin()) return;
@@ -356,6 +358,18 @@ namespace Blackout.Weapons
             switcher = new WeaponSwitcher(weapons.Length, index);
             ShowOnly(index);
             WeaponChanged?.Invoke(ActiveWeapon);
+            return true;
+        }
+
+        /// <summary>Requests a reload of the held gun; the ammo clock still owns completion and animation timing.</summary>
+        public bool TryReload()
+        {
+            if (!isActiveAndEnabled || Time.timeScale <= 0f || input == null || !input.isActiveAndEnabled
+                || input.PausePressed || look == null || !look.isActiveAndEnabled || motor == null || !motor.isActiveAndEnabled
+                || switcher == null || !switcher.IsReady || ActiveWeapon == null || ActiveWeapon.kind == WeaponKind.Melee
+                || motor.State == MovementState.Sprint || (takedown != null && (takedown.IsBusy || takedown.WaitingForRelease))) return false;
+            if (!ammo[switcher.ActiveIndex].TryStartReload()) return false;
+            AmmoChanged?.Invoke();
             return true;
         }
 
@@ -430,7 +444,7 @@ namespace Blackout.Weapons
         internal void ApplyTakedownDamage(Health target, Vector3 point, float damage) => context.ApplyDamage(target,
             new DamageInfo(damage, point, motor.transform.forward, motor.gameObject, DamageType.Melee));
 
-        // Every gun reloads in the background, so switching away from an emptied gun does not cancel its reload.
+        // A requested reload continues in the background when switching away, as before.
         private void TickAmmo(float dt)
         {
             bool finished = false;

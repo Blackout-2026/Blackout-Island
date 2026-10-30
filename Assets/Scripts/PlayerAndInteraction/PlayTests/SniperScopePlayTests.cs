@@ -107,6 +107,7 @@ namespace Blackout.Diagnostics.PlayTests
             WeaponAmmo ammo = weapons.AmmoOf(weapons.ActiveWeapon);
             int rounds = ammo.Loaded;
             for (int i = 0; i < rounds; i++) ammo.Consume();
+            Assert.That(weapons.TryReload(), Is.True);
             scope.Tick(0.1f, true);
             AssertNormal();
             yield return null; yield return null;

@@ -71,6 +71,7 @@ namespace Blackout.Diagnostics.PlayTests
                 WeaponAmmo ammo = weapons.AmmoOf(weapons.ActiveWeapon);
                 int rounds = ammo.Loaded;
                 for(int i=0;i<rounds;i++) Assert.That(ammo.Consume(),Is.True);
+                Assert.That(weapons.TryReload(), Is.True);
                 pose.Tick(.1f,true);
                 Assert.That(ammo.Reloading,Is.True);
                 Assert.That(smg.localPosition,Is.EqualTo(hip));

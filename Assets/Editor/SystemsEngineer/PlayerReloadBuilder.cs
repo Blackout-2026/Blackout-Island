@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
 namespace Blackout.Editor
@@ -31,6 +32,33 @@ namespace Blackout.Editor
         public const string SmgModel = "Assets/Models/Custom/SM_Reload_Smg.fbx";
         public const string RifleModel = "Assets/Models/Custom/SM_Reload_Rifle.fbx";
         public const string SourceFolder = "Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/";
+
+        [MenuItem("Blackout/Systems/Add Manual Reload Input")]
+        public static void BuildManualReloadInput()
+        {
+            // Edit the assigned actions through the Input System JSON API; existing IDs/GUID stay intact.
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabBuilder.PrefabPath);
+            var reader = player.GetComponent<Blackout.Player.PlayerInputReader>();
+            var assigned = new SerializedObject(reader).FindProperty("actions").objectReferenceValue;
+            string path = AssetDatabase.GetAssetPath(assigned);
+            var actions = InputActionAsset.FromJson(File.ReadAllText(path));
+            try
+            {
+                var map = actions.FindActionMap("Player", true);
+                var reload = map.FindAction("Reload");
+                bool changed = false;
+                if(reload == null) { reload = map.AddAction("Reload", InputActionType.Button); reload.expectedControlType = "Button"; changed = true; }
+                if(!reload.bindings.Any(b => b.path == "<Keyboard>/r"))
+                { reload.AddBinding("<Keyboard>/r", groups: "Keyboard&Mouse"); changed = true; }
+                if(changed)
+                {
+                    File.WriteAllText(path, actions.ToJson());
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                }
+            }
+            finally { Object.DestroyImmediate(actions); }
+            Debug.Log("[MR1] Reload action uses R; existing input references retained.");
+        }
 
         public static AnimationClip ImportedClip(string path)
         {

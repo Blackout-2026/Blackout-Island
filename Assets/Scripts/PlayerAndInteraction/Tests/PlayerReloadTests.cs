@@ -8,6 +8,18 @@ namespace Blackout.Player.Tests
 {
     public class PlayerReloadTests
     {
+        [Test]
+        public void SavedPlayer_UsesReloadButtonOnR()
+        {
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Player/Player.prefab");
+            var reader = player.GetComponent<Blackout.Player.PlayerInputReader>();
+            var actions = (UnityEngine.InputSystem.InputActionAsset)new SerializedObject(reader).FindProperty("actions").objectReferenceValue;
+            var reload = actions.FindAction("Player/Reload", true);
+            Assert.That(reload.type, Is.EqualTo(UnityEngine.InputSystem.InputActionType.Button));
+            Assert.That(reload.bindings.Count, Is.EqualTo(1));
+            Assert.That(reload.bindings[0].path, Is.EqualTo("<Keyboard>/r"));
+            Assert.That(reload.interactions, Is.Null.Or.Empty, "one press, without a hold/toggle interaction");
+        }
         private const string PlayerPath = "Assets/Prefabs/Player/Player.prefab";
         private const string Holder = "CameraRig/CameraPivot/PlayerCamera/WeaponHolder/";
 
