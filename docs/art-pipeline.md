@@ -1,5 +1,32 @@
 # Art pipeline: Blender to Unity 6
 
+## FD1: forest density and additional shapes
+
+`Art/Blender/Scripts/build_forest_variants.py` uses Blender Python and the existing
+`build_ponderosa_forest` helpers. Defaults are the user-supplied folders
+`D:/model/pine-forest-at-sunset` and `D:/model/small-trees`; both are read-only.
+Run Blender 5.2 with `-b --factory-startup --python-exit-code 1 -P` and that script.
+It exports only seven new FBXs into `Assets/Models/Custom/SM_Forest_*`:
+SmallTreeA/B/C, BushWide/Upright, RockWide/Round. No original model is overwritten.
+
+The FBX has three trunk/leaf pairs, not three animation rigs. Its original texture
+links point at an unavailable author desktop. The converter explicitly resolves the
+supplied leaf albedo/opacity and bark albedo/normal, keeping UVs and separate material
+slots. Leaves are saved as a new **RGBA** image before resizing; writing alpha into
+the original JPEG-backed image would silently save RGB. Unity uses URP alpha clipping,
+two-sided foliage, instancing and alpha-coverage mips. Three 1024px PNGs live under
+`Assets/Textures/Models/T_SmallTree_*`. Existing forest needle/rock materials are reused.
+
+Trees use deterministic branch reduction/card thinning into <=2350/680/190-triangle
+LODs, at heights 6.2/3.8/7.4 m before reduction. Rocks have <=650/220/70-triangle LODs;
+bushes have one 228/136-triangle detail mesh. **Blackout > World > Add Dense Varied
+Forest** builds the seven prefabs in `Assets/Environment/Vegetation`, appends the
+finite density plan and rebakes navigation when collidable instances are added.
+It preserves existing terrain and hand-authored vegetation. Use **Inspect Forest
+Density** for counts/budgets and five graphics captures in system Temp `blackout-FD1`.
+See [placement, counts and limits](level-layout.md#denser-varied-forest-fd1) and
+[source credits](credits/world-builder.md#additional-forest-shapes-fd1).
+
 WA1 adds rigged FPS arm derivatives of the existing cinematic Winter Soldier.
 Scoped Generic import rules supersede static-prop defaults for these new FBXs.
 See [matching FPS arms](winter-fps-arms.md) for extraction and offline retargeting.

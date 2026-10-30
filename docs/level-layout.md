@@ -498,6 +498,42 @@ The five-view vegetation estimates are now Dock **61,846**, Forest checkpoint **
 Gate looking back **76,318** and Hunter-1 spawn **58,852** triangles. The highest falls from **80,874 to 76,318**
 (about **5.6%**); detail counts and the full LOD0 geometry inventory stay unchanged. These are estimates, not GPU timings.
 
+### Denser, varied forest (FD1)
+
+**Blackout > World > Add Dense Varied Forest** (`ForestDensityBuilder`) supplements the saved terrain;
+it does not run Paint Terrain And Forest. The original 657 tree/rock instances, 376 bushes,
+6,000 grass tufts, heights and splat painting are preserved. Current saved totals are **1,038 trees,
+280 rocks and 1,476 bushes**, plus unchanged grass. There are seven inland tree shapes
+(four existing ponderosas and three trees from the supplied Small Trees FBX), four rock shapes
+and three bush shapes. Beach palms/almonds/bananas retain their existing placement.
+
+The finite supplement uses seeds **50123 / 50432 / 50777** for trees/bushes/rocks and at most
+900 / 1100 / 240 candidates. Actual additions: **544 trees, 1,100 bushes, 117 rocks**. It samples
+Unity x -105..105, z -88..65, ground >= 2.6 m, normal Y >= 0.85, below the cliff minus 6 m.
+The existing compound/dock/cliff exclusions and Hunter 6 m clearings apply. Trail centre clearance
+is 4.5 m for trees, 3.8 m for bushes, 4 m for rocks. Candidate spacing is 3.2 / 1.4 / 3 m;
+saved tree/rock positions additionally exclude additions within 2.6 m (trees) or 1.8 m (rocks).
+Rejected candidates are not replaced: rerunning the same plan adds zero more trees/rocks.
+Only the two new named bush detail layers are regenerated; original layers are untouched.
+
+New trees/rocks have three LODs and trunk/rock capsules. The existing NavMesh baker includes
+these capsules; the rebake passes **145/145** layout checks, including mission and Hunter routes.
+Hunter cover already recognises all terrain trees and every detail prefab containing `Bush`;
+its integration test now includes all three bush shapes. No AI runtime changes were needed.
+
+The five-view PC vegetation estimate was already over the historical 250,000-triangle target:
+worst **476,853 before -> 753,001 after**, excluding shadows and occlusion. The target is retained,
+not claimed as passed. New small trees use <= 2,350 / 680 / 190 triangles per LOD;
+new rocks <= 650 / 220 / 70, bushes 228 / 136 each. GPU frame time still needs a live Profiler check.
+Evidence: system temporary directory `blackout-FD1` (inventories, preservation hashes, captures,
+Unity logs and test XML). Fixed Environment captures verify density/texture setup, not complete
+gameplay, all camera angles or target-machine performance. Check the trail, Hunter clearings,
+off-trail collision, sightlines, restart and quality settings through Bootstrap.
+
+**Rebuild order:** convert using `build_forest_variants.py`, run Add Dense Varied Forest, then
+Validate Layout. A full Paint Terrain And Forest resets vegetation to W6: reapply tree diversification
+and FD1 afterward. Existing hand/weapon/cinematic assets and lighting are unchanged.
+
 ### Visible-triangle budget
 
 **Budget: 250,000 vegetation triangles in the main camera's view**, from any player viewpoint, shadow passes not
@@ -1866,5 +1902,5 @@ camera-facing flame sprites are stylised and the procedural torch handle lacks a
 | Nine optional dressing placements missing (W10) | Pipes, cable trays, grille, extinguisher and flask skip until their five prefabs are supplied | Core Developer (Assets/Prefabs/Props) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
-berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
-clearings (see "Terrain painting and vegetation").
+berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"). The forest keeps the Hunter
+clearings and adds the FD1 density/shape supplement (see "Terrain painting and vegetation").

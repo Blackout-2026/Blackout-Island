@@ -1,5 +1,35 @@
 # World Builder optimisation (W11)
 
+## 2026-10-30: denser and varied forest (FD1)
+
+This later art pass supplements, rather than repaints, the original W6 vegetation:
+494 -> **1,038 trees**, 163 -> **280 rocks**, 376 -> **1,476 bushes**. Seven inland tree
+shapes, four rocks and three bushes use the supplied ponderosa/small-tree models.
+Original 657 tree/rock instances, terrain heights/splats and grass/bush paint are
+checked before/after; only two additional bush layers are managed by the new tool.
+
+The worst five-view PC main-camera vegetation estimate is **476,853 -> 753,001**
+triangles. The original 250,000 target was already exceeded and remains exceeded;
+neither the target nor global quality settings were changed to hide the result.
+New trees use <=2350/680/190 triangles in three LODs; new rocks <=650/220/70.
+These estimates exclude occlusion and shadow passes. The 15-second agent smoke
+test measures CPU work without a rendered gameplay camera, so its timings are
+**not** GPU performance or a playable frame-rate claim.
+
+Evidence in system Temp `blackout-FD1`: conversion/import/capture logs, before/after
+inventories and five night Environment views, preservation hashes, 68 focused
+EditMode tests plus 6 Hunter cover integration tests, and the 1-test/24-agent
+PlayMode smoke run (15 seconds, zero exceptions/error logs/warnings/stuck events).
+The regenerated NavMesh passes all 145 layout checks. Repeat generation adds zero
+trees/rocks and leaves the 20 checked terrain/NavMesh/prefab/material files identical.
+
+Viva: **does** fills forest gaps with distinct shapes; **design** fixed candidate
+plans plus append-only trees and two owned detail layers; **alternative** avoids
+repainting authored terrain; **number** adds 544 trees/117 rocks/1100 bushes;
+**weakness** target-machine GPU/visibility balance still needs an interactive check.
+Check Bootstrap trail/escape traversal, Hunter sightlines, off-trail collision,
+LOD transitions and Low/Medium/PC performance before the demo.
+
 Run **Blackout > World > Scene Report** to inspect the loaded Environment scene. Batch entry point: `Blackout.Editor.SceneReport.AppendBaseline`. Reports never save the scene or assets.
 
 ## 2026-10-18 02:19:28 — baseline

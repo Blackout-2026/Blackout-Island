@@ -16,9 +16,9 @@ namespace Blackout.AI.Hunter.Tests
     public class HunterCoverLevelTests
     {
         private const string EnvironmentPath = "Assets/Scenes/Environment.unity";
-        // 431 pines + 63 palms + 163 rocks, and 376 bushes (docs/level-layout.md, "Terrain painting and vegetation").
-        private const int PlantedTrees = 431 + 63 + 163;
-        private const int PlantedBushes = 376;
+        // FD1: original forest plus 544 trees, 117 rocks and 1100 bushes; grass is not Hunter cover.
+        private const int PlantedTrees = 1038 + 280;
+        private const int PlantedBushes = 1476;
 
         private Scene environment;
         private Terrain terrain;
@@ -48,6 +48,15 @@ namespace Blackout.AI.Hunter.Tests
         public void Trees_AreAllTheWorldBuildersTrees()
         {
             Assert.AreEqual(PlantedTrees, terrain.terrainData.treeInstanceCount);
+        }
+
+        [Test]
+        public void BushLayers_IncludeTheNewShapesAndExcludeGrass()
+        {
+            var names = new List<string>();
+            foreach (DetailPrototype prototype in terrain.terrainData.detailPrototypes)
+                if (HunterWorld.IsBush(prototype)) names.Add(prototype.prototype.name);
+            CollectionAssert.AreEquivalent(new[] { "Bush", "BushWide", "BushUpright" }, names);
         }
 
         [Test]

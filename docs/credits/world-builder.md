@@ -105,6 +105,25 @@ The FBX geometry and UVs are unchanged. Sail transmission is not implemented.
 See [integration and rebuild notes](../gislinge-boat.md). This is a third-party
 environment prop and is not claimed as either student-modelled hero asset.
 
+## Additional forest shapes (FD1)
+
+User-supplied sources remain unchanged outside the repository:
+
+- `D:/model/pine-forest-at-sunset/source/ponderosa_stand_sketchfab.glb`: `Icosphere.005` and
+  `Icosphere.001` become RockWide/RockRound; `Ponderosa Pine seedling.036_foliage` and
+  `.047_foliage` become BushWide/BushUpright. Reuses the F1 rock and needle textures/materials.
+  Attribution/licence status remains **to confirm**, as recorded in the F1 table above.
+- `D:/model/small-trees/source/Small Trees.fbx`: the three `tree`/`leaves.004`,
+  `tree.001`/`leaves.005`, `tree.002`/`leaves.006` pairs become SmallTreeA/B/C.
+  Supplied `qimhv_2K_Albedo` + `Opacity` form the RGBA leaf texture;
+  `vmbibijg_2K_Albedo` and `Normal` supply bark maps, resized to 1024.
+  Author, download page and licence: **to confirm**; no attribution is inferred from texture filenames.
+
+Converted by `Art/Blender/Scripts/build_forest_variants.py`, reusing the F1 conversion helpers.
+UVs/material separation retained, branches decimated and leaf cards thinned into three tree LODs;
+rocks also have three LODs. These are adapted third-party models, not student-modelled hero assets.
+No source model or existing credit was replaced.
+
 ## How to add a vegetation model
 
 1. Use a CC0 low-poly pack (for example Kenney or Quaternius, both CC0 1.0). Put its files in
