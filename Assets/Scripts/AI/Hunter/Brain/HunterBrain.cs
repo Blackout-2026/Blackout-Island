@@ -200,6 +200,11 @@ namespace Blackout.AI.Hunter
         /// <summary>The Commander's order. Kept until the tree completes it; a newer order replaces it.</summary>
         public void OnDirective(Directive directive)
         {
+            if (directive.type != DirectiveType.Converge && directive.type != DirectiveType.SearchZone &&
+                directive.type != DirectiveType.Regroup) return;
+            if (context?.Health != null && !context.Health.IsAlive) return;
+            if (hasOrder && order.type == directive.type && order.position.Equals(directive.position) &&
+                order.radius == directive.radius) return; // Repeated broadcasts must not restart the running BT leg.
             order = directive;
             hasOrder = true;
             orderReceivedAt = clock();

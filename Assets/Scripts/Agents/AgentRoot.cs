@@ -132,6 +132,7 @@ namespace Blackout.Agents
             registry.Register(this);
             brain?.Initialize(registry.CreateContext(transform, health));
             initialized = true;
+            ReplayDirective();
             hasAppliedAlert = false;
             BindAlert();
         }
@@ -149,11 +150,16 @@ namespace Blackout.Agents
                 brain?.Initialize(registry.CreateContext(transform, health));
                 hasAppliedAlert = false;
                 SyncWorldAlert();
-                var members = registry.Blackboard.Agents;
-                for (int i = 0; i < members.Count; i++)
-                    if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
-                        DirectiveReceiver?.OnDirective(members[i].LastDirective);
+                ReplayDirective();
             }
+        }
+
+        private void ReplayDirective()
+        {
+            var members = registry.Blackboard.Agents;
+            for (int i = 0; i < members.Count; i++)
+                if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
+                    DirectiveReceiver?.OnDirective(members[i].LastDirective);
         }
 
         private void BindAlert()

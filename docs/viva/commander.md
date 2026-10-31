@@ -113,7 +113,7 @@ running movement leaf using the Hunter's existing tree lifecycle.
 The prototype treats all three orders as post updates. Keep scoring Attack,
 MoveToCover, Reposition and HoldPost normally; do not force a score winner just
 because an order arrived. The current Unity brain exposes `SetPost(Vector3)`.
-The owner should invalidate an obsolete cover claim when changing posts. Using
+SO1 releases an obsolete cover claim when changing posts; identical post updates keep it. Using
 the SearchZone radius for a wider scan would be an additional owner decision;
 the prototype's post-update mapping does not use that radius.
 
@@ -121,18 +121,79 @@ the prototype's post-update mapping does not use that radius.
 
 AgentRoot registers its brain's IDirectiveReceiver with the shared Blackboard.
 The Commander sends only to living other agents. Blackboard retains each latest
-directive, and AgentRoot replays it when replacing a brain. There is no need to
+valid directive, and AgentRoot replays it after initialization or when replacing a brain. There is no need to
 find the Commander, subscribe directly to it, or change shared signatures.
 
 Each owner should check all three order types, a repeated type with a new target,
 and an interruption by their own combat behavior. Confirm that receiving an order
 alone does not enable firing, and that Commander death does not clear the order.
-These samples describe the handoff; they do not claim the other owners' runtime
-brains already implement it. G3's scene-free fake-receiver harness demonstrates
-the mappings independently of their scenes and AI assemblies.
+SO1 connects the real Patrol FSM and Tactical Guard utility brain alongside the Hunter BT receiver.
+The historical G3 scene-free fake-receiver harness remains an isolated contract example; SO1 adds
+verification against the saved scenes, prefab registrations and runtime brains.
 
 The G2 alert is a separate contract: `IAlertReceiver.OnAlert(AgentAlert)` supplies
 the vision multiplier. Directive handling does not apply or stack alert buffs.
+
+## SO1 runtime squad integration
+
+The shared `Directive` and `IDirectiveReceiver` signatures are unchanged. All three enemy brain types now implement
+the receiver, and `AgentRoot` registers them through the existing runtime Blackboard lookup. The existing Agents
+scene spawns 12 Patrols, six Guards and five Hunters plus the Commander; no new component or Inspector wiring is needed.
+
+| Receiver | Converge | SearchZone | Regroup |
+| --- | --- | --- | --- |
+| Patrol FSM | Pursue, run to the supplied point | Search at the supplied centre and inside its radius | Investigate, walk to the rally and look around |
+| Hunter BT | Existing FollowOrders branch, run | Existing bounded search points | Existing FollowOrders branch, walk |
+| Guard utility AI | Update defended post | Update defended post to centre | Update defended post to rally |
+
+Patrol perception takes priority: visible player, Attack's existing lost-sight grace, and short local pursuit memory
+precede squad orders. Interrupted orders remain available. Orders alone never authorize a shot. A changed payload
+replaces the order; identical active payloads do not reset state/search timers. Regroup uses the existing 1.5 m arrival
+and 3.5 s investigation look-around. Converge completes within 1.5 m or the existing search-duration bound (14 s calm,
+30 s alert). Ordered Search first reaches its centre, then uses four deterministic directions at 60% of the supplied
+radius, dwelling 1.6 s at a reached point. It retains the existing 14/30 s total timeout, including unreachable points.
+Normal non-directive searches keep their previous centre/look-around behaviour. The shared mover still owns pathfinding.
+
+The Guard keeps its scorer, hysteresis, combat and cover choices: an order changes the post rather than forcing an action.
+Changed posts and disable/death release cover claims; repeated same-post orders preserve a valid claim. The prototype
+uses SearchZone's centre for Guards; its radius does not create a separate robot search state.
+
+The Hunter keeps its existing combat/noise/order branch priorities. Repeated identical broadcasts preserve the active BT
+leg instead of resetting its received-time stamp. Unknown order types are ignored by all three receivers and by Blackboard
+storage, preserving the last valid payload for checkpoint/reinitialization replay.
+
+`AgentRoot.Initialize` now replays a retained valid order after the brain has initialized, covering orders delivered during
+startup or reinitialization. Brain replacement uses the same helper. Checkpoint restoration still uses the existing spawner
+and Blackboard replay; Commander death stops new orders without clearing survivors' accepted orders. Living disabled Patrols
+resume their retained order; reinitialization/death/player-respawn clear local FSM order state. A scene-reload restart starts
+with a fresh roster and Blackboard. No new events or subscriptions are introduced for directives.
+
+Evidence for this step is under `%TEMP%\blackout-SO1`. Unit tests cover mappings, repeated/moved/unknown orders, combat
+preemption, cover release and initialization replay. `SquadOrderIntegrationPlayTests` loads the real Environment and Agents
+scenes, checks all 23 receiver registrations, drives the real GOAP orders and verifies Patrol-3/TG-05 progress through the
+saved NavMesh and mover. It also checks death, checkpoint restoration and a fresh Agents-scene reload. A separate PlayMode
+test uses actual disable/re-enable callbacks for Guard cover cleanup. The scene order test deliberately has no player to
+isolate squad coordination; local combat priorities are checked with controlled perception in the brain tests.
+
+Verified in Unity 6000.3.25f1: `EditMode-verified.xml` reports **936 passed, 0 failed** across the six selected Patrol,
+Guard, Hunter, Commander, Agents and Shared test assemblies; `PlayMode-final.xml` reports **7 passed, 0 failed** across
+the new integration fixture, existing Commander lifecycle fixture and agent animation fixture. Both batch runs exited 0,
+including compilation/import. Unity generated the new test script's metadata. All 817 protected assets/settings retained
+their hashes; whitespace checks passed. The existing Unity licensing-token diagnostic remains. These are selected suites,
+not a whole-project or visual/gameplay pass.
+
+Manual check: play from Bootstrap, take the cure with the Commander alive, and inspect the debug orders/states for a Patrol,
+Hunter and Guard. Confirm local sight/shooting interrupts travel, movement resumes when appropriate, search areas change
+when sightings move, and closed doors/obstacles behave sensibly. Kill the Commander, restore a checkpoint and restart.
+The Commander remains a stationary coordinator in this step. Live combat balance, animation and rendering need human review.
+
+Five-line viva summary:
+
+1. GOAP sends the same shared order data to three real squad brain types.
+2. Patrol uses FSM transitions, Hunter uses its existing BT branch, Guard updates inputs to its utility scorer.
+3. Local combat keeps priority; an order is not proof that the player is visible.
+4. Repeats preserve progress, changed payloads replace targets, and retained orders survive the appropriate lifecycle paths.
+5. Automated tests check delivery and execution; live encounter balance and visual quality remain manual checks.
 
 ## Running the scene-free handoff harness
 

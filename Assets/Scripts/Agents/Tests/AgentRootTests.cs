@@ -70,14 +70,17 @@ namespace Blackout.Agents.Tests
             public void CeaseFire() { ceaseFireCalls++; }
         }
 
-        private sealed class FakeBrain : IAgentBrain
+        private sealed class FakeBrain : IAgentBrain, IDirectiveReceiver
         {
             public AgentIntent next;
             public float lastDeltaTime;
             public int tickCalls;
             public IAgentContext context;
+            public bool hasOrder;
+            public Directive order;
 
-            public void Initialize(IAgentContext newContext) { context = newContext; }
+            public void Initialize(IAgentContext newContext) { context = newContext; hasOrder = false; }
+            public void OnDirective(Directive directive) { order = directive; hasOrder = true; }
 
             public AgentIntent Tick(float deltaTime)
             {
@@ -113,6 +116,25 @@ namespace Blackout.Agents.Tests
         public void TearDown()
         {
             Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
+        public void Initialize_ReplaysAnOrderThatArrivedBeforeTheBrainWasInitialized()
+        {
+            var registryObject = new GameObject("Registry");
+            try
+            {
+                var registry = registryObject.AddComponent<AgentRegistry>();
+                BlackboardAgent member = registry.Blackboard.RegisterAgent(root.AgentName, root.transform, health, brain);
+                var order = new Directive(DirectiveType.Regroup, Vector3.one, 10f);
+                member.Issue(order);
+                Assert.That(brain.hasOrder, Is.True);
+                root.Initialize(registry); // Initialize clears the brain's local order before replay.
+                Assert.That(brain.hasOrder, Is.True);
+                Assert.That(brain.order.position, Is.EqualTo(order.position));
+                Assert.That(registry.Blackboard.Agents.Count, Is.EqualTo(1));
+            }
+            finally { Object.DestroyImmediate(registryObject); }
         }
 
         private static DamageInfo Hit(float amount)

@@ -20,7 +20,10 @@ namespace Blackout.AI.SecurityPatrol
         LostPlayer,
         CannotAttack,
         SearchComplete,
-        InvestigationAlerted
+        InvestigationAlerted,
+        OrderConverge,
+        OrderSearch,
+        OrderRegroup
     }
 
     internal static class SecurityPatrolTransitions
@@ -58,7 +61,19 @@ namespace Blackout.AI.SecurityPatrol
             new Transition(SecurityPatrolState.Attack, SecurityPatrolTrigger.CannotAttack, SecurityPatrolState.Pursue),
             new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.DetectedPlayer, SecurityPatrolState.Pursue),
             new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.CanAttack, SecurityPatrolState.Attack),
-            new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.SearchComplete, SecurityPatrolState.Patrol)
+            new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.SearchComplete, SecurityPatrolState.Patrol),
+            new Transition(SecurityPatrolState.Patrol, SecurityPatrolTrigger.OrderConverge, SecurityPatrolState.Pursue),
+            new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.OrderConverge, SecurityPatrolState.Pursue),
+            new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.OrderConverge, SecurityPatrolState.Pursue),
+            new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.OrderConverge, SecurityPatrolState.Pursue),
+            new Transition(SecurityPatrolState.Patrol, SecurityPatrolTrigger.OrderSearch, SecurityPatrolState.Search),
+            new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.OrderSearch, SecurityPatrolState.Search),
+            new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.OrderSearch, SecurityPatrolState.Search),
+            new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.OrderSearch, SecurityPatrolState.Search),
+            new Transition(SecurityPatrolState.Patrol, SecurityPatrolTrigger.OrderRegroup, SecurityPatrolState.Investigate),
+            new Transition(SecurityPatrolState.Investigate, SecurityPatrolTrigger.OrderRegroup, SecurityPatrolState.Investigate),
+            new Transition(SecurityPatrolState.Pursue, SecurityPatrolTrigger.OrderRegroup, SecurityPatrolState.Investigate),
+            new Transition(SecurityPatrolState.Search, SecurityPatrolTrigger.OrderRegroup, SecurityPatrolState.Investigate)
         };
 
         public static bool TryGetNext(SecurityPatrolState from, SecurityPatrolTrigger trigger,

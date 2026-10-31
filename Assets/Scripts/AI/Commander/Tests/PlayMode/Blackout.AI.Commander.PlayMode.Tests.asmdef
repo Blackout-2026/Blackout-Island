@@ -5,7 +5,10 @@
         "UnityEngine.TestRunner",
         "Blackout.Shared",
         "Blackout.Agents",
-        "Blackout.AI.Commander"
+        "Blackout.AI.Commander",
+        "Blackout.AI.SecurityPatrol",
+        "Blackout.AI.TacticalGuard",
+        "Blackout.AI.Hunter"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

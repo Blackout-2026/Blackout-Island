@@ -133,14 +133,37 @@ namespace Blackout.AI.SecurityPatrol
 
     internal sealed class SearchState : State
     {
+        private Vector3 point;
+        private float lookingTime;
+        private int pointIndex;
         public SearchState(SecurityPatrolBrain brain) : base(SecurityPatrolState.Search, brain) { }
 
-        public override AgentIntent Tick(float deltaTime) => Brain.IsNear(Target, 1.2f)
+        public override void Enter(Vector3 target)
+        {
+            base.Enter(target);
+            point = target;
+            lookingTime = 0f;
+            pointIndex = 0;
+        }
+
+        public override void Advance(float deltaTime)
+        {
+            base.Advance(deltaTime);
+            float radius = Brain.SearchOrderRadius;
+            if (radius <= 0f) { point = Target; return; }
+            lookingTime = Brain.IsNear(point, 1.2f) ? lookingTime + deltaTime : 0f;
+            if (lookingTime < 1.6f) return;
+            lookingTime = 0f;
+            float angle = (++pointIndex % 4) * Mathf.PI * .5f;
+            point = Target + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (radius * .6f);
+        }
+
+        public override AgentIntent Tick(float deltaTime) => Brain.IsNear(point, 1.2f)
             ? Brain.LookAround(TimeInState, true) : new AgentIntent
         {
-            moveTarget = Target,
+            moveTarget = point,
             moveSpeed = MoveSpeed.Walk,
-            lookTarget = Target,
+            lookTarget = point,
             hasLookTarget = true,
             aim = true
         };

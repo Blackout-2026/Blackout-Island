@@ -207,6 +207,24 @@ namespace Blackout.AI.Hunter.Tests
         }
 
         [Test]
+        public void RepeatedOrUnknownOrders_DoNotRestartTheRunningLeg_ButMovedTargetsDo()
+        {
+            sight.Clear = false;
+            var order = new Directive(DirectiveType.Converge, new Vector3(20f, 0f, 0f), 0f);
+            brain.OnDirective(order); Step();
+            float received = brain.Tree.Facts.Get(HunterFacts.OrderReceivedAt);
+            brain.OnDirective(order);
+            brain.OnDirective(new Directive((DirectiveType)999, Vector3.zero, 0f));
+            Step();
+            Assert.That(brain.Tree.Facts.Get(HunterFacts.OrderReceivedAt), Is.EqualTo(received));
+            Assert.That(brain.LastIntent.moveTarget, Is.EqualTo(order.position));
+            var moved = new Directive(DirectiveType.Converge, new Vector3(25f, 0f, 0f), 0f);
+            brain.OnDirective(moved); Step();
+            Assert.That(brain.LastIntent.moveTarget, Is.EqualTo(moved.position));
+            Assert.That(brain.Tree.Facts.Get(HunterFacts.OrderReceivedAt), Is.GreaterThan(received));
+        }
+
+        [Test]
         public void NoConfig_UsesTheDefaults_AndWarns()
         {
             var bare = Hidden("Bare").AddComponent<HunterBrain>();

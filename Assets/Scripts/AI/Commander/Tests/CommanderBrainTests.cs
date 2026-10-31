@@ -364,6 +364,18 @@ namespace Blackout.AI.Commander.Tests
         }
 
         [Test]
+        public void UnknownOrder_PreservesTheLastValidOrderForReplay()
+        {
+            var valid = new Directive(DirectiveType.Regroup, Vector3.one, 10f);
+            units[0].Issue(valid);
+            int received = receivers[0].Count;
+            units[0].Issue(new Directive((DirectiveType)999, Vector3.zero, 0f));
+            Assert.That(receivers[0].Count, Is.EqualTo(received));
+            Assert.That(units[0].LastDirective.type, Is.EqualTo(valid.type));
+            Assert.That(units[0].LastDirective.position, Is.EqualTo(valid.position));
+        }
+
+        [Test]
         public void StableThinkTicks_DoNotAllocateOrReplan()
         {
             StartConverge();
