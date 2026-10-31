@@ -425,6 +425,7 @@ namespace Blackout.Diagnostics.PlayTests
             Vector3 position = gun.localPosition;
             Quaternion rotation = gun.localRotation;
             int layer = gun.gameObject.layer;
+            var visibility = gun.GetComponentsInChildren<Renderer>(true).ToDictionary(r => r, r => r.enabled);
             Assert.That(takedown.TryBegin(), Is.True);
             yield return WaitForPlaying();
             for (int i = 0; i < 160 && takedown.KickCount == 0; i++) yield return null;
@@ -437,7 +438,7 @@ namespace Blackout.Diagnostics.PlayTests
             Assert.That(gun.gameObject.layer, Is.EqualTo(layer));
             Assert.That(gun.GetComponent<Rigidbody>(), Is.Null);
             Assert.That(gun.GetComponent<BoxCollider>(), Is.Null);
-            Assert.That(gun.GetComponentsInChildren<Renderer>().All(r => r.enabled), Is.True);
+            foreach (var part in visibility) Assert.That(part.Key.enabled, Is.EqualTo(part.Value), part.Key.name);
             Assert.That(target.Available && target.Health.IsAlive && weapons.enabled, Is.True);
         }
 

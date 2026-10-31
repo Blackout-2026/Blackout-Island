@@ -131,3 +131,10 @@ Used only as visual reference for the realistic generator (step C6). They live i
 
 Fill the three TODO cells from the page where the images were found. If the author does not allow reuse of their images in a
 public repository, delete the two PNG files from `Art/Reference/Generator/` and keep only this row.
+
+## Supplied enemy rifle (EG1)
+
+`SM_Weapon_EnemyGun.fbx` and `T_EnemyGun_*` are derivatives of the gun supplied by the project owner in `D:\model\gun`.
+The supplied MTL/texture names credit **Dries Deryckere**; no licence text or source-page URL was included.
+The source hashes, conversion details, material mapping and integration are recorded in
+[EG1 enemy gun](../viva/EG1-enemy-gun.md). Existing character and player-weapon credits remain applicable.

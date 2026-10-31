@@ -214,8 +214,10 @@ namespace Blackout.Editor
                 Assign(target, "shooter", root.GetComponentInChildren<AgentShooter>(true));
                 Assign(target, "driver", driver);
                 Transform gun = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Gun");
-                Assign(target, "disarmWeapon", gun);
-                Renderer[] parts = gun != null ? gun.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
+                Transform supplied = gun != null ? gun.Find("SuppliedEnemyGun") : null;
+                Assign(target, "disarmWeapon", supplied != null && name == "TacticalGuard" ? null : gun);
+                Transform carried = supplied != null ? supplied : gun;
+                Renderer[] parts = carried != null ? carried.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
                 var serialized = new SerializedObject(target);
                 SerializedProperty array = serialized.FindProperty("carriedWeapon");
                 array.arraySize = parts.Length;

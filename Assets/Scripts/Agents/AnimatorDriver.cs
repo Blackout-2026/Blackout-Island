@@ -15,7 +15,7 @@ namespace Blackout.Agents
     [RequireComponent(typeof(Animator))]
     public class AnimatorDriver : AgentVisualAnimatorBase
     {
-        [Header("Optional weapon on a rigid character (Commander)")]
+        [Header("Optional weapon following the animated hand")]
         [SerializeField] private Transform weapon;
         [SerializeField] private Transform weaponHand;
         [SerializeField] private Vector3 weaponGripPosition;
@@ -38,8 +38,7 @@ namespace Blackout.Agents
         /// <summary>Follow the animated hand. Also used after manual Editor animation sampling.</summary>
         public void SyncWeaponGrip()
         {
-            // The rigid Commander's pistol is part of its imported hierarchy. Follow the animated
-            // hand without unpacking/reparenting that FBX or changing its mesh and prefab references.
+            // Follow the animated hand without unpacking/reparenting imported character models.
             if (weapon != null && weaponHand != null)
                 weapon.SetPositionAndRotation(weaponHand.TransformPoint(weaponGripPosition), weaponHand.rotation * weaponGripRotation);
         }

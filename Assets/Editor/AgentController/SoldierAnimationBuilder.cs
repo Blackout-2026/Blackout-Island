@@ -145,6 +145,8 @@ namespace Blackout.Editor
                 serialized.FindProperty("visualRoot").objectReferenceValue = visual;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 AlignWeapon(root, animator, driver, name);
+                if (AgentAvatarBuilder.Find(visual, EnemyGunBuilder.InstanceName) != null)
+                    EnemyGunBuilder.ConfigureAgent(root, name);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(model);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(animator);
                 PrefabUtility.SaveAsPrefabAsset(root, path);

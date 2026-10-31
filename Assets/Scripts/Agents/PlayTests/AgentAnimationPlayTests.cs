@@ -95,6 +95,43 @@ namespace Blackout.Agents.PlayTests
             }
         }
 
+        [UnityTest]
+        public IEnumerator ReplacementGun_HidesAcrossLodUpdates_AndRestoresAfterRepeatedDisarms()
+        {
+            string[] names = { "SecurityPatrol", "Hunter", "TacticalGuard", "Commander" };
+            for (int i = 0; i < names.Length; i++)
+            {
+                GameObject agent = Spawn(names[i], i);
+                var target = agent.GetComponent<AgentTakedownTarget>();
+                var settings = new SerializedObject(target);
+                SerializedProperty parts = settings.FindProperty("carriedWeapon");
+                var carried = new Renderer[parts.arraySize];
+                for (int p = 0; p < carried.Length; p++) carried[p] = (Renderer)parts.GetArrayElementAtIndex(p).objectReferenceValue;
+                Assert.That(carried.Length, Is.EqualTo(3), names[i]);
+                Transform gun = carried[0].transform.GetComponentInParent<LODGroup>().transform.parent.parent;
+                Transform parent = gun.parent;
+                for (int attempt = 0; attempt < 2; attempt++)
+                {
+                    Assert.That(target.TryReserve(agent), Is.True, names[i]);
+                    foreach (LODGroup lod in agent.GetComponentsInChildren<LODGroup>()) lod.ForceLOD(attempt);
+                    yield return null;
+                    foreach (Renderer part in carried) Assert.That(part.enabled, Is.False, names[i] + " rear weapon visible");
+                    target.PrepareFrontal(agent);
+                    target.KickWeapon(agent, agent.transform.forward);
+                    yield return null;
+                    if (names[i] != "TacticalGuard") Assert.That(gun.parent, Is.Null, names[i] + " detached gun");
+                    target.Release(agent);
+                    yield return null;
+                    Assert.That(gun.parent, Is.EqualTo(parent), names[i] + " gun was not restored");
+                    Assert.That(gun.GetComponent<Rigidbody>(), Is.Null);
+                    foreach (Renderer part in carried) Assert.That(part.enabled, Is.True, names[i] + " missing restored weapon");
+                    foreach (Renderer old in gun.GetComponentsInChildren<Renderer>(true))
+                        if (System.Array.IndexOf(carried, old) < 0) Assert.That(old.enabled, Is.False, "old gun reappeared");
+                }
+                Assert.That(agent.GetComponentInChildren<AnimatorDriver>().enabled, Is.True);
+            }
+        }
+
         private GameObject Spawn(string name, int index)
         {
             GameObject obj = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Agents/{name}.prefab"));
