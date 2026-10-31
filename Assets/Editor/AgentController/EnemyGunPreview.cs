@@ -14,7 +14,7 @@ namespace Blackout.Editor
         // A graphics device is required: omit -nographics for this method only.
         public static void Render()
         {
-            string folder = Path.Combine(Path.GetTempPath(), "blackout-EG1", "preview");
+            string folder = Path.Combine(Path.GetTempPath(), "blackout-enemy-gun", "preview");
             Directory.CreateDirectory(folder);
             var camera = new GameObject("Enemy gun review camera").AddComponent<Camera>();
             var light = new GameObject("Enemy gun review light").AddComponent<Light>();
@@ -32,7 +32,7 @@ namespace Blackout.Editor
             RenderSettings.ambientLight = Color.gray;
             try
             {
-                foreach (string name in EnemyGunBuilder.AgentNames)
+                foreach (string name in new[] { "SecurityPatrol", "Hunter", "TacticalGuard", "Commander" })
                 {
                     var root = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Agents/{name}.prefab"));
                     try

@@ -98,7 +98,7 @@ namespace Blackout.Agents.PlayTests
         [UnityTest]
         public IEnumerator ReplacementGun_HidesAcrossLodUpdates_AndRestoresAfterRepeatedDisarms()
         {
-            string[] names = { "SecurityPatrol", "Hunter", "TacticalGuard", "Commander" };
+            string[] names = { "SecurityPatrol", "Hunter", "Commander" };
             for (int i = 0; i < names.Length; i++)
             {
                 GameObject agent = Spawn(names[i], i);
@@ -119,7 +119,7 @@ namespace Blackout.Agents.PlayTests
                     target.PrepareFrontal(agent);
                     target.KickWeapon(agent, agent.transform.forward);
                     yield return null;
-                    if (names[i] != "TacticalGuard") Assert.That(gun.parent, Is.Null, names[i] + " detached gun");
+                    Assert.That(gun.parent, Is.Null, names[i] + " detached gun");
                     target.Release(agent);
                     yield return null;
                     Assert.That(gun.parent, Is.EqualTo(parent), names[i] + " gun was not restored");

@@ -11,7 +11,7 @@ namespace Blackout.Editor
 {
     public static class EnemyGunBuilder
     {
-        public static readonly string[] AgentNames = { "SecurityPatrol", "Hunter", "TacticalGuard", "Commander" };
+        public static readonly string[] AgentNames = { "SecurityPatrol", "Hunter", "Commander" };
         public const string VisualPath = "Assets/Prefabs/Models/EnemyGun_Visual.prefab";
         public const string ModelPath = "Assets/Models/Custom/SM_Weapon_EnemyGun.fbx";
         public const string InstanceName = "SuppliedEnemyGun";
@@ -32,7 +32,47 @@ namespace Blackout.Editor
                 finally { PrefabUtility.UnloadPrefabContents(root); }
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[EG1] Supplied rifle connected to all four enemy prefabs.");
+            Debug.Log("[EG1] Supplied rifle connected to Patrol, Hunter and Commander; Tactical Guard is excluded.");
+        }
+
+        [MenuItem("Blackout/Agents/Restore Tactical Guard Original Gun")]
+        public static void RestoreTacticalGuard()
+        {
+            const string path = "Assets/Prefabs/Agents/TacticalGuard.prefab";
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var driver = root.GetComponentsInChildren<AnimatorDriver>(true).Single(d => d.enabled);
+                Animator animator = driver.GetComponent<Animator>();
+                Transform addedGun = animator.transform.Find("Gun");
+                if (addedGun != null)
+                {
+                    if (addedGun.Find(InstanceName) == null)
+                        throw new InvalidOperationException("Tactical Guard has an unmanaged Gun; refusing to remove it.");
+                    UnityEngine.Object.DestroyImmediate(addedGun.gameObject);
+                }
+                Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                var originalGun = new SerializedObject(hand.GetComponent<Renderer>());
+                PrefabUtility.RevertPropertyOverride(originalGun.FindProperty("m_Enabled"), InteractionMode.AutomatedAction);
+                animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Animations/Agent_Sidearm.overrideController");
+                var follow = new SerializedObject(driver);
+                follow.FindProperty("weapon").objectReferenceValue = null;
+                follow.FindProperty("weaponHand").objectReferenceValue = null;
+                follow.FindProperty("weaponGripPosition").vector3Value = Vector3.zero;
+                follow.FindProperty("weaponGripRotation").quaternionValue = Quaternion.identity;
+                follow.ApplyModifiedPropertiesWithoutUndo();
+                Transform muzzle = AgentAvatarBuilder.Find(hand, "MuzzlePoint");
+                if (muzzle == null) throw new InvalidOperationException("Original Tactical Guard muzzle is missing.");
+                Assign(root.GetComponent<AgentShooter>(), "muzzle", muzzle);
+                var target = new SerializedObject(root.GetComponent<AgentTakedownTarget>());
+                target.FindProperty("disarmWeapon").objectReferenceValue = null;
+                target.FindProperty("carriedWeapon").arraySize = 0;
+                target.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[EG2] Tactical Guard original integrated gun, muzzle and sidearm animations restored.");
         }
 
         private static void BuildVisual()
@@ -114,16 +154,12 @@ namespace Blackout.Editor
         // Also called by the existing animation builder, so rebuilding animations preserves this fit.
         public static void ConfigureAgent(GameObject root, string name)
         {
+            if (name == "TacticalGuard") return; // Keep its original integrated gun and sidearm pose.
             var driver = root.GetComponentsInChildren<AnimatorDriver>(true).Single(d => d.enabled);
             Animator animator = driver.GetComponent<Animator>();
             animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Animations/Agent_Humanoid.controller");
             Transform gun = AgentAvatarBuilder.Find(animator.transform, "Gun");
-            if (gun == null)
-            {
-                if (name != "TacticalGuard") throw new InvalidOperationException(name + ": missing original Gun.");
-                gun = new GameObject("Gun").transform;
-                gun.SetParent(animator.transform, false);
-            }
+            if (gun == null) throw new InvalidOperationException(name + ": missing original Gun.");
             Transform supplied = gun.Find(InstanceName);
             if (supplied == null)
             {
@@ -135,15 +171,6 @@ namespace Blackout.Editor
             {
                 renderer.enabled = renderer.transform.IsChildOf(supplied);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
-            }
-            // The old robot's carbine and glove share one rigid mesh. Preserve its wrist joint,
-            // hide that mesh only, and mount the replacement on the same animated wrist.
-            if (name == "TacticalGuard")
-            {
-                var old = animator.GetBoneTransform(HumanBodyBones.RightHand).GetComponent<Renderer>();
-                if (old == null) throw new InvalidOperationException("Robot hand/carbine mesh is missing.");
-                old.enabled = false;
-                PrefabUtility.RecordPrefabInstancePropertyModifications(old);
             }
             Transform[] bones = animator.GetComponentsInChildren<Transform>(true).Where(t => t != gun && !t.IsChildOf(gun)).ToArray();
             var rest = bones.Select(t => (t.localPosition, t.localRotation, t.localScale)).ToArray();
@@ -176,7 +203,7 @@ namespace Blackout.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(animator);
             Assign(root.GetComponent<AgentShooter>(), "muzzle", supplied.Find("MuzzlePoint"));
             var target = new SerializedObject(root.GetComponent<AgentTakedownTarget>());
-            target.FindProperty("disarmWeapon").objectReferenceValue = name == "TacticalGuard" ? null : gun;
+            target.FindProperty("disarmWeapon").objectReferenceValue = gun;
             Renderer[] carried = supplied.GetComponentsInChildren<Renderer>(true);
             SerializedProperty array = target.FindProperty("carriedWeapon");
             array.arraySize = carried.Length;

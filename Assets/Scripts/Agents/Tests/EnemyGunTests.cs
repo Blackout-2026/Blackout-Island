@@ -12,7 +12,6 @@ namespace Blackout.Agents.Tests
     {
         [TestCase("SecurityPatrol")]
         [TestCase("Hunter")]
-        [TestCase("TacticalGuard")]
         [TestCase("Commander")]
         public void SavedEnemy_UsesNewGunAndMuzzle_AndKeepsItsTakedownReferences(string name)
         {
@@ -30,13 +29,12 @@ namespace Blackout.Agents.Tests
             SerializedProperty array = target.FindProperty("carriedWeapon");
             var assigned = Enumerable.Range(0, array.arraySize).Select(i => array.GetArrayElementAtIndex(i).objectReferenceValue).ToArray();
             CollectionAssert.AreEquivalent(parts, assigned);
-            Assert.That(target.FindProperty("disarmWeapon").objectReferenceValue, Is.EqualTo(name == "TacticalGuard" ? null : supplied.parent));
+            Assert.That(target.FindProperty("disarmWeapon").objectReferenceValue, Is.EqualTo(supplied.parent));
             Assert.That(supplied.parent.GetComponentsInChildren<Renderer>(true).Where(r => !r.transform.IsChildOf(supplied)).All(r => !r.enabled), Is.True);
         }
 
         [TestCase("SecurityPatrol")]
         [TestCase("Hunter")]
-        [TestCase("TacticalGuard")]
         [TestCase("Commander")]
         public void AnimatedAim_FitsTheGrip_AndFiresATracerFromTheNewBarrel(string name)
         {
@@ -82,6 +80,38 @@ namespace Blackout.Agents.Tests
                 Assert.That(Vector3.Distance(line.GetPosition(0), muzzle.position + agent.transform.forward * config.muzzleForwardOffset), Is.LessThan(.001f));
             }
             finally { Object.DestroyImmediate(agent); Object.DestroyImmediate(channel); }
+        }
+
+        [Test]
+        public void TacticalGuard_KeepsItsOriginalIntegratedGunAndMuzzle_WhenReplacementIsApplied()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Agents/TacticalGuard.prefab");
+            GameObject robot = Object.Instantiate(prefab);
+            try
+            {
+                var driver = robot.GetComponentInChildren<AnimatorDriver>();
+                Animator animator = driver.GetComponent<Animator>();
+                RuntimeAnimatorController controller = animator.runtimeAnimatorController;
+                Assert.That(AssetDatabase.GetAssetPath(controller), Is.EqualTo("Assets/Animations/Agent_Sidearm.overrideController"));
+                Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                Assert.That(hand.GetComponent<Renderer>().enabled, Is.True);
+                Assert.That(robot.GetComponentsInChildren<Transform>(true).Any(t => t.name == EnemyGunBuilder.InstanceName || t.name == "Gun"), Is.False);
+                var shooter = new SerializedObject(robot.GetComponent<AgentShooter>());
+                Transform muzzle = (Transform)shooter.FindProperty("muzzle").objectReferenceValue;
+                Assert.That(muzzle, Is.EqualTo(hand.Find("MuzzlePoint")));
+                var follow = new SerializedObject(driver);
+                Assert.That(follow.FindProperty("weapon").objectReferenceValue, Is.Null);
+                Assert.That(follow.FindProperty("weaponHand").objectReferenceValue, Is.Null);
+                var target = new SerializedObject(robot.GetComponent<AgentTakedownTarget>());
+                Assert.That(target.FindProperty("carriedWeapon").arraySize, Is.Zero);
+                Assert.That(target.FindProperty("disarmWeapon").objectReferenceValue, Is.Null);
+                Assert.That(EnemyGunBuilder.AgentNames, Does.Not.Contain("TacticalGuard"));
+                EnemyGunBuilder.ConfigureAgent(robot, "TacticalGuard");
+                Assert.That(animator.runtimeAnimatorController, Is.SameAs(controller));
+                Assert.That(hand.GetComponent<Renderer>().enabled, Is.True);
+                Assert.That(robot.GetComponentsInChildren<Transform>(true).Any(t => t.name == EnemyGunBuilder.InstanceName), Is.False);
+            }
+            finally { Object.DestroyImmediate(robot); }
         }
 
         [Test]
