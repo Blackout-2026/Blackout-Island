@@ -41,7 +41,7 @@ namespace Blackout.Weapons
             bool allowed = focused && mouseCaptured && Time.timeScale > 0 && health.IsAlive
                 && input.isActiveAndEnabled && look.isActiveAndEnabled && motor.isActiveAndEnabled
                 && weapons.isActiveAndEnabled && weapons.ActiveWeapon == data && !weapons.IsSwitching
-                && !(weapons.AmmoOf(data)?.Reloading ?? false) && hands.Shown
+                && !(weapons.AmmoOf(data)?.Reloading ?? false) && hands.ShownIgnoringSight
                 && motor.State != MovementState.Sprint && !input.PausePressed;
             if (!allowed) { ResetPose(); return; }
             Blend = PlayerMovementLogic.Damp(Blend, input.AimHeld ? 1 : 0, blendRate, dt);

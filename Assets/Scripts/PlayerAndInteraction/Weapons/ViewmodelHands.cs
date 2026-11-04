@@ -24,6 +24,7 @@ namespace Blackout.Weapons
         private bool shown = true;
         private bool scopeHidden;
         private bool cinematicHidden;
+        private bool sightHidden;
 
         /// <summary>True for the mesh objects of the arms: GloveR, GloveL, SleeveR and SleeveL.</summary>
         public static bool IsArmPart(string objectName)
@@ -43,6 +44,12 @@ namespace Blackout.Weapons
         public int ArmCount => parts == null ? 0 : parts.Length;
 
         public bool Shown => shown;
+
+        /// <summary>
+        /// True when the rules (sprint, sniper scope, cinematics) would show the viewmodel, whether or not the red-dot view is hiding it. The SMG aim pose
+        /// uses this so the view that hides the gun does not end the aim that raised it.
+        /// </summary>
+        public bool ShownIgnoringSight => !scopeHidden && !cinematicHidden && (motor == null || ShouldShow(motor.State));
 
         /// <summary>
         /// Finds the mesh renderers under this object, held weapon or not (the arms and the guns and the knife; the muzzle flash switches itself).
@@ -66,7 +73,7 @@ namespace Blackout.Weapons
                 enabledByDesign[i] = !shown || parts[i].enabled; // while hidden every renderer reads as off
             }
 
-            Apply(!scopeHidden && !cinematicHidden && (motor == null || ShouldShow(motor.State)));
+            Apply(!sightHidden && ShownIgnoringSight);
         }
 
         /// <summary>Hide renderers through the scope while leaving weapon simulation and firing active.</summary>
@@ -74,13 +81,21 @@ namespace Blackout.Weapons
         {
             if (scopeHidden == hidden) return;
             scopeHidden = hidden;
-            Apply(!hidden && !cinematicHidden && (motor == null || ShouldShow(motor.State)));
+            Apply(!sightHidden && ShownIgnoringSight);
+        }
+
+        /// <summary>The red-dot view hides the gun and arms (you look through the optic) without cancelling the aim.</summary>
+        public void SetSightHidden(bool hidden)
+        {
+            if (sightHidden == hidden) return;
+            sightHidden = hidden;
+            Apply(!hidden && ShownIgnoringSight);
         }
 
         public void SetCinematicHidden(bool hidden)
         {
             cinematicHidden = hidden;
-            Apply(!hidden && !scopeHidden && (motor == null || ShouldShow(motor.State)));
+            Apply(!sightHidden && ShownIgnoringSight);
         }
 
         /// <summary>Shows or hides every viewmodel renderer now.</summary>
@@ -113,7 +128,7 @@ namespace Blackout.Weapons
                 return;
             }
 
-            bool show = !scopeHidden && !cinematicHidden && ShouldShow(motor.State);
+            bool show = !sightHidden && ShownIgnoringSight;
             if (show != shown)
             {
                 Apply(show);

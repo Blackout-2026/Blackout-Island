@@ -146,9 +146,10 @@ namespace Blackout.Player.Tests
             centre/=total;
             Vector3 contact=gun.Find("LeftThumbContact").localPosition;
             TestContext.WriteLine("Thumb distal centre "+centre.ToString("F6")+"; bounds "+bounds.size.ToString("F6"));
-            Assert.That(centre.x,Is.GreaterThan(.004f),"tip must reach the opposite side of the grip");
-            Assert.That(centre.z,Is.LessThan(contact.z+.006f),"thumb must cross the back of the grip");
-            Assert.That(bounds.size.x,Is.GreaterThan(bounds.size.y*1.15f),"wrapped thumb must lie across the grip rather than stand upright");
+            // GN1: the thumb lies along the handguard's left face (one finger radius off it), pointing forward, instead of wrapping a vertical foregrip.
+            Assert.That(Mathf.Abs(centre.x-(contact.x-.0086f)),Is.LessThan(.012f),"the thumb tip rests against the handguard's left face");
+            Assert.That(centre.z,Is.GreaterThan(contact.z-.02f),"the thumb points forward along the handguard");
+            Assert.That(bounds.size.z,Is.GreaterThan(bounds.size.y*1.15f),"the thumb lies along the handguard rather than standing upright");
         }
 
         [TestCase("SMG")]
@@ -222,7 +223,9 @@ namespace Blackout.Player.Tests
             try
             {
                 Assert.That(newClip.length, Is.EqualTo(oldClip.length).Within(0.001f));
-                for (int frame = 0; frame <= 60; frame++)
+                // GN1: the SMG's reload was remade for the IOER-32G, so only its first and last frame (the approved pose) must equal the original's.
+                // The rifle's whole retargeted motion is still compared frame by frame.
+                foreach (int frame in label == "Smg" ? new[] { 0, 60 } : Enumerable.Range(0, 61))
                 {
                     float t = frame / 60f;
                     oldClip.SampleAnimation(original, t);

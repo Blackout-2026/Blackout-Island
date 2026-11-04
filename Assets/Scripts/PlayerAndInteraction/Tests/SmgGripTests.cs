@@ -65,11 +65,11 @@ namespace Blackout.Player.Tests
                 {
                     Transform elbow = rig.GetComponentsInChildren<Transform>(true).Single(t => t.name == "Forearm" + side);
                     Vector3 point = smg.InverseTransformPoint(elbow.position);
-                    Assert.That(point.x * (side == "L" ? -1 : 1), Is.GreaterThan(.1f), "elbows stay on their own side");
+                    Assert.That(point.x * (side == "L" ? -1 : 1), Is.GreaterThan(.07f), "elbows stay on their own side (SM1: tucked in, not crossed)");
                     Transform hand = rig.GetComponentsInChildren<Transform>(true).Single(t => t.name == "Hand" + side);
                     Transform knuckle = rig.GetComponentsInChildren<Transform>(true).Single(t => t.name == "Middle1" + side);
                     Assert.That(Vector3.Angle(hand.position-elbow.position, knuckle.position-hand.position),
-                        Is.LessThan(side == "L" ? 5f : 60f), "left palm must continue the forearm without a wrist bend");
+                        Is.LessThan(25f), side + " wrist must stay in a natural range (SM1): the forearm is within 25 degrees of straight with the palm");
                 }
                 // A marker near a palm is insufficient: check the front target against the actual MP9 surface.
                 smg.gameObject.SetActive(true);
@@ -78,8 +78,13 @@ namespace Blackout.Player.Tests
                 var collider = gun.gameObject.AddComponent<MeshCollider>();
                 collider.sharedMesh = gun.sharedMesh;
                 Physics.SyncTransforms();
-                Assert.That(collider.Raycast(new Ray(smg.TransformPoint(new Vector3(0,-.075f,.6f)), -smg.forward), out RaycastHit hit, 1), Is.True);
-                Assert.That(Vector3.Distance(smg.InverseTransformPoint(hit.point), smg.Find("LeftHandGrip").localPosition), Is.LessThan(.001f));
+                // GN1: the support-hand marker is the centre of the handguard's cross-section: rays in from both sides reach the real surface within 3 cm of it.
+                Vector3 marker = smg.Find("LeftHandGrip").localPosition;
+                foreach (Vector3 side in new[] { Vector3.right, Vector3.left })
+                {
+                    Assert.That(collider.Raycast(new Ray(smg.TransformPoint(marker + side * .08f), -smg.TransformDirection(side)), out RaycastHit hit, 1), Is.True);
+                    Assert.That(Vector3.Distance(smg.InverseTransformPoint(hit.point), marker), Is.LessThan(.03f), "the marker sits inside the handguard");
+                }
                 foreach (string side in new[] { "R", "L" })
                 {
                     Transform finger = rig.GetComponentsInChildren<Transform>(true).Single(t => t.name == "Middle3" + side);

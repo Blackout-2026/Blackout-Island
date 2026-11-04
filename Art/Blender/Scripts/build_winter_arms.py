@@ -13,6 +13,9 @@ import json
 import math
 from mathutils import Matrix, Vector
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import grip_fit  # GN1: seats the SMG's fingers on the real gun mesh
+
 REPO, SOURCE, EVIDENCE = sys.argv[sys.argv.index('--') + 1:]
 SMG_ONLY = os.environ.get('SG_EXPORT_ONLY') == 'Smg'
 with open(os.path.join(REPO, 'Art/Blender/SmgGrip.json')) as f:
@@ -141,6 +144,32 @@ for side, obj in native.items():
 
 bpy.ops.wm.open_mainfile(filepath=os.path.join(REPO, 'Art/Blender/SM_Reload_Viewmodels.blend'))
 for o in bpy.data.objects: o.hide_render = True
+
+
+def use_ioer_gun():
+    """GN1: the reload rig's SMG gun and magazine become the IOER-32G (from SM_IoerSmg.blend, built by build_ioer_smg.py), keeping the
+    object names, their armature modifiers and their vertex groups (the gun follows Motion, the magazine follows Magazine)."""
+    source = os.path.join(REPO, 'Art/Blender/SM_IoerSmg.blend')
+    if not os.path.exists(source):
+        return False
+    with bpy.data.libraries.load(source) as (src, dst):
+        dst.meshes = ['Smg_Gun', 'Smg_Magazine']
+    meshes = dict(zip(('Smg_Gun', 'Smg_Magazine'), dst.meshes))
+    material = bpy.data.materials['M_Weapon_Smg']
+    for name, group in (('Smg_Gun', 'Motion'), ('Smg_Magazine', 'Magazine')):
+        obj = bpy.data.objects[name]
+        assert max(abs(obj.matrix_world[r][c] - (1.0 if r == c else 0.0)) for r in range(4) for c in range(4)) < 1e-6, name + ' is not in the gun frame'
+        mesh = meshes[name]
+        mesh.materials.clear()
+        mesh.materials.append(material)
+        obj.data = mesh
+        vgroup = obj.vertex_groups.get(group) or obj.vertex_groups.new(name=group)   # names live on the mesh, so a swapped mesh has none
+        vgroup.add(list(range(len(mesh.vertices))), 1.0, 'REPLACE')
+    return True
+
+
+IOER_GUN = use_ioer_gun()
+report['ioer_gun'] = IOER_GUN
 material = bpy.data.materials.get('M_PlayerWinter_Body') or bpy.data.materials.new('M_PlayerWinter_Body')
 image = bpy.data.images.load(os.path.join(SOURCE, 'textures/00000037.png'), check_existing=True)
 material.use_nodes = True
@@ -163,7 +192,12 @@ def fitted(side, rig, name, wrist):
             # to the original sleeve through its existing weights, preserving the seam.
             forearm_weight = mapping.get('Forearm' + side, 0)
             hand_scale = spec.get('handScale', 1)
-            local *= hand_scale + (1 - hand_scale) * forearm_weight
+            # SM1: the sleeve keeps its full length but is slimmed across its width (x and z of the wrist frame) to
+            # forearmScale, so the forearm is in proportion with the smaller hand instead of a tube much thicker than it.
+            forearm_scale = spec.get('forearmScale', 1)
+            across = hand_scale + (forearm_scale - hand_scale) * forearm_weight
+            along = hand_scale + (1 - hand_scale) * forearm_weight
+            local = Vector((local.x * across, local.y * along, local.z * across))
             elbow = axes.inverted() @ (joints['Forearm'] - joints['Hand'])
             rotation = (wrist.to_3x3() @ elbow).rotation_difference(swap(spec['elbowDirection']))
             hand_point = wrist @ local
@@ -317,6 +351,83 @@ def seat_fingers(rig, arm, side, targets):
     bpy.context.view_layer.update()
 
 
+def bake_ioer(rig):
+    """GN1: a reload made for the IOER-32G (the MP9's baked reload sent the left hand to a magazine that is no longer there).
+
+    One second at 60 Hz, like the original. Everything is in the gun frame; the numbers are under "reload" in SmgGrip.json.
+      0.00-0.15  the gun tilts (pitch up, roll right) about the pistol grip so the magazine well opens toward the left hand
+      0.00-0.14  the left arm moves from the handguard to the magazine
+      0.14-0.34  the magazine slides out and down along its own axis, the hand carrying it
+      0.34-0.46  the hand takes it away below the view, drifting left
+      0.46-0.62  a magazine comes back up from below, the hand pushing it
+      0.62-0.70  it seats in the well
+      0.74-0.92  the hand returns to the handguard; the tilt eases out from 0.82
+    The arms are moved rigidly (a translation of the whole left arm, the right arm with the gun), so no skin is stretched; the left fingers flex a little round the magazine.
+    """
+    spec = smg_grip['reload']
+    pivot, axis, drift = swap(spec['pivot']), swap(spec['magazineAxisDown']).normalized(), swap(spec['drift'])
+    handguard = swap(smg_grip['left']['contact'])
+    mag_points = [v.co for v in bpy.data.objects['Smg_Magazine'].data.vertices]
+    mag_centre = sum(mag_points, Vector()) / len(mag_points)
+    out, away = spec['travelOut'], spec['travelAway']
+    rest = {b.name: b.matrix_local.copy() for b in rig.data.bones}
+    for p in rig.pose.bones: p.rotation_mode = 'QUATERNION'
+
+    def smooth(x):
+        x = max(0.0, min(1.0, x))
+        return x * x * (3 - 2 * x)
+
+    def ramp(t, a, b):
+        return smooth((t - a) / (b - a))
+
+    def gun_matrix(t):
+        k = ramp(t, 0, .15) * (1 - ramp(t, .82, 1.0))
+        turn = Matrix.Rotation(math.radians(spec['roll']) * k, 4, 'Y') @ Matrix.Rotation(math.radians(spec['pitch']) * k, 4, 'X')
+        return Matrix.Translation(pivot) @ turn @ Matrix.Translation(-pivot)
+
+    def magazine_offset(t):
+        """How far down its own axis the magazine is (metres, 0 = seated)."""
+        if t < .14: return 0.0
+        if t < .34: return out * ramp(t, .14, .34)
+        if t < .46: return out + (away - out) * ramp(t, .34, .46)
+        if t < .62: return away - (away - 0.03) * ramp(t, .46, .62)
+        return 0.03 - 0.03 * ramp(t, .62, .70)
+
+    def hand_target(t):
+        holding = ramp(t, 0, .14) * (1 - ramp(t, .74, .92))
+        point = handguard.lerp(mag_centre + axis * magazine_offset(t), holding)
+        return point + drift * (ramp(t, .30, .42) * (1 - ramp(t, .50, .62)))
+
+    for frame in range(1, 62):
+        t = (frame - 1) / 60
+        gun = gun_matrix(t)
+        arm_shift = Matrix.Translation(gun @ hand_target(t) - handguard)
+        # The left fingers open a little as the hand reaches the magazine, close round it, and open again on the way back.
+        flex = math.radians(12) * ramp(t, .10, .16) * (1 - ramp(t, .70, .76)) - math.radians(8) * ramp(t, 0, .06) * (1 - ramp(t, .08, .12))
+        desired = {}
+        for b in rig.data.bones:
+            name = b.name
+            if name == 'Root':
+                desired[name] = rest[name]
+            elif name == 'Magazine':
+                desired[name] = gun @ Matrix.Translation(axis * magazine_offset(t)) @ rest[name]
+            elif name.endswith('L') and any(name.startswith(f) for f in fingers):
+                rel = rest[b.parent.name].inverted() @ rest[name]
+                desired[name] = desired[b.parent.name] @ rel @ Matrix.Rotation(flex, 4, 'X')
+            elif name.endswith('L') and name != 'Root':
+                desired[name] = arm_shift @ rest[name]
+            else:                       # Motion, and the right arm with its fingers: they move with the gun
+                desired[name] = gun @ rest[name]
+        for b in rig.data.bones:
+            parent_pose = desired[b.parent.name] if b.parent else Matrix.Identity(4)
+            rel = rest[b.parent.name].inverted() @ rest[b.name] if b.parent else rest[b.name]
+            rig.pose.bones[b.name].matrix_basis = rel.inverted() @ parent_pose.inverted() @ desired[b.name]
+            rig.pose.bones[b.name].keyframe_insert('location', frame=frame)
+            rig.pose.bones[b.name].keyframe_insert('rotation_quaternion', frame=frame)
+    bpy.context.scene.render.fps = 60
+    bpy.context.scene.frame_start, bpy.context.scene.frame_end = 1, 61
+
+
 def bake(original, rig, smg=False):
     rest = {b.name: b.matrix_local.copy() for b in rig.data.bones}
     old_rest = {b.name: b.matrix_local.copy() for b in original.data.bones}
@@ -353,6 +464,37 @@ def bake(original, rig, smg=False):
     bpy.context.scene.frame_start, bpy.context.scene.frame_end = 1, 61
 
 
+def fit_targets(rig, side, spec):
+    """GN1: finger joint targets (Unity-frame dicts, the form seat_fingers takes) computed from the gun mesh by grip_fit."""
+    fit = spec['fit']
+    gun = bmesh.new()
+    for name in ('Smg_Gun', 'Smg_Magazine'):
+        gun.from_mesh(bpy.data.objects[name].data)
+    lo = swap(fit['region']['min'])
+    hi = swap(fit['region']['max'])
+    keep = lambda p: all(min(lo[i], hi[i]) <= p[i] <= max(lo[i], hi[i]) for i in range(3))
+    axis = {'horizontal': 2, 'cross': 1}[fit['slice']]   # the Blender axis each finger plane is perpendicular to (z up, or y forward)
+    radius = fit.get('radius', 0.0072)
+    targets, notes = {}, {}
+    for finger in fingers:
+        bones = [rig.data.bones[finger + str(j) + side] for j in (1, 2, 3)]
+        root = bones[0].head_local.copy()
+        lengths = [b.length for b in bones]
+        if finger == 'Thumb':
+            thumb = fit['thumb']
+            polyline = grip_fit.line_polyline(swap(thumb['start']), swap(thumb['direction']), thumb['length'])
+            joints = grip_fit.walk(root, lengths, polyline, closed=False)
+        else:
+            polyline, obstacle = grip_fit.outline(gun, axis, root[axis], keep, radius)
+            joints = grip_fit.walk(root, lengths, polyline, obstacle=obstacle)
+        targets[finger] = [{'x': v.x, 'y': v.z, 'z': v.y} for v in joints]
+        notes[finger] = {'knuckle_unity': [root.x, root.z, root.y], 'phalanx_lengths': lengths,
+                         'reach_to_outline': grip_fit.first_reach(root, polyline)}
+    gun.free()
+    report.setdefault('smg_fit', {})[side] = {'targets': targets, 'notes': notes}
+    return targets
+
+
 outputs = []
 for label in ('Smg', 'Rifle'):
     if SMG_ONLY and label != 'Smg': continue
@@ -366,12 +508,18 @@ for label in ('Smg', 'Rifle'):
             back, forward = swap(spec['back']).normalized(), swap(spec['fingers']).normalized()
             wrists[side] = Matrix((back, forward, back.cross(forward))).transposed().to_4x4()
             wrists[side].translation = swap(spec['wrist'])
+            if 'fit' in spec:
+                # GN1: place the hand by where its middle knuckle must be, so the wrist follows the hand's scale and frame.
+                _, _, _, _, hand_joints, hand_axes = source_data[side]
+                offset = hand_axes.inverted() @ (hand_joints['Middle1'] - hand_joints['Hand']) * 3 * spec.get('handScale', 1)
+                wrists[side].translation = swap(spec['fit']['middleKnuckle']) - wrists[side].to_3x3() @ offset
     anatomical_bind(rig, wrists, label == 'Smg')
     arms = [fitted(s, rig, 'Winter' + label + s, wrists[s]) for s in ('L', 'R')]
     grip(rig, arms, ('L', 'R'), smg=label == 'Smg')
     if label == 'Smg':
         for side, arm in zip(('L', 'R'), arms):
-            targets = smg_grip['left' if side == 'L' else 'right'].get('fingerTargets', {})
+            spec = smg_grip['left' if side == 'L' else 'right']
+            targets = fit_targets(rig, side, spec) if 'fit' in spec else spec.get('fingerTargets', {})
             if targets: seat_fingers(rig, arm, side, targets)
     parts = []
     for name in ('Gun', 'Magazine'):
@@ -383,7 +531,10 @@ for label in ('Smg', 'Rifle'):
             if mod.type == 'ARMATURE': mod.object = rig
         bpy.context.scene.collection.objects.link(part)
         parts.append(part)
-    bake(original, rig, label == 'Smg')
+    if label == 'Smg' and IOER_GUN and 'reload' in smg_grip:
+        bake_ioer(rig)
+    else:
+        bake(original, rig, label == 'Smg')
     bpy.context.scene.frame_set(1)
     export(os.path.join(OUT, 'SM_WinterArms_' + label + '.fbx'), [rig, *arms, *parts], True)
     outputs += [rig, *arms, *parts]

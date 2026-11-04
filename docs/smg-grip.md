@@ -1,4 +1,33 @@
-# SMG grip and sight alignment (SG1)
+# SMG grip and sight alignment (SG1, re-posed in SM1)
+
+> **GN1 replaced the MP9 with the IOER-32G.** The gun geometry, grip contacts, finger positions, sight reference and hip pose below describe the MP9 and are
+> kept as history; the current numbers and the finger solver are in [ioer-smg.md](ioer-smg.md). The SM1 arm changes (slimmer forearms, tucked elbows,
+> the wrist limits in the tests) still apply.
+
+## SM1: more natural arms (read this first)
+
+SM1 re-poses the SMG arms because the earlier fit read as unnatural in every view: both forearms were splayed into a wide V, the sleeves
+were about 1.7 times thicker than the shrunken hands, and the right wrist was bent about 50 degrees from the hand axis. Only the forearms
+changed; palms, finger joints, grip contacts, the trigger finger, the thumb wrap, reload timing and all other weapons are as before.
+
+| `Art/Blender/SmgGrip.json` | Before | SM1 |
+| --- | --- | --- |
+| right `elbowDirection` (gun-local, wrist to elbow) | (1.4, -1.6, -1.8), about 50 degrees from the hand axis | (0.5, -0.7, -2.0), about 21 degrees: elbow mostly behind, slightly out and down |
+| left `elbowDirection` | (-2.5, -1.3, -2.7), exactly in line with the hand | (-1.09, -0.78, -2.0): tucked in and down, about 21 degrees from the hand axis (13.4 measured on the bind) |
+| `forearmScale` (new, optional, default 1) | not present | right 0.82, left 0.80 |
+
+`forearmScale` slims the sleeve across its width only (the x and z axes of the wrist frame), blended from the hand scale at the wrist to
+the full value on the forearm weights; length is unchanged. A natural wrist can deviate roughly 20 degrees, so the tests now require
+under 25 degrees of bend at both wrists (they used 5 degrees left and 60 degrees right) and elbows at least 0.07 m on their own side of the
+gun axis (was 0.1 m). Rebuild exactly as under "Rebuild and review", then run Apply SMG Grip And Sights, Add Trigger Finger Motion and Wrap
+SMG Support Thumb in that order (the Blender step and these three menu items are all that SM1 needed).
+
+Verification (2026-11-04, Unity 6000.3.25f1, Editor open): Blender exit 0 (log in system Temp `blackout-SM1`); rebuilt SMG assets only
+(`SM_WinterArms_Smg.fbx`, `SM_SmgThumb.asset`, `SM_TriggerFinger_Smg.asset`; rifle and knife assets unchanged; the only Player prefab diff is
+one skinned-mesh bounding box). Isolated before/after renders at 16:9 and 8:3 (hip and full aim) were inspected: the arms now meet toward
+the bottom of the screen, are in proportion with the hands, and cover far less of the aiming view. Player EditMode tests 254/255 (the failure
+is the unrelated untracked `IntroLoadoutTests` cinematic test). These are controlled renders, not in-game motion: walk, sprint, crouch,
+fire, reload and the left-hand release still need a live look.
 
 The Player keeps its existing MP9, Winter Soldier arm meshes/material, camera,
 weapon scripts, ammo clock and visibility gates. This step refits only the SMG
@@ -33,9 +62,10 @@ turning sideways at the wrist. The palm's dorsal axis is projected perpendicular
 to that direction. Its wrist is repositioned to keep the middle knuckle fixed at
 the existing grip, and the authored finger targets remain on the foregrip.
 Forearm direction is unchanged; the hand rotates into a neutral wrist position.
-The saved-pose regression requires less than 5 degrees of left wrist bend,
+The saved-pose regression originally required less than 5 degrees of left wrist bend,
 measured elbow-to-wrist against wrist-to-middle-knuckle (about 50 degrees before
-this correction). This uses anatomical points rather than bone-axis assumptions.
+this correction); SM1 relaxes it to under 25 degrees at both wrists (see above).
+This uses anatomical points rather than bone-axis assumptions.
 The right index remains near the trigger. The left sleeve's cropped elbow end
 extends 0.18 m along its pole, blended only beyond 65% of the forearm length.
 This carries the open cut behind/below the camera in wide ADS; wrist, palm and

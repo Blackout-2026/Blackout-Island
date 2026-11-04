@@ -117,7 +117,8 @@ namespace Blackout.Editor
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(WinterArmsBuilder.ModelPrefix+"Smg.fbx");
             Mesh source = model.GetComponentsInChildren<SkinnedMeshRenderer>(true).Single(r=>r.name=="WinterSmgL").sharedMesh;
             var glove = gun.Find("Visual").GetComponentsInChildren<MeshFilter>(true).Single(m=>m.name=="GloveL");
-            Vector3 contact = FindContact(gun,new Vector3(0,-.055f,.21f),Vector3.forward,"LeftThumbContact");
+            // GN1: the support hand cups the handguard from below, so its thumb lies along the handguard's left face, just above its flat underside (x -0.018 m at y -0.01).
+            Vector3 contact = FindContact(gun,new Vector3(-.08f,-.01f,.2f),Vector3.right,"LeftThumbContact");
             Mesh saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             Mesh fitted = Bake("Smg",source,contact,gun.worldToLocalMatrix*glove.transform.localToWorldMatrix,saved,true);
             fitted.name = "SmgSupportThumb";
@@ -131,7 +132,11 @@ namespace Blackout.Editor
         private static Vector3 FindTrigger(Transform gun)
         {
             bool smg = gun.name=="SMG";
-            return FindContact(gun,new Vector3(0,smg ? -.036f : -.062f,smg ? .213f : -.047f),Vector3.back,"RightIndexContact");
+            // GN1: the SMG's trigger blade is a thin lever at y -0.027 .. -0.015 m, z 0.040 - 0.046 m. The ray starts inside the trigger guard (z 0.085 m,
+            // in front of the blade) and points back, as the MP9's did; a ray from behind starts inside the lower receiver and misses the blade. The rifle
+            // keeps its original ray.
+            return smg ? FindContact(gun,new Vector3(0,-.022f,.085f),Vector3.back,"RightIndexContact")
+                : FindContact(gun,new Vector3(0,-.062f,-.047f),Vector3.back,"RightIndexContact");
         }
 
         // These rays begin inside the measured guard or beside the foregrip.
@@ -183,13 +188,14 @@ namespace Blackout.Editor
             return pose;
         }
 
-        // A tip-only solve can fold the middle joint upright. Author the wrap arc instead:
-        // left back corner -> across the back face -> right back corner.
+        // A tip-only solve can fold the middle joint upright. Author the path instead: along the handguard's left face (GN1; the MP9's was an arc
+        // round the back of a vertical foregrip).
         private static Matrix4x4[] WrapThumb(Vector3[] chain,Vector3 backContact,Matrix4x4 meshToGun)
         {
             Vector3[] original=(Vector3[])chain.Clone();
-            Vector3[] guides={backContact+new Vector3(-.020f,0,.003f),
-                backContact+new Vector3(.004f,0,-.006f),backContact+new Vector3(.016f,-.005f,-.001f)};
+            // GN1: the thumb follows the handguard's left face forward, one finger radius (8.6 mm) off it; each guide only gives the next bone's direction.
+            Vector3[] guides={backContact+new Vector3(-.0086f,0,-.004f),
+                backContact+new Vector3(-.0086f,0,.05f),backContact+new Vector3(-.0086f,0,.09f)};
             var pose=new Matrix4x4[3];
             for(int joint=0;joint<3;joint++)
             {
@@ -275,7 +281,7 @@ namespace Blackout.Editor
                 if(supportThumb) Debug.Log("[TF2] Thumb wrap arc fitted; original segment lengths retained.");
                 else if(smg) Debug.Log("[TF2] Rotation-only trigger index, pad-centre error "+Vector3.Distance(target[3],goal).ToString("F6"));
                 Matrix4x4 Bend(Vector3 pivot,Vector3 end,float degrees) => Matrix4x4.Translate(pivot)*Matrix4x4.Rotate(Quaternion.AngleAxis(degrees,Vector3.Cross(end-pivot,rear).normalized))*Matrix4x4.Translate(-pivot);
-                Matrix4x4 bend2=Bend(target[1],target[3],smg ? 12 : 2),bend3=bend2*Bend(target[2],target[3],smg ? 8 : 1.5f);
+                Matrix4x4 bend2=Bend(target[1],target[3],smg ? 11 : 2),bend3=bend2*Bend(target[2],target[3],smg ? 7 : 1.5f); // GN1: 12/8 moved a vertex 12.2 mm on the IOER-32G's longer index; the limit is 12 mm
                 var delta=new Vector3[rest.Length];var normalDelta=new Vector3[rest.Length];
                 for(int i=0;i<rest.Length;i++)
                 {

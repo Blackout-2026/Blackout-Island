@@ -2,6 +2,7 @@
 
 SG1 fits the SMG's two grips separately and adds visual RMB sight alignment;
 other weapon poses remain unchanged. See [SMG grip and sights](smg-grip.md).
+GN1 later replaced the MP9 described below with the IOER-32G: see [ioer-smg.md](ioer-smg.md).
 
 WA1 overrides the active Player's arms with Winter Soldier derivatives for
 holding, knife swings and reloads. Original assets and historical notes below

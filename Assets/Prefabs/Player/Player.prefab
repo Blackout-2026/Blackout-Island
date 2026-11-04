@@ -5992,6 +5992,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 646689576552358464}
   - {fileID: 6571524703260705452}
   - {fileID: 2331985742073826261}
   - {fileID: 1837686255859954622}
@@ -7927,7 +7928,7 @@ Transform:
   m_GameObject: {fileID: 1690140264211811049}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.000000044703484, y: -0.035999592, z: 0.17636314}
+  m_LocalPosition: {x: -0.000000035390258, y: -0.021999858, z: 0.040920354}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8402,8 +8403,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1986970686520003852}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.05213681, y: -0.08703629, z: -0.0045613796, w: 0.9948294}
-  m_LocalPosition: {x: 0.13, y: -0.05, z: 0.14}
+  m_LocalRotation: {x: -0.043513134, y: -0.06969008, z: -0.0030427345, w: 0.99661463}
+  m_LocalPosition: {x: 0.105, y: -0.075, z: 0.27}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8472,7 +8473,7 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: cd772b0348d91419bb81dd6e7394dbe8, type: 2}
   hands: {fileID: 2405567711439170817}
   aimReference: {fileID: 550663877114675742}
-  eyeDistance: 0.32
+  eyeDistance: 0.31
   blendRate: 14
 --- !u!1 &2014423823045740163
 GameObject:
@@ -12035,6 +12036,71 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.8}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
+--- !u!1 &3886941255187699907
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 646689576552358464}
+  - component: {fileID: 7392513178676881280}
+  - component: {fileID: 6401155225583602299}
+  m_Layer: 5
+  m_Name: RedDotScope
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &646689576552358464
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3886941255187699907}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6937052387151285076}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &7392513178676881280
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3886941255187699907}
+  m_CullTransparentMesh: 1
+--- !u!114 &6401155225583602299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3886941255187699907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e4f2d5c3f6d2a44cb5bc924ae616bde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Hud.RedDotOverlay
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &3891097907170325938
 GameObject:
   m_ObjectHideFlags: 0
@@ -13181,7 +13247,7 @@ Transform:
   m_GameObject: {fileID: 4914085511766232628}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.022, y: -0.075, z: 0.15}
+  m_LocalPosition: {x: 0.0004, y: -0.048, z: 0.008}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13518,8 +13584,8 @@ SkinnedMeshRenderer:
   m_BlendShapeWeights: []
   m_RootBone: {fileID: 4099296078688317120}
   m_AABB:
-    m_Center: {x: 0.088843286, y: 0.01874064, z: 0.16427617}
-    m_Extent: {x: 0.12293582, y: 0.18333162, z: 0.13645984}
+    m_Center: {x: 0.05180554, y: -0.1559737, z: 0.104394004}
+    m_Extent: {x: 0.08238287, y: 0.21383604, z: 0.10240331}
   m_DirtyAABB: 0
 --- !u!1 &5452536631461571651
 GameObject:
@@ -13640,8 +13706,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5551917781754798517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.20370477, y: 0.3355263, z: 0.7861924, w: 0.4773133}
-  m_LocalPosition: {x: 0, y: -0.075, z: 0.2842}
+  m_LocalRotation: {x: 0.3413399, y: 0.13303998, z: 0.9291926, w: -0.048872743}
+  m_LocalPosition: {x: 0, y: 0, z: 0.225}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15291,7 +15357,7 @@ Transform:
   m_GameObject: {fileID: 6249499074057576263}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.000000052154064, y: -0.05499965, z: 0.24673326}
+  m_LocalPosition: {x: -0.018034529, y: -0.009999958, z: 0.19999959}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -16726,6 +16792,7 @@ GameObject:
   - component: {fileID: 3780103019779969711}
   - component: {fileID: 3356447577754586015}
   - component: {fileID: 3641756449110700562}
+  - component: {fileID: 1971209777312498144}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -16993,6 +17060,24 @@ MonoBehaviour:
   - {fileID: 8813139205175220179}
   - {fileID: 3356447577754586015}
   - {fileID: 466296247462174139}
+--- !u!114 &1971209777312498144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298196783125929523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1fcbb597d8436c4ab77d4abf0603481, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Weapons.RedDotScope
+  pose: {fileID: 4274604699873154721}
+  hands: {fileID: 2405567711439170817}
+  playerCamera: {fileID: 7960660481702232932}
+  overlay: {fileID: 3886941255187699907}
+  crosshair: {fileID: 6536128552199527889}
+  scopedFieldOfView: 58
 --- !u!1 &7358575603390302503
 GameObject:
   m_ObjectHideFlags: 0
@@ -19416,7 +19501,7 @@ Transform:
   m_GameObject: {fileID: 8928925262540151353}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05, z: 0.065}
+  m_LocalPosition: {x: 0, y: 0.087, z: 0.064}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

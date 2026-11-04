@@ -49,7 +49,7 @@ writes hip/side/front rest and pulled images outside the repository.
 Each accepted firearm shot pulls the finger, preserves the first rendered frame,
 then returns to rest even while LMB remains held. A subsequent automatic SMG
 shot retriggers the cycle. Release duration is min(140 ms, 85% of cooldown).
-The SMG uses a small 12/8-degree distal pull; the rifle retains its small pull
+The SMG uses a small 11/7-degree distal pull (12/8 until GN1); the rifle retains its small pull
 and unchanged holding geometry. Dry fire and knife attacks start no cycle.
 WeaponController still owns fire rate, recoil, bullets and ammo. Only the visual
 blend weight changes during gameplay; no per-frame mesh baking is used.
