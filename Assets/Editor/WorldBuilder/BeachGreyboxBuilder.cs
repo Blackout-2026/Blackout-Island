@@ -23,7 +23,7 @@ namespace Blackout.Editor
 
         // Ocean plane (Unity's Plane primitive is 10 x 10 m).
         private const float WaterSize = 520f;
-        private const float WaterCentreZ = 20f;
+        internal const float WaterCentreZ = 20f;
 
         // Dock posts and rails.
         private const float PostSpacing = 3f;
@@ -60,6 +60,14 @@ namespace Blackout.Editor
                 Object.DestroyImmediate(go.GetComponent<Collider>()); // nobody walks on the water
                 Undo.RegisterCreatedObjectUndo(go, UndoLabel);
                 water = go.transform;
+            }
+
+            // OC1: once Build Ocean and Shore has put the animated sea on Beach/Water, keep it (as Build Terrain keeps
+            // an installed RowboatVisual) instead of putting the flat placeholder plane back.
+            var existingFilter = water.GetComponent<MeshFilter>();
+            if (existingFilter != null && existingFilter.sharedMesh != null && existingFilter.sharedMesh.name == OceanMesh.MeshName)
+            {
+                return;
             }
 
             water.SetPositionAndRotation(new Vector3(0f, IslandLayout.WaterY, WaterCentreZ), Quaternion.identity);
