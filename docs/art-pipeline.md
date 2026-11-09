@@ -854,13 +854,26 @@ checks all of it for the three files.
 
 ### 18.2 The realistic Commander (step C10b)
 
-The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service dress, so he is no longer
-built by `build_humans.py` (rigid boxes, flat colours). He has his own pipeline; the other two humans are untouched. The face, hair and insignia are
-generic: no one's likeness, and the name tag says COMMANDER, not a name.
+**Current Commander revision:** the owner supplied a new portrait of a mature
+field officer in a dark long coat with burgundy shoulder mantle, armor and tall
+boots. `build_commander.py` now exports that silhouette with a broader jaw,
+exposed swept hair and gloves. The earlier white naval officer description in
+the historical table above refers to the replaced asset. The game model is a
+low-poly approximation of the new portrait, rather than an exact likeness.
+
+**Supplied Commander model:** `Art/Blender/Commander_Hero_Source.blend` is the
+user's rigged officer with pistol and five authored actions. Run
+`Art/Blender/Scripts/export_commander_hero.py` in Blender to produce
+`SM_Char_CommanderHero.fbx` and the face/hair textures. In Unity choose
+**Blackout > Agents > Install Supplied Commander Model**. This creates
+`Char_CommanderHero_Visual.prefab`, URP materials and `Commander_Hero.controller`,
+and connects them to `Commander.prefab`. `ModelImportRules` imports animation for
+this FBX only. The older procedural Commander above remains a separate asset.
 
 | Script | Does |
 | --- | --- |
 | `commander_atlas.py` | The texture layout shared by Blender and the painter (swatches, decals, the face's planar projection), plus the head scale. |
+| `recolor_commander_textures.py` | Run once after the original Pillow painter: recolors the existing PNG atlases to charcoal, burgundy and dark hair, and removes the old pink lip paint. Uses Blender and NumPy. |
 | `make_commander_textures.py` (Python + Pillow, like `make_skin_texture.py`) | Paints `T_CharCommanderUniform_BaseColor` and `_MetalSmooth` (1024: white cloth, gold with metallic, black leather, shoulder boards with a star and three stripes, a 3 x 3 ribbon rack, name tag, warfare pin, cap visor with gold leaves, cap device), `T_CharCommanderSkin_BaseColor` (1024: the face with eyes, brows, lashes, lips, freckles, plus a freckled tile for arms and hands) and `T_CharCommanderHair_BaseColor` (512, RGBA: an opaque strand texture for the cap and a lock card with alpha). Fixed seeds. |
 | `build_commander.py` | The framework (sweeps, shells, decals, per-joint split, custom normals, FBX export) and the body: torso with a bust, tucked shirt, belt, holster, trousers with a pressed crease, shoes, sleeves, bent arms, hands with fingers, watch. `commander_head.py` builds the head, and `commander_uniform.py` the collar, V-neck, buttons, boards, ribbons, name tag, pocket and cap. |
 | `preview_humans.py` | Review renders; new views `face`, `face34`, `profile`, `upper`. |
@@ -868,7 +881,8 @@ generic: no one's likeness, and the name tag says COMMANDER, not a name.
 
 ```
 python Art/Blender/Scripts/make_commander_textures.py
-"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
+"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup -P Art/Blender/Scripts/recolor_commander_textures.py
+"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
 ```
 
 How it differs from the rigid-box method: every part is a swept tube (torso, legs, sleeves, fingers), a thin shell (collar, pocket, cap visor) or a flat plate (boards,
@@ -881,7 +895,7 @@ the belt and the cap worn on the head and both hands on a pistol, but the joints
 same joints (a rotated forearm moves its hand, the pistol stays on the Gun socket).
 
 **Budget:** the Commander is the one hero character, so `ModelBudget` gives `SM_Char_Commander` 14,000 triangles (hard maximum 21,000) and 3
-materials; Patrol and Hunter keep 3,000. Measured: 13,038 triangles, 1.884 m tall (cap on), 0.49 m wide, 0.57 m deep with the pistol. **What the exported FBX was
+materials; Patrol and Hunter keep 3,000. Current export: 12,816 triangles, 1.885 m tall, 0.580 m wide, 0.578 m deep with the pistol. **What the exported FBX was
 checked against:** it was re-imported into Blender and all 18 joints were at the table's heights with the table's parents, every mesh has UV0 and
 custom normals, and the materials are the three names above. It has NOT been imported into Unity or run through `CharacterFbxTests` yet (the Editor was open).
 

@@ -7,8 +7,8 @@ using UnityEngine;
 namespace Blackout.Player.Tests
 {
     /// <summary>
-    /// The loot progression of step L1: the storm leaves only the knife, then the first enemy gun taken is the SMG (slot 1) and the second is the
-    /// sniper rifle (slot 2). The rules live in WeaponLoadout, so they are tested here without a scene; the controller part is checked before Awake.
+    /// Tests the low-level knife-only inventory rules and the controller's SMG-and-knife gameplay start.
+    /// The rifle is the remaining loot gun. The controller part is checked before Awake.
     /// </summary>
     public class WeaponLoadoutTests
     {
@@ -153,7 +153,7 @@ namespace Blackout.Player.Tests
         }
 
         [Test]
-        public void ControllerBeforeAwake_StartsWithOnlyTheKnifeWithoutTheStorm()
+        public void ControllerBeforeAwake_OwnsTheSmgAndKnife()
         {
             var root = new GameObject("Inactive bootstrap player");
             root.SetActive(false);
@@ -162,7 +162,7 @@ namespace Blackout.Player.Tests
                 var controller = root.AddComponent<WeaponController>();
 
                 Assert.IsFalse(controller.HasLoadout);
-                Assert.IsFalse(controller.Owns(smg));
+                Assert.IsTrue(controller.Owns(smg));
                 Assert.IsFalse(controller.Owns(rifle));
                 Assert.IsTrue(controller.Owns(knife));
                 Assert.IsFalse(controller.DebugEquip(1));
@@ -172,7 +172,7 @@ namespace Blackout.Player.Tests
                 controller.LoseStartingLoadout();
 
                 Assert.IsFalse(controller.HasLoadout);
-                Assert.IsFalse(controller.Owns(smg));
+                Assert.IsTrue(controller.Owns(smg));
                 Assert.IsFalse(controller.Owns(rifle));
                 Assert.IsTrue(controller.Owns(knife), "the knife survives the storm");
                 Assert.IsNull(controller.TakeNextLootWeapon());
@@ -185,7 +185,7 @@ namespace Blackout.Player.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void PlayerPrefab_InitializesWithOnlyTheKnife_WithOrWithoutStormCallback(bool storm)
+        public void PlayerPrefab_InitializesWithSmgAndKnife_WithOrWithoutStormCallback(bool storm)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Player/Player.prefab");
             Assert.That(prefab, Is.Not.Null);
@@ -200,15 +200,15 @@ namespace Blackout.Player.Tests
                     .Invoke(controller, null);
 
                 Assert.That(controller.enabled, Is.True);
-                Assert.That(controller.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
-                Assert.That(controller.NextLootWeapon().slot, Is.EqualTo(1));
-                Assert.That(controller.DebugEquip(1), Is.False);
+                Assert.That(controller.ActiveWeapon.slot, Is.EqualTo(1));
+                Assert.That(controller.NextLootWeapon().slot, Is.EqualTo(2));
+                Assert.That(controller.DebugEquip(1), Is.True);
                 Assert.That(controller.DebugEquip(2), Is.False);
                 foreach (IWeapon weapon in controller.GetComponentsInChildren<IWeapon>(true))
                 {
-                    bool isKnife = weapon.Data.kind == WeaponKind.Melee;
-                    Assert.That(controller.Owns(weapon.Data), Is.EqualTo(isKnife));
-                    Assert.That(((Component)weapon).gameObject.activeSelf, Is.EqualTo(isKnife));
+                    bool owned = weapon.Data.slot != 2;
+                    Assert.That(controller.Owns(weapon.Data), Is.EqualTo(owned));
+                    Assert.That(((Component)weapon).gameObject.activeSelf, Is.EqualTo(weapon.Data.slot == 1));
                 }
             }
             finally

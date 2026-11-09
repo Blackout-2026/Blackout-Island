@@ -1,11 +1,11 @@
-"""Builds the realistic Commander: SM_Char_Commander, a female naval officer in white service dress (step C10b). Owner: Core Developer.
+"""Builds the Commander: a dark-coated field officer based on the team's character reference. Owner: Agent Controller.
 
     "D:\\Blender\\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
 
-The look is the owner's reference photo of a naval officer: short light-brown hair, a short-sleeved white shirt with an open collar, gold
-striped shoulder boards with a star, a name tag on the right chest and a ribbon rack on the left, a white belt with a gold buckle, white
-trousers, black shoes, a watch and the white cap tucked under the left arm. The face, the hair and the insignia are generic: nobody's
-likeness. It replaces the old blocky Commander of build_humans.py, which now hands "Commander" over to this script.
+The current owner reference is a mature field officer with exposed dark hair, a
+charcoal long coat, burgundy shoulder mantle, layered armor, gloves and tall
+boots. The face and insignia are generic rather than a copy of a real person.
+This replaces the old white naval uniform and cap while retaining the rig.
 
 What is different from the other two humans (they are rigid boxes with flat colours):
   * smooth organic shapes: every part is a sweep, a shell or a thin plate, shaded with custom normals so the cloth and skin are round
@@ -14,9 +14,10 @@ What is different from the other two humans (they are rigid boxes with flat colo
   * three textured materials (uniform, skin, hair) from make_commander_textures.py, the layout in commander_atlas.py;
   * the arms are modelled bent, the hands clasped in front of the belt like the photo, with every joint still at rotation 0.
 
-Rig: unchanged from the other humans (docs/art-pipeline.md section 18): 18 joint objects under one Empty root rotated +90 degrees about
-X, the joint offsets of build_humans.JOINTS, 1.87 m tall, facing +Z, MuzzlePoint under Gun. She aims a pistol with both hands in front of the chest (the Gun socket stays where the Agent Controller expects it, and
-MuzzlePoint is the pistol's muzzle, 0.22 m ahead of it); the white cap is on her head.
+Rig: unchanged from the other humans (docs/art-pipeline.md section 18): 18 joint
+objects under one Empty root rotated +90 degrees about X, the joint offsets of
+build_humans.JOINTS, 1.87 m tall, facing +Z, MuzzlePoint under Gun. The pistol
+remains aligned to the existing weapon and animation socket.
 
 Numbers below are UNITY metres (x right, y up, z forward) unless a function says Blender; bl() converts. Left = -X.
 Budget: 14,000 triangles target (hero character, ModelBudget "SM_Char_Commander"), 3 materials.
@@ -349,7 +350,7 @@ def decal(joint, slot, rect, size_key, centre, u_axis, v_axis, w, h, nx=1, ny=1,
 
 
 # ============================================================================= the body
-BUST, BUST_Y, BUST_X = 0.026, 1.335, 0.074
+BUST, BUST_Y, BUST_X = 0.0, 1.335, 0.074
 TORSO_P = 2.35
 TORSO_KEYS = [  # y, rx, rz
     (0.80, 0.060, 0.070), (0.86, 0.110, 0.100), (0.90, 0.160, 0.115), (0.96, 0.176, 0.123), (1.02, 0.166, 0.118), (1.07, 0.151, 0.108), (1.10, 0.146, 0.103),
@@ -478,12 +479,12 @@ def build_arms():
     for u, side in ((-1, "L"), (1, "R")):
         up, fore = f"UpperArm_{side}", f"ForeArm_{side}"
         sx = u * SHOULDER_X
-        # short sleeve (white, loose) and the bare upper arm inside it
+        # The coat sleeves cover the arm from shoulder to glove.
         path = [V(arm_x(u, y), y, 0.0) for y in SLEEVE_ROWS]
         radii = [interp(SLEEVE_KEYS, y) for y in SLEEVE_ROWS]
         sweep(up, UNIFORM, swatch("white"), path, radii, sides=18, label=f"sleeve {side}")
         ys = [1.185, 1.24, 1.30, 1.36, 1.42]
-        sweep(up, SKIN, skin_tile(V(sx, 1.3, 0.0)), [V(arm_x(u, y), y, 0.0) for y in ys], [interp(UPPER_KEYS, y) for y in ys], sides=14,
+        sweep(up, UNIFORM, swatch("white"), [V(arm_x(u, y), y, 0.0) for y in ys], [interp(UPPER_KEYS, y) for y in ys], sides=14,
               label=f"upper arm {side}")
         # the forearm swings up, forward and inward from the elbow to the grip (the joint stays where the Agent Controller expects it)
         elbow = WORLD[fore]
@@ -495,13 +496,13 @@ def build_arms():
         n = (n_hint - f * n_hint.dot(f)).normalized()
         wrist = g - f * 0.060 - n * 0.030
         ARM[side] = (elbow, wrist)
-        ellipsoid(fore, SKIN, skin_tile(elbow), elbow, (0.0425 * BUILD, 0.0425 * BUILD, 0.0425 * BUILD), u=12, v=7, label=f"elbow {side}")
+        ellipsoid(fore, UNIFORM, swatch("white"), elbow, (0.0425 * BUILD, 0.0425 * BUILD, 0.0425 * BUILD), u=12, v=7, label=f"elbow {side}")
         d = (wrist - elbow).normalized()
         mid = elbow + (wrist - elbow) * 0.45 + V(0.0, 0.006, 0.0)
         pts = catmull([elbow, mid, wrist], 4)
         keys = [(0.0, 0.040 * BUILD, 0.037 * BUILD), (0.35, 0.043 * BUILD, 0.037 * BUILD), (0.75, 0.033 * BUILD, 0.029 * BUILD), (1.0, 0.028 * BUILD, 0.024 * BUILD)]
         radii = [interp(keys, i / (len(pts) - 1)) for i in range(len(pts))]
-        sweep(fore, SKIN, skin_tile(elbow + d * 0.13), pts, radii, sides=14, ref=(0.0, 1.0, 0.0), label=f"forearm {side}")
+        sweep(fore, UNIFORM, swatch("white"), pts, radii, sides=14, ref=(0.0, 1.0, 0.0), label=f"forearm {side}")
         build_hand(u, side, wrist, f, n)
     # the watch on the left wrist
     elbow, wrist = ARM["L"]
@@ -519,10 +520,10 @@ def build_hand(u, side, wrist, f, n, curl=1.9):
     facing -Z) and then moved onto the wrist. f = the direction of the fingers, n = the palm's normal."""
     j = f"Hand_{side}"
     start = len(PARTS)
-    sk = skin_swatch()
+    sk = swatch("black")
     palm_keys = [(0.0, 0.028, 0.016), (0.03, 0.033, 0.0165), (0.065, 0.039, 0.0165), (0.095, 0.040, 0.0145)]
     ys = [0.0, 0.025, 0.05, 0.075, 0.097]
-    sweep(j, SKIN, sk, [V(0.0, y, 0.0) for y in ys], [interp(palm_keys, y) for y in ys], sides=10, ref=(0.0, 0.0, 1.0), label=f"palm {side}")
+    sweep(j, UNIFORM, sk, [V(0.0, y, 0.0) for y in ys], [interp(palm_keys, y) for y in ys], sides=10, ref=(0.0, 0.0, 1.0), label=f"palm {side}")
     fingers = [(0.030, 0.076, 0.0098), (0.0105, 0.084, 0.0102), (-0.0095, 0.078, 0.0098), (-0.028, 0.062, 0.0085)]
     for fx, length, rad in fingers:
         pts = []
@@ -536,10 +537,10 @@ def build_hand(u, side, wrist, f, n, curl=1.9):
         pts.append(pos)
         pts = catmull(pts, 2)
         radii = [(rad * (1.0 - 0.28 * i / (len(pts) - 1)), rad * 0.92 * (1.0 - 0.28 * i / (len(pts) - 1))) for i in range(len(pts))]
-        sweep(j, SKIN, sk, pts, radii, sides=7, ref=(0.0, 0.0, 1.0), label=f"finger {side}")
+        sweep(j, UNIFORM, sk, pts, radii, sides=7, ref=(0.0, 0.0, 1.0), label=f"finger {side}")
     thumb = catmull([V(0.034, 0.012, -0.004), V(0.050, 0.035, -0.010), V(0.056, 0.060, -0.018), V(0.050, 0.082, -0.026)], 3)
     radii = [(0.0125 - 0.003 * i / (len(thumb) - 1), 0.0115 - 0.003 * i / (len(thumb) - 1)) for i in range(len(thumb))]
-    sweep(j, SKIN, sk, thumb, radii, sides=7, ref=(0.0, 0.0, 1.0), label=f"thumb {side}")
+    sweep(j, UNIFORM, sk, thumb, radii, sides=7, ref=(0.0, 0.0, 1.0), label=f"thumb {side}")
     s_axis = f.cross(n)
     transform_parts(PARTS[start:], Matrix.Scale(1.0 + (BUILD - 1.0) * 0.6, 4))
     # canonical axes: +Y -> f, -Z -> n (the palm), +X -> the thumb side (the right hand is mirrored so its thumb comes out on top)
@@ -709,6 +710,8 @@ def make_material(name, key, prefix):
             nt.links.new(invert.outputs["Value"], bsdf.inputs["Roughness"])
     else:
         bsdf.inputs["Base Color"].default_value = srgb_to_linear({"uniform": "#e9e9e4", "skin": A.SKIN_HEX, "hair": "#8a6a42"}.get(key, "#808080"))
+    if key == "hair":
+        bsdf.inputs["Roughness"].default_value = 0.9
     if key == "skin":
         bsdf.inputs["Roughness"].default_value = 0.65
     return mat
@@ -819,6 +822,7 @@ def main():
     draft = os.environ.get("COMMANDER_DRAFT")                                  # a folder: write there instead of into the project
     blend_path, fbx_path = (os.path.join(draft, "SM_Char_Commander.blend"), os.path.join(draft, "SM_Char_Commander.fbx")) if draft else (BLEND, FBX)
     os.makedirs(os.path.dirname(blend_path), exist_ok=True)
+    bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     export_fbx(fbx_path)
     print(f"[Commander] {blend_path}")

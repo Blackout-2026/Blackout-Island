@@ -34,12 +34,14 @@ namespace Blackout.Editor
             importer.useFileScale = true;
             importer.bakeAxisConversion = true;
 
-            // Models never bring scene objects or clips with them; parts are animated by script.
+            // The supplied Commander is a rigged character with authored combat actions.
+            // Other custom models use procedural animation and do not import clips.
             importer.importCameras = false;
             importer.importLights = false;
             importer.importVisibility = false;
             importer.importBlendShapes = false;
-            importer.importAnimation = false;
+            importer.importAnimation = importer.assetPath.Replace('\\', '/').EndsWith(
+                "/SM_Char_CommanderHero.fbx", StringComparison.OrdinalIgnoreCase);
 
             // Shading as modelled in Blender, tangents that match the Blender normal map bake.
             importer.importNormals = ModelImporterNormals.Import;

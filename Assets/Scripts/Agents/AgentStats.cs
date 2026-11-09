@@ -15,7 +15,8 @@ namespace Blackout.Agents
 
     /// <summary>
     /// One agent type's numbers: hit points, weapon and movement. The values in <see cref="DifficultyConfig"/> are
-    /// the prototype's (docs/reference/agent-controller.md sections 3.1 and 5). A struct, so the multipliers can
+    /// the configured baseline (the first three follow docs/reference/agent-controller.md sections 3.1 and 5).
+    /// A struct, so the multipliers can
     /// produce a scaled copy without touching the asset.
     /// </summary>
     [Serializable]

@@ -6,7 +6,7 @@ namespace Blackout.Hud
 {
     /// <summary>
     /// Bottom-right weapon slots 1/2/3: highlights the slot of the weapon the WeaponController holds, and shows only the slots of the weapons the player
-    /// owns (after the storm that is the knife alone, then the SMG and the sniper rifle appear as they are taken from dead enemies, step L1).
+    /// owns (the SMG and knife at the start, then the sniper rifle after it is taken from a dead enemy).
     /// </summary>
     public class WeaponSlots : MonoBehaviour
     {

@@ -6,13 +6,35 @@ using UnityEngine;
 
 namespace Blackout.AI.Commander
 {
+    /// <summary>Injectable sight query so cover and firing decisions have deterministic tests.</summary>
+    public interface ICommanderSight
+    {
+        bool Clear(Vector3 from, Vector3 to);
+    }
+
+    public sealed class PhysicsCommanderSight : ICommanderSight
+    {
+        private readonly LayerMask blockers;
+
+        public PhysicsCommanderSight(LayerMask blockers) => this.blockers = blockers;
+
+        public bool Clear(Vector3 from, Vector3 to) =>
+            !Physics.Linecast(from, to, blockers, QueryTriggerInteraction.Ignore);
+    }
+
     /// <summary>
-    /// Plans squad orders, then waits for observed results. Never moves a Transform or fires a weapon.
+    /// Plans squad orders with GOAP and chooses cover/peek/pistol intents when threatened.
+    /// The shared mover, AnimatorDriver and AgentShooter execute those intents.
     /// AgentRoot supplies think ticks; the lifecycle integration supplies cure notifications.
     /// </summary>
     public sealed class CommanderBrain : MonoBehaviour, IAgentBrain, IDebugInfo
     {
         [SerializeField] private CommanderConfig config;
+        [SerializeField] private LayerMask sightBlockers =
+            (1 << PhysicsLayers.Default) | (1 << PhysicsLayers.Level) | (1 << PhysicsLayers.Interactable);
+        [SerializeField] private Transform pistolMuzzle;
+
+        private enum CombatPhase { None, MovingToCover, Hiding, MovingToPeek, Shooting, Flanking }
 
         private static readonly Func<float> DefaultClock = () => Time.time;
         private readonly GoapPlanner planner = new GoapPlanner();
@@ -35,6 +57,16 @@ namespace Blackout.AI.Commander
         private bool forceReplan;
         private bool regroupIssued;
         private Blackboard subscribedBoard;
+        private ICommanderSight sight;
+        private Marker cover;
+        private CombatPhase combatPhase;
+        private Vector3 peekTarget;
+        private bool peekRight;
+        private float phaseUntil;
+        private float lastOwnSighting;
+        private Vector3 flankTarget;
+        private float flankUntil;
+        private bool flankRight;
 
         public string State { get; private set; } = "Uninitialized";
         public string GoalName { get; private set; } = "none (monitoring)";
@@ -44,12 +76,15 @@ namespace Blackout.AI.Commander
         public WorldState WorldState => world.Clone();
         public int PlanVersion { get; private set; }
         public CommanderConfig Config => config;
+        public Marker CombatCover => cover;
         /// <summary>Live diagnostic source. Gizmo readers must not mutate it or tick the brain.</summary>
         public Blackboard DebugBlackboard => context?.Blackboard;
 
         // Set these before Initialize. The clock seam keeps all timing tests deterministic.
         public void SetConfig(CommanderConfig value) => config = value;
         public void SetClock(Func<float> value) => clock = value ?? DefaultClock;
+        public void SetSight(ICommanderSight value) => sight = value;
+        public void SetMuzzle(Transform value) => pistolMuzzle = value;
 
         public void Initialize(IAgentContext newContext)
         {
@@ -70,6 +105,11 @@ namespace Blackout.AI.Commander
             forceReplan = true;
             GoalName = "none (monitoring)";
             State = "Monitor";
+            combatPhase = CombatPhase.None;
+            cover = null;
+            lastOwnSighting = float.NegativeInfinity;
+            flankUntil = float.NegativeInfinity;
+            sight = sight ?? new PhysicsCommanderSight(sightBlockers);
             Subscribe();
         }
 
@@ -121,13 +161,14 @@ namespace Blackout.AI.Commander
             Blackboard board = context.Blackboard;
             int living = CountLiving();
             Observe(now, living);
+            AgentIntent combatIntent = ThinkCombat(now, out bool combatActive);
             if (!board.cureTaken && board.alertLevel <= 0)
             {
-                State = "Monitor";
+                State = combatActive ? CombatState() : "Monitor";
                 GoalName = "none (monitoring)";
                 plan = Array.Empty<GoapAction>();
                 plannedFrom = null;
-                return IdleIntent();
+                return combatActive ? combatIntent : IdleIntent();
             }
             if (board.cureTaken)
                 ActivateAlert();
@@ -158,6 +199,11 @@ namespace Blackout.AI.Commander
             else
                 Execute(now, living);
 
+            if (combatActive)
+            {
+                State = CombatState();
+                return combatIntent;
+            }
             return IdleIntent();
         }
 
@@ -232,9 +278,10 @@ namespace Blackout.AI.Commander
                         regroupIssued = true;
                     }
                     if (living >= config.minimumSquadSize &&
-                        (CountAtRally() >= config.minimumSquadSize || now - actionStarted >= config.regroupTimeout))
+                        CountAtRally() >= config.minimumSquadSize)
                     {
-                        // The reference permits regroup completion after 12 s if enough units survive.
+                        // Only observed arrivals establish squad readiness. A timeout is failure,
+                        // never evidence that distant survivors reached the rally point.
                         context.Blackboard.squadAssembled = true;
                         world.Set(CommanderFacts.SquadAssembled, true);
                         step++;
@@ -312,13 +359,245 @@ namespace Blackout.AI.Commander
             };
         }
 
+        private AgentIntent ThinkCombat(float now, out bool active)
+        {
+            active = false;
+            Transform player = context.Player;
+            if (player == null || context.Blackboard.playerNeutralized)
+            {
+                ResetCombat();
+                return AgentIntent.Idle;
+            }
+
+            Vector3 self = context.Self.position;
+            Vector3 playerPos = player.position;
+            Vector3 chest = playerPos + Vector3.up * config.playerChestHeight;
+            float distance = Vector3.Distance(self, playerPos);
+            bool visible = distance <= config.sightRange &&
+                sight.Clear(self + Vector3.up * config.eyeHeight, chest);
+            bool clearShot = visible && (pistolMuzzle == null || sight.Clear(pistolMuzzle.position, chest));
+            if (visible)
+            {
+                lastOwnSighting = now;
+                context.Blackboard.lastKnownPlayerPos = playerPos;
+                context.Blackboard.lastKnownPlayerTime = now;
+            }
+            if (!visible && now - lastOwnSighting > config.combatMemory)
+            {
+                ResetCombat();
+                return AgentIntent.Idle;
+            }
+
+            active = true;
+            Vector3 look = visible ? chest : context.Blackboard.lastKnownPlayerPos + Vector3.up * config.playerChestHeight;
+            if (cover != null && !HiddenAt(cover.transform.position, playerPos))
+            {
+                cover = null;
+                combatPhase = CombatPhase.None;
+            }
+            if (cover == null && visible)
+            {
+                cover = PickCover(self, playerPos);
+                if (cover != null) combatPhase = CombatPhase.MovingToCover;
+            }
+
+            if (cover != null)
+            {
+                Vector3 point = cover.transform.position;
+                if (combatPhase == CombatPhase.MovingToCover)
+                {
+                    if (FlatDistance(self, point) > config.coverArrivalRadius)
+                        return MoveIntent(point, MoveSpeed.Run, look);
+                    combatPhase = CombatPhase.Hiding;
+                    phaseUntil = now + HideDuration();
+                }
+                if (combatPhase == CombatPhase.Hiding)
+                {
+                    if (now < phaseUntil)
+                        return HoldIntent(look, false, false);
+                    if (!ChoosePeek(point, playerPos, chest, out peekTarget))
+                    {
+                        phaseUntil = now + HideDuration();
+                        return HoldIntent(look, false, false);
+                    }
+                    combatPhase = CombatPhase.MovingToPeek;
+                }
+                if (combatPhase == CombatPhase.MovingToPeek)
+                {
+                    if (FlatDistance(self, peekTarget) > config.peekArrivalRadius)
+                        return MoveIntent(peekTarget, MoveSpeed.Walk, look);
+                    combatPhase = CombatPhase.Shooting;
+                    phaseUntil = now + config.peekSeconds;
+                }
+                if (combatPhase == CombatPhase.Shooting)
+                {
+                    if (now < phaseUntil)
+                        return HoldIntent(look, visible, clearShot && distance <= config.pistolRange);
+                    combatPhase = CombatPhase.MovingToCover;
+                    return MoveIntent(point, MoveSpeed.Walk, look);
+                }
+            }
+
+            // A room with no usable CoverPoint still has a fighting Commander.
+            if (visible && !clearShot)
+            {
+                // The eye may see over furniture while the lower pistol cannot.
+                // Move sideways to find an unobstructed lane before spending a shot.
+                if (now >= flankUntil || FlatDistance(self, flankTarget) <= config.peekArrivalRadius)
+                {
+                    if (!ChooseFireLane(self, playerPos, chest, out flankTarget))
+                        flankTarget = playerPos - (playerPos - self).normalized * config.coverPlayerStandoff;
+                    flankUntil = now + 2.5f;
+                }
+                combatPhase = CombatPhase.Flanking;
+                return MoveIntent(flankTarget, MoveSpeed.Walk, look);
+            }
+            if (visible && distance <= config.pistolRange)
+            {
+                combatPhase = CombatPhase.None;
+                return HoldIntent(look, true, clearShot);
+            }
+            if (visible)
+            {
+                Vector3 approach = playerPos - (playerPos - self).normalized * (config.pistolRange - 1f);
+                return MoveIntent(approach, MoveSpeed.Run, look);
+            }
+            if (FlatDistance(self, context.Blackboard.lastKnownPlayerPos) > config.coverArrivalRadius)
+                return MoveIntent(context.Blackboard.lastKnownPlayerPos, MoveSpeed.Walk, look);
+            return HoldIntent(look, visible, false);
+        }
+
+        private Marker PickCover(Vector3 self, Vector3 player)
+        {
+            IReadOnlyList<Marker> markers = context.GetMarkers(MarkerType.CoverPoint);
+            if (markers == null) return null;
+            Marker best = null;
+            float bestScore = float.PositiveInfinity;
+            for (int i = 0; i < markers.Count; i++)
+            {
+                Marker candidate = markers[i];
+                if (candidate == null) continue;
+                Vector3 point = candidate.transform.position;
+                float travel = FlatDistance(self, point);
+                if (travel > config.coverSearchRadius ||
+                    FlatDistance(point, player) < config.coverPlayerStandoff ||
+                    !HiddenAt(point, player)) continue;
+                float score = travel + 0.25f * FlatDistance(point, post);
+                if (score >= bestScore) continue;
+                best = candidate;
+                bestScore = score;
+            }
+            return best;
+        }
+
+        private bool HiddenAt(Vector3 point, Vector3 player) =>
+            !sight.Clear(player + Vector3.up * config.eyeHeight,
+                point + Vector3.up * config.coverArrivalRadius);
+
+        private bool ChoosePeek(Vector3 point, Vector3 player, Vector3 chest, out Vector3 chosen)
+        {
+            Vector3 toward = player - point;
+            toward.y = 0f;
+            if (toward.sqrMagnitude < 0.01f)
+            {
+                chosen = point;
+                return false;
+            }
+            Vector3 side = Vector3.Cross(Vector3.up, toward.normalized) * config.peekOffset;
+            peekRight = !peekRight;
+            Vector3 first = point + (peekRight ? side : -side);
+            Vector3 second = point - (peekRight ? side : -side);
+            if (sight.Clear(first + Vector3.up * config.eyeHeight, chest))
+            {
+                chosen = first;
+                return true;
+            }
+            if (sight.Clear(second + Vector3.up * config.eyeHeight, chest))
+            {
+                chosen = second;
+                return true;
+            }
+            chosen = point;
+            return false;
+        }
+
+        private bool ChooseFireLane(Vector3 self, Vector3 player, Vector3 chest, out Vector3 chosen)
+        {
+            Vector3 toward = player - self;
+            toward.y = 0f;
+            if (toward.sqrMagnitude < 0.01f)
+            {
+                chosen = self;
+                return false;
+            }
+            Vector3 side = Vector3.Cross(Vector3.up, toward.normalized);
+            float height = pistolMuzzle != null ? pistolMuzzle.position.y - self.y : config.eyeHeight;
+            flankRight = !flankRight;
+            for (int step = 0; step < 2; step++)
+            {
+                float offset = step == 0 ? 2f : 3.5f;
+                for (int direction = 0; direction < 2; direction++)
+                {
+                    Vector3 candidate = self + side * (direction == 0 ?
+                        (flankRight ? offset : -offset) : (flankRight ? -offset : offset));
+                    if (FlatDistance(candidate, player) >= config.coverPlayerStandoff &&
+                        sight.Clear(candidate + Vector3.up * height, chest))
+                    {
+                        chosen = candidate;
+                        return true;
+                    }
+                }
+            }
+            chosen = self;
+            return false;
+        }
+
+        private float HideDuration() => context.Health.Current / context.Health.Max <= config.lowHealthFraction
+            ? config.lowHealthHideSeconds : config.hideSeconds;
+
+        private static float FlatDistance(Vector3 a, Vector3 b)
+        {
+            Vector3 delta = a - b;
+            delta.y = 0f;
+            return delta.magnitude;
+        }
+
+        private static AgentIntent MoveIntent(Vector3 target, MoveSpeed speed, Vector3 look) => new AgentIntent
+        {
+            moveTarget = target, moveSpeed = speed, hasLookTarget = true, lookTarget = look
+        };
+
+        private static AgentIntent HoldIntent(Vector3 look, bool aim, bool fire) => new AgentIntent
+        {
+            moveSpeed = MoveSpeed.Stop, hasLookTarget = true, lookTarget = look, aim = aim, fire = fire
+        };
+
+        private string CombatState() => combatPhase == CombatPhase.None ? "PistolAttack" : "Combat" + combatPhase;
+
+        private void ResetCombat()
+        {
+            cover = null;
+            combatPhase = CombatPhase.None;
+            lastOwnSighting = float.NegativeInfinity;
+            flankUntil = float.NegativeInfinity;
+        }
+
         public string GetDebugText()
         {
             // AgentRoot may stop ticking after death; diagnostics must still describe the actual health.
             string displayState = context?.Health != null && !context.Health.IsAlive ? "Dead" :
                 !isActiveAndEnabled ? "Disabled" : State;
-            return CommanderDebugText.Format(GoalName, displayState, plan, step,
+            string report = CommanderDebugText.Format(GoalName, displayState, plan, step,
                 world, context?.Blackboard, clock());
+            string combat = float.IsNegativeInfinity(lastOwnSighting) ? "Inactive" : CombatState();
+            return report + "\nCombat: " + combat + " | cover=" + (cover != null ? cover.name : "none") +
+                " | health=" + (context?.Health != null ? context.Health.Current.ToString("F0") : "-");
+        }
+
+        [ContextMenu("Log Commander Plan")]
+        private void LogCommanderPlan()
+        {
+            Debug.Log(GetDebugText(), this);
         }
     }
 }

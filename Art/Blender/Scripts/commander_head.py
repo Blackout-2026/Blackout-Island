@@ -27,7 +27,7 @@ Y_BOTTOM, Y_TOP = 1.6125, 1.846
 PLANE = [(1.6125, 0.040), (1.620, 0.066), (1.628, 0.0765), (1.636, 0.0735), (1.648, 0.0735), (1.662, 0.0735), (1.690, 0.0755),
          (1.720, 0.0775), (1.745, 0.0805), (1.775, 0.0830), (1.800, 0.0785), (1.820, 0.0650), (1.835, 0.0400), (1.846, 0.0)]
 # half width of the head at each height: chin, jaw, cheeks, temples, crown
-WIDTH = [(1.6125, 0.022), (1.620, 0.031), (1.630, 0.041), (1.645, 0.052), (1.665, 0.063), (1.690, 0.071), (1.720, 0.0750),
+WIDTH = [(1.6125, 0.034), (1.620, 0.047), (1.630, 0.057), (1.645, 0.063), (1.665, 0.069), (1.690, 0.074), (1.720, 0.0750),
          (1.750, 0.0765), (1.780, 0.0740), (1.810, 0.0620), (1.830, 0.0430), (1.846, 0.0)]
 # the back of the skull
 BACK = [(1.6125, -0.040), (1.625, -0.062), (1.645, -0.085), (1.680, -0.100), (1.720, -0.108), (1.760, -0.108), (1.800, -0.093),
@@ -82,12 +82,12 @@ def face_features(p, B):
     d += 0.0075 * gauss(x, 0.0150, 0.0065) * gauss(y, 1.6725, 0.0065)                        # the nostril wings
     d -= 0.0045 * gauss(y, 1.6615, 0.0050) * gauss(x, 0.0, 0.020)                           # under the nose
     d -= 0.0070 * gauss(x, A.EYE_X, 0.0200) * gauss(y, A.EYE_Y + 0.001, 0.0120)             # eye sockets
-    d += 0.0060 * gauss(y, A.BROW_Y + 0.003, 0.0065) * gauss(x, 0.032, 0.030)               # brow ridge
+    d += 0.0090 * gauss(y, A.BROW_Y + 0.003, 0.0065) * gauss(x, 0.032, 0.030)               # brow ridge
     d += 0.0020 * gauss(y, 1.7395, 0.0040) * gauss(x, 0.032, 0.016)                          # the lid fold
     d += 0.0060 * gauss(x, 0.049, 0.021) * gauss(y, 1.698, 0.018)                            # cheekbones
     d -= 0.0035 * gauss(x, 0.050, 0.020) * gauss(y, 1.662, 0.015)                            # the hollow under them
-    d += 0.0058 * gauss(y, 1.6535, 0.0050) * gauss(x, 0.0, 0.0185)                          # upper lip
-    d += 0.0068 * gauss(y, 1.6405, 0.0058) * gauss(x, 0.0, 0.0175)                          # lower lip
+    d += 0.0030 * gauss(y, 1.6535, 0.0050) * gauss(x, 0.0, 0.0185)                          # upper lip
+    d += 0.0035 * gauss(y, 1.6405, 0.0058) * gauss(x, 0.0, 0.0175)                          # lower lip
     d -= 0.0040 * gauss(y, 1.6470, 0.0021) * gauss(x, 0.0, 0.0215)                          # the mouth line
     return d * front
 
@@ -202,10 +202,8 @@ CAP_Y = 1.775   # design height where the cap's band starts: the hair above it i
 
 
 def hair_start(theta, B):
-    """t where the hair cap starts for the capped head: the surface height CAP_Y, never nearer than 0.1 to the hairline."""
-    deg = abs(math.degrees(theta))
-    yb = B.interp(HAIRLINE, deg)[0] + 0.0035 * math.sin(9.0 * theta + 1.0) * smoothstep(5.0, 40.0, deg)
-    return min(0.9, max(0.0, (Y_TOP - 0.001 - CAP_Y) / max(Y_TOP - 0.001 - yb, 1e-6)))
+    """The reference officer has exposed, swept-back hair rather than a cap."""
+    return 0.0
 
 
 def build_hair(B):
@@ -243,6 +241,8 @@ def build_hair(B):
 def build_locks(B, rng):
     """Single-sided hair locks laid over the cap: swept up and back over the front, tousled on the crown, short round the sides and nape."""
     specs = []
+    for _ in range(18):
+        specs.append((rng.uniform(-55.0, 55.0), rng.uniform(0.35, 0.67), rng.uniform(0.035, 0.055), "up"))
     for _ in range(12):                              # the sides over the ears
         specs.append((rng.choice((-1, 1)) * rng.uniform(70.0, 115.0), rng.uniform(0.6, 0.97), rng.uniform(0.026, 0.040), "down"))
     for _ in range(14):                              # the nape

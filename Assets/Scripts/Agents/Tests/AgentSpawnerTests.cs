@@ -172,9 +172,9 @@ namespace Blackout.Agents.Tests
             Health hunter = Find("Hunter-1").GetComponent<Health>();
             Health commander = Find("Commander").GetComponent<Health>();
             Assert.AreEqual(90f, hunter.Max);
-            Assert.AreEqual(70f, commander.Max);
+            Assert.AreEqual(180f, commander.Max);
             Assert.AreEqual(12f, Find("Hunter-2").GetComponent<AgentShooter>().Config.damage);
-            Assert.AreEqual(5f, Find("Commander").GetComponent<AgentShooter>().Config.damage);
+            Assert.AreEqual(10f, Find("Commander").GetComponent<AgentShooter>().Config.damage);
             Assert.AreEqual(4.5f, Find("Hunter-1").GetComponent<PathFollower>().Settings.runSpeed);
             Assert.That(Find("Hunter-1").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.Hunter));
             Assert.That(Find("Patrol-1").GetComponent<AgentRoot>().Kind, Is.EqualTo(AgentKind.SecurityPatrol));

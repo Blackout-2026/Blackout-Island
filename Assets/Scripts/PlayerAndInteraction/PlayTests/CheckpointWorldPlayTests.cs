@@ -78,36 +78,30 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest, Timeout(120000)]
-        public IEnumerator KnifeStart_LootsBothGuns_AndRestoresTheSavedLoadout()
+        public IEnumerator SmgStart_LootsRifle_AndRestoresTheSavedLoadout()
         {
-            Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
-            Assert.That(weapons.DebugEquip(1), Is.False);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
+            Assert.That(weapons.DebugEquip(1), Is.True);
             Assert.That(weapons.DebugEquip(2), Is.False);
-            AssertVisibleSlots(3);
+            AssertVisibleSlots(1, 3);
 
             Kill(Agent("Hunter-1"));
             var first = Agent("Hunter-1").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
-            Assert.That(first.Offer.slot, Is.EqualTo(1), "runtime lookup finds the player's missing SMG");
+            Assert.That(first.Offer.slot, Is.EqualTo(2), "runtime lookup finds the missing rifle");
             Assert.That(first.CanInteract, Is.True);
-            first.Interact(player);
-            first.Interact(player); // a second use of the same body must not grant the rifle
-            yield return new WaitForSeconds(0.6f);
-            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
-            Assert.That(weapons.DebugEquip(2), Is.False);
-            Assert.That(weapons.AmmoOf(weapons.ActiveWeapon).CanFire, Is.True);
-            AssertVisibleSlots(1, 3);
             tracker.SetCheckpoint(tracker.Current);
-            yield return null; // save the SMG, its collected drop and the dead first enemy
+            yield return null; // save the SMG, the available rifle drop and the dead first enemy
+            first.Interact(player);
+            first.Interact(player); // a second use of the same body must not grant another gun
+            yield return new WaitForSeconds(0.6f);
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(2));
+            Assert.That(weapons.AmmoOf(weapons.ActiveWeapon).CanFire, Is.True);
+            AssertVisibleSlots(1, 2, 3);
 
             Kill(Agent("Hunter-2"));
             var second = Agent("Hunter-2").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
-            Assert.That(second.Offer.slot, Is.EqualTo(2));
-            second.Interact(player);
-            yield return new WaitForSeconds(0.6f);
-            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(2));
+            Assert.That(second.CanInteract, Is.False, "both guns are already owned");
             Assert.That(weapons.NextLootWeapon(), Is.Null);
-            Assert.That(weapons.AmmoOf(weapons.ActiveWeapon).CanFire, Is.True);
-            AssertVisibleSlots(1, 2, 3);
 
             Kill(Agent("Patrol-1"));
             var third = Agent("Patrol-1").GetComponent<EnemyWeaponDrop>().LastDrop.GetComponent<WeaponDropPickup>();
@@ -117,11 +111,11 @@ namespace Blackout.Diagnostics.PlayTests
             Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(2), "re-enabling must preserve earned weapons");
 
             yield return DieAndRespawn();
-            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1), "restore the saved SMG, not a fresh knife-only state");
+            Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1), "restore the saved starting SMG");
             Assert.That(weapons.DebugEquip(2), Is.False, "the later rifle acquisition rewinds");
             Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(2));
-            Assert.That(first.IsTaken, Is.True);
-            Assert.That(first.gameObject.activeSelf, Is.False);
+            Assert.That(first.IsTaken, Is.False);
+            Assert.That(first.gameObject.activeSelf, Is.True);
             Assert.That(Object.FindObjectsByType<WeaponDropPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
                 Is.EqualTo(1), "later drops disappear and restoring a dead enemy must not duplicate loot");
             AssertVisibleSlots(1, 3);
@@ -196,7 +190,7 @@ namespace Blackout.Diagnostics.PlayTests
             {
                 drop.Interact(player);
                 Assert.That(drop.IsTaken, Is.True);
-                Assert.That(weapons.DebugEquip(1), Is.True);
+                Assert.That(weapons.DebugEquip(2), Is.True);
                 kit.TryHeal(health);
                 Kill(Agent("Hunter-2"));
                 crate.position += Vector3.right * 3f;
@@ -212,8 +206,8 @@ namespace Blackout.Diagnostics.PlayTests
                 Assert.That(director.Deaths, Is.Zero, "counters rewind with the saved run");
                 Assert.That(health.Current, Is.EqualTo(health.Max), "respawn heals fully even from a wounded checkpoint");
                 Assert.That(health.IsInvulnerable, Is.True);
-                Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(1));
-                Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
+                Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(2));
+                Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
                 Assert.That(drop.IsTaken, Is.False);
                 Assert.That(drop.gameObject.activeSelf, Is.True);
                 Assert.That(Object.FindObjectsByType<WeaponDropPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, Is.EqualTo(1));

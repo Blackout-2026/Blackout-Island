@@ -27,7 +27,7 @@ namespace Blackout.Diagnostics.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator BootstrapAndRestart_StartWithOnlyTheKnife()
+        public IEnumerator BootstrapAndRestart_StartWithSmgAndKnife()
         {
             SceneManager.LoadScene("Bootstrap");
             for (int run = 0; run < 2; run++)
@@ -45,10 +45,10 @@ namespace Blackout.Diagnostics.PlayTests
                 Assert.That(director, Is.Not.Null);
                 Assert.That(director.IsRunning, Is.True);
                 var weapons = Object.FindFirstObjectByType<WeaponController>();
-                Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
-                Assert.That(weapons.DebugEquip(1), Is.False);
+                Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
+                Assert.That(weapons.DebugEquip(1), Is.True);
                 Assert.That(weapons.DebugEquip(2), Is.False);
-                Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(1));
+                Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(2));
                 if (run == 0)
                 {
                     weapons.TakeNextLootWeapon();

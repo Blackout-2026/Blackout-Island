@@ -95,9 +95,12 @@ namespace Blackout.Agents
             {
                 animator.SetFloat(SpeedParam, velocitySource.Speed);
             }
-            if (animator == null || weaponLayer < 0) return;
-            bool reacting = animator.GetCurrentAnimatorStateInfo(0).IsName("HitReact");
-            animator.SetLayerWeight(weaponLayer, aiming && !reacting ? 1f : 0f);
+            if (animator == null) return;
+            if (weaponLayer >= 0)
+            {
+                bool reacting = animator.GetCurrentAnimatorStateInfo(0).IsName("HitReact");
+                animator.SetLayerWeight(weaponLayer, aiming && !reacting ? 1f : 0f);
+            }
             // Follow actual shots, including the shooter's reaction delay and burst timing.
             if (shooter != null && shooter.ShotsFired != lastShotsFired)
             {

@@ -14,8 +14,16 @@ namespace Blackout.AI.Commander.Tests
             public Transform Self { get; set; }
             public Health Health { get; set; }
             public Blackboard Blackboard { get; set; }
-            public Transform Player => null;
-            public IReadOnlyList<Marker> GetMarkers(MarkerType type, string owner = null) => Array.Empty<Marker>();
+            public Transform Player { get; set; }
+            public IReadOnlyList<Marker> Covers { get; set; } = Array.Empty<Marker>();
+            public IReadOnlyList<Marker> GetMarkers(MarkerType type, string owner = null) =>
+                type == MarkerType.CoverPoint ? Covers : Array.Empty<Marker>();
+        }
+
+        private sealed class Sight : ICommanderSight
+        {
+            public Func<Vector3, Vector3, bool> Check = (from, to) => true;
+            public bool Clear(Vector3 from, Vector3 to) => Check(from, to);
         }
 
         private sealed class Receiver : IDirectiveReceiver
@@ -79,6 +87,120 @@ namespace Blackout.AI.Commander.Tests
             Assert.That(intent.fire, Is.False);
             Assert.That(intent.aim, Is.False);
             Assert.That(receivers[0].Count, Is.Zero);
+        }
+
+        [Test]
+        public void VisiblePlayer_UsesPistolIntentWithoutCover()
+        {
+            context.Player = MakeObject("Player").transform;
+            context.Player.position = new Vector3(8f, 0f, 0f);
+            brain.SetSight(new Sight());
+
+            AgentIntent intent = brain.Tick(0.1f);
+
+            Assert.That(brain.State, Is.EqualTo("PistolAttack"));
+            Assert.That(intent.aim, Is.True);
+            Assert.That(intent.fire, Is.True);
+            Assert.That(intent.moveSpeed, Is.EqualTo(MoveSpeed.Stop));
+            Assert.That(intent.lookTarget, Is.EqualTo(context.Player.position + Vector3.up * config.playerChestHeight));
+            Assert.That(board.lastKnownPlayerTime, Is.EqualTo(now));
+        }
+
+        [Test]
+        public void EyeCanSeeButPistolIsBlocked_RepositionsInsteadOfFiring()
+        {
+            context.Player = MakeObject("Player").transform;
+            context.Player.position = new Vector3(8f, 0f, 0f);
+            Transform muzzle = MakeObject("Muzzle").transform;
+            muzzle.position = new Vector3(0f, 1.3f, 0f);
+            brain.SetMuzzle(muzzle);
+            brain.SetSight(new Sight { Check = (from, to) => from.y >= 1.6f || Mathf.Abs(from.z) > 1.5f });
+
+            AgentIntent intent = brain.Tick(0.1f);
+
+            Assert.That(intent.fire, Is.False);
+            Assert.That(intent.moveSpeed, Is.EqualTo(MoveSpeed.Walk));
+            Assert.That(Mathf.Abs(intent.moveTarget.z), Is.GreaterThan(1.5f));
+            Assert.That(brain.State, Is.EqualTo("CombatFlanking"));
+        }
+
+        [Test]
+        public void CoverCycle_MovesHidesPeeksAndOnlyThenShoots()
+        {
+            context.Player = MakeObject("Player").transform;
+            context.Player.position = new Vector3(8f, 0f, 0f);
+            GameObject coverObject = MakeObject("Lab cover");
+            coverObject.transform.position = new Vector3(3f, 0f, 0f);
+            Marker marker = coverObject.AddComponent<Marker>();
+            context.Covers = new[] { marker };
+            brain.SetSight(new Sight { Check = (from, to) => from.x < 7f });
+
+            AgentIntent moving = brain.Tick(0.1f);
+            Assert.That(brain.State, Is.EqualTo("CombatMovingToCover"));
+            Assert.That(moving.moveTarget, Is.EqualTo(marker.transform.position));
+            Assert.That(moving.moveSpeed, Is.EqualTo(MoveSpeed.Run));
+            Assert.That(moving.fire, Is.False);
+
+            context.Self.position = marker.transform.position;
+            AgentIntent hiding = brain.Tick(0.1f);
+            Assert.That(brain.State, Is.EqualTo("CombatHiding"));
+            Assert.That(hiding.fire, Is.False);
+
+            now += config.hideSeconds + 0.1f;
+            AgentIntent peeking = brain.Tick(0.1f);
+            Assert.That(brain.State, Is.EqualTo("CombatMovingToPeek"));
+            Assert.That(peeking.moveSpeed, Is.EqualTo(MoveSpeed.Walk));
+            Assert.That(peeking.fire, Is.False);
+
+            context.Self.position = peeking.moveTarget;
+            AgentIntent shooting = brain.Tick(0.1f);
+            Assert.That(brain.State, Is.EqualTo("CombatShooting"));
+            Assert.That(shooting.aim, Is.True);
+            Assert.That(shooting.fire, Is.True);
+
+            now += config.peekSeconds + 0.1f;
+            AgentIntent retreating = brain.Tick(0.1f);
+            Assert.That(retreating.moveTarget, Is.EqualTo(marker.transform.position));
+            Assert.That(retreating.fire, Is.False);
+        }
+
+        [Test]
+        public void LostPlayer_StopsFireAfterCombatMemory()
+        {
+            context.Player = MakeObject("Player").transform;
+            context.Player.position = new Vector3(8f, 0f, 0f);
+            var sight = new Sight();
+            brain.SetSight(sight);
+            Assert.That(brain.Tick(0f).fire, Is.True);
+
+            sight.Check = (from, to) => false;
+            now += config.combatMemory + 0.1f;
+            AgentIntent intent = brain.Tick(0.1f);
+
+            Assert.That(intent.fire, Is.False);
+            Assert.That(brain.State, Is.EqualTo("Monitor"));
+        }
+
+        [Test]
+        public void WoundedCommander_StaysBehindCoverLonger()
+        {
+            context.Player = MakeObject("Player").transform;
+            context.Player.position = new Vector3(8f, 0f, 0f);
+            GameObject coverObject = MakeObject("Lab cover");
+            coverObject.transform.position = new Vector3(3f, 0f, 0f);
+            context.Covers = new[] { coverObject.AddComponent<Marker>() };
+            brain.SetSight(new Sight { Check = (from, to) => from.x < 7f });
+            context.Health.TakeDamage(new DamageInfo(60f, Vector3.zero, Vector3.zero, null, DamageType.Generic));
+
+            brain.Tick(0.1f);
+            context.Self.position = coverObject.transform.position;
+            brain.Tick(0.1f);
+            now += config.hideSeconds + 0.1f;
+            AgentIntent intent = brain.Tick(0.1f);
+
+            Assert.That(brain.State, Is.EqualTo("CombatHiding"));
+            Assert.That(intent.fire, Is.False);
+            Assert.That(intent.moveSpeed, Is.EqualTo(MoveSpeed.Stop));
         }
 
         [Test]
@@ -233,7 +355,7 @@ namespace Blackout.AI.Commander.Tests
         }
 
         [Test]
-        public void RegroupTimeout_CompletesWithEnoughSurvivorsAsInReference()
+        public void RegroupTimeout_DoesNotClaimDistantSurvivorsArrived()
         {
             config.sightingMemory = 30f; // isolate the regroup timeout from the 6 s sighting expiry
             board.alertLevel = 1;
@@ -242,8 +364,10 @@ namespace Blackout.AI.Commander.Tests
 
             Advance(config.regroupTimeout + 0.1f);
 
-            Assert.That(board.squadAssembled, Is.True);
-            Assert.That(brain.CurrentAction, Is.EqualTo(CommanderConfig.OrderConverge));
+            Assert.That(board.squadAssembled, Is.False);
+            Assert.That(brain.State, Is.EqualTo("ReplanPending"));
+            Assert.That(receivers[0].Count, Is.EqualTo(1));
+            Assert.That(receivers[0].Last.type, Is.EqualTo(DirectiveType.Regroup));
         }
 
         [Test]

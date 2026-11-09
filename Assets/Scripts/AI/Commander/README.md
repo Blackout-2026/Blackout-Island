@@ -4,6 +4,12 @@ Owner: Agent Controller. Runtime assembly: `Blackout.AI.Commander`.
 
 ## Setup
 
+Run **Blackout > Agents > Install Supplied Commander Model** after the new FBX
+imports. This puts the supplied rigged character and its pistol on the Commander
+prefab, creates URP materials and an animation controller from the FBX's Idle,
+Walk, Run, Aim and Shoot actions, and sets the Commander to 180 health. The
+editable Blender source is `Art/Blender/Commander_Hero_Source.blend`.
+
 Run **Blackout > Agents > Set Up Commander (G2)**. The tool creates
 `Config/CommanderConfig.asset`, assigns `CommanderBrain` to the Commander prefab's
 `AgentRoot`, and connects the existing PlayerDied and PlayerRespawned channels in
@@ -33,14 +39,19 @@ effects and costs. Predicted effects never fabricate sightings or player death.
 The player lifecycle channels supply actual neutralization and respawn facts.
 
 - Search: cost 3, ring radius 7 m, search radius 9 m, orders every 8 s, timeout 24 s.
-- Regroup: cost 2, midpoint rally, radius 10 m, at least 2 survivors. As in the
-  reference, completes when two arrive OR after 12 s with two surviving agents.
+- Regroup: cost 2, midpoint rally, radius 10 m, at least 2 survivors. Completes
+  only when two living squad members actually reach the rally. After 12 s without
+  those arrivals it fails and retries after the configured interval.
 - Converge: cost 2, orders every 1 s until the player dies or the sighting expires.
 
 After a failed action, retry is delayed by the configured search interval. Changes
 to observed facts replan immediately on the next think tick; CureTaken replans
-synchronously. The Commander holds position, looks toward known information and
-never aims or fires. Stable ticks reuse fact storage and allocate no managed memory;
+synchronously. When he sees the player, the Commander selects nearby hidden
+CoverPoint markers, runs to cover, waits, peeks, fires and returns to cover. Below
+45% health, he hides longer. Without usable cover he approaches pistol range and
+fires directly. The shared AgentShooter applies 10 damage, a 22 m range, spread
+and reaction delay. GOAP squad orders continue during his own combat. Stable
+ticks reuse fact storage and allocate no managed memory;
 planning and debug-text requests may allocate.
 
 ## Alert and other owners' integration
@@ -49,19 +60,12 @@ AgentRoot applies the default x1.25 movement multiplier to PathFollower and x0.9
 aim-error multiplier to AgentShooter. These are absolute assignments, so repeated
 alerts do not stack. Newly registered agents inherit the active alert.
 
-**Handoff to the World Builder (SecurityPatrol), Systems Engineer (Hunter), and
-Core Developer (TacticalGuard):** implement `Blackout.Shared.IDirectiveReceiver`
-on your brain and map Converge, SearchZone and Regroup to your architecture's states.
-Also implement `Blackout.Shared.IAlertReceiver.OnAlert(AgentAlert)` and use
-`alert.visionMultiplier` (default 1.4) against the unmodified base sight range.
-AgentRoot forwards the alert after initialization and forwards a retained directive
-when replacing a brain. Blackboard.Alert also exposes the active profile.
-
-At G2 implementation time, none of the other three AI folders implements either
-receiver interface. Orders are retained in Blackboard, but those brains still need
-their owners' receiver implementations to act on them and extend their vision.
-No files in their owned paths were changed. The current humanoid visuals remain
-the clearly named placeholders from the existing agent setup.
+SecurityPatrol, Hunter and TacticalGuard implement the shared directive receiver;
+SecurityPatrol and Hunter also implement the alert receiver. AgentRoot forwards
+directives to their brains, and the scene integration test checks the 23 real
+recipients and NavMesh movement. Blackboard retains each accepted order so a
+replacement brain can replay it. TacticalGuard handles its shared alert behavior
+through AgentRoot's movement and aim modifiers.
 
 ## Editor checks
 
@@ -90,4 +94,5 @@ Retained orders remain visible after Commander death while its object exists.
 
 See [Commander coordination and viva notes](../../../../docs/viva/commander.md)
 for owner mappings, GOAP/FSM and Blackboard rationale, the worked cost-4 plan,
-the regroup-timeout weakness, test coverage and the Editor demonstration.
+the regroup-timeout edge case, test coverage and the Editor demonstration.
+For a short live presentation sequence, see [Commander demo](../../../../docs/viva/commander-demo.md).

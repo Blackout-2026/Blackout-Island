@@ -185,7 +185,7 @@ not a whole-project or visual/gameplay pass.
 Manual check: play from Bootstrap, take the cure with the Commander alive, and inspect the debug orders/states for a Patrol,
 Hunter and Guard. Confirm local sight/shooting interrupts travel, movement resumes when appropriate, search areas change
 when sightings move, and closed doors/obstacles behave sensibly. Kill the Commander, restore a checkpoint and restart.
-The Commander remains a stationary coordinator in this step. Live combat balance, animation and rendering need human review.
+The Commander uses the supplied rigged model and pistol. His GOAP squad plan runs alongside a cover, peek, shoot and retreat combat cycle. A live Bootstrap Play check confirmed 180 HP on the spawned Commander, 10 damage per pistol hit in a clear line, and a hide, peek and fire cycle at lab CoverPoint_14. See `commander-demo.md` for the presentation steps.
 
 Five-line viva summary:
 
@@ -296,8 +296,9 @@ The stored plan initially reads:
 Plan: [OrderRegroup(cost=2)] -> OrderConverge(cost=2) | totalCost=4 | remainingCost=4
 ```
 
-Regroup sends directives and waits for arrivals or its configured timeout. When
-it completes, the retained sequence can show remainingCost=2. On the next think
+Regroup sends directives and requires two living arrivals at its rally point. A
+12-second timeout without those arrivals fails the action. When it completes, the
+retained sequence can show remainingCost=2. On the next think
 tick, the changed squad fact causes a replan; the new stored sequence may contain
 only Converge with totalCost=2. If the squad had already been assembled at the
 start, Converge alone would cost 2. TotalCost describes the currently stored plan,
@@ -373,21 +374,22 @@ The renderer reads the Blackboard, uses value structs and indexed roster access,
 and restores Gizmos color/matrix after drawing. It has no Update method and does
 not deliver directives, tick a brain, move agents or allocate scene objects.
 
-## Known weakness
+## Regroup edge case
 
-The discrete squadAssembled fact simplifies physical coordination. As inherited
-from the reference, Regroup can complete after 12 s if at least two other agents
-are still alive, even if they have not reached the rally point. That can permit
-Converge while the squad is still spread out. A future improvement would require
-arrival evidence or mark regroup as failed on timeout. The current behavior is
-visible in the Blackboard diagnostics and explicitly covered by a brain test.
+The discrete squadAssembled fact simplifies physical coordination. The Commander
+now verifies at least two living squad members are actually inside the rally
+radius before setting that fact. If the 12-second timer expires without those
+arrivals, it enters ReplanPending and retries after the configured interval.
+The brain tests cover both successful arrival and the distant-survivor timeout.
 
 The other owners' receiver implementations remain a separate integration handoff;
 the fake coordination tests do not establish their runtime adoption.
 
 ## Validation and Editor demonstration
 
-The G4 implementation was compiled and checked in Unity 6000.3.25f1:
+The earlier G4 implementation was compiled and checked in Unity 6000.3.25f1.
+The results below predate the current regroup and model changes; rerun the suites
+in the Editor for current evidence:
 
 | Suite | Latest G4 batch result | What it verifies |
 | --- | --- | --- |
@@ -400,8 +402,8 @@ requires visual inspection; this note does not claim it has been inspected.
 
 Before the PR or viva:
 
-1. Open Window > General > Test Runner > EditMode. Run the Commander suite and
-   confirm 60 passes; run the Agents suite and confirm 250 passes.
+1. Open Window > General > Test Runner > EditMode. Run the Commander and Agents
+   suites and confirm their current results.
 2. Open Commander.prefab and confirm CommanderBrain has a config and
    CommanderDirectiveGizmos is enabled.
 3. Start the mission with Agents loaded and a living Commander. Enable Scene
@@ -425,8 +427,8 @@ Five-line viva rehearsal:
    concrete classes, allowing scene-free receiver tests.
 4. Regroup 2 plus Converge 2 gives a plan cost of 4, preserving the reference's
    weights; a ready squad needs only Converge for 2.
-5. The regroup timeout can label a surviving squad assembled before it physically
-   arrives, which is a known weakness of this abstraction.
+5. Regroup counts physical arrivals; when two units do not reach the rally before
+   timeout, the action fails instead of inventing squad readiness.
 
 ## Sources and scope
 

@@ -13,7 +13,7 @@ namespace Blackout.Editor
         // Raise this when a rule changes so Unity reimports the models with the new rules.
         public override uint GetVersion()
         {
-            return 1;
+            return 2;
         }
 
         private void OnPreprocessModel()
