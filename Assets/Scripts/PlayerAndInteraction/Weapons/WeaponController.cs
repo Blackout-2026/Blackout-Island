@@ -26,7 +26,6 @@ namespace Blackout.Weapons
         // Fully lowered pose while switching: 0.3 m down, muzzle pitched 40° down.
         private const float SwitchDrop = 0.3f;
         private const float SwitchPitch = 40f;
-        private const int StartingSmgSlot = 1;
 
         [SerializeField] private PlayerInputReader input;
         [SerializeField] private PlayerMotor motor;
@@ -52,7 +51,7 @@ namespace Blackout.Weapons
         private WeaponContext context;
         private Vector3 restPosition;
         private Quaternion restRotation;
-        // Gameplay starts with the SMG and knife; the rifle is earned from enemy loot.
+        // Gameplay starts after the loss of the guns, even when the cinematic is skipped.
         private bool loadoutLost = true;
         private WeaponLoadout loadout;
         private WeaponAmmo[] ammo;
@@ -95,7 +94,7 @@ namespace Blackout.Weapons
         public event Action<bool> HitConfirmed;
         /// <summary>The held weapon changed (the HUD's slot highlight, Y4).</summary>
         public event Action<WeaponData> WeaponChanged;
-        /// <summary>The set of owned weapons changed: the starting loadout was applied or the player took a gun from a dead enemy (the HUD's slots).</summary>
+        /// <summary>The set of owned weapons changed: the storm took the guns, or the player took one from a dead enemy (the HUD's slots).</summary>
         public event Action LoadoutChanged;
         /// <summary>A real switch request was accepted; audio does not replay when a checkpoint restores ownership.</summary>
         public event Action SwitchStarted;
@@ -125,12 +124,12 @@ namespace Blackout.Weapons
         public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 && switcher != null && loadout != null && loadout.IsOwned(switcher.ActiveIndex)
             ? weapons[switcher.ActiveIndex].Data : null;
 
-        /// <summary>True only for an explicitly supplied full loadout. Use <see cref="Owns"/> to check individual weapons.</summary>
+        /// <summary>False for the normal knife-only start. Guns are recovered through <see cref="TakeNextLootWeapon"/>.</summary>
         public bool HasLoadout => !loadoutLost;
 
         /// <summary>
-        /// The introduction leaves the player with the SMG and knife. This is safe before Awake on the inactive bootstrap player:
-        /// Awake initializes the starting weapons when the scene finishes loading.
+        /// The storm of the introduction takes every gun and leaves the knife (step L1). The loss persists through respawns, and it is safe before Awake on the
+        /// inactive bootstrap player: the weapons are hidden now and Awake starts the player with the knife only.
         /// </summary>
         public void LoseStartingLoadout()
         {
@@ -142,18 +141,16 @@ namespace Blackout.Weapons
             else
             {
                 loadout.KeepOnlyMelee();
-                int smg = IndexOfSlot(StartingSmgSlot);
-                loadout.Grant(smg);
-                int start = smg >= 0 ? smg : loadout.FirstOwned();
-                switcher = new WeaponSwitcher(weapons.Length, Mathf.Max(0, start));
-                ShowOnly(start);
+                int knife = loadout.FirstOwned();
+                switcher = new WeaponSwitcher(weapons.Length, Mathf.Max(0, knife));
+                ShowOnly(knife);
             }
 
             WeaponChanged?.Invoke(ActiveWeapon);
             LoadoutChanged?.Invoke();
         }
 
-        /// <summary>True if the player holds this weapon now (before Awake: the SMG and knife).</summary>
+        /// <summary>True if the player holds this weapon now (before Awake: only the knife).</summary>
         public bool Owns(WeaponData data)
         {
             if (loadout != null)
@@ -161,11 +158,10 @@ namespace Blackout.Weapons
                 return loadout.Owns(data);
             }
 
-            return data != null && (!loadoutLost || data.kind == WeaponKind.Melee ||
-                                    (data.kind == WeaponKind.Hitscan && data.slot == StartingSmgSlot));
+            return data != null && (!loadoutLost || data.kind == WeaponKind.Melee);
         }
 
-        /// <summary>The gun a dead enemy's pickup gives now: the R-700 sniper rifle; null once the player has both guns.</summary>
+        /// <summary>The gun a dead enemy's pickup would give now: the SMG first, then the R-700 sniper rifle; null once the player has both.</summary>
         public WeaponData NextLootWeapon()
         {
             int index = loadout != null ? loadout.NextLootIndex() : -1;
@@ -278,7 +274,6 @@ namespace Blackout.Weapons
             }
 
             loadout = new WeaponLoadout(data, !loadoutLost);
-            loadout.Grant(IndexOfSlot(StartingSmgSlot));
             ammo = new WeaponAmmo[weapons.Length];
             for (int i = 0; i < ammo.Length; i++)
             {
@@ -289,7 +284,7 @@ namespace Blackout.Weapons
             int start = Mathf.Clamp(startIndex, 0, weapons.Length - 1);
             if (!loadout.IsOwned(start))
             {
-                start = Mathf.Max(0, loadout.FirstOwned());
+                start = Mathf.Max(0, loadout.FirstOwned()); // after the storm: the knife
             }
 
             switcher = new WeaponSwitcher(weapons.Length, start);

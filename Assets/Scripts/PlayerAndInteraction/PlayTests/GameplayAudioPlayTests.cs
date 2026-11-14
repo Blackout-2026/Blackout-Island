@@ -127,7 +127,8 @@ namespace Blackout.Diagnostics.PlayTests
         [UnityTest]
         public IEnumerator PlayerGunshotsKeepTheirTailsWhenFeedbackVoicesAreFull()
         {
-            yield return null;
+            weapons.TakeNextLootWeapon();
+            yield return new WaitForSeconds(0.5f);
             Assert.That(weapons.ActiveWeapon.slot, Is.EqualTo(1));
             var bank = AssetDatabase.LoadAssetAtPath<PrototypeAudioBank>("Assets/ScriptableObjects/Audio/PrototypeAudio.asset");
             AudioClip first = bank.GetGunshot(AudioCue.Smg, false), second = bank.GetGunshot(AudioCue.Smg, true);
