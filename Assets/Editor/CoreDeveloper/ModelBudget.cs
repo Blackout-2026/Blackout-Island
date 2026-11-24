@@ -27,6 +27,8 @@ namespace Blackout.Editor
         private static readonly ModelBudget Character = new ModelBudget(3000, 3);
         // The Commander is the one realistic hero character (sculpted face, hair cards, a detailed uniform): docs/art-pipeline.md section 18.2.
         private static readonly ModelBudget CommanderHero = new ModelBudget(14000, 3);
+        // The downloaded skinned officer has four texture atlases but duplicate FBX material slots.
+        private static readonly ModelBudget ArmyOfficer = new ModelBudget(35000, 14);
         // The Security Patrol is the second hero humanoid (sculpted head, balaclava, painted gear atlas, laced boots): docs/art-pipeline.md section 18.3.
         private static readonly ModelBudget PatrolHero = new ModelBudget(12000, 3);
         // The downloaded photographic soldier that is the Patrol now (docs/art-pipeline.md section 18.4): 9,710 triangles and the seven material slots Mixamo exports.
@@ -59,6 +61,10 @@ namespace Blackout.Editor
             else if (Matches(assetName, "SM_Char_Commander"))
             {
                 budget = CommanderHero;
+            }
+            else if (Matches(assetName, "SM_Char_ArmyOfficer"))
+            {
+                budget = ArmyOfficer;
             }
             else if (Matches(assetName, "SM_Char_HunterL4D"))
             {

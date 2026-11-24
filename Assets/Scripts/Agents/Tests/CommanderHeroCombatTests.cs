@@ -65,5 +65,33 @@ namespace Blackout.Agents.Tests
                 Object.DestroyImmediate(commander);
             }
         }
+
+        [Test]
+        public void CommanderPistol_FollowsTheAnimatedHand_AndKeepsItsMuzzleForward()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Agents/Commander.prefab");
+            GameObject commander = Object.Instantiate(prefab);
+            try
+            {
+                var driver = commander.GetComponentInChildren<AnimatorDriver>();
+                Animator animator = driver.GetComponent<Animator>();
+                animator.Rebind();
+                animator.SetBool("Aiming", true);
+                animator.SetLayerWeight(animator.GetLayerIndex("WeaponPose"), 1f);
+                animator.Play("Aim", 0, 0f);
+                animator.Update(0f);
+                animator.Update(.2f);
+                driver.SyncWeaponGrip();
+
+                var shooter = new SerializedObject(commander.GetComponent<AgentShooter>());
+                var muzzle = (Transform)shooter.FindProperty("muzzle").objectReferenceValue;
+                Transform gun = muzzle.parent;
+                Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                Assert.That(gun.name, Is.EqualTo("Gun"));
+                Assert.That(Vector3.Distance(gun.position, hand.position), Is.LessThan(.2f));
+                Assert.That(Vector3.Dot(muzzle.forward, commander.transform.forward), Is.GreaterThan(.95f));
+            }
+            finally { Object.DestroyImmediate(commander); }
+        }
     }
 }

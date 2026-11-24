@@ -1,14 +1,24 @@
 # Commander demo for the assignment
 
+## Model preview
+
+These Unity-rendered previews show the installed Army Officer with the animated
+sidearm. The muzzle is placed near the barrel tip, and the pistol stays in the
+right hand during aim and fire animations.
+
+![Army Officer aiming from a three-quarter view](commander-army-officer-aim.png)
+
+![Army Officer firing from the side](commander-army-officer-shoot-side.png)
+
 ## Prepare once
 
 1. Open the project in Unity and wait for imports and script compilation.
-2. The supplied Commander model is already installed. If you reimport its FBX or
-   change its Blender source, choose **Blackout > Agents > Install Supplied Commander Model**
-   to rebuild the visual prefab and animation controller.
+2. The Army Officer Commander model is installed. If you reimport its FBX or
+   textures, choose **Blackout > Agents > Install Army Officer Commander**
+   to rebuild the visual prefab, materials and pistol attachment.
 3. Open `Assets/Prefabs/Agents/Commander.prefab` to show the new model, pistol,
-   `CommanderBrain`, `AgentShooter` and `Health`. The editable source is
-   `Art/Blender/Commander_Hero_Source.blend`.
+   `CommanderBrain`, `AgentShooter` and `Health`. The model source is
+   `Assets/Models/Custom/SM_Char_ArmyOfficer.fbx`, supplied in `army-officer.zip`.
 
 ## Play and show behavior
 

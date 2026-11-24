@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &2115296084661290492
+--- !u!1001 &2636095177270954734
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -8,79 +8,78 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8454537713324184309}
     m_Modifications:
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 378555821844610531, guid: 3442f175368c7c3499022132e519148f, type: 3}
+      propertyPath: visualRoot
+      value:
+      objectReference: {fileID: 8454537713324184309}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
+      value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4111631493024033932, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
+    - target: {fileID: 7438957580801595092, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_Name
-      value: Char_CommanderHero_Visual
+      value: Char_ArmyOfficer_Visual
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
---- !u!4 &3098714171106876208 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 3442f175368c7c3499022132e519148f, type: 3}
+--- !u!4 &344790203664974666 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3916955791550684876, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
-  m_PrefabInstance: {fileID: 2115296084661290492}
+  m_CorrespondingSourceObject: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &3850663574039933029 stripped
+--- !u!23 &607519306334444917 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3241216311297742747, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1739932395456325146 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 2894482547581744537, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
-  m_PrefabInstance: {fileID: 2115296084661290492}
+  m_CorrespondingSourceObject: {fileID: 4373050021944585460, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &4004931315158878671 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 3084778119318522931, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
-  m_PrefabInstance: {fileID: 2115296084661290492}
-  m_PrefabAsset: {fileID: 0}
---- !u!137 &7179516923215910251 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 9149570680494379159, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
-  m_PrefabInstance: {fileID: 2115296084661290492}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &7440298458345739483 stripped
+--- !u!114 &2438044007200143117 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8798426821027123495, guid: 006f1708ca90c0c4aa9999a2a2b1f1f7, type: 3}
-  m_PrefabInstance: {fileID: 2115296084661290492}
+  m_CorrespondingSourceObject: {fileID: 378555821844610531, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -88,6 +87,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dfd3bfc4e617ec489e2ae696d6a5e1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AnimatorDriver
+--- !u!4 &3742243346794230818 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1691757965438500556, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8591431418386667563 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6030231681721062085, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8454407701810296281
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -151,7 +160,7 @@ PrefabInstance:
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: muzzle
       value: 
-      objectReference: {fileID: 3850663574039933029}
+      objectReference: {fileID: 3742243346794230818}
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: config.range
       value: 22
@@ -189,7 +198,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3098714171106876208}
+      addedObject: {fileID: 344790203664974666}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
@@ -228,7 +237,7 @@ MonoBehaviour:
   sightBlockers:
     serializedVersion: 2
     m_Bits: 769
-  pistolMuzzle: {fileID: 3850663574039933029}
+  pistolMuzzle: {fileID: 3742243346794230818}
 --- !u!114 &621524260021865184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -287,14 +296,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentTakedownTarget
   eligible: 1
-  actorAnimator: {fileID: 4004931315158878671}
+  actorAnimator: {fileID: 8591431418386667563}
   agent: {fileID: 4019000919527423183}
   mover: {fileID: 7817492189855319184}
   shooter: {fileID: 1845708321235843013}
-  driver: {fileID: 7440298458345739483}
+  driver: {fileID: 2438044007200143117}
   carriedWeapon:
-  - {fileID: 7179516923215910251}
-  disarmWeapon: {fileID: 0}
+  - {fileID: 607519306334444917}
+  disarmWeapon: {fileID: 1739932395456325146}
 --- !u!114 &1845708321235843013 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}

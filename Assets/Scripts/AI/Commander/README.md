@@ -4,11 +4,13 @@ Owner: Agent Controller. Runtime assembly: `Blackout.AI.Commander`.
 
 ## Setup
 
-Run **Blackout > Agents > Install Supplied Commander Model** after the new FBX
-imports. This puts the supplied rigged character and its pistol on the Commander
-prefab, creates URP materials and an animation controller from the FBX's Idle,
-Walk, Run, Aim and Shoot actions, and sets the Commander to 180 health. The
-editable Blender source is `Art/Blender/Commander_Hero_Source.blend`.
+Run **Blackout > Agents > Install Army Officer Commander** after importing the
+owner-supplied `army-officer.zip`. This installs Nasser's Humanoid Army Officer
+with URP materials, the existing soldier sidearm animations and a pistol whose
+muzzle is connected to `AgentShooter` and `CommanderBrain`. The authored model is
+`Assets/Models/Custom/SM_Char_ArmyOfficer.fbx`; attribution is in
+`docs/credits/core-developer.md`. The earlier Blender Commander remains as a
+separate source and is no longer the active prefab visual.
 
 Run **Blackout > Agents > Set Up Commander (G2)**. The tool creates
 `Config/CommanderConfig.asset`, assigns `CommanderBrain` to the Commander prefab's

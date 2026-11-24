@@ -129,6 +129,9 @@ namespace Blackout.Editor
                 animator.runtimeAnimatorController = null;
                 if (name == "Hunter")
                     animator.avatar = AssetDatabase.LoadAllAssetsAtPath("Assets/Models/Custom/SM_Char_HunterL4D.fbx").OfType<Avatar>().First();
+                else if (name == "Commander" && AgentAvatarBuilder.Find(visual, "Char_ArmyOfficer_Visual") != null)
+                    animator.avatar = AssetDatabase.LoadAllAssetsAtPath("Assets/Models/Custom/SM_Char_ArmyOfficer.fbx")
+                        .OfType<Avatar>().First(a => a.isValid && a.isHuman);
                 else if (name != "SecurityPatrol")
                 {
                     animator.avatar = null;

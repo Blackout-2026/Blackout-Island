@@ -1,6 +1,7 @@
 # EG1: supplied enemy rifle
 
-The Patrol, Hunter and Commander gameplay prefabs carry the textured rifle supplied in `D:\model\gun`.
+The Patrol and Hunter gameplay prefabs carry the textured rifle supplied in `D:\model\gun`.
+Commander now uses the Army Officer visual with a separate pistol and sidearm animations.
 EG2 restores the Tactical Guard's original integrated gun, muzzle and sidearm animations.
 The existing `Agents` scene spawner references these prefab GUIDs, so its spawned enemies inherit the replacement.
 Player weapons, weapon pickups, combat tuning, event channels and the four brain architectures are unchanged.
@@ -29,7 +30,7 @@ Reproduce the derivative with Blender 4.2 or newer (verified with installed Blen
 ```
 
 Then use **Blackout > Agents > Apply Supplied Enemy Gun**. The scoped builder updates its own visual/materials and
-the three humanoid gameplay prefab variants through Unity APIs; Tactical Guard is excluded. Existing model assets and
+the Patrol and Hunter gameplay prefab variants through Unity APIs; Tactical Guard and Commander are excluded. Existing model assets and
 GUIDs are retained. It samples the
 existing rifle aim clip to fit the grip, saves the hand-relative offset, and restores the saved skeleton transforms.
 The animation builder reapplies this fit when rebuilding an enemy that already contains the supplied rifle.
@@ -37,19 +38,18 @@ Run the scoped gun builder again after rebuilding/replacing character visuals fr
 
 ## Connections and lifecycle
 
-`AgentIntent` still reaches the existing `AgentShooter` and `AnimatorDriver`. Patrol, Hunter and Commander use the existing rifle
-aim/shoot clips. Patrol/Hunter retain their hand parenting; `AnimatorDriver.SyncWeaponGrip` follows the animated right
-hand on the rigid Commander. The shooter now references the
+`AgentIntent` still reaches the existing `AgentShooter` and `AnimatorDriver`. Patrol and Hunter use the existing rifle
+aim/shoot clips and retain their hand parenting. The shooter now references the
 replacement's `MuzzlePoint`; damage, noise and timing still use the existing weapon configuration.
 
-The original Patrol/Hunter/Commander `Gun` transforms remain in their nested models, with their old renderers disabled.
+The original Patrol/Hunter `Gun` transforms remain in their nested models, with their old renderers disabled.
 The Tactical Guard retains its original right-hand mesh (glove and integrated carbine), original hand-mounted muzzle,
 sidearm animation controller and non-detachable takedown setup. It has no supplied rifle or additional gun-follow binding.
 The replacement builder skips Tactical Guard, including direct calls from another tool. The scoped restore command
 removes only the previously managed rifle addition through Unity prefab APIs.
 
-`AgentTakedownTarget.carriedWeapon` contains only the three new LOD renderers. Rear attacks hide them; frontal disarms
-detach the existing `Gun` root on the three humanoids; cancellation restores it. The takedown builder preserves these
+For each rifle user, `AgentTakedownTarget.carriedWeapon` contains the three new LOD renderers. Rear attacks hide them; frontal disarms
+detach the existing `Gun` root on Patrol and Hunter; cancellation restores it. The takedown builder preserves these
 references on reruns. The new gun stays below `Visual`, so the existing corpse fade includes it. Death pickups continue
 to grant the existing SMG/sniper choices; the player does not receive a new weapon type.
 
@@ -84,19 +84,19 @@ Historical EG1 checks before the EG2 Tactical Guard correction:
 The preview tool renders aim, idle and shooting samples from two views and also captures native skinned aim frames.
 These are static Editor samples, not a live gameplay or performance pass.
 
-The existing Commander rigid hand meshes are offset from their Humanoid animation joints; this is visible in the rifle
-preview as detached hands. The original body meshes, skeleton and avatars were preserved. Correcting that character's
-rig/mesh attachment is separate work. The robot retains its original integrated carbine and original animation pose.
+The historical EG1 Commander preview showed its rigid hand meshes offset from their Humanoid animation joints.
+The active Army Officer Commander replaces that visual and uses a separate animated pistol.
+The robot retains its original integrated carbine and original animation pose.
 
 Before committing, inspect the four enemy types in **Bootstrap** gameplay: idle/run/aim/shoot, muzzle position from
 both sides, near/far LOD changes, frontal and rear takedowns, cancellation after a disarm, death fade, existing pickups,
-checkpoint restore and restart. Check Console for new errors. Pay particular attention to the Commander hand limitation
-and the restored Tactical Guard gun/muzzle/sidearm pose. No new input, package, lighting or global project setting is required.
+checkpoint restore and restart. Check Console for new errors. Pay particular attention to the
+restored Tactical Guard gun/muzzle/sidearm pose. No new input, package, lighting or global project setting is required.
 
 ## Five-line viva summary
 
 1. I converted the supplied OBJ and PBR maps into an enemy-only Unity rifle visual, keeping the source attribution.
-2. I reduced it to three LODs and reused three URP materials across the three humanoid enemy prefabs.
+2. I reduced it to three LODs and reused three URP materials across the Patrol and Hunter prefabs.
 3. The existing animation driver follows the right hand, while the shared shooter uses the new barrel socket.
 4. Takedown renderer/disarm references were updated without changing FSM, BT, utility AI or GOAP decisions.
-5. Automated checks cover wiring, shots and lifecycle; live appearance and the existing Commander hand problem need review.
+5. Automated checks cover wiring, shots and lifecycle; live appearance still needs review.

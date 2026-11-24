@@ -12,7 +12,6 @@ namespace Blackout.Agents.Tests
     {
         [TestCase("SecurityPatrol")]
         [TestCase("Hunter")]
-        [TestCase("Commander")]
         public void SavedEnemy_UsesNewGunAndMuzzle_AndKeepsItsTakedownReferences(string name)
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Agents/{name}.prefab");
@@ -35,7 +34,6 @@ namespace Blackout.Agents.Tests
 
         [TestCase("SecurityPatrol")]
         [TestCase("Hunter")]
-        [TestCase("Commander")]
         public void AnimatedAim_FitsTheGrip_AndFiresATracerFromTheNewBarrel(string name)
         {
             GameObject agent = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Agents/{name}.prefab"));

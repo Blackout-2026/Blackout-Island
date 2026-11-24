@@ -50,7 +50,7 @@ namespace Blackout.Agents.Tests
         // Core Developer's Char_<Name>_Visual is nested in the same Visual slot instead (the way the Tactical Guard nests its robot).
         [TestCase("Hunter", "Char_Hunter_Visual")]
         [TestCase("SecurityPatrol", "Char_Patrol_Visual")]
-        [TestCase("Commander", "Char_Commander_Visual")]
+        [TestCase("Commander", "Char_ArmyOfficer_Visual")]
         public void HumanoidPrefabs_HaveABody_WithoutACollider(string name, string modelName)
         {
             Transform visual = Prefab(name).transform.Find("Visual");

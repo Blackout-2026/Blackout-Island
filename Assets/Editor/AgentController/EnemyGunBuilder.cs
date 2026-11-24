@@ -11,7 +11,7 @@ namespace Blackout.Editor
 {
     public static class EnemyGunBuilder
     {
-        public static readonly string[] AgentNames = { "SecurityPatrol", "Hunter", "Commander" };
+        public static readonly string[] AgentNames = { "SecurityPatrol", "Hunter" };
         public const string VisualPath = "Assets/Prefabs/Models/EnemyGun_Visual.prefab";
         public const string ModelPath = "Assets/Models/Custom/SM_Weapon_EnemyGun.fbx";
         public const string InstanceName = "SuppliedEnemyGun";
@@ -32,7 +32,7 @@ namespace Blackout.Editor
                 finally { PrefabUtility.UnloadPrefabContents(root); }
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[EG1] Supplied rifle connected to Patrol, Hunter and Commander; Tactical Guard is excluded.");
+            Debug.Log("[EG1] Supplied rifle connected to Patrol and Hunter; Commander keeps its pistol.");
         }
 
         [MenuItem("Blackout/Agents/Restore Tactical Guard Original Gun")]

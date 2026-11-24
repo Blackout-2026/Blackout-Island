@@ -30,14 +30,13 @@ its FBX contents stay unchanged, and its visual builder now keeps that rig type.
 | Damage | `Combat/HumanM@Damage01.fbx` |
 | Death | `Combat/HumanM@Death01.fbx` |
 
-Patrol and Hunter use their FBX importer's Humanoid avatars and rifle clips.
-The existing robot and Commander consist of rigid meshes on named joints.
-`AgentAvatarBuilder` maps those joints to Humanoid bones and builds avatar
-assets from a T-pose. It restores the imported joint transforms first, so
-rebuilding does not accumulate animation poses. Neither model is replaced or
-unpacked. Commander and robot use a sidearm override, which fits a pistol or
-single weapon pod. The robot's old procedural driver remains present but
-disabled in its gameplay prefab; AgentRoot selects an enabled animation driver.
+Patrol, Hunter and the active Army Officer Commander use their FBX importers'
+Humanoid avatars. Patrol and Hunter use rifle clips; Commander uses the sidearm
+override and a separate pistol following the animated right hand. The existing
+robot consists of rigid meshes on named joints. `AgentAvatarBuilder` maps those
+joints to Humanoid bones and builds its avatar from a T-pose. The robot's old
+procedural driver remains present but disabled in its gameplay prefab;
+AgentRoot selects an enabled animation driver.
 
 `AnimatorDriver` reads actual mover speed. The existing blend thresholds remain
 **0 / 1.5 / 4 m/s** for idle/walk/run. Locomotion and Aim share the leg blend

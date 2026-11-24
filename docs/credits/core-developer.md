@@ -21,6 +21,16 @@ CC0 packs will fill, with the sources I checked.
 
 ## Characters
 
+### Army Officer Commander
+
+"Army Officer" by **Nasser** is licensed under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+Source: [Sketchfab](https://sketchfab.com/3d-models/army-officer-1ccd699c3f9c4cb4a015aac924ba3e84) ([short link](https://skfb.ly/6UGLV)).
+The owner supplied `army-officer.zip`; its FBX, four normal maps and four base-colour maps are imported as
+`SM_Char_ArmyOfficer.fbx` and `Assets/Textures/Models/ArmyOfficer/`. The base-colour maps combine the
+archive's diffuse and opacity images, so transparent hair and fabric render correctly. The character is used as the Commander's
+visual with the project's existing pistol and combat animations. The original model remains credited here
+because it is included in the game and repository. Game distributions should include this attribution.
+
 The Security Patrol is a downloaded, skinned soldier (step PS4, `docs/art-pipeline.md` section 18.4). The owner supplied it as the folder
 `american-soldier-rigged` (`source/army-soldier-character.zip` with `army3.fbx`, and six `mott_var01_*` textures). It is a Mixamo-style
 export: the FBX holds a path under `mixamo-mini` and its bones are called `mott_var01:Hips` and so on. The download came **without any

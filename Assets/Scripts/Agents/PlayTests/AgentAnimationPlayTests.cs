@@ -98,7 +98,7 @@ namespace Blackout.Agents.PlayTests
         [UnityTest]
         public IEnumerator ReplacementGun_HidesAcrossLodUpdates_AndRestoresAfterRepeatedDisarms()
         {
-            string[] names = { "SecurityPatrol", "Hunter", "Commander" };
+            string[] names = { "SecurityPatrol", "Hunter" };
             for (int i = 0; i < names.Length; i++)
             {
                 GameObject agent = Spawn(names[i], i);
@@ -130,6 +130,29 @@ namespace Blackout.Agents.PlayTests
                 }
                 Assert.That(agent.GetComponentInChildren<AnimatorDriver>().enabled, Is.True);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator CommanderPistol_DisarmsAndRestoresWithoutLosingItsMuzzle()
+        {
+            GameObject agent = Spawn("Commander", 0);
+            var target = agent.GetComponent<AgentTakedownTarget>();
+            var settings = new SerializedObject(target);
+            Transform gun = (Transform)settings.FindProperty("disarmWeapon").objectReferenceValue;
+            Transform muzzle = (Transform)new SerializedObject(agent.GetComponent<AgentShooter>())
+                .FindProperty("muzzle").objectReferenceValue;
+            Assert.That(gun, Is.Not.Null);
+            Assert.That(muzzle.IsChildOf(gun), Is.True);
+            Transform parent = gun.parent;
+            Assert.That(target.TryReserve(agent), Is.True);
+            target.PrepareFrontal(agent);
+            target.KickWeapon(agent, agent.transform.forward);
+            yield return null;
+            Assert.That(gun.parent, Is.Null);
+            target.Release(agent);
+            yield return null;
+            Assert.That(gun.parent, Is.EqualTo(parent));
+            Assert.That(muzzle.IsChildOf(gun), Is.True);
         }
 
         private GameObject Spawn(string name, int index)

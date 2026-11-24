@@ -32,8 +32,8 @@ Scoped Generic import rules supersede static-prop defaults for these new FBXs.
 See [matching FPS arms](winter-fps-arms.md) for extraction and offline retargeting.
 
 Current animation integration (AN1): all four gameplay agent prefabs use the
-imported Human Soldier Animations package. The Hunter now imports as Humanoid;
-the rigid Commander and robot use generated avatars. This supersedes the older
+imported Human Soldier Animations package. Hunter and the active Army Officer
+Commander import as Humanoid; the rigid robot uses a generated avatar. This supersedes the older
 static/Generic/procedural animation limits below. After rebuilding agent
 visuals, run **Blackout > Agents > Apply Soldier Animations**. See
 [the current animation setup](agent-animations.md).
@@ -854,7 +854,12 @@ checks all of it for the three files.
 
 ### 18.2 The realistic Commander (step C10b)
 
-**Current Commander revision:** the owner supplied a new portrait of a mature
+The current gameplay Commander uses the owner-supplied Army Officer FBX and the
+**Blackout > Agents > Install Army Officer Commander** builder. The older hero
+model and instructions below remain available as an alternative. The new model's
+attribution is in [Core Developer credits](credits/core-developer.md#army-officer-commander).
+
+**Earlier Commander revision:** the owner supplied a portrait of a mature
 field officer in a dark long coat with burgundy shoulder mantle, armor and tall
 boots. `build_commander.py` now exports that silhouette with a broader jaw,
 exposed swept hair and gloves. The earlier white naval officer description in
