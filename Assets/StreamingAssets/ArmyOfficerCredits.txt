@@ -1,0 +1,5 @@
+"Army Officer" (https://skfb.ly/6UGLV) by Nasser is licensed under
+Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/).
+
+The model was adapted for Blackout Island: diffuse and opacity maps were
+combined, Unity materials were created, and a separate animated pistol was added.

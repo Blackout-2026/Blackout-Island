@@ -1,7 +1,50 @@
 # Art pipeline: Blender to Unity 6
 
+## FD1: forest density and additional shapes
+
+`Art/Blender/Scripts/build_forest_variants.py` uses Blender Python and the existing
+`build_ponderosa_forest` helpers. Defaults are the user-supplied folders
+`D:/model/pine-forest-at-sunset` and `D:/model/small-trees`; both are read-only.
+Run Blender 5.2 with `-b --factory-startup --python-exit-code 1 -P` and that script.
+It exports only seven new FBXs into `Assets/Models/Custom/SM_Forest_*`:
+SmallTreeA/B/C, BushWide/Upright, RockWide/Round. No original model is overwritten.
+
+The FBX has three trunk/leaf pairs, not three animation rigs. Its original texture
+links point at an unavailable author desktop. The converter explicitly resolves the
+supplied leaf albedo/opacity and bark albedo/normal, keeping UVs and separate material
+slots. Leaves are saved as a new **RGBA** image before resizing; writing alpha into
+the original JPEG-backed image would silently save RGB. Unity uses URP alpha clipping,
+two-sided foliage, instancing and alpha-coverage mips. Three 1024px PNGs live under
+`Assets/Textures/Models/T_SmallTree_*`. Existing forest needle/rock materials are reused.
+
+Trees use deterministic branch reduction/card thinning into <=2350/680/190-triangle
+LODs, at heights 6.2/3.8/7.4 m before reduction. Rocks have <=650/220/70-triangle LODs;
+bushes have one 228/136-triangle detail mesh. **Blackout > World > Add Dense Varied
+Forest** builds the seven prefabs in `Assets/Environment/Vegetation`, appends the
+finite density plan and rebakes navigation when collidable instances are added.
+It preserves existing terrain and hand-authored vegetation. Use **Inspect Forest
+Density** for counts/budgets and five graphics captures in system Temp `blackout-FD1`.
+See [placement, counts and limits](level-layout.md#denser-varied-forest-fd1) and
+[source credits](credits/world-builder.md#additional-forest-shapes-fd1).
+
+WA1 adds rigged FPS arm derivatives of the existing cinematic Winter Soldier.
+Scoped Generic import rules supersede static-prop defaults for these new FBXs.
+See [matching FPS arms](winter-fps-arms.md) for extraction and offline retargeting.
+
+Current animation integration (AN1): all four gameplay agent prefabs use the
+imported Human Soldier Animations package. Hunter and the active Army Officer
+Commander import as Humanoid; the rigid robot uses a generated avatar. This supersedes the older
+static/Generic/procedural animation limits below. After rebuilding agent
+visuals, run **Blackout > Agents > Apply Soldier Animations**. See
+[the current animation setup](agent-animations.md).
+
 Owner: Core Developer. Applies to every custom model in the game (generator, security robot, props,
 weapon viewmodels). Unity 6000.3.25f1, URP, Blender 4.2 LTS or newer (menu names below are from 4.x).
+
+B1 imports the supplied Gislinge boat as a credited third-party environment prop.
+The original FBX/UVs are preserved; converted 2048px maps use this pipeline's
+URP channel conventions. See [boat integration and rebuild notes](gislinge-boat.md)
+and [source attribution](credits/world-builder.md#gislinge-boat-b1).
 
 Reference for sizes and parts: `docs/reference/core-developer.md`. Import rules in this document are
 enforced by `Assets/Editor/CoreDeveloper` (section 9), so a model that follows the checklist in section 8
@@ -136,7 +179,10 @@ is 1.5 x target and the importer prints a warning above it. Targets start from t
 | Generator G-1 | `SM_Generator` | 8,840 | **10,000** | 15,000 | 6 |
 | Security robot | `SM_SecurityRobot` | 3,216 | **5,000** | 7,500 | 4 |
 | Humanoid (if modelled) | `SM_Char_*` | 2,600 to 3,100 | 3,000 | 4,500 | 3 |
-| Weapon viewmodel with hands | `SM_Weapon_*` | 530 to 1,700 | 6,000 | 9,000 | 3 |
+| Hero humanoid (the earlier rigid Patrol operator, step PS3) | `SM_Char_Patrol` | 11,582 | **12,000** | 18,000 | 3 |
+| Hero humanoid (the Patrol now: a downloaded skinned soldier, step PS4) | `SM_Char_PatrolSoldier` | 9,710 | **10,000** | 15,000 | 7 |
+| Hunter (a downloaded skinned model, step HV1) | `SM_Char_HunterL4D` | 5,046 | **6,000** | 9,000 | 2 |
+| Weapon viewmodel with hands (the downloaded arms, step VM1) | `SM_Weapon_*` | 6,436 to 9,000 | **10,000** | 15,000 | 3 |
 | Prop, small (< 0.5 m): mug, flask, medkit, cure case | `SM_Prop_*` | | 1,200 | 1,800 | 4 |
 | Prop, medium (0.5 to 1.5 m): chair, monitor, barrel, crate, locker | `SM_Prop_*` | | 2,000 | 3,000 | 4 |
 | Prop, large (> 1.5 m): desk, lab bench, fuel tank, chamber | `SM_Prop_*` | | 3,000 | 4,500 | 4 |
@@ -594,6 +640,12 @@ local position to the held position above (the constants are in `WeaponDefinitio
 `MuzzleFlash` for a few frames and add the point light yourself. The flash material is `M_Weapon_Flash`, a stand-in for the
 prototype's additive flash texture.
 
+**The downloaded weapons and arms (step VM1).** The SMG is now the downloaded MP9, the knife the downloaded M9 and the hands the downloaded
+first-person arms, all in the same three files, so the weapon prefabs, the muzzle point and the Player prefab did not change. See
+`docs/viewmodels.md` for how they are built, held and animated. The viewmodel budget is now 10,000 triangles (hard maximum 15,000):
+the SMG is 9,000, the rifle 8,568 and the knife 6,436, of which each arm is about 2,400. The materials are `M_Weapon_Smg` or
+`M_Weapon_Knife` or `M_Weapon_Sniper` for the weapon and `M_Weapon_Hands` for both arms (2 of the 3 slots).
+
 ### 14.7 Props palette
 
 **Window > Blackout > Props Palette** lists the catalog (props, pickups, weapons, both hero visuals, the 6 CC0 slots and the
@@ -768,28 +820,31 @@ parkerised grey receiver. The stand-alone `SM_Weapon_SniperHeavy` of section 17 
 
 `SM_Char_Patrol`, `SM_Char_Hunter` and `SM_Char_Commander` replace the blue capsules that stand in for the Security Patrol (x3 in the
 level), the Hunter (x2) and the Commander (x1). All three share one body and one skeleton (`docs/reference/core-developer.md` section 4)
-and differ in clothes, head gear and weapon. The look comes from three reference photos the owner supplied (a police-style tactical
-operator, a camouflaged field soldier, a white-uniformed officer); the shapes are my own, no one's likeness, and there is no text or insignia.
+and differ in clothes, head gear and weapon. The look comes from reference photos the owner supplied (a camouflaged field soldier, a desert-tan tactical operator for the Patrol in step PS2, a white-uniformed officer; the Patrol was first a police-style operator and then, in step PS1, a woodland-camouflage soldier); the shapes are my own, no one's likeness, and there is no text or insignia.
 
 | | Security Patrol | Hunter | Commander |
 | --- | --- | --- | --- |
-| Look | navy uniform, black plate-carrier vest with front plate, 3 pouches, radio, shoulder straps, belt pouches, cargo pockets, helmet with side rails, night-vision mount, dark visor, ear cups, knee and elbow pads, holstered pistol | field soldier like the owner's photo: tan cap with a patch, a long human head under a black mask and hood with a nose shape under the fabric and only the eyes showing: a skin patch with real eyes (white, iris, pupil, lid line, brow) painted from four colour swatches of `T_CharHunterSkin_BaseColor` (`make_hunter_skin.py`), so skin and eyes share the one `M_Char_Hunter_Skin` material, very dark forest camouflage jacket and trousers (texture `T_CharHunter_BaseColor`, made by `make_hunter_camo.py`, one tile per metre) with about 70 hanging leaf and cloth strips (fixed seed; shoulders, arms, waist, thighs, cap, bag and rifle), black chest rig with 3 pouches, a camouflage rucksack with a rolled mat and side pockets (so the side view has depth), black gloves with fingers, wrist watch, cargo pockets, boots, a side bag with a strap; the arms are modelled bent so he holds the rifle in both hands | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
-| Weapon | assault rifle with an optic, a weapon light and sling straps | AK-style rifle with camouflage furniture and a curved magazine, 0.12 m right of the socket, held in both hands | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
-| Muzzle | `MuzzlePoint` 0.74 m ahead of the Gun socket | 0.74 m | 0.22 m |
-| Triangles (target 3,000; the Commander 14,000) | 2,548 | 2,819 | 13,038 |
-| Materials | `M_Char_Patrol_Cloth`, `_Gear`, `_Metal` | `M_Char_Hunter_Camo`, `_Skin`, `_Gear` | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
+| Look | the downloaded soldier of step PS4 (section 18.4): a skinned Mixamo-style character with photographic textures: a woodland-camouflage jacket and trousers, a vest with pouches and straps, laced boots, a cap and a real face (`T_CharPatrolSoldier*`); he holds the rifle at the low ready in both hands (a pose baked into the prefab). The PS3 operator (section 18.3) is still in the project, unused | the downloaded Left 4 Dead Hunter of step HV1 (section 18.5): a skinned Valve-biped model with a photographic 2048 texture (a grey hoodie with a hood over a pale face, bandaged forearms, knee pads, dark boots), holding a scoped rifle in both hands at the low ready (a pose baked into the prefab). The rigid camouflage Hunter (below, section 18.1) is still in the project, unused | a realistic female naval officer in white service dress, from the owner's second reference photo (section 18.2): sculpted face with painted eyes, brows and lips, layered short hair, open-collar short-sleeved shirt, shoulder boards, ribbons, name tag, white belt with a gold buckle, white trousers, black shoes, a watch, the white cap worn on her head, aiming a pistol with both hands in front of the chest |
+| Weapon | the same SCAR-style rifle as before (tan receiver, handguard, pistol grip and folding stock, black rails with teeth, barrel with flash hider, flip-up sights, curved magazine), now its own file `SM_Char_PatrolRifle.fbx` nested under the soldier's right hand | the Patrol's SCAR-style rifle with a scope on two rings, its own file `SM_Char_HunterRifle.fbx` (746 triangles) nested under the right hand | a compact pistol held in both hands (slide, tilted grip, trigger guard, sights), `MuzzlePoint` at its muzzle |
+| Muzzle | `MuzzlePoint` 0.74 m ahead of the rifle's `Gun` (the flash hider ends 0.745 m ahead) | 0.74 m | 0.22 m |
+| Triangles (target 3,000; the Patrol 10,000; the Commander 14,000) | 9,710 for the soldier and 542 for the rifle (1.86 m tall) | 5,046 for the Hunter and 746 for his rifle (1.83 m tall) | 13,038 |
+| Materials | `M_Char_PatrolSoldier_Body`, `_Face`, `_Legs`, `_Hands`, `_Hair` (all textured, URP Lit) for the soldier and `M_Char_Patrol_Kit` for the rifle | `M_Char_HunterL4D` (one URP Lit material, `T_CharHunterL4D_BaseColor`) for the model and `M_Char_Patrol_Kit` for the rifle | `M_Char_Commander_Uniform`, `_Skin`, `_Hair` (all textured) |
 
 ### 18.1 How they are built (scripts in `Art/Blender/Scripts`)
 
 | Order | Script | Does |
 | --- | --- | --- |
-| 1 | `build_humans.py` (uses `build_robot.py`'s kit) | One shared body (hips, torso, head with jaw, nose and ears, tapered limbs, hands, boots) plus the costume and weapon of each character. Merges the parts, removes faces hidden inside their joint, triangulates, unwraps UV0, splits back into 18 joint objects under one Empty root and exports `Assets/Models/Custom/SM_Char_<Name>.fbx` and `Art/Blender/SM_Char_<Name>.blend`. `-- Hunter` builds one character |
+| 1 | `build_humans.py` (uses `build_robot.py`'s kit) | One shared body (hips, torso, head with jaw, nose and ears, tapered limbs, hands, boots) plus the costume and weapon of each character. Merges the parts, removes faces hidden inside their joint, triangulates, unwraps UV0, splits back into 18 joint objects under one Empty root and exports `Assets/Models/Custom/SM_Char_<Name>.fbx` and `Art/Blender/SM_Char_<Name>.blend`. `-- Hunter` builds one character; `-- Patrol` and `-- Commander` hand over to their own scripts (`build_operator.py`, `build_commander.py`) |
 | 2 | `preview_humans.py` | Review renders (optional) |
 | 3 | Unity: **Blackout > Art > Use Character Models In Agents** | Builds the 9 flat materials and the 3 `Char_*_Visual.prefab` files, then replaces the capsule in the Agent Controller's SecurityPatrol, Hunter and Commander prefabs with the matching model and points `AgentShooter.muzzle` at its `MuzzlePoint` |
 
 ```
+python Art/Blender/Scripts/make_patrol_cloth.py
+python Art/Blender/Scripts/make_patrol_textures.py
 "D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_humans.py
 ```
+
+`make_patrol_cloth.py` and `make_patrol_textures.py` need Python with numpy and Pillow (like `make_hunter_camo.py`) and give the same pixels on every run. On the owner's machine Blender is at `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`.
 
 **Rig:** the robot's method (section 16.2): rigid parts on pivots, every joint at rotation 0, rotation about the joint's local X, one
 Empty root cancelling the exporter's axis rotation. Joints (heights in metres): `Hips` 0.98 (root), `Spine` 1.08, `Chest` 1.28, `Neck` 1.55,
@@ -799,13 +854,31 @@ checks all of it for the three files.
 
 ### 18.2 The realistic Commander (step C10b)
 
-The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service dress, so he is no longer
-built by `build_humans.py` (rigid boxes, flat colours). He has his own pipeline; the other two humans are untouched. The face, hair and insignia are
-generic: no one's likeness, and the name tag says COMMANDER, not a name.
+The current gameplay Commander uses the owner-supplied Army Officer FBX and the
+**Blackout > Agents > Install Army Officer Commander** builder. The older hero
+model and instructions below remain available as an alternative. The new model's
+attribution is in [Core Developer credits](credits/core-developer.md#army-officer-commander).
+
+**Earlier Commander revision:** the owner supplied a portrait of a mature
+field officer in a dark long coat with burgundy shoulder mantle, armor and tall
+boots. `build_commander.py` now exports that silhouette with a broader jaw,
+exposed swept hair and gloves. The earlier white naval officer description in
+the historical table above refers to the replaced asset. The game model is a
+low-poly approximation of the new portrait, rather than an exact likeness.
+
+**Supplied Commander model:** `Art/Blender/Commander_Hero_Source.blend` is the
+user's rigged officer with pistol and five authored actions. Run
+`Art/Blender/Scripts/export_commander_hero.py` in Blender to produce
+`SM_Char_CommanderHero.fbx` and the face/hair textures. In Unity choose
+**Blackout > Agents > Install Supplied Commander Model**. This creates
+`Char_CommanderHero_Visual.prefab`, URP materials and `Commander_Hero.controller`,
+and connects them to `Commander.prefab`. `ModelImportRules` imports animation for
+this FBX only. The older procedural Commander above remains a separate asset.
 
 | Script | Does |
 | --- | --- |
 | `commander_atlas.py` | The texture layout shared by Blender and the painter (swatches, decals, the face's planar projection), plus the head scale. |
+| `recolor_commander_textures.py` | Run once after the original Pillow painter: recolors the existing PNG atlases to charcoal, burgundy and dark hair, and removes the old pink lip paint. Uses Blender and NumPy. |
 | `make_commander_textures.py` (Python + Pillow, like `make_skin_texture.py`) | Paints `T_CharCommanderUniform_BaseColor` and `_MetalSmooth` (1024: white cloth, gold with metallic, black leather, shoulder boards with a star and three stripes, a 3 x 3 ribbon rack, name tag, warfare pin, cap visor with gold leaves, cap device), `T_CharCommanderSkin_BaseColor` (1024: the face with eyes, brows, lashes, lips, freckles, plus a freckled tile for arms and hands) and `T_CharCommanderHair_BaseColor` (512, RGBA: an opaque strand texture for the cap and a lock card with alpha). Fixed seeds. |
 | `build_commander.py` | The framework (sweeps, shells, decals, per-joint split, custom normals, FBX export) and the body: torso with a bust, tucked shirt, belt, holster, trousers with a pressed crease, shoes, sleeves, bent arms, hands with fingers, watch. `commander_head.py` builds the head, and `commander_uniform.py` the collar, V-neck, buttons, boards, ribbons, name tag, pocket and cap. |
 | `preview_humans.py` | Review renders; new views `face`, `face34`, `profile`, `upper`. |
@@ -813,7 +886,8 @@ generic: no one's likeness, and the name tag says COMMANDER, not a name.
 
 ```
 python Art/Blender/Scripts/make_commander_textures.py
-"D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
+"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup -P Art/Blender/Scripts/recolor_commander_textures.py
+"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_commander.py
 ```
 
 How it differs from the rigid-box method: every part is a swept tube (torso, legs, sleeves, fingers), a thin shell (collar, pocket, cap visor) or a flat plate (boards,
@@ -826,7 +900,7 @@ the belt and the cap worn on the head and both hands on a pistol, but the joints
 same joints (a rotated forearm moves its hand, the pistol stays on the Gun socket).
 
 **Budget:** the Commander is the one hero character, so `ModelBudget` gives `SM_Char_Commander` 14,000 triangles (hard maximum 21,000) and 3
-materials; Patrol and Hunter keep 3,000. Measured: 13,038 triangles, 1.884 m tall (cap on), 0.49 m wide, 0.57 m deep with the pistol. **What the exported FBX was
+materials; Patrol and Hunter keep 3,000. Current export: 12,816 triangles, 1.885 m tall, 0.580 m wide, 0.578 m deep with the pistol. **What the exported FBX was
 checked against:** it was re-imported into Blender and all 18 joints were at the table's heights with the table's parents, every mesh has UV0 and
 custom normals, and the materials are the three names above. It has NOT been imported into Unity or run through `CharacterFbxTests` yet (the Editor was open).
 
@@ -836,9 +910,100 @@ animator must rotate both together; the hair under the cap is trimmed to what sh
 
 **Not done, on purpose:** the models have no skin and no clips. The Agent Controller's humanoids are meant to use an Animator with free
 humanoid animations; these rigid-part models cannot play those, so the humans currently stand upright and slide along their path
-until a procedural humanoid animator (like `ProceduralRobotAnimator`, driving these joint names) is added. Materials of the Patrol are flat
-colours; the Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
+until a procedural humanoid animator (like `ProceduralRobotAnimator`, driving these joint names) is added. The Patrol operator (steps PS1 to PS3) replaced the navy
+operator and is the model nested in `SecurityPatrol.prefab` (the capsule was still there until then); it is the second hero (section 18.3), with a painted atlas
+and a weathered cloth texture. The Hunter's camouflage uniform has a seamless camouflage texture, because camouflage is the point of his look and flat colour cannot show it; the Commander is the textured hero (section 18.2). The rest have no baked textures, because those characters are seen from 10 to 30 m. The Hunter and Patrol brains are still the other
 owners' work: the agents keep the placeholder walker until then.
+
+### 18.3 The hero Patrol operator (step PS3), replaced by the downloaded soldier in step PS4
+
+*Since step PS4 the Security Patrol uses the downloaded soldier of section 18.4. The operator below is still in the project (`SM_Char_Patrol.fbx`, `M_Char_Patrol_Cloth`, built by `build_operator.py`), unused; only its rifle and `M_Char_Patrol_Kit` live on.*
+
+The owner's reference photo (a desert-tan tactical operator with a beige helmet, balaclava, webbing vest and laced boots) showed that the rigid boxes of
+`build_humans.py` look like building blocks next to it, so the Patrol got the Commander's treatment (section 18.2) instead of more boxes. Same rig and joints,
+new meshes.
+
+| Script | Does |
+| --- | --- |
+| `patrol_atlas.py` | The atlas layout shared by Blender and the painter: nine swatches, the decal rectangles and the face's planar projection. |
+| `make_patrol_textures.py` (Python + Pillow, using the Commander painter's `Atlas` and `Canvas`) | Paints `T_CharPatrolKit_BaseColor` and `_MetalSmooth` (1024): swatches, vest webbing, magazine pouch, radio, velcro patch, zip, picatinny teeth, holster, boot laces and the balaclava face with painted eyes. Fixed seeds, no insignia. |
+| `make_patrol_cloth.py` | The weathered khaki tile `T_CharPatrol_BaseColor` and its normal map. |
+| `build_operator.py` | The geometry, with `build_commander.py` as its engine: sweeps for torso, legs, arms, hands, head and helmet; plates for pouches and rails; decals for the painted detail; custom normals cut per joint. `build_humans.py -- Patrol` calls it. |
+| Unity: **Blackout > Art > Use Character Models In Agents** | Builds `M_Char_Patrol_Cloth` and `_Kit`, retires the older Patrol materials through `CharacterMaterialBuilder`'s obsolete list (`AssetDatabase.DeleteAsset`), rebuilds `Char_Patrol_Visual.prefab`. |
+
+`build_commander.py` gained three backward-compatible hooks for this: a UV maker with `per_face = True` is called per corner with the face normal (a box projection for the
+cloth), `build_scene` takes a root name, a material list and a muzzle offset, and `make_material` has a neutral fallback colour. The Commander's defaults are unchanged.
+
+**Budget:** `ModelBudget` gives `SM_Char_Patrol` 12,000 triangles (hard maximum 18,000) and 3 materials, like the Commander's hero budget; the Hunter keeps 3,000.
+Measured: 11,582 triangles (heaviest joints: Head 1,828, Chest 1,700, Hips 944, hands 608 each), 1.91 m tall, 0.59 m wide, 2 materials. The flash hider ends 0.745 m ahead of the
+Gun socket and `MuzzlePoint` is 0.74 m ahead, so the muzzle contract and `CharacterFbxTests` hold.
+
+**Limits:** it is a low-poly game character, not a scan: the face is painted on a simple head, the hands are blocky fingers, the clothing is smooth tubes with creases, and the model
+has no animation (rigid parts, the humans still slide along their path). The decals are painted generic gear, not a copy of any product. The helmet rails are boxes with painted teeth.
+
+### 18.4 The downloaded Patrol soldier (step PS4)
+
+The owner supplied a finished model in the folder `american-soldier-rigged` (`army-soldier-character.zip`: `army3.fbx` and six `mott_var01_*` jpeg textures) and asked for it as the
+Security Patrol. It is a photographic, skinned character, much more detailed than anything built here, so it replaces the PS3 operator. Its licence and author are not known (the
+download had no licence text): see `docs/credits/core-developer.md`, whose row must be filled before the repository is published.
+
+| What | Measured |
+| --- | --- |
+| Skeleton | Mixamo names (`mott_var01:Hips`, `:RightArm`, `:RightHandIndex3` and so on), 65 bones including all fingers, standing in a T-pose with the arms sloping 50 degrees down |
+| Mesh | one skinned mesh, 9,710 triangles, 1.86 m tall, 7 material slots (`lambert1` to `lambert7`) |
+| Textures | body (jacket, vest, pouches) with a normal map, legs (trousers, boots, caps), hands, hair, and `eyerefmask`, which is really the whole face |
+| Orientation | after import it faces -Z, so the visual prefab turns the `Model` 180 degrees about Y; agents face +Z |
+
+| Step | What does it |
+| --- | --- |
+| Import | The FBX is copied unchanged to `Assets/Models/Custom/SM_Char_PatrolSoldier.fbx`, the textures to `Assets/Textures/Models/T_CharPatrolSoldier<Part>_BaseColor.jpg` (and `_Normal`). `PatrolSoldierBuilder.EnsureImportSettings` imports the FBX as a **Humanoid** (a rig type of None would drop the skin weights and make a static mesh), so a valid avatar exists for Mixamo clips later |
+| Rifle | `build_patrol_rifle.py` exports the rifle of `build_operator.py` by itself as `SM_Char_PatrolRifle.fbx` (542 triangles, 1.063 m): an object called `Gun` with the Empty `MuzzlePoint` 0.74 m ahead |
+| Materials | `CharacterMaterialBuilder` builds five URP Lit materials from the textures; `PatrolSoldierBuilder.SlotMaterials` maps the seven slot names to them (the eyes share the face, the cap shares the trousers' atlas) |
+| Pose | `PatrolSoldierPose` poses the arms to hold the rifle at the low ready: the rifle is placed across the chest, each arm is solved with analytic two-bone IK to a wrist that puts the palm on its grip, the hand is turned to face the grip and every finger is curled round it. The result is stored in the bone Transforms of the prefab; the FBX and its T-pose bind pose are untouched |
+| Prefab | `PatrolSoldierBuilder` rebuilds `Char_Patrol_Visual.prefab` every time (`Model`, with the rifle under the right hand), so the pose is deterministic. `SecurityPatrol.prefab` already nests that prefab, so it did not change structure; **Blackout > Art > Use Character Models In Agents** re-points the shooter's muzzle to the new `MuzzlePoint` |
+| Review | **Blackout > Art > Render Patrol Preview** (`CharacterPreviewRenderer`) renders front, three-quarter, side, back, head and rifle pictures of any visual prefab in Unity, outside the repository (needs a graphics device) |
+
+**Why the pose is computed, not keyed.** Everything is worked out in a character frame taken from the skeleton (toes give forward, up from the model, right follows), so it does not depend on how the importer
+turned the axes. The hold (butt 1.34 m up and 0.08 m right, 10 degrees to the character's left, 6 degrees muzzle-down) came from a reach search over the measured arm lengths (upper arm 0.27 m, forearm 0.28 m)
+that keeps both elbows bent, about 100 degrees on the right and 145 on the left.
+
+**Checks.** `PatrolSoldierTests` (EditMode): the FBX is a skinned, valid-Humanoid skeleton of about 1.87 m with its feet on the floor and inside its budget; the rifle has `Gun` and `MuzzlePoint`; the visual faces +Z, wears
+five textured materials on all seven slots, carries the rifle on the right hand with the muzzle 0.74 m ahead of `Gun` and in front of the chest; each palm is within a few centimetres of its grip with a bent elbow;
+the fingers curl towards the palm; two builds give the same pose; and the `SecurityPatrol` prefab has no capsule and shoots from the rifle's muzzle.
+
+**Limits.** There is still no animation: the soldier stands in his rifle-ready pose and slides along his path like the other humans. The Agent Controller's `AnimatorDriver` and `Agent_Humanoid.controller` need clips named `Idle`,
+`Walk`, `Run`, `Aim_Idle`, `HitReact` and `Death` in `Assets/Animations/Humanoid`; the Humanoid avatar is ready for Mixamo versions of them, and a controller would then replace the baked pose. The rifle is the plain box model from
+PS3, so it looks simpler than the soldier.
+
+### 18.5 The downloaded Hunter (step HV1)
+
+The owner supplied the Hunter of Left 4 Dead (`D:\model\hunter-from-left-4-dead`: `hunter.rar` with `Hunter.FBX` and TGA textures) and asked for it as the game's Hunter. **It is Valve's copyrighted character;
+see `docs/credits/core-developer.md` before this goes anywhere public.** It is done the same way as the Patrol's soldier (section 18.4); the shared parts were made general for it.
+
+| What | Measured |
+| --- | --- |
+| File | an ASCII FBX 6.1 from 3ds Max (Blender cannot import ASCII FBX, Unity can; it was inspected as text and in Unity), one skinned mesh `SMDImport`, 5,046 triangles (15,138 unindexed vertices), 1 material, one 2048 x 2048 32-bit TGA |
+| Skeleton | Valve biped, 53 bones: `ValveBiped.Bip01_Pelvis`, `_Spine` to `_Spine4`, `_L_UpperArm`, `_L_Forearm`, `_L_Hand`, three-bone fingers `_L_Finger0` (the thumb) to `_Finger4`, `_L_Thigh`, `_L_Calf`, `_L_Foot`, `_L_Toe0` |
+| Size and pose | the importer gives 1.83 m tall (Source's 72 inches), no scale fix needed, in a relaxed A-pose with the arms 30 degrees out; it faces -Z once imported, so the prefab turns the `Model` 180 degrees about Y |
+
+| Step | What does it |
+| --- | --- |
+| Import | `Hunter.FBX` is copied unchanged to `Assets/Models/Custom/SM_Char_HunterL4D.fbx` and `hunter_01.tga` to `T_CharHunterL4D_BaseColor.tga`. It imports with a **Generic** rig: no humanoid clips are planned for it, and a rig type of None would drop the skin weights |
+| Material | `M_Char_HunterL4D` (URP Lit) from the texture, assigned to the one slot `Material #21` |
+| Rifle | `build_patrol_rifle.py -- Hunter` exports the Patrol's rifle with a scope (two rings, a tube, an objective, an eyepiece and two turrets) as `SM_Char_HunterRifle.fbx`, 746 triangles, `Gun` and `MuzzlePoint` 0.74 m ahead. The Hunter of this game shoots, so the shooter needs a muzzle |
+| Pose | `HumanoidRiflePose` (the maths of step PS4, now general) with `ValveBones` (the Valve names, three-bone fingers, palms turned in at rest) and the same low-ready hold |
+| Prefab | `SkinnedHumanoidBuilder` rebuilds `Char_Hunter_Visual.prefab`, which `Hunter.prefab` already nests, and **Blackout > Art > Use Character Models In Agents** re-points the shooter's muzzle |
+
+**What was made general.** `HumanoidBones` (a bone-name map: `MixamoBones` for the soldier, `ValveBones` for the Hunter), `HumanoidRiflePose` and `RifleHold` (the pose maths and the hold), `SkinnedHumanoidSpec` and
+`SkinnedHumanoidBuilder` (the files, materials and prefab of one character) replace the Patrol-only code; `PatrolSoldierBuilder` and `HunterModelBuilder` are now just each character's spec. `CharacterEntry` has a `Skinned`
+flag and a file name, `ModelBudget` knows both models, and the rigid-joint checks of `CharacterFbxTests` now cover only the Commander.
+
+**Checks.** `SkinnedHumanoidTestsBase` runs the same EditMode tests for both characters (`PatrolSoldierTests`, `HunterModelTests`): a skinned skeleton of about 1.87 m with its feet on the floor, inside its budget with the rig type it needs;
+the rifle's `Gun` and `MuzzlePoint`; a visual that faces +Z, wears its textured materials, carries the rifle on the right hand with the muzzle in front of the chest, holds it with both palms on the grips with bent elbows, curls its
+fingers and builds the same pose every time; and an agent prefab that shows it and shoots from the rifle's muzzle.
+
+**Limits.** No animation: he stands in the rifle-ready pose and slides along his path, and the Left 4 Dead clips (leaping, pouncing) are not part of the download. The model is a zombie in a hoodie with a gun, not the camouflaged sniper
+the design document describes, and its eyes are dark sockets because the game drew them with a shader. The detail texture of the game (`hunter_01_detail.tga`) is not used. The rifle is the plain box model from PS3.
 
 ## 19. Realistic trees (step C11)
 
@@ -879,8 +1044,8 @@ python Art/Blender/Scripts/make_tree_textures.py
 "D:\Blender\blender.exe" -b --factory-startup -P Art/Blender/Scripts/build_trees.py
 ```
 
-**Limits, honestly:** these are card-and-mesh trees, not SpeedTree-quality, and there is no wind sway. Bushes, grass and rocks are still the
-World Builder's placeholders. `TreeFbxTests` checks the heights, the three falling LODs, the UVs and the material slots. The World Builder's
+**Limits, honestly:** these are card-and-mesh trees, not SpeedTree-quality, and there is no wind sway. Bushes, grass and rocks were still the
+World Builder's placeholders (replaced in 19.5). `TreeFbxTests` checks the heights, the three falling LODs, the UVs and the material slots. The World Builder's
 visible-triangle budget (250,000) should be rechecked in the report that Paint Terrain And Forest prints.
 
 ### 19.2 Eight shapes, mixed over the island
@@ -941,6 +1106,35 @@ Each main pine branch now also carries two side branchlets (one each side, 52 de
 branch is a three-dimensional spray and not a flat feather. The needle texture has 8 to 12 needles per fascicle (it was 6 to 9) and lighter new
 growth toward the twig tips. Pine LOD0 is now 2,864 / PineB 4,140 / PineC 2,176 / PineD 1,696 triangles (the test limit for a tree seen up
 close is 5,000); LOD1 and LOD2 are unchanged. The sea almond's bare branch now ends inside its leaves.
+
+### 19.5 The forest from a downloaded ponderosa stand (step F1)
+
+The pines, rocks, bush and grass of the forest are replaced by the models of a downloaded scene (`ponderosa_stand_sketchfab.glb`: three Florasynth
+trees, 64 ponderosa seedlings, six rocks and grass cards). Unity 6 cannot import a `.glb` and the project has no glTFast, so
+`Art/Blender/Scripts/build_ponderosa_forest.py` converts it in background Blender (the scene is not copied into the repository; the script takes
+the path as an argument) into the layout of this section. Nothing in the World Builder's scatter, terrain painting or NavMesh is changed.
+
+| File | From the stand | Result |
+| --- | --- | --- |
+| `SM_Tree_Pine`, `PineB` (overwritten in place) | the two Florasynth trees' `_far` meshes | 10.8 m and 12.9 m, LOD0 2,700 triangles |
+| `SM_Tree_PineC`, `PineD` (overwritten in place) | seedlings `.001` and `.062` | 9.1 m (3,052) and 5.4 m (2,416) |
+| `SM_Forest_Rock`, `SM_Forest_RockSmall` | two icosphere rocks | 900 / 320 / 90 and 700 / 260 / 79 triangles, pivot at the centre |
+| `SM_Forest_Bush` | the needle sprays of seedling `.061`, one slot | 560 triangles, 1 m tall |
+| `SM_Forest_Grass` | three crossed cards | 6 triangles, 1.0 x 0.75 m |
+
+- **LODs.** The needle sprays are loose cards, which Decimate cannot reduce without wrecking them, so a lower LOD keeps an evenly spread share of
+  the cards and enlarges each one (up to 1.35, 1.9 and 3.0 times) to keep the crown's volume. The branches are about 130 loose tubes: LOD1 and LOD2 keep
+  the tallest tubes (the trunk first) and Decimate trims the rest. LOD0 is about 2,700 triangles, the average of the pines it replaces.
+- **Textures** (1024, 512 for the grass, in `Assets/Textures/Models`): `T_PonderosaBark_BaseColor/_Normal`, `T_PonderosaNeedles_BaseColor`,
+  `T_ForestGrass_BaseColor`, `T_ForestRock_BaseColor`. `TreeEntry` now points the four pines at the ponderosa textures; the per-variant tints
+  of 19.2 still multiply them. The material and prefab tools are unchanged, so run **Blackout > Art > Build Realistic Trees** after re-exporting.
+- **Rocks, bush, grass.** **Blackout > World > Apply Forest Models** builds `Rock`, `RockSmall`, `Bush` and `Grass.prefab` in
+  `Assets/Environment/Vegetation` (the names `VegetationLibrary` prefers over its placeholders) and swaps the terrain's prototypes in place, so no
+  tree, rock or tuft moves.
+- **Limits, honestly:** the pines are repeated three big shapes (the stand's trees) and one young tree, not a varied forest; the bush has no stem
+  (only needle sprays); a terrain detail draws one material, so it cannot have bark. The grass texture hangs from its top edge in the file, so the
+  cards have the root at v = 1. No wind. The look in the dark scene was not judged: the bark is much lighter than the old bark, so check it in
+  Bootstrap and tune `BarkTint` in `TreePrefabBuilder` if needed. Author and licence of the download are unconfirmed (`docs/credits/world-builder.md`).
 
 ## 20. Footbridge dock (step C12)
 

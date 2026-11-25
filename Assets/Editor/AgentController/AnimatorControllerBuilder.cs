@@ -178,7 +178,9 @@ namespace Blackout.Editor
                 return fromFbx;
             }
 
-            return AssetDatabase.LoadAssetAtPath<AnimationClip>(ClipFolder + clipName + ".anim");
+            var local = AssetDatabase.LoadAssetAtPath<AnimationClip>(ClipFolder + clipName + ".anim");
+            if (local != null) return local;
+            return SoldierAnimationBuilder.ClipFor(clipName);
         }
 
         private static void EnsureTransition(AnimatorState from, AnimatorState to, string paramName, AnimatorConditionMode mode)

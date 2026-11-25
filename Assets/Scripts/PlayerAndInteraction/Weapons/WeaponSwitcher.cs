@@ -38,6 +38,12 @@ namespace Blackout.Weapons
         public float Lowered { get; private set; }
         public bool IsReady => State == SwitchState.Ready;
 
+        public WeaponSwitcher CaptureCheckpoint() => new WeaponSwitcher(count, ActiveIndex)
+        {
+            PendingIndex = PendingIndex, State = State, Lowered = Lowered,
+            lowerTime = lowerTime, raiseTime = raiseTime
+        };
+
         /// <summary>
         /// Starts switching to a weapon. Ignored for the active weapon or an invalid index. A request while
         /// lowering replaces the pending weapon; a request while raising lowers again from the current pose.

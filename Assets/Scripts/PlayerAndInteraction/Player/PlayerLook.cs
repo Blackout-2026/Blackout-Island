@@ -20,11 +20,14 @@ namespace Blackout.Player
         [SerializeField] private Transform cameraPivot;
         [SerializeField] private Camera playerCamera;
 
+        private PlayerMotor motor;
         private float pitch;
         private float recoilPitch;
         private float recoilYaw;
 
         public float Pitch => pitch;
+        /// <summary>Transient scope factor, separate from the player's chosen sensitivity.</summary>
+        public float ScopeSensitivityMultiplier { get; set; } = 1f;
 
         private void Awake()
         {
@@ -40,6 +43,7 @@ namespace Blackout.Player
                 playerCamera.fieldOfView = settings.fieldOfView;
             }
 
+            motor = GetComponent<PlayerMotor>();
             cameraPivot.localPosition = new Vector3(0f, settings.EyeHeight, 0f);
         }
 
@@ -55,6 +59,12 @@ namespace Blackout.Player
 
         private void Update()
         {
+            if (motor != null)
+            {
+                // The eyes sink when crouching or lying prone and rise again (the motor glides the height).
+                cameraPivot.localPosition = new Vector3(0f, motor.EyeHeight, 0f);
+            }
+
             if (!input.isActiveAndEnabled)
             {
                 return;
@@ -75,7 +85,7 @@ namespace Blackout.Player
             }
 
             // Mouse delta is already "pixels this frame", so it is not multiplied by deltaTime.
-            Vector2 delta = input.LookDelta * settings.lookSensitivity;
+            Vector2 delta = input.LookDelta * (settings.lookSensitivity * ScopeSensitivityMultiplier);
             // Yaw is read back from the body each frame, so a teleport that sets the rotation is respected.
             float yaw = transform.eulerAngles.y + delta.x;
             pitch = Mathf.Clamp(pitch - delta.y, -settings.pitchLimit, settings.pitchLimit);

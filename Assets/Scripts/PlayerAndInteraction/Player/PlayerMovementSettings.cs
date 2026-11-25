@@ -39,6 +39,16 @@ namespace Blackout.Player
         [Tooltip("atan(1.15), the prototype's steepest climbable rise/run.")]
         [Range(0f, 89f)] public float slopeLimit = 49f;
 
+        [Header("Stance (C crouches, Z lies prone)")]
+        [Tooltip("Capsule height while crouching. The eyes follow, 0.12 m below the top.")]
+        [Min(0.7f)] public float crouchHeight = 1.1f;
+        [Tooltip("Capsule height while prone: the least a 0.35 m radius capsule can be (twice the radius).")]
+        [Min(0.7f)] public float proneHeight = 0.7f;
+        [Range(0.05f, 1f)] public float crouchSpeedMultiplier = 0.55f;
+        [Range(0.05f, 1f)] public float proneSpeedMultiplier = 0.25f;
+        [Tooltip("How fast the camera moves between eye heights (higher = snappier).")]
+        [Min(0f)] public float stanceEyeDamping = 14f;
+
         [Header("Look")]
         [Tooltip("Degrees per pixel of mouse movement (prototype: 0.0021 rad).")]
         [Min(0f)] public float lookSensitivity = 0.12f;
@@ -91,5 +101,8 @@ namespace Blackout.Player
 
         /// <summary>Eye height above the feet.</summary>
         public float EyeHeight => height - eyeBelowTop;
+
+        /// <summary>Eye height above the feet for a stance.</summary>
+        public float EyeHeightFor(Stance stance) => PlayerMovementLogic.StanceHeight(stance, this) - eyeBelowTop;
     }
 }

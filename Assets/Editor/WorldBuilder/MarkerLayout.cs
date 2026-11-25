@@ -49,15 +49,32 @@ namespace Blackout.Editor
         {
             ("Hunter-1", P(-24f, -54f), null, new[] { P(-24f, -54f), P(-30f, -30f), P(-18f, -12f), P(-26f, 8f), P(-14f, -70f), P(-36f, -44f) }),
             ("Hunter-2", P(26f, -20f), null, new[] { P(26f, -20f), P(30f, -44f), P(20f, -64f), P(32f, -2f), P(18f, 14f), P(36f, -30f) }),
+            // Extra Hunters share the existing cleared forest routes, starting at different points.
+            ("Hunter-3", P(-18f, -12f), null, new[] { P(-18f, -12f), P(-26f, 8f), P(-14f, -70f), P(-36f, -44f), P(-24f, -54f), P(-30f, -30f) }),
+            ("Hunter-4", P(20f, -64f), null, new[] { P(20f, -64f), P(32f, -2f), P(18f, 14f), P(36f, -30f), P(26f, -20f), P(30f, -44f) }),
+            ("Hunter-5", P(-14f, -70f), null, new[] { P(-14f, -70f), P(-36f, -44f), P(-24f, -54f), P(-30f, -30f), P(-18f, -12f), P(-26f, 8f) }),
             ("Patrol-1", P(-14f, 36f), null, new[] { P(-14f, 36f), P(14f, 36f), P(16f, 46f), P(10f, 55f), P(-10f, 55f), P(-16f, 46f) }),
             ("Patrol-2", P(3f, 74f), null, new[] { P(3f, 74f), P(-4f, 74f), P(-4f, 79.5f), P(3f, 79.5f) }),
 
             // A ping-pong route in the reference: its return through (0, 102) is stored as a 4th point.
             ("Patrol-3", P(0f, 88f), null, new[] { P(0f, 88f), P(0f, 102f), P(-0.5f, 120f), P(0f, 102f) }),
+            ("Patrol-4", P(14f, 36f), null, new[] { P(14f, 36f), P(16f, 46f), P(10f, 55f), P(-10f, 55f), P(-16f, 46f), P(-14f, 36f) }),
+            ("Patrol-5", P(-16f, 46f), null, new[] { P(-16f, 46f), P(-14f, 36f), P(14f, 36f), P(16f, 46f), P(10f, 55f), P(-10f, 55f) }),
+            ("Patrol-6", P(-0.8f, 79f), null, new[] { P(-0.8f, 79f), P(0.8f, 79f), P(0.8f, 80f), P(-0.8f, 80f) }),
+            ("Patrol-7", P(-15f, 100f), null, new[] { P(-15f, 100f), P(-6f, 100f), P(-6f, 102f), P(-15f, 102f) }),
+            ("Patrol-8", P(-5f, 112f), null, new[] { P(-5f, 112f), P(-15f, 112f), P(-15f, 110f), P(-5f, 110f) }),
+            ("Patrol-9", P(0f, 109f), null, new[] { P(0f, 109f), P(0f, 120f), P(0f, 103f), P(0f, 109f) }),
+            ("Patrol-10", P(-3f, 127f), null, new[] { P(-3f, 127f), P(-3f, 132f), P(-4f, 132f), P(-4f, 127f) }),
+            ("Patrol-11", P(3f, 132f), null, new[] { P(3f, 132f), P(4f, 132f), P(4f, 138f), P(3f, 138f) }),
+            ("Patrol-12", P(-3f, 139f), null, new[] { P(-3f, 139f), P(2f, 139f), P(2f, 140f), P(-3f, 140f) }),
 
             // Guards on a post face the door of their room; the Commander faces south as in the reference.
             ("TG-01", P(-8f, 100f), 45f, new[] { P(-8f, 100f) }), // toward D-Generator
             ("TG-02", P(3f, 129f), 210f, new[] { P(2.5f, 129f) }), // toward D-Lab
+            ("TG-03", P(-5f, 110f), 180f, new[] { P(-5f, 110f) }),
+            ("TG-04", P(-3f, 134f), 180f, new[] { P(-3f, 134f) }),
+            ("TG-05", P(0f, 114f), 180f, new[] { P(0f, 114f) }),
+            ("TG-06", P(2f, 76f), 180f, new[] { P(2f, 76f) }),
             ("Commander", P(6f, 138f), 180f, new[] { P(6f, 138f) }),
         };
 
@@ -86,6 +103,7 @@ namespace Blackout.Editor
             Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_Forest", "", 0f, -90f, 0f);
             Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_BunkerEntrance", "", 0f, 33f, 0f);
             Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_GeneratorRoom", "", -4.5f, 106f, 270f);
+            Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_EscapeLab", "", 0f, 127f, 0f);
             Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_EscapeEntrance", "", 0f, 40f, 180f);
             Add(markers, layout, MarkerType.Checkpoint, "Checkpoint_EscapeForest", "", 0f, 24f, 180f);
 

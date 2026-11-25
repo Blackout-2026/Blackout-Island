@@ -124,7 +124,7 @@ namespace Blackout.Player
             float time = Time.time;
 
             float dead = playerHealth != null ? playerHealth.DeathProgress : 0f;
-            float deadDrop = (settings.EyeHeight - DeadEyeHeight) * dead;
+            float deadDrop = Mathf.Max(0f, motor.EyeHeight - DeadEyeHeight) * dead; // from the eye height of the stance he died in
 
             Vector2 bobOffset = bob.Offset;
             float drop = landing.Offset * settings.landingCameraDrop;

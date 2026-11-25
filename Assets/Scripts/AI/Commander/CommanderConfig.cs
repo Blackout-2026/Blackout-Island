@@ -129,6 +129,24 @@ namespace Blackout.AI.Commander
         [Min(1f)] public float alertVisionMultiplier = 1.4f;
         [Range(0f, 1f)] public float alertAimErrorMultiplier = 0.9f;
 
+        [Header("Commander pistol combat")]
+        [Min(1f)] public float sightRange = 26f;
+        [Min(1f)] public float pistolRange = 22f;
+        [Min(0.1f)] public float combatMemory = 5f;
+        [Min(0f)] public float eyeHeight = 1.65f;
+        [Min(0f)] public float playerChestHeight = 1.2f;
+
+        [Header("Commander cover cycle")]
+        [Min(0f)] public float coverSearchRadius = 12f;
+        [Min(0f)] public float coverPlayerStandoff = 3f;
+        [Min(0.1f)] public float coverArrivalRadius = 0.9f;
+        [Min(0.1f)] public float peekArrivalRadius = 0.65f;
+        [Min(0.1f)] public float peekOffset = 1.25f;
+        [Min(0.1f)] public float hideSeconds = 1.6f;
+        [Min(0.1f)] public float peekSeconds = 1.15f;
+        [Range(0f, 1f)] public float lowHealthFraction = 0.45f;
+        [Min(0.1f)] public float lowHealthHideSeconds = 2.5f;
+
         public GoapAction[] BuildActions()
         {
             if (orderRegroup == null || orderSearchZone == null || orderConverge == null)

@@ -30,6 +30,9 @@ namespace Blackout.Shared
         /// <summary>Retains the order even if this agent's owner has not yet implemented a receiver.</summary>
         public void Issue(Directive directive)
         {
+            // Preserve the last valid order for checkpoint/reinitialization replay too.
+            if (directive.type != DirectiveType.Converge && directive.type != DirectiveType.SearchZone &&
+                directive.type != DirectiveType.Regroup) return;
             if (!IsAlive)
                 return;
             LastDirective = directive;

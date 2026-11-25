@@ -10,7 +10,7 @@ namespace Blackout.AI.SecurityPatrol
     /// The agent host calls Initialize once and Tick at its think rate (normally 10 Hz).
     /// States return intents; movement, animation and weapon execution belong to the agent host.
     /// </summary>
-    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain, IAlertReceiver, IDebugInfo
+    public sealed class SecurityPatrolBrain : MonoBehaviour, IAgentBrain, IDirectiveReceiver, IAlertReceiver, IDebugInfo
     {
         [Tooltip("Perception, state and executor reference tuning for this patrol.")]
         [SerializeField] private SecurityPatrolConfig config;
@@ -40,6 +40,9 @@ namespace Blackout.AI.SecurityPatrol
         private Health boundHealth;
         private VoidEventChannel boundRespawn;
         private float rangeMultiplier = 1f;
+        private Directive order;
+        private bool hasOrder;
+        private bool orderApplied;
 
         internal Vector3 Position => context.Self.position;
         internal Marker[] Route => route;
@@ -49,6 +52,8 @@ namespace Blackout.AI.SecurityPatrol
             (config != null ? config.searchTime : 14f);
         internal float AimHeight => config != null ? config.aimHeight : 1.8f * 0.62f;
         internal bool CanFire => canFire;
+        internal float SearchOrderRadius => hasOrder && orderApplied && order.type == DirectiveType.SearchZone
+            ? Mathf.Max(0f, order.radius) : 0f;
         private float AttackRange => (config != null ? config.attackRange : 22f) * rangeMultiplier;
         private Vector3 LastSeenPosition => hasSeenPlayer ? lastSeenPosition : current.Target;
         private bool CanThink => current != null && isActiveAndEnabled && context.Self != null &&
@@ -58,6 +63,7 @@ namespace Blackout.AI.SecurityPatrol
         public bool IsInitialized => current != null;
         public float VisionRangeMultiplier => rangeMultiplier;
         public SecurityPatrolState? CurrentState => current == null ? (SecurityPatrolState?)null : current.Id;
+        public bool HasDirective => hasOrder;
 
         // Read-only diagnostics. Active gizmos use the sensor's cached settings, even if config is edited live.
         public Transform AgentTransform => context == null ? transform : context.Self;
@@ -110,6 +116,7 @@ namespace Blackout.AI.SecurityPatrol
             lastSeenPosition = default;
             timeSinceSeen = 0f;
             canFire = false;
+            hasOrder = orderApplied = false;
             markerOwner = context.Self.name;
             sourceMarkers = null;
             sourceCount = 0;
@@ -168,6 +175,7 @@ namespace Blackout.AI.SecurityPatrol
             RefreshRoute();
             if (input.canSeePlayer)
             {
+                orderApplied = false; // Retain the order while direct perception takes priority.
                 hasSeenPlayer = true;
                 lastSeenPosition = input.playerPosition;
                 timeSinceSeen = 0f;
@@ -214,8 +222,13 @@ namespace Blackout.AI.SecurityPatrol
                 if ((!input.canSeePlayer && timeSinceSeen >= 1f) ||
                     (input.canSeePlayer && !IsNear(input.playerPosition, AttackRange * 1.15f)))
                     TryRequestTransition(SecurityPatrolTrigger.CannotAttack, LastSeenPosition);
+                return;
             }
-            else if (current.Id == SecurityPatrolState.Pursue && !input.canSeePlayer)
+            // Finish the local pursuit's short sighting memory before resuming a squad order.
+            if (!(current.Id == SecurityPatrolState.Pursue && hasSeenPlayer && timeSinceSeen < 2.5f)
+                && FollowDirective()) return;
+
+            if (current.Id == SecurityPatrolState.Pursue && !input.canSeePlayer)
             {
                 if (IsNear(LastSeenPosition, 1.5f) || (timeSinceSeen > 2.5f && current.TimeInState >= 4f))
                     TryRequestTransition(SecurityPatrolTrigger.LostPlayer, LastSeenPosition);
@@ -227,6 +240,39 @@ namespace Blackout.AI.SecurityPatrol
                     SecurityPatrolTrigger.InvestigationComplete, IsAlert ? current.Target : Position);
             else if (current.Id == SecurityPatrolState.Search && current.TimeInState >= SearchTime)
                 TryRequestTransition(SecurityPatrolTrigger.SearchComplete, Position);
+        }
+
+        /// <summary>Receive data only. The FSM evaluates the order on its next normal think tick.</summary>
+        public void OnDirective(Directive directive)
+        {
+            if (directive.type != DirectiveType.Converge && directive.type != DirectiveType.SearchZone &&
+                directive.type != DirectiveType.Regroup) return;
+            if (context?.Health != null && !context.Health.IsAlive) return;
+            if (hasOrder && order.type == directive.type && order.position.Equals(directive.position) &&
+                order.radius == directive.radius) return;
+            order = directive;
+            hasOrder = true;
+            orderApplied = false;
+        }
+
+        private bool FollowDirective()
+        {
+            if (!hasOrder) return false;
+            if (orderApplied)
+            {
+                bool complete = order.type == DirectiveType.Converge
+                    ? IsNear(order.position, 1.5f) || current.TimeInState >= SearchTime
+                    : order.type == DirectiveType.Regroup
+                        ? current is InvestigateState investigate && investigate.IsComplete
+                        : current.TimeInState >= SearchTime;
+                if (!complete) return true;
+                hasOrder = orderApplied = false;
+                return false;
+            }
+            SecurityPatrolTrigger trigger = order.type == DirectiveType.Converge ? SecurityPatrolTrigger.OrderConverge :
+                order.type == DirectiveType.SearchZone ? SecurityPatrolTrigger.OrderSearch : SecurityPatrolTrigger.OrderRegroup;
+            orderApplied = TryRequestTransition(trigger, order.position);
+            return orderApplied;
         }
 
         /// <summary>Absolute multiplier shared with the executors; never multiply an already-buffed range.</summary>
@@ -245,6 +291,7 @@ namespace Blackout.AI.SecurityPatrol
         private void OnDisable()
         {
             UnbindSensing();
+            orderApplied = false; // A living disabled/re-enabled patrol resumes its retained order.
             ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Disabled; memory cleared");
         }
 
@@ -257,7 +304,7 @@ namespace Blackout.AI.SecurityPatrol
             boundHealth = context.Health;
             if (boundHealth != null) boundHealth.OnDied += HandleOwnDeath;
             boundRespawn = playerRespawned;
-            if (boundRespawn != null) boundRespawn.OnRaised += ResetPlayerMemory;
+            if (boundRespawn != null) boundRespawn.OnRaised += ResetForRespawn;
         }
 
         private void UnbindSensing()
@@ -265,13 +312,14 @@ namespace Blackout.AI.SecurityPatrol
             senses?.Dispose();
             senses = null;
             if (boundHealth != null) boundHealth.OnDied -= HandleOwnDeath;
-            if (boundRespawn != null) boundRespawn.OnRaised -= ResetPlayerMemory;
+            if (boundRespawn != null) boundRespawn.OnRaised -= ResetForRespawn;
             boundHealth = null;
             boundRespawn = null;
         }
 
         private void HandleOwnDeath()
         {
+            hasOrder = orderApplied = false;
             UnbindSensing();
             ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Agent died; memory cleared");
         }
@@ -279,8 +327,15 @@ namespace Blackout.AI.SecurityPatrol
         private void ResetPlayerMemory() =>
             ResetPlayerMemory("Security Patrol [FSM] Patrol | last transition: Player memory reset");
 
+        private void ResetForRespawn()
+        {
+            hasOrder = orderApplied = false;
+            ResetPlayerMemory();
+        }
+
         private void ResetPlayerMemory(string resetDebugText)
         {
+            orderApplied = false;
             senses?.Forget();
             pending = null;
             pendingTarget = default;

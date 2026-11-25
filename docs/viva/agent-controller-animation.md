@@ -1,5 +1,12 @@
 # Agent animation (A3) — design notes
 
+**Current setup (AN1):** all four gameplay prefabs now use the imported Human
+Soldier Animations clips through `AnimatorDriver`. The robot's procedural driver
+is retained but disabled on its gameplay prefab. See
+[soldier animation integration](../agent-animations.md) for rig mappings, clip
+names, weapon fitting and verification. The A3 notes below describe the earlier
+controller/procedural baseline and its design alternatives.
+
 Owner: Agent Controller. Covers `AnimatorDriver`, `ProceduralRobotAnimator`, `AgentVisualAnimatorBase`,
 `RobotGaitMath`, `IAgentVelocitySource` and the `AnimatorControllerBuilder` Editor tool. Numbers cite
 `docs/reference/agent-controller.md` (sections 9.1–9.3, read from the prototype's source in A0) and

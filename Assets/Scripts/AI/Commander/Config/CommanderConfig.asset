@@ -57,3 +57,17 @@ MonoBehaviour:
   alertSpeedMultiplier: 1.25
   alertVisionMultiplier: 1.4
   alertAimErrorMultiplier: 0.9
+  sightRange: 26
+  pistolRange: 22
+  combatMemory: 5
+  eyeHeight: 1.65
+  playerChestHeight: 1.2
+  coverSearchRadius: 12
+  coverPlayerStandoff: 3
+  coverArrivalRadius: 0.9
+  peekArrivalRadius: 0.65
+  peekOffset: 1.25
+  hideSeconds: 1.6
+  peekSeconds: 1.15
+  lowHealthFraction: 0.45
+  lowHealthHideSeconds: 2.5

@@ -11,10 +11,11 @@ namespace Blackout.Interaction
     /// door refuses both. The panel slides sideways into the wall over 1 / speed seconds (eased), and stops
     /// blocking once it is 80 % open. Every open and close publishes a Door noise. While locked, a NavMeshObstacle
     /// carves the doorway so agents path around it; an unlocked door stays walkable so agents can reach it.
+    /// A double door (step D1) gives a second panel: it slides the same distance the other way, so the two leaves part.
     /// Optional fail-safe maglock: unlocks and opens itself a few seconds after an event (the lab door after
     /// GeneratorDisabled). Numbers: docs/reference/systems-engineer.md section 10.
     /// </summary>
-    public class SlidingDoor : Interactable, IDoor
+    public class SlidingDoor : Interactable, IDoor, IDoorCombatLock, ICheckpointState
     {
         private const float PassableOpen = 0.8f;
 
@@ -22,6 +23,8 @@ namespace Blackout.Interaction
         [SerializeField] private string label = "door";
         [Tooltip("The moving panel. It slides along its parent's X axis.")]
         [SerializeField] private Transform panel;
+        [Tooltip("Optional second leaf of a double door: it slides the same distance along -X while the panel slides along +X.")]
+        [SerializeField] private Transform mirrorPanel;
         [Tooltip("Collider that blocks the doorway while mostly closed.")]
         [SerializeField] private Collider blocker;
         [Tooltip("Metres the panel slides: the width plus 0.05 m.")]
@@ -51,20 +54,50 @@ namespace Blackout.Interaction
         public UnityEvent onLockedUsed = new UnityEvent();
 
         private Vector3 closedPosition;
+        private Vector3 mirrorClosedPosition;
         private float open;
         private float target;
         private bool locked;
+        private bool combatLocked;
         private float unlockTimer = -1f;
         private string openPrompt;
         private string closePrompt;
         private string lockedPrompt;
 
-        public override string Prompt => locked ? lockedPrompt : target > 0.5f ? closePrompt : openPrompt;
-        public override string Key => locked ? string.Empty : "E";
+        public override string Prompt => combatLocked ? "Eliminate the remaining lab defenders" : locked ? lockedPrompt : target > 0.5f ? closePrompt : openPrompt;
+        public override string Key => IsLocked ? string.Empty : "E";
 
         public Vector3 Position => transform.position;
+        /// <summary>Full travel time, also used by the sound adapter to distinguish the heavy bunker door.</summary>
+        public float SlideSeconds => 1f / speed;
         public bool IsOpen => open > PassableOpen;
-        public bool IsLocked => locked;
+        public bool IsLocked => locked || combatLocked;
+
+        private struct Checkpoint
+        {
+            public float Open, Target, UnlockTimer;
+            public bool Locked, CombatLocked;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            Open = open, Target = target, UnlockTimer = unlockTimer, Locked = locked, CombatLocked = combatLocked
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            open = saved.Open;
+            target = saved.Target;
+            unlockTimer = saved.UnlockTimer;
+            locked = saved.Locked;
+            combatLocked = saved.CombatLocked;
+            float slide = slideDistance * Mathf.SmoothStep(0f, 1f, open);
+            if (panel != null) panel.localPosition = closedPosition + Vector3.right * slide;
+            if (mirrorPanel != null) mirrorPanel.localPosition = mirrorClosedPosition + Vector3.left * slide;
+            if (blocker != null) blocker.enabled = IsLocked || open < PassableOpen;
+            ApplyLock(); // no opening sounds or noises during restoration
+        }
 
         private void Awake()
         {
@@ -77,11 +110,17 @@ namespace Blackout.Interaction
                 closedPosition = panel.localPosition;
             }
 
+            if (mirrorPanel != null)
+            {
+                mirrorClosedPosition = mirrorPanel.localPosition;
+            }
+
             SetLocked(startLocked);
         }
 
         private void OnEnable()
         {
+            DoorRegistry.Register(this); // agents find the doors through the registry (step F2)
             if (unlockOn != null)
             {
                 unlockOn.OnRaised += StartUnlockTimer;
@@ -90,6 +129,7 @@ namespace Blackout.Interaction
 
         private void OnDisable()
         {
+            DoorRegistry.Unregister(this);
             if (unlockOn != null)
             {
                 unlockOn.OnRaised -= StartUnlockTimer;
@@ -98,7 +138,7 @@ namespace Blackout.Interaction
 
         public override void Interact(GameObject by)
         {
-            if (locked)
+            if (IsLocked)
             {
                 onLockedUsed.Invoke();
                 return;
@@ -109,7 +149,7 @@ namespace Blackout.Interaction
 
         public bool RequestOpen(GameObject by)
         {
-            if (locked || target > 0.5f)
+            if (IsLocked || target > 0.5f)
             {
                 return false;
             }
@@ -121,14 +161,35 @@ namespace Blackout.Interaction
         public void SetLocked(bool value)
         {
             locked = value;
+            ApplyLock();
+        }
+
+        public void SetCombatLocked(bool value)
+        {
+            if (combatLocked == value) return;
+            combatLocked = value;
+            if (value)
+            {
+                // Close immediately so the player cannot slip through while the panel is sliding.
+                target = open = 0f;
+                if (panel != null) panel.localPosition = closedPosition;
+                if (mirrorPanel != null) mirrorPanel.localPosition = mirrorClosedPosition;
+                if (blocker != null) blocker.enabled = true;
+            }
+            ApplyLock();
+            if (!value && !IsLocked) RequestOpen(null);
+        }
+
+        private void ApplyLock()
+        {
             if (lockObstacle != null)
             {
-                lockObstacle.enabled = value;
+                lockObstacle.enabled = IsLocked;
             }
 
             if (lockLamp != null)
             {
-                Material lamp = value ? lockedLampMaterial : unlockedLampMaterial;
+                Material lamp = IsLocked ? lockedLampMaterial : unlockedLampMaterial;
                 if (lamp != null)
                 {
                     lockLamp.sharedMaterial = lamp;
@@ -171,9 +232,15 @@ namespace Blackout.Interaction
             }
 
             open = Mathf.MoveTowards(open, target, speed * dt);
+            float slide = slideDistance * Mathf.SmoothStep(0f, 1f, open);
             if (panel != null)
             {
-                panel.localPosition = closedPosition + Vector3.right * (slideDistance * Mathf.SmoothStep(0f, 1f, open));
+                panel.localPosition = closedPosition + Vector3.right * slide;
+            }
+
+            if (mirrorPanel != null)
+            {
+                mirrorPanel.localPosition = mirrorClosedPosition + Vector3.left * slide;
             }
 
             if (blocker != null)

@@ -4,8 +4,8 @@ Pure data and tiny helpers, no bpy and no PIL, so both sides can import it. Rect
 UV space is bottom-left based, so v = 1 - y / size.
 
 Three textures, three materials (docs/art-pipeline.md section 18):
-  uniform  M_Char_Commander_Uniform  white cloth, gold, black leather, ribbons, shoulder boards, name tag, cap
-  skin     M_Char_Commander_Skin     the face (planar front projection), freckled arms and hands, neck
+  uniform  M_Char_Commander_Uniform  charcoal coat, burgundy lining, gold, armor and leather
+  skin     M_Char_Commander_Skin     the face (planar front projection) and neck
   hair     M_Char_Commander_Hair     strand texture on the hair cap and the hair locks
 """
 
@@ -15,13 +15,13 @@ SIZE = {"uniform": 1024, "skin": 1024, "hair": 512}
 SWATCH_SIZE = 96
 UNIFORM_SWATCHES = {
     # name: (rect, hex, metallic, smoothness)
-    "white": ((0, 0, SWATCH_SIZE, SWATCH_SIZE), "#e9e9e4", 0.0, 0.18),
+    "white": ((0, 0, SWATCH_SIZE, SWATCH_SIZE), "#29282b", 0.0, 0.18),
     "gold": ((SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#c8a24a", 0.85, 0.62),
     "black": ((2 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#15161a", 0.0, 0.62),
     "watch": ((3 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#2a2c30", 0.35, 0.55),
     "silver": ((4 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#b9bdc4", 0.85, 0.6),
-    "shade": ((5 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#cfd0cb", 0.0, 0.18),   # the cloth in a fold or under a collar
-    "navy": ((6 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#1b2540", 0.0, 0.3),
+    "shade": ((5 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#1b1a1d", 0.0, 0.18),
+    "navy": ((6 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#793846", 0.0, 0.3),
     "sole": ((7 * SWATCH_SIZE, 0, SWATCH_SIZE, SWATCH_SIZE), "#0d0d0f", 0.0, 0.25),
 }
 UNIFORM_DECALS = {
@@ -31,7 +31,7 @@ UNIFORM_DECALS = {
     "pin": (608, 192, 96, 96),        # gold warfare pin above the ribbons
     "visor": (0, 256, 384, 192),      # black cap visor with the gold oak leaves of a commander
     "device": (400, 320, 128, 128),   # the cap's gold device
-    "cloth": (0, 464, 512, 512),      # white cloth with a faint weave, for the big garments
+    "cloth": (0, 464, 512, 512),      # charcoal cloth with a faint weave
 }
 
 # ----- skin atlas

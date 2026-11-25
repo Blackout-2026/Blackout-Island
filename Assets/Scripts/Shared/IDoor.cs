@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace Blackout.Shared
 {
+    /// <summary>An additional encounter lock, independent of a door's powered maglock.</summary>
+    public interface IDoorCombatLock
+    {
+        void SetCombatLocked(bool value);
+    }
+
     /// <summary>
     /// A door agents can open on their way through (prototype: agent-controller.md 3.2, "door awareness").
     /// The Systems Engineer's doors implement it; the Agent Controller's movement only talks to this interface,

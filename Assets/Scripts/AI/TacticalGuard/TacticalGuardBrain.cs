@@ -11,7 +11,7 @@ namespace Blackout.AI.TacticalGuard
     /// <see cref="GuardActionScorer"/> pick Attack, MoveToCover, Reposition or HoldPost, and returns the matching
     /// AgentIntent. It reads the world and the Blackboard but never moves, animates or shoots; AgentRoot does that.
     /// </summary>
-    public class TacticalGuardBrain : MonoBehaviour, IAgentBrain, IDebugInfo
+    public class TacticalGuardBrain : MonoBehaviour, IAgentBrain, IDirectiveReceiver, IDebugInfo
     {
         [Tooltip("All weights and curves. Empty falls back to the built-in defaults (and logs a warning).")]
         [SerializeField] private TacticalGuardConfig config;
@@ -54,7 +54,21 @@ namespace Blackout.AI.TacticalGuard
         public void SetSensor(IGuardSensor newSensor) => sensor = newSensor;
         public void SetClaims(CoverClaims newClaims) => claims = newClaims;
         public void SetClock(Func<float> newClock) => clock = newClock ?? DefaultClock;
-        public void SetPost(Vector3 newPost) => post = newPost;
+        public void SetPost(Vector3 newPost)
+        {
+            if (post.Equals(newPost)) return;
+            ReleaseCover();
+            post = newPost;
+        }
+
+        /// <summary>All squad orders update the defended post; utility scores still choose the action.</summary>
+        public void OnDirective(Directive directive)
+        {
+            if (directive.type != DirectiveType.Converge && directive.type != DirectiveType.SearchZone &&
+                directive.type != DirectiveType.Regroup) return;
+            if (context?.Health != null && !context.Health.IsAlive) return;
+            SetPost(directive.position);
+        }
 
         public void Initialize(IAgentContext newContext)
         {
@@ -202,6 +216,8 @@ namespace Blackout.AI.TacticalGuard
                 Gizmos.DrawLine(self + Vector3.up, lastRepositionTarget + Vector3.up);
             }
         }
+
+        private void OnDisable() => ReleaseCover();
 
         private void OnDestroy()
         {

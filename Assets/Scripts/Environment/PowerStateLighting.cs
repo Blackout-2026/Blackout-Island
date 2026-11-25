@@ -28,7 +28,7 @@ namespace Blackout.Environment
     /// Owner: World Builder.
     /// </summary>
     [DisallowMultipleComponent]
-    public class PowerStateLighting : MonoBehaviour
+    public class PowerStateLighting : MonoBehaviour, ICheckpointState
     {
         /// <summary>A light and, optionally, the lamp mesh that glows with it.</summary>
         [Serializable]
@@ -112,6 +112,32 @@ namespace Blackout.Environment
 
         /// <summary>The look applied to fog, ambient, moon and reflections: 0 powered, 1 full blackout.</summary>
         public float Blend => appliedBlend;
+
+        private struct Checkpoint
+        {
+            public bool GeneratorDisabled, Blackout;
+            public float Seconds;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            GeneratorDisabled = generatorIsDisabled, Blackout = blackoutPlaying,
+            Seconds = blackoutPlaying ? Time.time - blackoutStart : 0f
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            if (profile == null || powered == null) return;
+            var saved = (Checkpoint)state;
+            RestorePower();
+            generatorIsDisabled = saved.GeneratorDisabled;
+            if (saved.Blackout)
+            {
+                StartBlackout();
+                blackoutStart = Time.time - saved.Seconds;
+                Update(); // reconstruct fixtures, screens, beacon phase and Volume weight immediately
+            }
+        }
 
         /// <summary>Sets the event channels and the profile. Used by the Editor tool that builds the lighting.</summary>
         public void Configure(LightingStateProfile newProfile, VoidEventChannel generatorDisabledChannel,

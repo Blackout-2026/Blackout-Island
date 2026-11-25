@@ -204,10 +204,14 @@ namespace Blackout.AI.SecurityPatrol.Tests
             context.Health.ResetHealth(0f);
             brain.Initialize(context);
             Assert.That(brain.TryRequestTransition(SecurityPatrolTrigger.DetectedPlayer, Vector3.one), Is.True);
+            brain.OnDirective(new Directive(DirectiveType.Regroup, Vector3.one, 10f));
             context.Health.TakeDamage(new DamageInfo(context.Health.Max, Vector3.zero,
                 Vector3.forward, null, DamageType.Generic));
 
             AssertIdle(brain.Tick(0.1f));
+            Assert.That(brain.HasDirective, Is.False);
+            brain.OnDirective(new Directive(DirectiveType.Converge, Vector3.one, 0f));
+            Assert.That(brain.HasDirective, Is.False);
 
             Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Patrol));
         }
@@ -228,6 +232,77 @@ namespace Blackout.AI.SecurityPatrol.Tests
             Assert.That(accepted, Is.EqualTo(128 * 9));
             Assert.That(allocated, Is.Zero);
         }
+
+        [TestCase(DirectiveType.Converge, SecurityPatrolState.Pursue, MoveSpeed.Run)]
+        [TestCase(DirectiveType.SearchZone, SecurityPatrolState.Search, MoveSpeed.Walk)]
+        [TestCase(DirectiveType.Regroup, SecurityPatrolState.Investigate, MoveSpeed.Walk)]
+        public void SquadOrder_UsesTheExistingFsm_WithoutMovingOrFiring(DirectiveType type, SecurityPatrolState state, MoveSpeed speed)
+        {
+            brain.Initialize(context);
+            Vector3 start = self.transform.position;
+            Vector3 target = start + Vector3.forward * 10f;
+            brain.OnDirective(new Directive(type, target, 9f));
+            Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Patrol), "receiving must not tick the FSM");
+            AgentIntent intent = brain.Tick(0f, default);
+            Assert.That(brain.CurrentState, Is.EqualTo(state));
+            Assert.That(intent.moveTarget, Is.EqualTo(target));
+            Assert.That(intent.moveSpeed, Is.EqualTo(speed));
+            Assert.That(intent.fire, Is.False);
+            Assert.That(self.transform.position, Is.EqualTo(start));
+        }
+
+        [Test]
+        public void RepeatedSearch_DoesNotResetTimeout_AndMovedTargetsReplaceTheOrder()
+        {
+            brain.Initialize(context);
+            var search = new Directive(DirectiveType.SearchZone, PositionAhead(50f), 9f);
+            brain.OnDirective(search); brain.Tick(0f, default);
+            for (int i = 0; i < 13; i++) { brain.OnDirective(search); brain.Tick(1f, default); }
+            brain.Tick(1f, default);
+            Assert.That(brain.HasDirective, Is.False);
+            Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Patrol));
+            brain.OnDirective(new Directive(DirectiveType.Converge, PositionAhead(10f), 0f));
+            brain.Tick(0f, default);
+            Vector3 moved = PositionAhead(20f);
+            brain.OnDirective(new Directive(DirectiveType.Converge, moved, 0f));
+            brain.OnDirective(new Directive((DirectiveType)999, Vector3.zero, 0f));
+            Assert.That(brain.Tick(0f, default).moveTarget, Is.EqualTo(moved));
+        }
+
+        [Test]
+        public void SearchOrder_VisitsPointsWithinItsRadius()
+        {
+            brain.Initialize(context);
+            Vector3 centre = self.transform.position;
+            brain.OnDirective(new Directive(DirectiveType.SearchZone, centre, 5f));
+            brain.Tick(0f, default);
+            AgentIntent intent = brain.Tick(1.6f, default);
+            Assert.That(Vector3.Distance(intent.moveTarget, centre), Is.EqualTo(3f).Within(.001f));
+            Assert.That(intent.fire, Is.False);
+        }
+
+        [Test]
+        public void CombatInterruptsAnOrder_ThenTheRetainedOrderResumes_AndReinitializeClearsIt()
+        {
+            brain.Initialize(context);
+            Vector3 rally = PositionAhead(30f);
+            brain.OnDirective(new Directive(DirectiveType.Regroup, rally, 10f));
+            brain.Tick(0f, default);
+            AgentIntent combat = brain.Tick(.1f, new PatrolPerceptionInput { canSeePlayer = true, playerPosition = PositionAhead(5f) });
+            Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Attack));
+            Assert.That(combat.fire, Is.True);
+            brain.Tick(3f, default); // Attack -> local Pursue after lost sight.
+            AgentIntent resumed = brain.Tick(.1f, default);
+            Assert.That(brain.CurrentState, Is.EqualTo(SecurityPatrolState.Investigate));
+            Assert.That(resumed.moveTarget, Is.EqualTo(rally));
+            Assert.That(resumed.fire, Is.False);
+            brain.enabled = false; brain.enabled = true;
+            Assert.That(brain.Tick(.1f, default).moveTarget, Is.EqualTo(rally));
+            brain.Initialize(context);
+            Assert.That(brain.HasDirective, Is.False);
+        }
+
+        private Vector3 PositionAhead(float distance) => self.transform.position + Vector3.forward * distance;
 
         private AgentIntent RequestAndTick(SecurityPatrolTrigger trigger, Vector3 target)
         {

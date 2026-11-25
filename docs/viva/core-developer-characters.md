@@ -30,6 +30,78 @@
 - I replaced the capsules inside the Agent Controller's three prefabs through a menu tool. The change is the removed capsule, the nested model
   and one muzzle reference, but they should know.
 
+## The hero Patrol operator (steps PS1 to PS3, since replaced by the downloaded soldier) - added at the owner's request
+
+**What changed and why.** The Patrol was an old navy operator, and in fact the game still showed the blue capsule: `SecurityPatrol.prefab` had never been swapped. In PS1 the owner asked
+for a camouflaged soldier with a tan SCAR-style rifle, in PS2 for a desert-tan tactical operator from a new photo. My rigid-box version looked like building blocks next to that photo,
+so in PS3 the Patrol got the Commander's hero treatment: `build_operator.py` builds it, `build_humans.py -- Patrol` hands over to it, and the existing menu
+**Blackout > Art > Use Character Models In Agents** nests it in the prefab.
+
+**Design decisions I can defend.**
+- **Reuse the Commander's engine, not a copy.** `build_operator.py` imports `build_commander.py` (sweeps, shells, plates, custom normals, per-joint split, FBX export), and I added three
+  backward-compatible hooks to it (per-face UVs, a configurable root/materials/muzzle, a neutral material fallback). The Commander's defaults do not change.
+- **Same rig, new surface.** Same 18 joints, rotation 0 and MuzzlePoint contract (the flash hider ends at 0.745 m, MuzzlePoint is 0.74 m ahead of the socket), so `CharacterFbxTests`, the swap tool
+  and the shooter wiring needed no changes. The photo is an unarmed A-pose, so the rifle and the bent-arm pose are my assumption.
+- **Detail from textures, not triangles.** A 1024 atlas holds swatches and painted decals (vest webbing, pouches, radio, patch, zip, rail teeth, holster, boot laces) and the balaclava face with
+  painted eyes, painted by `make_patrol_textures.py` with the same planar projection the head uses. The tan cloth is a 512 tile box-projected at one tile per metre.
+- **Two materials.** `M_Char_Patrol_Cloth` and `M_Char_Patrol_Kit` (with a metal map for buckles and the rifle), so the third material slot is free.
+- **A hero budget.** 12,000 triangles (18,000 maximum) for this one character (three patrols in the level), like the Commander's 14,000; `ModelBudget` and its test know about it.
+- **Retiring materials safely.** Old materials are removed by an obsolete list in `CharacterMaterialBuilder`, which calls `AssetDatabase.DeleteAsset`, so the .meta files and references go with them.
+
+**One number and why.** 11,582 triangles against a 12,000 target: the head, chest and hips take most of them (1,828, 1,700 and 944), because that is where the eye goes at 10 to 30 m.
+
+**Known weaknesses.**
+- Rigid parts again, so no walking animation: the operator slides along its path like the other humans.
+- It is still a game character, not a scan: the face is painted on a simple head, the hands are blocky, the cloth is smooth tubes with creases and the helmet rails are boxes with painted teeth.
+- The decals are generic painted gear, and I have seen the model in Blender renders and Unity tests, not yet in a Play Mode fight.
+- The rifle's stock sits inside the vest volume (hidden), because the arms and the Gun socket are fixed by the rig table.
+
+## The downloaded Patrol soldier (step PS4) - added at the owner's request
+
+**What changed and why.** After the PS3 operator the owner supplied a finished, photographically textured, skinned soldier (a Mixamo-style export, 9,710 triangles, 65 bones) and asked for it as the Security Patrol.
+It is far more detailed than anything my scripts build, so the Patrol now uses it and the PS3 operator stays in the project, unused. The change is mostly integration: it is the first skinned human here, the soldier has no weapon
+and he is modelled in a T-pose.
+
+**Design decisions I can defend.**
+- **Keep the model unchanged.** The FBX is copied as it came, with the textures renamed to the repo's `T_<Name>_<Map>` convention. All my changes are around it: materials, pose, rifle, prefab.
+- **Import as Humanoid.** Rig type None looks simpler but throws the skin weights away (the first build showed it: bones moved, the body did not). Humanoid keeps the skin and gives a valid avatar for the Agent Controller's
+  humanoid animation later.
+- **Pose by maths, written into the prefab.** Two-bone IK for the arms and a finger curl, in a character frame taken from the skeleton, give a rifle-at-the-low-ready pose without any animation clip. It is stored as bone
+  rotations in the prefab, so the FBX is untouched and an Animator can take over later. The prefab is rebuilt from scratch each time, which keeps it deterministic (a test builds it twice and compares).
+- **The rifle is its own file.** `SM_Char_PatrolRifle.fbx` (`Gun` plus `MuzzlePoint`) hangs under the right hand, so the Agent Controller's shooter finds its muzzle by name exactly as before; the agent prefab did not change.
+- **Same prefab, same name.** `Char_Patrol_Visual.prefab` keeps its asset, so `SecurityPatrol.prefab` still nests it; only the content changed.
+- **Look at it in the engine.** `CharacterPreviewRenderer` renders the prefab in Unity itself. It showed two problems tests could not (the model faced -Z, the rifle was white), so I keep it as a review tool.
+
+**One number and why.** Both elbows must stay bent (about 100 and 145 degrees): a reach search over the measured arm lengths (0.27 m and 0.28 m) found the rifle hold where both hands reach their grips without straightening an arm.
+
+**Known weaknesses (say these before they ask).**
+- **Licence.** The download came without any licence text; `docs/credits/core-developer.md` has TODO cells that must be filled before the repository is published.
+- **No animation.** He stands in a fixed rifle-ready pose and slides along his path. The humanoid controller needs clips named Idle, Walk, Run, Aim_Idle, HitReact and Death.
+- **The rifle is the weakest part.** It is the plain box model from PS3 next to a photographic soldier.
+- **Not seen in a Play Mode fight yet.** I checked it in Unity-rendered pictures and EditMode tests, not in the game.
+
+## The downloaded Hunter (step HV1) - added at the owner's request
+
+**What changed and why.** The owner supplied the Hunter of Left 4 Dead and asked for it as the game's Hunter. It is the second skinned character here, so the pose and build code written for the Patrol's soldier (PS4) was
+made general instead of copied: a bone-name map per skeleton (Mixamo and Valve biped), a rifle-hold struct, and a spec per character. The rigid camouflage Hunter stays in the project, unused.
+
+**Design decisions I can defend.**
+- **General, not copied.** The IK pose depends only on bone positions, so a `HumanoidBones` map is all that differs between a four-bone Mixamo finger and a three-bone Valve finger, and between palms-down and palms-in rest poses.
+  `SkinnedHumanoidTestsBase` runs the same tests for both characters, so the second one is held to the same standard as the first.
+- **Inspect before trusting.** The FBX is ASCII FBX 6.1 that Blender cannot open, so I read its structure as text (53 Valve bones, one skinned mesh, 5,046 triangles, Z-up data in inches) and rendered it raw in Unity before
+  writing any code. That showed it needed only a 180 degree turn, no scale fix.
+- **A rifle for a zombie.** The Hunter of this game shoots, so the shooter needs a muzzle; he gets the Patrol's rifle with a scope (746 triangles) rather than firing from his fist.
+- **Generic rig.** No humanoid clips are planned for it, and a rig type of None would drop the skin weights.
+- **Same prefab, same name.** `Char_Hunter_Visual.prefab` keeps its asset, so `Hunter.prefab` still nests it and its structure did not change.
+
+**One number and why.** 5,046 triangles against a 6,000 target: the model is already low-poly, and its budget was set from the measured count (the default character limit of 4,500 flagged it at import).
+
+**Known weaknesses (say these before they ask).**
+- **Licence.** It is Valve's copyrighted character, taken from a fan site with no licence text. `docs/credits/core-developer.md` says so; it must not go into a public repository without permission.
+- **Not the camouflaged sniper of the design document**, but a hooded zombie with a gun, and its eyes are dark sockets.
+- **No animation**: a fixed pose, sliding along its path.
+- **The rifle is a plain box model**, and I have not seen the Hunter in a Play Mode fight.
+
 ## The realistic Commander (step C10b) - added at the owner's request
 
 **What changed and why.** The owner asked for the Commander to be "really, really realistic" like a photo of a naval officer in white service

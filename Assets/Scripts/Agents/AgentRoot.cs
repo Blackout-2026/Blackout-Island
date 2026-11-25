@@ -12,7 +12,7 @@ namespace Blackout.Agents
     /// (think at 10 Hz with a random offset per agent, executors every frame).
     /// </summary>
     [RequireComponent(typeof(Health))]
-    public class AgentRoot : MonoBehaviour, IAgentInfo
+    public class AgentRoot : MonoBehaviour, IAgentInfo, ICheckpointRosterMember
     {
         [Tooltip("Unique name such as Patrol-1. Used on the Blackboard and as the Owner of this agent's markers. Empty uses the object name.")]
         [SerializeField] private string agentName;
@@ -42,6 +42,7 @@ namespace Blackout.Agents
         private float thinkTimer;
         private float thinkElapsed;
         private float stateTimer;
+        private bool initialized;
 
         public string AgentName => string.IsNullOrEmpty(agentName) ? name : agentName;
         public AgentKind Kind => kind;
@@ -60,13 +61,22 @@ namespace Blackout.Agents
             Configure(
                 brainBehaviour as IAgentBrain ?? GetComponent<IAgentBrain>(),
                 GetComponent<IAgentMover>(),
-                GetComponentInChildren<IAgentAnimator>(true),
+                FindEnabledAnimator(),
                 GetComponentInChildren<IAgentShooter>(true));
+        }
+
+        private IAgentAnimator FindEnabledAnimator()
+        {
+            // A prefab may retain a disabled legacy driver for its original visual setup.
+            foreach (MonoBehaviour component in GetComponentsInChildren<MonoBehaviour>(true))
+                if (component.enabled && component is IAgentAnimator driver) return driver;
+            return null;
         }
 
         private void Start()
         {
-            Initialize(AgentRegistry.Current != null ? AgentRegistry.Current : FindFirstObjectByType<AgentRegistry>());
+            if (!initialized)
+                Initialize(AgentRegistry.Current != null ? AgentRegistry.Current : FindFirstObjectByType<AgentRegistry>());
             thinkTimer = Random.value * thinkInterval; // stagger agents so they do not all think in the same frame
         }
 
@@ -121,6 +131,8 @@ namespace Blackout.Agents
 
             registry.Register(this);
             brain?.Initialize(registry.CreateContext(transform, health));
+            initialized = true;
+            ReplayDirective();
             hasAppliedAlert = false;
             BindAlert();
         }
@@ -138,11 +150,16 @@ namespace Blackout.Agents
                 brain?.Initialize(registry.CreateContext(transform, health));
                 hasAppliedAlert = false;
                 SyncWorldAlert();
-                var members = registry.Blackboard.Agents;
-                for (int i = 0; i < members.Count; i++)
-                    if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
-                        DirectiveReceiver?.OnDirective(members[i].LastDirective);
+                ReplayDirective();
             }
+        }
+
+        private void ReplayDirective()
+        {
+            var members = registry.Blackboard.Agents;
+            for (int i = 0; i < members.Count; i++)
+                if (members[i].Transform == transform && members[i].HasDirective && IsAlive)
+                    DirectiveReceiver?.OnDirective(members[i].LastDirective);
         }
 
         private void BindAlert()
@@ -272,6 +289,8 @@ namespace Blackout.Agents
             mover?.Stop();
             shooter?.CeaseFire();
             animator?.PlayDeath();
+            // A cleared lab must remain passable, and dead bodies must not absorb later shots.
+            foreach (Collider body in GetComponentsInChildren<Collider>()) body.enabled = false;
             UnregisterFromRegistry();
         }
 

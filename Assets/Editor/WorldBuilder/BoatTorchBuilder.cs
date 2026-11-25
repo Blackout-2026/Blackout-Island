@@ -18,7 +18,8 @@ namespace Blackout.Editor
         private const string MaterialFolder = "Assets/Materials/Environment/";
         private const string TexturePath = "Assets/Environment/BoatTorchFlame.asset";
         private const string TorchName = "BoatTorch";
-        private static readonly Vector3 Mount = new Vector3(-1.25f, 0.6f, -1.7f);
+        // Gislinge's stern gunwale: keep the existing torch clear of the lowered sail.
+        private static readonly Vector3 Mount = new Vector3(-1.15f, 0.1f, 2.5f);
 
         internal static Renderer FindEmber(Scene scene) => FindTorch(scene)?.Find("BoatTorch_Embers")?.GetComponent<Renderer>();
         internal static Transform FindTorch(Scene scene) => WorldSceneSkeleton.FindRoot(scene, "Beach")?.transform.Find("Boat/" + TorchName);

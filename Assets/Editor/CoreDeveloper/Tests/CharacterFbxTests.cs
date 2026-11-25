@@ -6,10 +6,11 @@ using UnityEngine;
 namespace Blackout.Editor.Tests
 {
     /// <summary>
-    /// Checks the three real humanoid FBX files (step C10: SM_Char_Patrol, SM_Char_Hunter, SM_Char_Commander) against what the
+    /// Checks the rigid-part humanoid FBX file of the Commander (step C10: SM_Char_Commander) against what the
     /// Agent Controller needs: the 17 joints at their heights with rest rotation 0, the 1.87 m height with the feet on the floor,
     /// the Gun socket with a MuzzlePoint that looks along +Z at the distance of the weapon, and the budget. A file that does not
-    /// exist yet is skipped, not failed.
+    /// exist yet is skipped, not failed. The Security Patrol (step PS4) and the Hunter (step HV1) are downloaded skinned models (a Mixamo and a Valve
+    /// skeleton, not these joints), so their checks are in PatrolSoldierTests and HunterModelTests.
     /// </summary>
     public class CharacterFbxTests
     {
@@ -63,8 +64,6 @@ namespace Blackout.Editor.Tests
             return bounds;
         }
 
-        [TestCase("Patrol")]
-        [TestCase("Hunter")]
         [TestCase("Commander")]
         public void EveryJoint_IsThereAtItsHeightWithRotationZeroAndTurnsAboutTheLeftRightAxis(string characterName)
         {
@@ -81,8 +80,6 @@ namespace Blackout.Editor.Tests
             }
         }
 
-        [TestCase("Patrol")]
-        [TestCase("Hunter")]
         [TestCase("Commander")]
         public void Names_AreUniqueSoAnAnimatorFindsTheRightObject(string characterName)
         {
@@ -95,8 +92,6 @@ namespace Blackout.Editor.Tests
             }
         }
 
-        [TestCase("Patrol")]
-        [TestCase("Hunter")]
         [TestCase("Commander")]
         public void Size_IsAbout1Point87MetresTallWithTheFeetOnTheFloor(string characterName)
         {
@@ -108,8 +103,6 @@ namespace Blackout.Editor.Tests
             Assert.That(bounds.size.x, Is.InRange(0.45f, 0.85f), "a slim body, with the rifle held in front");
         }
 
-        [TestCase("Patrol")]
-        [TestCase("Hunter")]
         [TestCase("Commander")]
         public void MuzzlePoint_IsOnTheGunAndLooksAlongPlusZAtTheWeaponsLength(string characterName)
         {
@@ -125,8 +118,6 @@ namespace Blackout.Editor.Tests
             Assert.Greater(muzzle.position.z, Find("Hips").position.z + 0.35f, "in front of the body");
         }
 
-        [TestCase("Patrol")]
-        [TestCase("Hunter")]
         [TestCase("Commander")]
         public void Budget_StaysUnderTheTargetWithAtMostThreeMaterials(string characterName)
         {

@@ -1,4 +1,5 @@
 // Owner: Systems Engineer.
+using Blackout.Shared;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -9,7 +10,7 @@ namespace Blackout.Weapons
     /// instantiates or destroys anything. When all are busy the oldest one is reused (the prototype's 24-tracer
     /// pool, 0.018 m thick, fading out over 0.06 s).
     /// </summary>
-    public class TracerPool : MonoBehaviour
+    public class TracerPool : MonoBehaviour, ICheckpointState
     {
         [SerializeField, Min(1)] private int size = 24;
         [Tooltip("Additive particle material that uses vertex colour (LineRenderer colours fade the tracer).")]
@@ -23,6 +24,18 @@ namespace Blackout.Weapons
         private LineRenderer[] lines;
         private float[] timeLeft;
         private int next;
+
+        public object CaptureCheckpoint() => null;
+        public void RestoreCheckpoint(object state)
+        {
+            if (lines == null) return;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i].enabled = false;
+                timeLeft[i] = 0f;
+            }
+            next = 0;
+        }
 
         private void Awake()
         {

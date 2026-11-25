@@ -1,4 +1,5 @@
 // Owner: Systems Engineer.
+using System;
 using Blackout.Shared;
 using UnityEngine;
 
@@ -22,6 +23,9 @@ namespace Blackout.Weapons
         // Seconds until the blade lands; negative when no swing is in progress.
         private float swingTimer = -1f;
 
+        /// <summary>The player attacked: the swing starts now (the knife's swing animation, KnifeSwing, listens). The blade lands at the hit delay.</summary>
+        public event Action Swung;
+
         public WeaponData Data => data;
 
         public void Initialize(WeaponContext weaponContext)
@@ -39,6 +43,7 @@ namespace Blackout.Weapons
         {
             swingTimer = data.meleeHitDelay;
             context.PublishNoise(data.noiseRadius, NoiseType.Melee);
+            Swung?.Invoke();
         }
 
         public void Tick(float dt)

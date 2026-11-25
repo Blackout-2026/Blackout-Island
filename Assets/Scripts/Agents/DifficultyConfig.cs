@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Blackout.Agents
 {
     /// <summary>
-    /// Every agent type's stats in one asset, plus four difficulty multipliers. At 1 the numbers are exactly the
-    /// prototype's; raising or lowering a multiplier makes the whole game harder or easier without editing a
+    /// Every agent type's stats in one asset, plus four difficulty multipliers. At 1 the numbers are the
+    /// configured baseline; raising or lowering a multiplier makes the whole game harder or easier without editing a
     /// prefab: health, damage, reaction delay (a smaller number reacts faster) and aim error (a smaller spread
     /// aims better). Vision, hearing and attack range belong to the AI brains, not here.
     /// </summary>
@@ -14,7 +14,7 @@ namespace Blackout.Agents
     {
         [SerializeField] private AgentStats[] stats = DefaultStats();
 
-        [Header("Difficulty multipliers (1 = the prototype's numbers)")]
+        [Header("Difficulty multipliers (1 = configured baseline)")]
         [Min(0.1f)] public float healthMultiplier = 1f;
         [Min(0.1f)] public float damageMultiplier = 1f;
         [Tooltip("Above 1 the agents are slower to open fire; below 1 they react faster.")]
@@ -22,7 +22,7 @@ namespace Blackout.Agents
         [Tooltip("Above 1 the agents aim worse; below 1 they aim better.")]
         [Min(0.1f)] public float aimErrorMultiplier = 1f;
 
-        /// <summary>The stats for a kind with the multipliers applied. A kind missing from the asset falls back to the prototype numbers.</summary>
+        /// <summary>The stats for a kind with the multipliers applied. A kind missing from the asset falls back to the baseline numbers.</summary>
         public AgentStats Get(AgentKind kind)
         {
             AgentStats found = Find(stats, kind) ?? Find(DefaultStats(), kind).Value;
@@ -55,9 +55,9 @@ namespace Blackout.Agents
         }
 
         /// <summary>
-        /// The prototype's numbers (docs/reference/agent-controller.md): HP, weapon rows from section 5, speeds and
-        /// turn rates from section 3.1 (turn rates converted from rad/s to degrees/s). The gunfire noise is the
-        /// prototype's default of 40 for every agent.
+        /// The prototype's numbers (docs/reference/agent-controller.md) for the first three agents. The Commander
+        /// uses the hero encounter's tougher health and pistol settings. Turn rates are converted from rad/s to
+        /// degrees/s. Gunfire noise is 40 for every agent.
         /// </summary>
         public static AgentStats[] DefaultStats()
         {
@@ -86,9 +86,9 @@ namespace Blackout.Agents
                 },
                 new AgentStats
                 {
-                    kind = AgentKind.Commander, maxHealth = 70f,
-                    damage = 5f, range = 22f, burstCount = 2, burstInterval = 0.25f, burstPause = 1.2f,
-                    spread = 0.05f, reactionDelay = 0.8f, noiseLoudness = 40f,
+                    kind = AgentKind.Commander, maxHealth = 180f,
+                    damage = 10f, range = 22f, burstCount = 1, burstInterval = 0.3f, burstPause = 0.35f,
+                    spread = 0.025f, reactionDelay = 0.45f, noiseLoudness = 40f,
                     walkSpeed = 1.3f, runSpeed = 3.4f, turnRateDegrees = 5f * Mathf.Rad2Deg,
                 },
             };

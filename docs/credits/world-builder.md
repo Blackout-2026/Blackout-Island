@@ -15,8 +15,8 @@ No textures have been added yet. All 12 environment materials use the flat palet
 | Grass | none yet (flat #2C3A1D) | — | — | — | — |
 | ForestFloor | none yet (flat #32281A) | — | — | — | — |
 | Rock | none yet (flat #43423D) | — | — | — | — |
-| Concrete | none yet (flat #72726B) | — | — | — | — |
-| ConcreteStained | none yet (flat #5C5E5A) | — | — | — | — |
+| Concrete | `Concrete_BaseColor.png`, `_Normal.png`, `_Roughness.png`, `_AO.png` (the hut's roof maps, unchanged apart from PNG; step B1) | Military Hut (`Military_Hut.zip`, `Military_Hut_Roof_map_*`) | TODO: page URL | TODO: check before publishing the repo (the download contains no licence text) | TODO: confirm on the page (the folder name suggests Sketchfab, TampaJoey) |
+| ConcreteStained | `ConcreteStained_BaseColor.png`, `_Roughness.png`, `_AO.png` (a clean 512 px patch of the hut's pad maps, mirrored to tile; step B1) | Military Hut (`Military_Hut_Foundation_map_*`) | TODO: page URL | same as Concrete | same as Concrete |
 | MetalPlate | none yet (flat #5A5E60) | — | — | — | — |
 | Rust | none yet (flat #64361C) | — | — | — | — |
 | Tile | none yet (flat #AAB3B4) | — | — | — | — |
@@ -26,6 +26,16 @@ No textures have been added yet. All 12 environment materials use the flat palet
 
 Generated files are not credited separately: `<Surface>_MetallicSmoothness.png` is made by Build Material Library
 from that surface's Roughness and Metallic maps, so it has the same source and licence.
+
+## Military hut entrance (B1)
+
+| Files in the project | Source asset | URL | Licence | Author |
+| --- | --- | --- | --- | --- |
+| `Assets/Models/Custom/SM_Hut_Entrance.fbx`, `SM_Hut_Props.fbx` and `Art/Blender/SM_Military_Hut.blend` (the download cut down and scaled by `Art/Blender/Scripts/build_military_hut.py`) | "Military Hut" with animations, `Military_Hut.zip` (`Military_Hut.fbx`) | TODO: page URL | TODO: check before publishing the repo (the download contains no licence text) | TODO: confirm on the page (the folder name suggests Sketchfab, TampaJoey) |
+| `Assets/Textures/Models/T_Hut_*_BaseColor.png`, `_Normal.png` (the downloaded maps, some halved to 512 px) and `_MetalSmooth.png` (repacked from the downloaded Metallic, Roughness and AO maps) | same zip | TODO: page URL | same | same |
+
+Fill the TODO cells from the page the folder was downloaded from. If its licence does not allow use in a public repository, keep the repository
+private or replace the hut.
 
 ## How to add a texture set
 
@@ -58,6 +68,61 @@ prototype's own geometry), which need no credit. Fill in a row when you add a re
 | Rock.prefab, RockSmall.prefab | Rock_Placeholder, RockSmall_Placeholder (180 / 80 / 20) | — | — | — | — |
 | Bush.prefab | Bush_Placeholder (160) | — | — | — | — |
 | Grass.prefab | Grass_Placeholder (6) | — | — | — | — |
+
+### Ponderosa forest models (F1)
+
+The pines, rocks, bush and grass of the forest come from one downloaded scene, `D:\model\pine-forest-at-sunset` (not in the repository: the `.glb`
+is 37 MB). It was converted by `Art/Blender/Scripts/build_ponderosa_forest.py`. **Author, source URL and licence are not recorded in the download
+(the file is named `ponderosa_stand_sketchfab.glb`, made with Blender's Florasynth add-on): confirm them and fill in the row before the project is
+published or handed in.**
+
+| Used for | Source in the download | Author | URL | Licence |
+| --- | --- | --- | --- | --- |
+| Pine, PineB (`SM_Tree_Pine`, `SM_Tree_PineB`) | the `FlorasynthTree.001` and `.002` trees, the lower-detail `_far` meshes | to confirm | to confirm | to confirm |
+| PineC, PineD (`SM_Tree_PineC`, `SM_Tree_PineD`) | `Ponderosa Pine seedling.001` and `.062` | to confirm | to confirm | to confirm |
+| Rock, RockSmall (`SM_Forest_Rock`, `SM_Forest_RockSmall`) | the scene's `Icosphere.003` and `.004` rocks | to confirm | to confirm | to confirm |
+| Bush (`SM_Forest_Bush`) | the needle sprays of `Ponderosa Pine seedling.061` | to confirm | to confirm | to confirm |
+| Bark and needles (`T_PonderosaBark_*`, `T_PonderosaNeedles_BaseColor`) | `ponderosa-bark-old_1.jpeg`, `brown-bark-old-NORMAL_0.jpeg`, `ponderosa-foliage_2.png` | to confirm | to confirm | to confirm |
+| Grass tuft (`SM_Forest_Grass`, `T_ForestGrass_BaseColor`) | `grass-lush-min_4.png` on three cards | to confirm | to confirm | to confirm |
+| Rock texture (`T_ForestRock_BaseColor`) | `mossy_rock_diff_1k.jpg` (the name matches a Poly Haven CC0 texture, unverified) | to confirm | to confirm | to confirm |
+
+Not used from the download: its terrain, logs, the 440 scattered tree copies and the two large grass meshes.
+
+## Gislinge boat (B1)
+
+[Gislinge Viking Boat](https://sketchfab.com/3d-models/gislinge-viking-boat-01098ad7973647a9b558f41d2ebc5193)
+by **Opus Poly** (Alberto Foglia), licensed under
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+The creator's [portfolio page](https://albertofoglia.artstation.com/projects/Kr2EOy)
+also describes the reconstruction, based on the Roskilde Viking Ship Museum's
+Gislinge Boat Open Source Project. The Sketchfab listing carries a NoAI label.
+
+User-supplied source: `D:/model/gislinge-viking-boat/source/Gislinge_Boat.zip`.
+Used: the complete FBX, hull and sail colour/normal/metallic/roughness maps,
+and hull AO. Changes: texture resizing to 2048px, conversion to PNG, packed
+metallic/occlusion/smoothness channels, URP materials and Unity placement/collision.
+The FBX geometry and UVs are unchanged. Sail transmission is not implemented.
+See [integration and rebuild notes](../gislinge-boat.md). This is a third-party
+environment prop and is not claimed as either student-modelled hero asset.
+
+## Additional forest shapes (FD1)
+
+User-supplied sources remain unchanged outside the repository:
+
+- `D:/model/pine-forest-at-sunset/source/ponderosa_stand_sketchfab.glb`: `Icosphere.005` and
+  `Icosphere.001` become RockWide/RockRound; `Ponderosa Pine seedling.036_foliage` and
+  `.047_foliage` become BushWide/BushUpright. Reuses the F1 rock and needle textures/materials.
+  Attribution/licence status remains **to confirm**, as recorded in the F1 table above.
+- `D:/model/small-trees/source/Small Trees.fbx`: the three `tree`/`leaves.004`,
+  `tree.001`/`leaves.005`, `tree.002`/`leaves.006` pairs become SmallTreeA/B/C.
+  Supplied `qimhv_2K_Albedo` + `Opacity` form the RGBA leaf texture;
+  `vmbibijg_2K_Albedo` and `Normal` supply bark maps, resized to 1024.
+  Author, download page and licence: **to confirm**; no attribution is inferred from texture filenames.
+
+Converted by `Art/Blender/Scripts/build_forest_variants.py`, reusing the F1 conversion helpers.
+UVs/material separation retained, branches decimated and leaf cards thinned into three tree LODs;
+rocks also have three LODs. These are adapted third-party models, not student-modelled hero assets.
+No source model or existing credit was replaced.
 
 ## How to add a vegetation model
 

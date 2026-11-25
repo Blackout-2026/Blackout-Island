@@ -1,6 +1,6 @@
 # Hunter viva (Systems Engineer: behaviour tree + sound propagation)
 
-The Hunter is the forest agent: two of them prowl the island, react to what they hear, and hunt the player. Code in
+The Hunter is the forest agent: five of them prowl the island, react to what they hear, and hunt the player. Code in
 `Assets/Scripts/AI/Hunter` (assembly `Blackout.AI.Hunter`); the prototype's rules and every [GUESS] are in
 `docs/reference/systems-engineer.md` sections 13–16; each step's notes are in `docs/viva/systems-engineer/`
 (`-h1-behaviour-tree`, `-h2-sound-propagation`, `-h3-hunter-tree`).

@@ -23,7 +23,7 @@ namespace Blackout.Agents.PlayTests
     {
         public const string EnvironmentScene = "Assets/Scenes/Environment.unity";
         public const string AgentsScene = "Assets/Scenes/Agents.unity";
-        public const int ExpectedAgents = 8; // Hunter x2, Security Patrol x3, Tactical Guard x2, Commander x1
+        public const int ExpectedAgents = 24; // Hunter x5, Security Patrol x12, Tactical Guard x6, Commander x1
 
         private const float BinMilliseconds = 0.25f;
         private const int BinCount = 400; // up to 100 ms

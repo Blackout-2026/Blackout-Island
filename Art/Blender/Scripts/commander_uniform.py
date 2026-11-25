@@ -1,5 +1,4 @@
-"""The uniform details of the realistic Commander: open collar, V-neck, placket and buttons, shoulder boards, ribbon rack, name tag,
-pocket, and the white cap worn on her head, plus the pistol she aims (step C10b). Owner: Core Developer.
+"""The field commander's dark coat, armor, burgundy shoulder mantle, boots, gloves and sidearm.
 
 build(B) is called by build_commander.py with its own module as B. Unity metres, front +Z, left = -X. Everything that lies on the shirt is
 snapped to the torso surface function (B.torso_z), so it follows the bust. The insignia are generic (three gold stripes and a star); the
@@ -15,6 +14,93 @@ import commander_atlas as A
 
 def V(x, y, z):
     return Vector((x, y, z))
+
+
+def build_field_coat(B):
+    """A split, open-front coat. Upper panels follow Chest; long tails follow Hips so the rig can bend."""
+    dark, lining, gold, armor = (B.swatch(n) for n in ("white", "navy", "gold", "watch"))
+    for side in (-1, 1):
+        upper = []
+        for y in (1.48, 1.40, 1.32, 1.24, 1.16, 1.08):
+            outer = 0.205 + 0.018 * (1.48 - y)
+            inner = 0.063 + 0.016 * (1.48 - y)
+            upper.append([V(side * x, y, B.torso_z(y, side * x, 0.026))
+                          for x in (inner, (inner + outer) * 0.5, outer)])
+        B.shell("Chest", B.UNIFORM, dark, upper, 0.009, lambda p: V(0, p.y, 0),
+                label=f"coat front upper {side}")
+        # Burgundy facing is visible beside the open armored center.
+        facing = []
+        for y in (1.47, 1.34, 1.21, 1.08):
+            facing.append([V(side * x, y, B.torso_z(y, side * x, 0.036))
+                           for x in (0.058, 0.071, 0.084)])
+        B.shell("Chest", B.UNIFORM, lining, facing, 0.002, lambda p: V(0, p.y, 0),
+                label=f"burgundy coat facing {side}")
+        tail = []
+        for y in (1.075, 0.90, 0.72, 0.55, 0.36):
+            t = (1.075 - y) / 0.715
+            inner = 0.071 + 0.015 * t
+            outer = 0.205 + 0.055 * t
+            z = 0.142 - 0.055 * t
+            tail.append([V(side * x, y, z + 0.010 * (x - inner))
+                         for x in (inner, (inner + outer) * 0.5, outer)])
+        B.shell("Hips", B.UNIFORM, dark, tail, 0.008, lambda p: V(0, p.y, 0),
+                label=f"long coat tail {side}")
+        lining_strip = []
+        for y in (1.074, 0.84, 0.60, 0.36):
+            t = (1.075 - y) / 0.715
+            z = 0.158 - 0.055 * t
+            inner = 0.080 + 0.015 * t
+            lining_strip.append([V(side * x, y, z) for x in (inner, inner + 0.021, inner + 0.043)])
+        B.shell("Hips", B.UNIFORM, lining, lining_strip, 0.001,
+                lambda p: V(0, p.y, 0), label=f"burgundy coat lining {side}")
+        trim = []
+        for y in (1.074, 0.84, 0.60, 0.36):
+            t = (1.075 - y) / 0.715
+            x = 0.073 + 0.015 * t
+            z = 0.151 - 0.055 * t
+            trim.append([V(side * (x + d), y, z) for d in (-0.004, 0.004)])
+        B.shell("Hips", B.UNIFORM, gold, trim, 0.0015, lambda p: V(0, p.y, 0),
+                label=f"coat edge gold {side}")
+        # A burgundy shoulder cape is the signature silhouette in the supplied reference.
+        mantle = []
+        for y, span in ((1.545, 0.21), (1.50, 0.26), (1.43, 0.29), (1.35, 0.25)):
+            mantle.append([V(side * x, y, B.torso_z(y, side * x, 0.060))
+                           for x in (0.065, span * 0.60, span)])
+        B.shell("Chest", B.UNIFORM, lining if side < 0 else dark, mantle, 0.009,
+                lambda p: V(0, p.y, 0), label=f"shoulder mantle {side}")
+        B.box("Chest", B.UNIFORM, gold, V(side * 0.19, 1.54, 0.045),
+              (0.10, 0.009, 0.026), label=f"rank bar {side}")
+        for y in (1.37, 1.27, 1.17):
+            B.box("Chest", B.UNIFORM, gold,
+                  V(side * 0.156, y, B.torso_z(y, side * 0.156, 0.046)),
+                  (0.014, 0.014, 0.006), label=f"coat button {side}")
+        # Tall armored boots retain the existing foot rig and walking animation.
+        shaft = [V(side * B.LEG_X, y, 0) for y in (0.07, 0.20, 0.34, 0.43)]
+        B.sweep(f"Shin_{'L' if side < 0 else 'R'}", B.UNIFORM, B.swatch("black"), shaft,
+                [(0.088, 0.092), (0.088, 0.087), (0.082, 0.082), (0.078, 0.078)],
+                sides=16, label=f"armored boot {side}")
+    # Back panels make the coat read as a coat from every camera angle.
+    back = []
+    for y in (1.47, 1.33, 1.18, 1.08):
+        rx, rz = B.torso_rxz(y)
+        back.append([V(x, y, -rz - 0.023) for x in (-rx * 0.85, 0, rx * 0.85)])
+    B.shell("Chest", B.UNIFORM, dark, back, 0.008, lambda p: V(0, p.y, 0), label="coat back upper")
+    back_tail = []
+    for y, half, z in ((1.075, 0.18, -0.14), (0.86, 0.21, -0.15), (0.61, 0.23, -0.15), (0.36, 0.25, -0.13)):
+        back_tail.append([V(x, y, z) for x in (-half, 0, half)])
+    B.shell("Hips", B.UNIFORM, dark, back_tail, 0.008, lambda p: V(0, p.y, 0), label="coat back tail")
+    # Layered chest armor remains visible between the open coat panels.
+    for y, w in ((1.20, 0.125), (1.27, 0.145), (1.34, 0.155), (1.41, 0.135)):
+        B.box("Chest", B.UNIFORM, armor, V(0, y, B.torso_z(y, 0, 0.029)),
+              (w, 0.060, 0.015), label="segmented breastplate")
+        B.box("Chest", B.UNIFORM, gold, V(0, y - 0.027, B.torso_z(y, 0, 0.041)),
+              (w * 0.85, 0.004, 0.004), label="armor seam")
+    # High collar and its two gold rank tabs frame the uncovered face.
+    B.sweep("Neck", B.UNIFORM, dark, [V(0, y, 0) for y in (1.51, 1.56, 1.61)],
+            [(0.086, 0.079), (0.083, 0.078), (0.080, 0.075)], sides=20, label="high collar")
+    for side in (-1, 1):
+        B.box("Neck", B.UNIFORM, gold, V(side * 0.049, 1.568, 0.067),
+              (0.026, 0.009, 0.005), label=f"collar rank {side}")
 
 
 def build_collar(B):
@@ -158,9 +244,5 @@ def build_pistol(B):
 
 
 def build(B):
-    build_collar(B)
-    build_placket(B)
-    build_boards(B)
-    build_insignia(B)
-    build_cap(B)
+    build_field_coat(B)
     build_pistol(B)

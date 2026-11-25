@@ -115,6 +115,44 @@ namespace Blackout.AI.TacticalGuard.Tests
             ctx.Health.TakeDamage(new DamageInfo(amount, Vector3.zero, Vector3.zero, null, DamageType.Bullet));
         }
 
+        [TestCase(DirectiveType.Converge)]
+        [TestCase(DirectiveType.SearchZone)]
+        [TestCase(DirectiveType.Regroup)]
+        public void SquadOrder_ChangesThePost_WhileUtilityStillChoosesMovementAndCombat(DirectiveType type)
+        {
+            Vector3 target = new Vector3(20f, 0f, 0f);
+            brain.OnDirective(new Directive(type, target, 9f));
+            Assert.That(brain.Post, Is.EqualTo(target));
+            Assert.That(context.Self.position, Is.EqualTo(Vector3.zero));
+            AgentIntent travel = brain.Tick(.1f);
+            Assert.That(brain.CurrentAction, Is.EqualTo(GuardActionType.HoldPost));
+            Assert.That(travel.moveTarget, Is.EqualTo(target));
+            Assert.That(travel.fire, Is.False);
+            sensor.playerVisible = true;
+            brain.OnDirective(new Directive(type, new Vector3(2f, 0f, 0f), 9f));
+            AgentIntent combat = brain.Tick(.1f);
+            Assert.That(brain.CurrentAction, Is.EqualTo(GuardActionType.Attack));
+            Assert.That(combat.fire, Is.True);
+        }
+
+        [Test]
+        public void ChangedOrderReleasesOldCover_IdenticalOrUnknownOrdersPreserveIt()
+        {
+            Marker cover = AddCover(context, 3f, 0f);
+            sensor.playerVisible = true;
+            Hurt(context, 70f);
+            brain.Tick(.1f);
+            Assert.That(brain.HeldCover, Is.SameAs(cover));
+            brain.OnDirective(new Directive(DirectiveType.Regroup, brain.Post, 10f));
+            brain.OnDirective(new Directive((DirectiveType)999, Vector3.one, 0f));
+            Assert.That(brain.HeldCover, Is.SameAs(cover));
+            brain.OnDirective(new Directive(DirectiveType.Converge, Vector3.forward * 20f, 0f));
+            Assert.That(brain.HeldCover, Is.Null);
+            Assert.That(claims.Count, Is.Zero);
+            brain.SetPost(Vector3.zero); brain.Tick(.1f);
+            Assert.That(brain.HeldCover, Is.SameAs(cover));
+        }
+
         [Test]
         public void Calm_GuardAtItsPostHoldsAndScans()
         {

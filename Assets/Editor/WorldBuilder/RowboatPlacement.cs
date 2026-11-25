@@ -15,7 +15,8 @@ namespace Blackout.Editor
     public static class RowboatPlacement
     {
         public const string VisualName = "RowboatVisual";
-        public const float VisualHeight = -0.28f; // Keel just below sea level; floorboard tops at world y0.1675.
+        public const float VisualHeight = -0.2f; // Original keel is near zero; world keel y is approximately -0.05.
+        public static readonly Vector3 VisualOffset = new Vector3(-0.65f, VisualHeight, -0.269f);
         private const string Label = "Replace Boat With Rowboat";
 
         [MenuItem("Blackout/World/Replace Boat With Rowboat")]
@@ -33,16 +34,17 @@ namespace Blackout.Editor
             Apply(boat);
             // Reattach the existing dock moorings to this hull and retain the lantern/flicker link.
             BeachDressingBuilder.Build();
-            Debug.Log("[World] Rowboat placed at the existing boat transform; old generated hull/cabin/fittings disabled. "
-                + "Floor y0.1675m, boarding planks removed, fire torch installed; existing light and BoatExit retained. NavMesh unchanged (boat excluded).");
+            Debug.Log("[World] Gislinge boat placed under the existing boat/visual roots; legacy geometry disabled. "
+                + "Floor proxy y0.18m, 22 simple colliders, existing torch/light and BoatExit retained. NavMesh unchanged (boat excluded).");
         }
 
         internal static bool IsPlaced(Transform boat) => boat.Find(VisualName) != null;
 
         internal static Vector3 MooringPoint(float z)
         {
-            float t = (4.2f - z) / 8.8f;
-            return new Vector3(-Width(t), VisualHeight + 1.15f + Sheer(t), z);
+            float modelZ = z - VisualOffset.z;
+            float t = Mathf.InverseLerp(3.89f, -3.34f, modelZ);
+            return VisualOffset + new Vector3(-Width(t), 0.67f + Sheer(t), modelZ);
         }
 
         // Also called by the terrain and beach builders so they preserve an installed rowboat.
@@ -62,7 +64,7 @@ namespace Blackout.Editor
             else if (PrefabUtility.GetCorrespondingObjectFromSource(visual.gameObject) != source)
                 throw new InvalidOperationException("A different object occupies RowboatVisual; inspect it before replacing.");
             Undo.RecordObject(visual, Label);
-            visual.SetLocalPositionAndRotation(Vector3.up * VisualHeight, Quaternion.identity);
+            visual.SetLocalPositionAndRotation(VisualOffset, Quaternion.identity);
             visual.localScale = Vector3.one;
             PrefabUtility.RecordPrefabInstancePropertyModifications(visual);
             foreach (Transform part in visual.GetComponentsInChildren<Transform>(true))
@@ -122,42 +124,36 @@ namespace Blackout.Editor
         {
             Transform collision = GeneratedObjects.FindOrCreateChild(boat, "RowboatCollision", Label);
             Undo.RecordObject(collision, Label);
-            collision.SetLocalPositionAndRotation(Vector3.up * VisualHeight, Quaternion.identity);
+            collision.SetLocalPositionAndRotation(VisualOffset, Quaternion.identity);
             collision.localScale = Vector3.one;
-            // These dimensions are the Blender floorboards, rather than a floating full-width deck.
+            // Narrow floor strips follow the supplied hull's bottom; no old benches block the open interior.
             for (int i = -4; i <= 4; i++)
             {
-                float x = i * 0.14f;
-                float minimumZ = -3.65f + Mathf.Abs(x) * 2.8f;
-                Box(collision, "Floor" + (i + 4), new Vector3(x, 0.265f, (minimumZ + 3.75f) * 0.5f),
-                    new Vector3(0.14f, 0.065f, 3.75f - minimumZ));
+                float x = i * 0.07f;
+                float minimumZ = -2.6f + Mathf.Abs(x) * 2.8f;
+                float maximumZ = 2.9f - Mathf.Abs(x) * 2.8f;
+                Box(collision, "Floor" + (i + 4), new Vector3(x, 0.2f, (minimumZ + maximumZ) * 0.5f),
+                    new Vector3(0.07f, 0.06f, maximumZ - minimumZ));
             }
-            float[] benches = { 0.12f, 0.49f, 0.77f };
-            for (int i = 0; i < benches.Length; i++)
-            {
-                float t = benches[i];
-                Box(collision, "Bench" + i, new Vector3(0f, 0.91f + Sheer(t), 4.2f - 8.8f * t),
-                    new Vector3(Width(t) * 1.78f, 0.085f, 0.48f));
-            }
+            for (int i = 0; i < 3; i++) DisableGeneratedPart(collision.Find("Bench" + i));
+            DisableGeneratedPart(collision.Find("Transom")); // Gislinge has two pointed stems.
             // Short side segments follow the narrowing gunwales; ropes and fenders have no collision.
             for (int side = -1; side <= 1; side += 2)
                 for (int i = 0; i < 6; i++)
                 {
                     float a = i / 6f, b = (i + 1) / 6f;
-                    Vector3 start = new Vector3(side * Width(a), 0.72f + Sheer(a), 4.2f - 8.8f * a);
-                    Vector3 end = new Vector3(side * Width(b), 0.72f + Sheer(b), 4.2f - 8.8f * b);
+                    Vector3 start = new Vector3(side * Width(a), 0.44f + Sheer(a), 3.89f - 7.23f * a);
+                    Vector3 end = new Vector3(side * Width(b), 0.44f + Sheer(b), 3.89f - 7.23f * b);
                     GameObject wall = Box(collision, $"Side{side}_{i}", (start + end) * 0.5f,
-                        new Vector3(0.08f, 0.86f, Vector3.Distance(start, end)));
+                        new Vector3(0.08f, 0.44f, Vector3.Distance(start, end)));
                     wall.transform.localRotation = Quaternion.LookRotation(end - start, Vector3.up);
                 }
-            Box(collision, "Transom", new Vector3(0f, 0.75f, 4.2f), new Vector3(Width(0f) * 2f, 0.86f, 0.08f));
+            Box(collision, "Mast", new Vector3(0f, 2.4f, -0.064f), new Vector3(0.095f, 4.45f, 0.095f));
         }
 
-        // Same measured hull profile used in the Blender model (metres, bow at local -Z).
-        private static float Width(float t) => 1.45f * (0.82f + 0.18f * Mathf.Sin(Mathf.PI * Mathf.Min(t / 0.72f, 1f)))
-            * (1f - 0.974f * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.63f, 1f, t)));
-        private static float Sheer(float t) => 0.065f * Mathf.Pow(1f - t, 4f)
-            + 0.28f * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.72f, 1f, t));
+        // Simple fitted profile from the supplied 1.73 x 7.23m planking bounds; bow at local -Z.
+        private static float Width(float t) => 0.03f + 0.83f * Mathf.Pow(Mathf.Max(0f, Mathf.Sin(Mathf.PI * t)), 0.7f);
+        private static float Sheer(float t) => 0.3f * Mathf.Pow(Mathf.Abs(2f * t - 1f), 2f);
 
         private static GameObject Box(Transform parent, string name, Vector3 centre, Vector3 size)
         {

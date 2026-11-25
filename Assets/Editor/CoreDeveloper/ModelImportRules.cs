@@ -34,12 +34,24 @@ namespace Blackout.Editor
             importer.useFileScale = true;
             importer.bakeAxisConversion = true;
 
-            // Models never bring scene objects or clips with them; parts are animated by script.
+            // The earlier Commander FBX includes authored clips. The Army Officer uses the
+            // shared Humanoid soldier clips and imports only its avatar and mesh.
             importer.importCameras = false;
             importer.importLights = false;
             importer.importVisibility = false;
             importer.importBlendShapes = false;
-            importer.importAnimation = false;
+            string normalizedPath = importer.assetPath.Replace('\\', '/');
+            bool suppliedCommander = normalizedPath.EndsWith(
+                "/SM_Char_CommanderHero.fbx", StringComparison.OrdinalIgnoreCase);
+            bool armyOfficer = normalizedPath.EndsWith(
+                "/SM_Char_ArmyOfficer.fbx", StringComparison.OrdinalIgnoreCase);
+            importer.importAnimation = suppliedCommander;
+            if (armyOfficer)
+            {
+                importer.animationType = ModelImporterAnimationType.Human;
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                importer.optimizeGameObjects = false;
+            }
 
             // Shading as modelled in Blender, tangents that match the Blender normal map bake.
             importer.importNormals = ModelImporterNormals.Import;

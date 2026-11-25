@@ -11,7 +11,7 @@ namespace Blackout.Interaction
     /// 60 m Generator noise. It sits on the console beside the nested Generator_Visual, which it never edits.
     /// Audio hooks: random sparks while holding, and one call when it shuts down.
     /// </summary>
-    public class GeneratorInteractable : Interactable
+    public class GeneratorInteractable : Interactable, ICheckpointState
     {
         // Prototype: a tick at random, about 6 per second, while E is held.
         private const float SparksPerSecond = 6f;
@@ -32,6 +32,9 @@ namespace Blackout.Interaction
         public UnityEvent onDisabled = new UnityEvent();
 
         public bool IsRunning { get; private set; } = true;
+
+        public object CaptureCheckpoint() => IsRunning;
+        public void RestoreCheckpoint(object state) => IsRunning = (bool)state;
 
         public override string Prompt => PromptText;
         public override string Key => HoldKey;

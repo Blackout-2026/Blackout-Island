@@ -40,6 +40,12 @@ namespace Blackout.Editor
 
         public static void Build(CharacterEntry entry, Dictionary<string, Material> materials)
         {
+            if (entry.Skinned)
+            {
+                SkinnedHumanoidBuilder.Build(entry, SkinnedHumanoidBuilder.SpecFor(entry.Name), materials); // a downloaded model needs its pose and a rifle, not just the model
+                return;
+            }
+
             var fbx = AssetDatabase.LoadAssetAtPath<GameObject>(entry.FbxPath);
             if (fbx == null)
             {

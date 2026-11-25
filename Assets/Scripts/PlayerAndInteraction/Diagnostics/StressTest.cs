@@ -111,6 +111,12 @@ namespace Blackout.Diagnostics
                 yield break;
             }
 
+            // This diagnostic fires every weapon; gameplay now starts with only the knife.
+            while (weapons.NextLootWeapon() != null)
+            {
+                weapons.TakeNextLootWeapon();
+            }
+
             TakeInventory();
             CreateDummy();
             CreateBenchmarkDirections();

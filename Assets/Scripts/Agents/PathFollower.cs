@@ -112,6 +112,18 @@ namespace Blackout.Agents
             tracker.Clear();
         }
 
+        /// <summary>Temporary cinematic control: discard residual movement and rebase facing to the root.</summary>
+        public void StopImmediately()
+        {
+            Stop();
+            velocity = Vector2.zero;
+            yaw = transform.eulerAngles.y;
+            hasLookTarget = false;
+            aiming = false;
+            stuckTimer = 0f;
+            stuckReferencePosition = transform.position;
+        }
+
         /// <summary>One movement step. Update calls it every frame; public so tests can drive time.</summary>
         public void Tick(float dt)
         {
@@ -138,6 +150,12 @@ namespace Blackout.Agents
                     float speed = settings.SpeedFor(speedClass) * SpeedMultiplier * tracker.SpeedFactor(position, settings);
                     desired = direction.normalized * speed;
                 }
+            }
+
+            // F2: a closed door ahead is opened and waited for; a locked one is waited at until the re-plan finds another way.
+            if (desired.sqrMagnitude > 0f && DoorGate.MustWait(position, desired, gameObject, DoorRegistry.Doors))
+            {
+                desired = Vector2.zero;
             }
 
             // A4: applies even while standing still, so an idle agent still gets nudged out of a crowd.
@@ -206,7 +224,7 @@ namespace Blackout.Agents
                 Vector3 next = position + new Vector3(velocity.x, 0f, velocity.y) * dt;
 
                 // Clamp onto the NavMesh. No floor nearby means the step is refused, so an agent never leaves the mesh.
-                if (provider.TrySnap(next, settings.snapDistance, out Vector3 snapped))
+                if (provider.TryStep(position, next, settings.snapDistance, out Vector3 snapped))
                 {
                     float y = Mathf.Lerp(position.y, snapped.y, 1f - Mathf.Exp(-settings.groundDamping * dt));
                     position = new Vector3(snapped.x, y, snapped.z);

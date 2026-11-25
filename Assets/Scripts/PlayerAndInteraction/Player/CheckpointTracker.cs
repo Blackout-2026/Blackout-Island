@@ -12,7 +12,7 @@ namespace Blackout.Player
     /// Markers live in the Environment scene, so they are found at runtime, and looked for again until found
     /// (an additive scene may load after the player).
     /// </summary>
-    public class CheckpointTracker : MonoBehaviour
+    public class CheckpointTracker : MonoBehaviour, ICheckpointState
     {
         private const float SearchInterval = 1f;
 
@@ -25,6 +25,7 @@ namespace Blackout.Player
         private float nextSearchTime;
         private Vector3 spawnPosition;
         private float spawnYaw;
+        private CheckpointWorld world;
 
         /// <summary>Raised when a new checkpoint becomes the respawn point (the HUD shows a toast).</summary>
         public event Action<Marker> CheckpointReached;
@@ -42,7 +43,11 @@ namespace Blackout.Player
         {
             spawnPosition = transform.position;
             spawnYaw = transform.eulerAngles.y;
+            world = GetComponent<CheckpointWorld>();
+            if (world == null) world = gameObject.AddComponent<CheckpointWorld>();
         }
+
+        private void Start() => world.RequestCapture(); // fallback for a scene played without MissionDirector
 
         private void OnEnable()
         {
@@ -100,7 +105,25 @@ namespace Blackout.Player
         {
             Current = marker;
             CheckpointReached?.Invoke(marker);
+            world.RequestCapture();
         }
+
+        private struct Checkpoint
+        {
+            public Marker Marker;
+            public bool CureTaken;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint { Marker = Current, CureTaken = IsCureTaken };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            Current = saved.Marker;
+            IsCureTaken = saved.CureTaken;
+        }
+
+        public bool RestoreWorld() => world != null && world.Restore();
 
         /// <summary>Where to respawn: the current checkpoint, or the spawn point if none has been reached.</summary>
         public void GetRespawnPose(out Vector3 position, out float yaw)

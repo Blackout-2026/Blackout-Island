@@ -73,7 +73,19 @@ MonoBehaviour:
   noiseOrigin: {fileID: 6062148164161047920}
   onHoldSpark:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 734915589760624706}
+        m_TargetAssemblyTypeName: Blackout.Audio.InteractionAudio, Blackout.PlayerAndInteraction
+        m_MethodName: HoldTick
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onDisabled:
     m_PersistentCalls:
       m_Calls: []
@@ -86,6 +98,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6062148164161047920}
+  - component: {fileID: 734915589760624706}
   m_Layer: 9
   m_Name: Generator
   m_TagString: Untagged
@@ -110,6 +123,18 @@ Transform:
   - {fileID: 5960483756924150924}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &734915589760624706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6832055542037163287}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0ad2d17103bb8f4990a3c563a53d7c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.InteractionAudio
 --- !u!1001 &8323950732760137387
 PrefabInstance:
   m_ObjectHideFlags: 0

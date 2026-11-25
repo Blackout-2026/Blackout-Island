@@ -1,0 +1,36 @@
+{
+  "source": "D:\\model\\gun",
+  "credit": "Dries Deryckere (supplied MTL/texture filenames)",
+  "licence": "No licence text included in supplied files.",
+  "source_triangles": 21660,
+  "lod_triangles": [
+    9746,
+    3032,
+    866
+  ],
+  "source_grip_cm": [
+    1.9,
+    -7.0,
+    -14.0
+  ],
+  "unity_muzzle_metres": [
+    0.0002,
+    0.08965,
+    0.577724
+  ],
+  "sha256": {
+    "source\\083412fa5dba4c75a3bdc3bc77dd0ed5.zip": "6d87bc4538c977402cffb5a944d1e3e69b2dc4939628065c47f73b869a252a88",
+    "textures\\GAP_Examen_Gun_albedo_DriesDeryckere.tga.png": "c723a8bf4b5201cafd61adf5c504e18f6488340f799f1c5ab608f9ef4b797e84",
+    "textures\\GAP_Examen_Gun_metalness_DriesDeryckere.tg.png": "ee007ea809a32e7317ccafeda459728c1da57067baf6e412b46d5d179052df91",
+    "textures\\GAP_Examen_Gun_roughness_DriesDeryckere.tg.png": "1a70be864ea6f5e36dd908c1145f508b79ef3a7171082554b867de4516d6f803",
+    "textures\\GAP_Examen_Gun_occlusion_DriesDeryckere.tg.png": "dc3c2d9592a33d6581d39ce5c412884e96ae6e30e08d2bfbdf9a777ed5354d2f",
+    "textures\\Scope_Tex_A.tga.png": "979047158da23c3f03594e66647a9638c9d37cd00900bf4cbe87daf4f41e1304",
+    "textures\\Scope_Tex_M.tga.png": "2bd8e9f9d340c218c6ed189481c25ebd68d971ec79568452bd1872f63c0bbea3",
+    "textures\\Scope_Tex_R.tga.png": "acf888bb267463a9b71af8269068f0c07e88ab47c36c2f9bf0a2605e51358851",
+    "textures\\Scope_Tex_O.tga.png": "2dfb08ef8c78a6207851a2f04cf29ac359cd84b781f45508fd8fd0dd0c0fddb1",
+    "textures\\Grip_Tex_A.tga.png": "97c2995612f6fc771db288dbd911d2859e3b6622d46427480f6e9e52746b4a64",
+    "textures\\Grip_Tex_M.tga.png": "6fb814ee68afdf01b7f7c8d721466dcc3c2e0b44e40dd23c36bef2b618c7da28",
+    "textures\\Grip_Tex_R.tga.png": "f402e611cac8512005bd2b1de7783640ca24a8ae949d96c31bcd6e7545f6914c",
+    "textures\\Grip_Tex_O.tga.png": "6259decccb91e74d38dc0f0a6b7e363c29766600035be7bf1caa51530cd48548"
+  }
+}

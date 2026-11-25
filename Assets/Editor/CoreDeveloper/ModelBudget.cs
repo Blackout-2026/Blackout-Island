@@ -27,7 +27,17 @@ namespace Blackout.Editor
         private static readonly ModelBudget Character = new ModelBudget(3000, 3);
         // The Commander is the one realistic hero character (sculpted face, hair cards, a detailed uniform): docs/art-pipeline.md section 18.2.
         private static readonly ModelBudget CommanderHero = new ModelBudget(14000, 3);
-        private static readonly ModelBudget Weapon = new ModelBudget(6000, 3);
+        // The downloaded skinned officer has four texture atlases but duplicate FBX material slots.
+        private static readonly ModelBudget ArmyOfficer = new ModelBudget(35000, 14);
+        // The Security Patrol is the second hero humanoid (sculpted head, balaclava, painted gear atlas, laced boots): docs/art-pipeline.md section 18.3.
+        private static readonly ModelBudget PatrolHero = new ModelBudget(12000, 3);
+        // The downloaded photographic soldier that is the Patrol now (docs/art-pipeline.md section 18.4): 9,710 triangles and the seven material slots Mixamo exports.
+        private static readonly ModelBudget PatrolSoldierHero = new ModelBudget(10000, 7);
+        // The Hunter is the downloaded Left 4 Dead model (docs/art-pipeline.md section 18.5): 5,046 triangles, one material.
+        private static readonly ModelBudget HunterL4D = new ModelBudget(6000, 2);
+        // The viewmodels carry the downloaded first-person arms (about 2,400 triangles each), the one thing always on screen, so they get more than a prop:
+        // docs/art-pipeline.md section 14.6 (step VM1). Before VM1 the target was 6,000.
+        private static readonly ModelBudget Weapon = new ModelBudget(10000, 3);
         private static readonly ModelBudget Prop = new ModelBudget(3000, 4);
 
         /// <summary>Budget for a model asset name such as "SM_Generator" (extension optional).</summary>
@@ -51,6 +61,22 @@ namespace Blackout.Editor
             else if (Matches(assetName, "SM_Char_Commander"))
             {
                 budget = CommanderHero;
+            }
+            else if (Matches(assetName, "SM_Char_ArmyOfficer"))
+            {
+                budget = ArmyOfficer;
+            }
+            else if (Matches(assetName, "SM_Char_HunterL4D"))
+            {
+                budget = HunterL4D;
+            }
+            else if (Matches(assetName, "SM_Char_PatrolSoldier"))
+            {
+                budget = PatrolSoldierHero;
+            }
+            else if (Matches(assetName, "SM_Char_Patrol"))
+            {
+                budget = PatrolHero;
             }
             else if (assetName.StartsWith("SM_Char_", StringComparison.Ordinal))
             {

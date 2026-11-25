@@ -128,6 +128,8 @@ namespace Blackout.Mission.Tests
             mission.OnCureTaken();
             Assert.AreEqual(MissionPhase.Escape, mission.Phase);
             Assert.AreEqual(MissionStateMachine.ObjectiveEscape, mission.Objective);
+            Assert.AreEqual(MissionStateMachine.CheckpointEscapeLab, mission.CheckpointId,
+                "death must not strand the player outside the locked lab");
         }
 
         [Test]
@@ -136,7 +138,7 @@ namespace Blackout.Mission.Tests
             var mission = NewMission();
             mission.JumpTo(MissionPhase.Escape);
             mission.Tick(CorridorMiddle);
-            Assert.AreEqual(MissionStateMachine.CheckpointGeneratorRoom, mission.CheckpointId);
+            Assert.AreEqual(MissionStateMachine.CheckpointEscapeLab, mission.CheckpointId);
             Assert.AreEqual(MissionChange.Checkpoint, mission.Tick(CompoundYard));
             Assert.AreEqual(MissionStateMachine.CheckpointEscapeEntrance, mission.CheckpointId);
             Assert.AreEqual(MissionChange.Checkpoint, mission.Tick(OutsideGate));
@@ -257,6 +259,27 @@ namespace Blackout.Mission.Tests
                 MissionPhase.Beach, MissionPhase.Forest, MissionPhase.BunkerEntrance, MissionPhase.Corridor,
                 MissionPhase.GeneratorRoom, MissionPhase.Lab, MissionPhase.Escape, MissionPhase.Complete,
             }, phases);
+        }
+
+        [Test]
+        public void Checkpoint_RewindsCompletionAndWorldFlags_AndCanBeRestoredAgain()
+        {
+            var mission = new MissionStateMachine();
+            mission.SetBoatExit(BoatExit);
+            mission.JumpTo(MissionPhase.GeneratorRoom);
+            MissionStateMachine saved = mission.CaptureCheckpoint();
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                mission.OnGeneratorDisabled();
+                mission.OnCureTaken();
+                mission.Tick(BoatExit);
+                Assert.That(mission.IsComplete, Is.True);
+                mission.RestoreCheckpoint(saved);
+                Assert.That(mission.Phase, Is.EqualTo(MissionPhase.GeneratorRoom));
+                Assert.That(mission.GeneratorDisabled, Is.False);
+                Assert.That(mission.CureTaken, Is.False);
+                Assert.That(mission.CheckpointId, Is.EqualTo(MissionStateMachine.CheckpointGeneratorRoom));
+            }
         }
 
         [TestCase(0f, "0:00")]

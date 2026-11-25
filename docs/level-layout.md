@@ -98,7 +98,7 @@ Re-running the tool gives byte-identical output. It overwrites any hand sculptin
 | Dock landing (Unity addition) | Sand raised to y 1.25 under x −2.4 … 2.4, z −101 … −97 (3 m blend). Stepping off the deck is now ≤ 0.1 m, down from 0.33 m |
 | Ramp hole | Terrain hole over x −1.5 … 1.5, z 52.4 … 60.2: the part of the ramp whose roof (floor + 3.0 + 0.4) is above the plateau. Computed from `BunkerLayout.asset`. The 0.78 m grid cuts 44 cells (x ±1.56, z 52.03 … 60.63); the overrun is inside the ramp and lobby walls |
 | Boundary | `Terrain/IslandBoundary`: 180 invisible BoxColliders, 1 m thick, y −8 … 30, 841 m around. They sit on the 0.6 m water-depth line, traced every 2° from (0, 28). They go round x −10 … 12, z −132 … −92, so the dock, boat and boat zone stay inside |
-| Water | `Beach/Water`: 520 × 520 m plane at y 0 centred on (0, 20). Transparent placeholder material, no collider, no shadows |
+| Water | `Beach/Water`: 520 × 520 m surface at y 0 centred on (0, 20), no collider, no shadows. Since OC1 it is an animated 128 × 128 mesh with the `Blackout/Ocean` shader, plus a wet sand band, rocks and driftwood under `Beach/Shore` (see [ocean-shore.md](ocean-shore.md)); W2 built it as a flat transparent plane |
 | Dock | `Beach/Dock`: deck x ±1.4, z −128 … −97, top 1.3, 0.35 thick. Posts Ø 0.3 m every 3 m at x ±1.5 (z −98 … −128), from y −4. Rails at deck + 0.8 … 0.9. The east rail is open from z −119 to −128 beside the boat, with short bollards (deck + 0.25) at z −122 and −125 |
 | Boat | `Beach/Boat` at (3.7, 0.15, −122.5), yaw −2.9°, bow to the south, motor toward the shore. Hull 2.9 m wide, deck y 0.7. Fenders on the dock (west) side. Lantern at about (2.6, 2.6, −124.3). Its light, `Lighting/OutdoorLights/OutdoorLights_BoatLantern` (W7), is 0.15 m above it at (2.6, 2.75, −124.3); the reference's (2.5, 2.75, −124.2) ignores the boat's yaw. Colliders on the hull, sides, cabin and roof only. Keep it dynamic (it will bob) |
 
@@ -168,6 +168,8 @@ waypoints by id.
 
 DoorSockets are at floor level in the middle of the wall. They face into the room you enter on the way in. Only
 door gaps get one; the open ramp passages (O-RampTop, O-RampBottom) have no door.
+
+The current E1 population is 5 Hunters, 12 Security Patrols, 6 Tactical Guards and 1 Commander. See [enemy population and lab clearance](enemy-population.md) for the current distribution, respawn rules and lab checkpoint. The original route table below documents the eight prototype agents; additional routes are defined in MarkerLayout.cs.
 
 **Agents.** Agent names follow the prototype and the Agent Controller's `AgentRoot` (for example `Patrol-1`). An
 agent's AgentSpawn is `AgentSpawn_<agent>`. Its waypoints are `Waypoint_<agent>_01`, `_02` …, in route order, and
@@ -275,7 +277,7 @@ base colour becomes the tint, which is white except for Rock (#B8B8B4) and Tile 
 | Rock | rock, tint #B8B8B4 | #43423D | 0.20 / 0 | 0.12 | terrain layer TL_Rock and the rock prefabs (W6) |
 | Concrete | concrete, wallPanel | #72726B | 0 / 0 | 0.3 | ceilings, walls and lintels (27 parts) |
 | ConcreteStained | floorConcrete (oil stains) | #5C5E5A | 0 / 0 | 0.25 | floors of the lobby, SecurityArea, Corridor and GeneratorRoom (4) |
-| MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor, GeneratorRoom walls and lintel (7) |
+| MetalPlate | metalPlate, metal, diamond plate | #5A5E60 | 0 / 0.65 | 0.6 | ramp floor (F2: the GeneratorRoom's walls and lintel are Concrete now, 6 parts fewer) |
 | Rust | rust | #64361C | 0 / 0.3 | 0.5 (chosen: only on cylinders in the prototype) | — (props, W10) |
 | Tile | tiles, tint #D8DCDC | #AAB3B4 | 0 / 0 | 0.25 | Laboratory floor, walls and lintel (7) |
 | HazardStripe | hazard | #D9A521 | 0.25 / 0 | 1.5 | the 6 sills: every door and ramp passage threshold |
@@ -311,7 +313,7 @@ by hand.
 | Any room, `Sill_*` | HazardStripe |
 | Laboratory `Floor`, `Wall_*`, `Lintel_*` | Tile |
 | BunkerEntranceRamp `Floor` | MetalPlate |
-| GeneratorRoom `Wall_*`, `Lintel_*` | MetalPlate |
+| GeneratorRoom `Wall_*`, `Lintel_*` | Concrete (F2; it was a flat MetalPlate with no texture, also on the corridor's west wall beside D-Generator) |
 | Any room, `Floor` | ConcreteStained |
 | Any room, `Ceiling`, `Wall_*`, `Lintel_*` | Concrete |
 
@@ -323,7 +325,7 @@ along Z use (x, y). Tiling is then repeats per metre on every part, and textures
 UV2 (for the W7 lightmaps) is unwrapped at each part's real size. The part's scale, rotation, BoxCollider and static
 flags are unchanged, so the NavMesh does not need a rebake.
 
-**Result:** 51 parts (Concrete 27, Tile 7, MetalPlate 7, HazardStripe 6, ConcreteStained 4) and 51 meshes, which
+**Result:** 51 parts (Concrete 27, Tile 7, MetalPlate 7, HazardStripe 6, ConcreteStained 4) and 51 meshes (after F2: Concrete 33, MetalPlate 1, ConcreteStained 3, MetalGrating 1), which
 add about 290 KB to `Environment.unity`. A re-run leaves the scene byte-identical, and Validate Layout still passes
 65 of 65.
 
@@ -453,6 +455,22 @@ moves 4 pines and 4 palms: on exact values the prototype's own code also gives 4
   by the quality level.
 - **Not placed:** the prototype's 12 fallen logs; W10 covers bunker rooms only.
 
+**Forest models (F1).** The pines (`Pine`, `PineB`, `PineC`, `PineD`), `Rock`, `RockSmall`, `Bush` and `Grass` are now the downloaded ponderosa
+stand, so the forest no longer uses those placeholders (the beach palms, sea almonds and bananas are unchanged). **Blackout/World/Apply Forest
+Models** (`ForestModelSwap.cs`) builds the Rock, RockSmall, Bush and Grass prefabs and swaps the terrain prototypes' prefabs in place. It does
+not repaint: all 657 trees and rocks, 376 bushes and 6,000 tufts keep their position, scale and yaw, and the terrain layers, trail, NavMesh
+(the capsules are the placeholders' numbers) and lighting are untouched. Credits: `docs/credits/world-builder.md`; models: `docs/art-pipeline.md` 19.5.
+
+| Prefab | LOD0 / LOD1 / LOD2 triangles | Size |
+| --- | --- | --- |
+| Pine, PineB, PineC, PineD | 2,700 / 800 / 229, 2,700 / 800 / 229, 3,052 / 799 / 229, 2,416 / 799 / 229 | 10.8, 12.9, 9.1, 5.4 m tall |
+| Rock, RockSmall | 900 / 320 / 90, 700 / 260 / 79 | 2.4 x 1.0 m, 1.4 x 0.8 x 2.0 m, pivot in the middle |
+| Bush, Grass | 560, 6 | 1.0 m tall, 1.0 x 0.75 m |
+
+The pines are about as heavy as the trees they replace (the earlier pines averaged 2,842 at LOD0, these 2,700 to 3,050), so this step should not
+make the estimate below worse (not re-measured). It is an estimate of the old placeholders; Paint Terrain And Forest prints the real numbers and was not run, because
+it also repaints the terrain.
+
 **Prefabs.** `VegetationLibrary` uses `Assets/Environment/Vegetation/<Name>.prefab` (Pine, Palm, Rock, RockSmall,
 Bush, Grass) if it exists, else the generated `Placeholder/<Name>_Placeholder.prefab`. The placeholders port the
 prototype's own models and add 2 lower LODs:
@@ -479,6 +497,42 @@ Measured at PC LOD bias 2, the unit-scale palm's LOD1-to-LOD2 distance changes f
 The five-view vegetation estimates are now Dock **61,846**, Forest checkpoint **74,475**, Trail middle **60,329**,
 Gate looking back **76,318** and Hunter-1 spawn **58,852** triangles. The highest falls from **80,874 to 76,318**
 (about **5.6%**); detail counts and the full LOD0 geometry inventory stay unchanged. These are estimates, not GPU timings.
+
+### Denser, varied forest (FD1)
+
+**Blackout > World > Add Dense Varied Forest** (`ForestDensityBuilder`) supplements the saved terrain;
+it does not run Paint Terrain And Forest. The original 657 tree/rock instances, 376 bushes,
+6,000 grass tufts, heights and splat painting are preserved. Current saved totals are **1,038 trees,
+280 rocks and 1,476 bushes**, plus unchanged grass. There are seven inland tree shapes
+(four existing ponderosas and three trees from the supplied Small Trees FBX), four rock shapes
+and three bush shapes. Beach palms/almonds/bananas retain their existing placement.
+
+The finite supplement uses seeds **50123 / 50432 / 50777** for trees/bushes/rocks and at most
+900 / 1100 / 240 candidates. Actual additions: **544 trees, 1,100 bushes, 117 rocks**. It samples
+Unity x -105..105, z -88..65, ground >= 2.6 m, normal Y >= 0.85, below the cliff minus 6 m.
+The existing compound/dock/cliff exclusions and Hunter 6 m clearings apply. Trail centre clearance
+is 4.5 m for trees, 3.8 m for bushes, 4 m for rocks. Candidate spacing is 3.2 / 1.4 / 3 m;
+saved tree/rock positions additionally exclude additions within 2.6 m (trees) or 1.8 m (rocks).
+Rejected candidates are not replaced: rerunning the same plan adds zero more trees/rocks.
+Only the two new named bush detail layers are regenerated; original layers are untouched.
+
+New trees/rocks have three LODs and trunk/rock capsules. The existing NavMesh baker includes
+these capsules; the rebake passes **145/145** layout checks, including mission and Hunter routes.
+Hunter cover already recognises all terrain trees and every detail prefab containing `Bush`;
+its integration test now includes all three bush shapes. No AI runtime changes were needed.
+
+The five-view PC vegetation estimate was already over the historical 250,000-triangle target:
+worst **476,853 before -> 753,001 after**, excluding shadows and occlusion. The target is retained,
+not claimed as passed. New small trees use <= 2,350 / 680 / 190 triangles per LOD;
+new rocks <= 650 / 220 / 70, bushes 228 / 136 each. GPU frame time still needs a live Profiler check.
+Evidence: system temporary directory `blackout-FD1` (inventories, preservation hashes, captures,
+Unity logs and test XML). Fixed Environment captures verify density/texture setup, not complete
+gameplay, all camera angles or target-machine performance. Check the trail, Hunter clearings,
+off-trail collision, sightlines, restart and quality settings through Bootstrap.
+
+**Rebuild order:** convert using `build_forest_variants.py`, run Add Dense Varied Forest, then
+Validate Layout. A full Paint Terrain And Forest resets vegetation to W6: reapply tree diversification
+and FD1 afterward. Existing hand/weapon/cinematic assets and lighting are unchanged.
 
 ### Visible-triangle budget
 
@@ -1194,6 +1248,16 @@ Only bunker rooms are covered here; outdoor dressing, the catwalk and its stairs
 | Laboratory | LabCommanderMonitor | Prop_Monitor | 6.4 | 3.35 | 141.1 | 180 | 1 | 1 | 1 |
 | Laboratory | LabSign | Prop_Sign_BiohazardLevel4 | -2.8 | 4.5 | 124.03 | 0 | 1 | 1 | 1 |
 | Laboratory | LabFlask01 | Prop_Flask | -7.5 | 3.43 | 128.8 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyFuseBox | Prop_HutFuseBox | 2.6 | 11 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyKeypad | Prop_HutKeypad | -1.55 | 11.3 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyNotice | Prop_HutSignNotice | 1.75 | 12.1 | 48.4 | 0 | 1 | 1 | 1 |
+| BunkerEntranceLobby | LobbyCamera | Prop_HutCamera | -5.6 | 12.6 | 50.2 | 90 | 1 | 1 | 1 |
+| SecurityArea | SecurityFuseBox | Prop_HutFuseBox | 7.97 | 3.5 | 71.2 | 270 | 1 | 1 | 1 |
+| SecurityArea | SecurityCamera | Prop_HutCamera | 5.5 | 4.7 | 81.97 | 180 | 1 | 1 | 1 |
+| Corridor | CorridorCamera | Prop_HutCamera | -1.47 | 4.7 | 91 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorFuseBox | Prop_HutFuseBox | -1.47 | 3.5 | 112 | 90 | 1 | 1 | 1 |
+| Corridor | CorridorWarning | Prop_HutSignWarning | 1.47 | 4 | 116 | 270 | 1 | 1 | 1 |
+| GeneratorRoom | GeneratorFuseBox | Prop_HutFuseBox | -19.87 | 3.5 | 99 | 90 | 1 | 1 | 1 |
 <!-- W10-DRESSING-END -->
 
 ### Rebuilding and preserving hand edits
@@ -1641,6 +1705,12 @@ builder when supplied; no external assets are required to run it.
 
 ## Weathered rowboat replacement (W13)
 
+**B1 supersedes the visual assets and collision profile in this historical section:**
+the saved boat now uses the supplied Gislinge sailboat through the same visual
+prefab GUID and scene root. See [Gislinge boat replacement](gislinge-boat.md) for
+the current offsets, 22 enabled collision boxes, materials and rebuild procedure.
+The dock, torch and BoatExit remain connected through the existing systems.
+
 The user requested an original wooden rowboat based on their supplied image and approved additions in the
 Core Developer's model, texture, material and visual-prefab folders. `Environment.unity` now contains this
 linked visual at `Beach/Boat/RowboatVisual`. It replaces the cabin motorboat's appearance with a curved plank
@@ -1832,5 +1902,5 @@ camera-facing flame sprites are stylised and the procedural torch handle lacks a
 | Nine optional dressing placements missing (W10) | Pipes, cable trays, grille, extinguisher and flask skip until their five prefabs are supplied | Core Developer (Assets/Prefabs/Props) |
 
 Outdoor zones (Beach, Forest, compound yard) keep the prototype's positions. The terrain only adds the
-berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"), and the forest only adds the Hunter
-clearings (see "Terrain painting and vegetation").
+berth, the dock landing and the ramp hole (see "Terrain, beach and boundary"). The forest keeps the Hunter
+clearings and adds the FD1 density/shape supplement (see "Terrain painting and vegetation").

@@ -34,9 +34,11 @@ namespace Blackout.Editor
             { MarkerType.HealthPickup, "sv_label_2" },
         };
 
-        public static string Build(Transform markersRoot, BunkerLayout layout)
+        public static string Build(Transform markersRoot, BunkerLayout layout, bool agentsOnly = false)
         {
             List<MarkerSpec> specs = MarkerLayout.Build(layout);
+            if (agentsOnly)
+                specs.RemoveAll(s => s.Type != MarkerType.AgentSpawn && s.Type != MarkerType.Waypoint);
             var groups = new Dictionary<string, HashSet<string>>();
             foreach (MarkerSpec spec in specs)
             {

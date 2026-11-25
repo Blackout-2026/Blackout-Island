@@ -5,8 +5,9 @@
 
 The three agents share ONE body and one skeleton (docs/reference/core-developer.md section 4.1) and differ in clothes, head gear
 and weapon:
-  Patrol    a police-style tactical operator: navy uniform, black plate-carrier vest with pouches and a radio, helmet with rails,
-            night-vision mount, dark visor and ear cups, knee pads, gloves, a holstered pistol and an assault rifle with an optic.
+  Patrol    moved to build_operator.py (step PS3): a hero-quality desert-tan tactical operator with a sculpted head and balaclava, a helmet,
+            a vest with webbing and pouches, a belt, thigh pouches, laced boots and a SCAR-style rifle, two textured materials and a
+            12,000-triangle budget. "-- Patrol" runs that script.
   Hunter    a field soldier in camouflage like the owner's photo: a tan cap with a patch and a brim, sunglasses, a black hood over
             the whole head and face, a dark forest camouflage jacket and trousers (a camouflage texture, T_CharHunter_BaseColor) with leaf and cloth strips hanging from
             the shoulders, arms, waist, thighs, cap and rifle, a dark olive chest rig
@@ -20,8 +21,9 @@ Rig: the robot's method (build_robot.py), reused. Rigid parts on pivots, every j
 one Empty root that cancels the FBX exporter's axis rotation (docs/art-pipeline.md section 16.2). Joints (1.87 m tall, feet on y 0,
 facing +Z): Hips (root), Spine, Chest, Neck, Head, UpperArm_L/R, ForeArm_L/R, Hand_L/R, Thigh_L/R, Shin_L/R, Foot_L/R and Gun, whose
 child MuzzlePoint is an Empty at the muzzle (Patrol and Hunter 0.74 m ahead of the socket, Commander 0.22 m).
-Budget (ModelBudget, SM_Char_): 3,000 triangles target, 4,500 maximum, 3 materials. Flat colour materials only: the Unity side
-creates the matching M_Char_* assets (CharacterMaterialBuilder), so Blender's colours are for the previews.
+Budget (ModelBudget, SM_Char_): 3,000 triangles target, 4,500 maximum, 3 materials (the Hunter; the Patrol 12,000 and the Commander 14,000 are
+hero characters). Flat colour materials only: the Unity side creates the matching M_Char_* assets (CharacterMaterialBuilder), so Blender's colours
+are for the previews.
 
 Output: Art/Blender/SM_Char_<Name>.blend and Assets/Models/Custom/SM_Char_<Name>.fbx
 """
@@ -199,66 +201,6 @@ def body(s):
         cyl(foot, s["boot"], (0.0, 0.08, -0.005), 'y', 0.066, 0.14, segs=10)
 
 
-def rifle(metal, dark, furniture, scope=False, optic=False, light=False):
-    """The assault rifle of the Patrol and the Hunter (docs/reference/core-developer.md 4.5): 1.03 m, muzzle 0.74 m ahead of the socket."""
-    j = "Gun"
-    box(j, metal, (0.0, 0.0, 0.02), (0.06, 0.09, 0.42), bevel=0.004)                              # receiver
-    box(j, metal, (0.0, -0.005, 0.35), (0.052, 0.06, 0.24), bevel=0.004)                          # handguard
-    cyl(j, dark, (0.0, 0.01, 0.605), 'z', 0.013, 0.27, segs=8)                                      # barrel
-    cyl(j, dark, (0.0, 0.01, 0.72), 'z', 0.020, 0.04, segs=8)                                       # muzzle device, its tip is MuzzlePoint
-    box(j, dark, (0.0, -0.115, 0.07), (0.045, 0.16, 0.07), bevel=0.003, tilt=(14.0, (0.0, -0.115, 0.07)))   # magazine
-    box(j, furniture, (0.0, -0.085, -0.09), (0.045, 0.10, 0.05), bevel=0.004, tilt=(-17.0, (0.0, -0.085, -0.09)))  # pistol grip
-    box(j, furniture, (0.0, -0.01, -0.30), (0.05, 0.08, 0.22), bevel=0.004)                       # stock
-    box(j, dark, (0.0, 0.055, 0.43), (0.01, 0.03, 0.012))                                           # front sight
-    for z in (-0.04, 0.30):
-        box(j, furniture, (0.0, 0.10, z), (0.02, 0.16, 0.016))                                       # sling straps up to the vest
-    if optic:
-        box(j, dark, (0.0, 0.075, 0.06), (0.05, 0.05, 0.10), bevel=0.006)                         # red-dot optic
-    if scope:
-        cyl(j, dark, (0.0, 0.075, 0.05), 'z', 0.024, 0.20, segs=10)                                 # scope tube
-        for z in (-0.02, 0.10):
-            box(j, dark, (0.0, 0.05, z), (0.03, 0.04, 0.02))
-    if light:
-        cyl(j, dark, (0.0, -0.045, 0.38), 'z', 0.018, 0.08, segs=8)                                 # weapon light
-
-
-# --------------------------------------------------------------------------- Security Patrol
-
-def build_patrol():
-    CLOTH, GEAR, METAL = 0, 1, 2
-    body({"torso": CLOTH, "hips": CLOTH, "arm": CLOTH, "hand": GEAR, "leg": CLOTH, "boot": GEAR, "head": GEAR, "neck": GEAR})
-    # plate-carrier vest with a front plate, three pouches, a radio, a back panel and shoulder straps
-    loft("Chest", GEAR, [(-0.04, rrect(0.37, 0.27, 0.07)), (0.06, rrect(0.41, 0.30, 0.08)), (0.20, rrect(0.41, 0.29, 0.08)),
-                         (0.27, rrect(0.32, 0.24, 0.06))])
-    box("Chest", GEAR, (0.0, 0.14, 0.145), (0.30, 0.24, 0.03), bevel=0.006)                        # front plate
-    for x in (-0.13, 0.0, 0.13):
-        box("Chest", GEAR, (x, 0.02, 0.165), (0.09, 0.11, 0.06), bevel=0.006)                      # three pouches
-    box("Chest", GEAR, (0.16, 0.22, 0.10), (0.06, 0.10, 0.04), bevel=0.004)                        # radio on the shoulder side
-    cyl("Chest", GEAR, (0.17, 0.30, 0.10), 'y', 0.005, 0.10, segs=5)                               # its antenna
-    box("Chest", GEAR, (0.0, 0.12, -0.15), (0.30, 0.24, 0.03), bevel=0.006)                        # back panel
-    for u in (-1, 1):
-        box("Chest", GEAR, (0.11 * u, 0.28, 0.0), (0.07, 0.03, 0.26), bevel=0.004)                  # shoulder straps
-    cyl("Hips", GEAR, (0.0, 0.04, 0.0), 'y', 0.18, 0.06, segs=12)                                   # belt
-    for u in (-1, 1):
-        box("Hips", GEAR, (0.16 * u, 0.04, 0.05), (0.05, 0.09, 0.08), bevel=0.005)                     # belt pouches
-        box(f"Thigh_{'L' if u < 0 else 'R'}", CLOTH, (0.105 * u, -0.22, 0.02), (0.04, 0.13, 0.10), bevel=0.006)  # cargo pockets
-        box("Chest", GEAR, (0.215 * u, 0.04, 0.04), (0.03, 0.12, 0.09), bevel=0.005)                   # side plate pouches
-    box("Thigh_R", GEAR, (0.085, -0.15, 0.0), (0.05, 0.16, 0.10), bevel=0.006)                     # holster
-    box("Thigh_R", METAL, (0.085, -0.04, 0.0), (0.03, 0.05, 0.08))
-    for u, side in ((-1, "L"), (1, "R")):
-        box(f"Shin_{side}", GEAR, (0.0, 0.0, 0.07), (0.10, 0.10, 0.05), bevel=0.01)                 # knee pads
-        box(f"ForeArm_{side}", GEAR, (0.0, 0.0, -0.045), (0.07, 0.07, 0.03), bevel=0.008)           # elbow pads
-    # helmet: a shell with a brim, side rails, a night-vision mount, a dark visor and ear cups
-    ellipsoid("Head", GEAR, (0.0, 0.10, -0.005), (0.128, 0.115, 0.13), u=12, v=6)
-    cyl("Head", GEAR, (0.0, 0.04, 0.0), 'y', 0.135, 0.03, segs=12)
-    for u in (-1, 1):
-        box("Head", GEAR, (0.13 * u, 0.10, 0.0), (0.015, 0.05, 0.12), bevel=0.003)
-        cyl("Head", GEAR, (0.125 * u, 0.06, -0.01), 'x', 0.040, 0.03, segs=8)
-    box("Head", METAL, (0.0, 0.17, 0.12), (0.05, 0.04, 0.04), bevel=0.004)
-    box("Head", METAL, (0.0, 0.075, 0.105), (0.19, 0.06, 0.06), bevel=0.008)
-    rifle(METAL, METAL, GEAR, optic=True, light=True)
-
-
 # --------------------------------------------------------------------------- Hunter
 
 RIFLE_DX = 0.12   # the Hunter's rifle sits this far to the right of the socket, in front of his right chest, like a rifle at the ready
@@ -417,9 +359,6 @@ def build_hunter():
 # --------------------------------------------------------------------------- scene, materials, export
 
 CHARACTERS = {
-    "Patrol": dict(build=build_patrol, muzzle_z=0.74, muzzle_y=0.01, root="CharPatrol", fbx="SM_Char_Patrol",
-                   mats=[("M_Char_Patrol_Cloth", "#2b3546", 0.0, 0.85), ("M_Char_Patrol_Gear", "#1a1b1d", 0.1, 0.8),
-                         ("M_Char_Patrol_Metal", "#161718", 0.6, 0.4)]),
     "Hunter": dict(build=build_hunter, muzzle_z=0.74, muzzle_y=0.0, muzzle_x=RIFLE_DX, root="CharHunter", fbx="SM_Char_Hunter",
                    cube_uv=True, camo_texture="T_CharHunter_BaseColor.png", skin_texture="T_CharHunterSkin_BaseColor.png", swatches=True,
                    mats=[("M_Char_Hunter_Camo", "#27301e", 0.0, 0.9), ("M_Char_Hunter_Skin", "#b08368", 0.0, 0.7),
@@ -576,10 +515,13 @@ def build(kind):
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    for kind in (argv or list(CHARACTERS) + ["Commander"]):
+    for kind in (argv or list(CHARACTERS) + ["Patrol", "Commander"]):
         if kind == "Commander":
             import build_commander  # the realistic Commander has its own script (it resets the Blender scene itself)
             build_commander.main()
+        elif kind == "Patrol":
+            import build_operator  # the hero Patrol operator has its own script too (step PS3)
+            build_operator.main()
         else:
             build(kind)
 

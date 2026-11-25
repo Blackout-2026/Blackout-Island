@@ -1,4 +1,5 @@
 // Owner: Agent Controller.
+using Blackout.Shared;
 using UnityEngine;
 
 namespace Blackout.Agents
@@ -9,7 +10,7 @@ namespace Blackout.Agents
     /// hides itself again after its lifetime. Optional on AgentShooter — a tracer is a visual nicety, not a
     /// dependency, and this safely no-ops until a tracerPrefab is assigned.
     /// </summary>
-    public class AgentTracerPool : MonoBehaviour
+    public class AgentTracerPool : MonoBehaviour, ICheckpointState
     {
         [SerializeField] private LineRenderer tracerPrefab;
         [Min(1)] [SerializeField] private int poolSize = 8;
@@ -18,6 +19,14 @@ namespace Blackout.Agents
         private LineRenderer[] pool;
         private float[] expireAt;
         private int nextIndex;
+
+        public object CaptureCheckpoint() => null;
+        public void RestoreCheckpoint(object state)
+        {
+            if (pool == null) return;
+            foreach (LineRenderer tracer in pool) tracer.gameObject.SetActive(false);
+            nextIndex = 0;
+        }
 
         private void Awake()
         {

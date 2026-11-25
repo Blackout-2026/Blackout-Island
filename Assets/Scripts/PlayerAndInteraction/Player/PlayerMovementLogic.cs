@@ -11,6 +11,14 @@ namespace Blackout.Player
         Airborne
     }
 
+    /// <summary>How the body is held: C toggles crouching and Z toggles lying prone (step F2).</summary>
+    public enum Stance
+    {
+        Standing,
+        Crouching,
+        Prone
+    }
+
     /// <summary>
     /// The movement rules of the first-person controller as pure functions, so EditMode tests can check them
     /// without a scene. PlayerMotor calls these every frame and only applies the result.
@@ -45,6 +53,59 @@ namespace Blackout.Player
         public static float TargetSpeed(MovementState state, PlayerMovementSettings settings)
         {
             return state == MovementState.Sprint ? settings.sprintSpeed : settings.walkSpeed;
+        }
+
+        /// <summary>Top speed for a state and a stance: crouching and lying prone slow the player down (they only apply to walking).</summary>
+        public static float TargetSpeed(MovementState state, Stance stance, PlayerMovementSettings settings)
+        {
+            return TargetSpeed(state, settings) * StanceSpeedMultiplier(stance, settings);
+        }
+
+        public static float StanceSpeedMultiplier(Stance stance, PlayerMovementSettings settings)
+        {
+            switch (stance)
+            {
+                case Stance.Crouching:
+                    return settings.crouchSpeedMultiplier;
+                case Stance.Prone:
+                    return settings.proneSpeedMultiplier;
+                default:
+                    return 1f;
+            }
+        }
+
+        /// <summary>Capsule height of a stance.</summary>
+        public static float StanceHeight(Stance stance, PlayerMovementSettings settings)
+        {
+            switch (stance)
+            {
+                case Stance.Crouching:
+                    return settings.crouchHeight;
+                case Stance.Prone:
+                    return settings.proneHeight;
+                default:
+                    return settings.height;
+            }
+        }
+
+        /// <summary>
+        /// The stance the player wants after this frame's keys. C toggles crouching (from prone it comes up to a crouch), Z toggles prone, and
+        /// sprinting or jumping (<paramref name="wantsToStand"/>) stands up. Whether there is room to stand is the motor's question.
+        /// </summary>
+        public static Stance NextStance(Stance current, bool crouchPressed, bool pronePressed, bool wantsToStand)
+        {
+            Stance next = current;
+            if (crouchPressed)
+            {
+                next = current == Stance.Crouching ? Stance.Standing : Stance.Crouching;
+            }
+
+            if (pronePressed)
+            {
+                next = current == Stance.Prone ? Stance.Standing : Stance.Prone;
+            }
+
+            return wantsToStand && !pronePressed && !crouchPressed ? Stance.Standing : next;
         }
 
         public static float Acceleration(bool grounded, bool hasInput, PlayerMovementSettings settings)

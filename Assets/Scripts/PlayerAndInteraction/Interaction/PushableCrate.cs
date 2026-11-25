@@ -11,7 +11,7 @@ namespace Blackout.Interaction
     /// same object re-carves when it stops, so agents path around it.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
-    public class PushableCrate : MonoBehaviour
+    public class PushableCrate : MonoBehaviour, ICheckpointState
     {
         private const float PushHoldTime = 0.12f;
         private const float PushDamping = 6f;
@@ -26,6 +26,34 @@ namespace Blackout.Interaction
         private float pushTimeLeft;
         private float scrapeTimer;
         private GameObject lastPusher;
+
+        private struct Checkpoint
+        {
+            public Vector3 Position, Velocity, AngularVelocity, PushVelocity;
+            public Quaternion Rotation;
+            public float PushTime, ScrapeTimer;
+        }
+
+        public object CaptureCheckpoint() => new Checkpoint
+        {
+            Position = body.position, Rotation = body.rotation, Velocity = body.linearVelocity,
+            AngularVelocity = body.angularVelocity, PushVelocity = pushVelocity,
+            PushTime = pushTimeLeft, ScrapeTimer = scrapeTimer
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            var saved = (Checkpoint)state;
+            body.position = saved.Position;
+            body.rotation = saved.Rotation;
+            body.linearVelocity = saved.Velocity;
+            body.angularVelocity = saved.AngularVelocity;
+            pushVelocity = saved.PushVelocity;
+            pushTimeLeft = saved.PushTime;
+            scrapeTimer = saved.ScrapeTimer;
+            lastPusher = null;
+            body.WakeUp();
+        }
 
         private void Awake()
         {

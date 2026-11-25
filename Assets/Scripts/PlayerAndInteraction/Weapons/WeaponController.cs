@@ -2,6 +2,7 @@
 using System;
 using Blackout.Player;
 using Blackout.Shared;
+using Blackout.Takedowns;
 using UnityEngine;
 
 namespace Blackout.Weapons
@@ -12,7 +13,7 @@ namespace Blackout.Weapons
     /// holder (switch dip and viewmodel kick). What a shot or swing actually does is left to the weapon.
     /// Runs after PlayerLook so shots use this frame's aim.
     /// </summary>
-    public class WeaponController : MonoBehaviour
+    public class WeaponController : MonoBehaviour, IWeaponLoot, ICheckpointState
     {
         // Viewmodel springs (docs/reference/systems-engineer.md section 7): a shot adds kick × 30 to the
         // spring's velocity, and the offset is applied at 60 %.
@@ -40,6 +41,7 @@ namespace Blackout.Weapons
         [SerializeField] private LayerMask hitMask = PhysicsLayers.PlayerShots;
         [Tooltip("Index of the weapon held at the start, in slot order.")]
         [SerializeField, Min(0)] private int startIndex;
+        [SerializeField] private TakedownController takedown;
 
         private IWeapon[] weapons;
         private WeaponSwitcher switcher;
@@ -49,11 +51,56 @@ namespace Blackout.Weapons
         private WeaponContext context;
         private Vector3 restPosition;
         private Quaternion restRotation;
+        // Gameplay starts after the loss of the guns, even when the cinematic is skipped.
+        private bool loadoutLost = true;
+        private WeaponLoadout loadout;
+        private WeaponAmmo[] ammo;
+
+        private sealed class Checkpoint
+        {
+            public bool LoadoutLost;
+            public bool[] Owned;
+            public WeaponSwitcher Switcher;
+            public float Cooldown;
+            public WeaponAmmo.State[] Ammo;
+        }
+
+        public object CaptureCheckpoint() => switcher == null ? null : new Checkpoint
+        {
+            LoadoutLost = loadoutLost, Owned = loadout.CaptureOwnership(),
+            Switcher = switcher.CaptureCheckpoint(), Cooldown = cooldown.Remaining, Ammo = CaptureAmmo()
+        };
+
+        public void RestoreCheckpoint(object state)
+        {
+            if (!(state is Checkpoint saved)) return;
+            loadoutLost = saved.LoadoutLost;
+            loadout.RestoreOwnership(saved.Owned);
+            switcher = saved.Switcher.CaptureCheckpoint(); // never mutate the stored snapshot
+            cooldown.Start(saved.Cooldown);
+            RestoreAmmo(saved.Ammo);
+            kickBack.Reset();
+            kickRotate.Reset();
+            ShowOnly(loadout.IsOwned(switcher.ActiveIndex) ? switcher.ActiveIndex : -1);
+            UpdateHolderPose(0f);
+            WeaponChanged?.Invoke(ActiveWeapon);
+            LoadoutChanged?.Invoke();
+        }
+
+        /// <summary>A round was fired, a reload finished or magazines were picked up (the HUD's ammunition counts, step F2).</summary>
+        public event Action AmmoChanged;
 
         /// <summary>A shot or swing damaged something; true if it killed it (the HUD's hit marker, Y4).</summary>
         public event Action<bool> HitConfirmed;
         /// <summary>The held weapon changed (the HUD's slot highlight, Y4).</summary>
         public event Action<WeaponData> WeaponChanged;
+        /// <summary>The set of owned weapons changed: the storm took the guns, or the player took one from a dead enemy (the HUD's slots).</summary>
+        public event Action LoadoutChanged;
+        /// <summary>A real switch request was accepted; audio does not replay when a checkpoint restores ownership.</summary>
+        public event Action SwitchStarted;
+
+        /// <summary>A firearm actually fired; presentation listeners must not drive gameplay.</summary>
+        public event Action<WeaponData> ShotFired;
 
         /// <summary>Debug: every pellet's ray and what it hit (the Stress Test). Subscribe after Awake.</summary>
         public event Action<PelletTrace> PelletTraced
@@ -74,8 +121,133 @@ namespace Blackout.Weapons
             }
         }
 
-        public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 ? weapons[switcher.ActiveIndex].Data : null;
+        public WeaponData ActiveWeapon => weapons != null && weapons.Length > 0 && switcher != null && loadout != null && loadout.IsOwned(switcher.ActiveIndex)
+            ? weapons[switcher.ActiveIndex].Data : null;
+
+        /// <summary>False for the normal knife-only start. Guns are recovered through <see cref="TakeNextLootWeapon"/>.</summary>
+        public bool HasLoadout => !loadoutLost;
+
+        /// <summary>
+        /// The storm of the introduction takes every gun and leaves the knife (step L1). The loss persists through respawns, and it is safe before Awake on the
+        /// inactive bootstrap player: the weapons are hidden now and Awake starts the player with the knife only.
+        /// </summary>
+        public void LoseStartingLoadout()
+        {
+            loadoutLost = true;
+            if (loadout == null)
+            {
+                foreach (IWeapon weapon in GetComponentsInChildren<IWeapon>(true)) weapon.SetEquipped(false);
+            }
+            else
+            {
+                loadout.KeepOnlyMelee();
+                int knife = loadout.FirstOwned();
+                switcher = new WeaponSwitcher(weapons.Length, Mathf.Max(0, knife));
+                ShowOnly(knife);
+            }
+
+            WeaponChanged?.Invoke(ActiveWeapon);
+            LoadoutChanged?.Invoke();
+        }
+
+        /// <summary>True if the player holds this weapon now (before Awake: only the knife).</summary>
+        public bool Owns(WeaponData data)
+        {
+            if (loadout != null)
+            {
+                return loadout.Owns(data);
+            }
+
+            return data != null && (!loadoutLost || data.kind == WeaponKind.Melee);
+        }
+
+        /// <summary>The gun a dead enemy's pickup would give now: the SMG first, then the R-700 sniper rifle; null once the player has both.</summary>
+        public WeaponData NextLootWeapon()
+        {
+            int index = loadout != null ? loadout.NextLootIndex() : -1;
+            return index >= 0 ? weapons[index].Data : null;
+        }
+
+        /// <summary>Takes the next loot gun, shows it to the player by switching to it, and returns it (null if there is none left).</summary>
+        public WeaponData TakeNextLootWeapon()
+        {
+            int index = loadout != null ? loadout.NextLootIndex() : -1;
+            if (index < 0)
+            {
+                return null;
+            }
+
+            loadout.Grant(index);
+            if (switcher.Request(index, weapons[index].Data.switchTime)) SwitchStarted?.Invoke();
+            LoadoutChanged?.Invoke();
+            return weapons[index].Data;
+        }
         public bool IsSwitching => switcher != null && !switcher.IsReady;
+
+        /// <summary>The rounds of a weapon (null for a weapon this controller does not have). The knife's has no limit.</summary>
+        public WeaponAmmo AmmoOf(WeaponData data)
+        {
+            if (ammo == null || data == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                if (weapons[i].Data == data)
+                {
+                    return ammo[i];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// A dead body's ammunition: every gun gets its <c>magazinesPerBody</c> spare magazines (2 for the SMG, 1 for the sniper rifle). Returns how many
+        /// magazines were added in all (0 before Awake).
+        /// </summary>
+        public int AddMagazinesFromBody()
+        {
+            int added = 0;
+            for (int i = 0; ammo != null && i < ammo.Length; i++)
+            {
+                int count = weapons[i].Data.magazinesPerBody;
+                if (count > 0 && ammo[i].IsLimited)
+                {
+                    ammo[i].AddMagazines(count);
+                    added += count;
+                }
+            }
+
+            if (added > 0)
+            {
+                AmmoChanged?.Invoke();
+            }
+
+            return added;
+        }
+
+        private WeaponAmmo.State[] CaptureAmmo()
+        {
+            var states = new WeaponAmmo.State[ammo.Length];
+            for (int i = 0; i < states.Length; i++)
+            {
+                states[i] = ammo[i].Capture();
+            }
+
+            return states;
+        }
+
+        private void RestoreAmmo(WeaponAmmo.State[] states)
+        {
+            for (int i = 0; states != null && i < states.Length && i < ammo.Length; i++)
+            {
+                ammo[i].Restore(states[i]);
+            }
+
+            AmmoChanged?.Invoke();
+        }
 
         private void Awake()
         {
@@ -95,15 +267,33 @@ namespace Blackout.Weapons
             }
 
             Array.Sort(weapons, (a, b) => a.Data.slot.CompareTo(b.Data.slot));
+            var data = new WeaponData[weapons.Length];
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                data[i] = weapons[i].Data;
+            }
+
+            loadout = new WeaponLoadout(data, !loadoutLost);
+            ammo = new WeaponAmmo[weapons.Length];
+            for (int i = 0; i < ammo.Length; i++)
+            {
+                ammo[i] = new WeaponAmmo(data[i].magazineSize, data[i].startMagazines, data[i].reloadTime);
+            }
+
             context = new WeaponContext(aim, motor.gameObject, hitMask, noiseChannel, tracers, impacts, OnHit);
             int start = Mathf.Clamp(startIndex, 0, weapons.Length - 1);
+            if (!loadout.IsOwned(start))
+            {
+                start = Mathf.Max(0, loadout.FirstOwned()); // after the storm: the knife
+            }
+
             switcher = new WeaponSwitcher(weapons.Length, start);
             for (int i = 0; i < weapons.Length; i++)
             {
                 weapons[i].Initialize(context);
             }
 
-            ShowOnly(start);
+            ShowOnly(loadout.IsOwned(start) ? start : -1);
             restPosition = transform.localPosition;
             restRotation = transform.localRotation;
         }
@@ -113,16 +303,20 @@ namespace Blackout.Weapons
             WeaponChanged?.Invoke(ActiveWeapon);
         }
 
-        private void Update()
+        private void Update() => Tick(Time.deltaTime, Cursor.lockState == CursorLockMode.Locked);
+
+        /// <summary>Normal weapon update; tests supply cursor capture because batch mode cannot capture the mouse.</summary>
+        public void Tick(float dt, bool inputCaptured)
         {
-            float dt = Time.deltaTime;
+            if (switcher == null) return;
             if (dt <= 0f)
             {
                 return; // paused
             }
 
-            bool hasInput = input.isActiveAndEnabled && Cursor.lockState == CursorLockMode.Locked;
+            bool hasInput = input.isActiveAndEnabled && inputCaptured;
             cooldown.Tick(dt);
+            TickAmmo(dt);
             if (hasInput)
             {
                 HandleSwitchInput();
@@ -140,9 +334,16 @@ namespace Blackout.Weapons
             context.Grounded = motor.Grounded;
             weapon.Tick(dt);
 
+            if (hasInput && input.ReloadPressed) TryReload();
+
             if (hasInput && WantsToFire(weapon.Data) && CanFire(weapon.Data))
             {
+                if (weapon.Data.kind == WeaponKind.Melee && takedown != null && takedown.TryBegin()) return;
                 Fire(weapon);
+                if (ammo[switcher.ActiveIndex].Consume())
+                {
+                    AmmoChanged?.Invoke();
+                }
             }
 
             UpdateHolderPose(dt);
@@ -152,7 +353,7 @@ namespace Blackout.Weapons
         public bool DebugEquip(int slot)
         {
             int index = weapons != null ? IndexOfSlot(slot) : -1;
-            if (index < 0)
+            if (index < 0 || !loadout.IsOwned(index))
             {
                 return false;
             }
@@ -163,11 +364,23 @@ namespace Blackout.Weapons
             return true;
         }
 
+        /// <summary>Requests a reload of the held gun; the ammo clock still owns completion and animation timing.</summary>
+        public bool TryReload()
+        {
+            if (!isActiveAndEnabled || Time.timeScale <= 0f || input == null || !input.isActiveAndEnabled
+                || input.PausePressed || look == null || !look.isActiveAndEnabled || motor == null || !motor.isActiveAndEnabled
+                || switcher == null || !switcher.IsReady || ActiveWeapon == null || ActiveWeapon.kind == WeaponKind.Melee
+                || motor.State == MovementState.Sprint || (takedown != null && (takedown.IsBusy || takedown.WaitingForRelease))) return false;
+            if (!ammo[switcher.ActiveIndex].TryStartReload()) return false;
+            AmmoChanged?.Invoke();
+            return true;
+        }
+
         /// <summary>Debug and the Stress Test: fires the held weapon now, skipping input, the cooldown and the
         /// sprint rule. Recoil and noise happen as for a real shot.</summary>
         public void DebugFire()
         {
-            if (weapons != null)
+            if (weapons != null && switcher != null && loadout.IsOwned(switcher.ActiveIndex))
             {
                 Fire(weapons[switcher.ActiveIndex]);
             }
@@ -186,15 +399,15 @@ namespace Blackout.Weapons
             float scroll = input.WeaponScroll;
             if (scroll != 0f && switcher.IsReady)
             {
-                Request(switcher.Neighbour(scroll < 0f ? 1 : -1));
+                Request(loadout.NextOwned(switcher.ActiveIndex, scroll < 0f ? 1 : -1));
             }
         }
 
         private void Request(int index)
         {
-            if (index >= 0)
+            if (loadout.IsOwned(index))
             {
-                switcher.Request(index, weapons[index].Data.switchTime);
+                if (switcher.Request(index, weapons[index].Data.switchTime)) SwitchStarted?.Invoke();
             }
         }
 
@@ -216,18 +429,46 @@ namespace Blackout.Weapons
             return data.automatic ? input.FireHeld : input.FirePressed;
         }
 
-        /// <summary>Not while cooling down or switching, and guns not while sprinting (the knife can).</summary>
+        /// <summary>Not while cooling down or switching, not with an empty or reloading gun, and guns not while sprinting (the knife can).</summary>
         private bool CanFire(WeaponData data)
         {
             bool sprinting = motor.State == MovementState.Sprint;
-            return cooldown.IsReady && switcher.IsReady && (data.kind == WeaponKind.Melee || !sprinting);
+            return (takedown == null || (!takedown.IsBusy && !takedown.WaitingForRelease))
+                && cooldown.IsReady && switcher.IsReady && ammo[switcher.ActiveIndex].CanFire
+                && (data.kind == WeaponKind.Melee || !sprinting);
+        }
+
+        public bool CanStartTakedown => ActiveWeapon != null && ActiveWeapon.kind == WeaponKind.Melee
+            && switcher.IsReady && cooldown.IsReady;
+        internal void StartTakedownCooldown() => cooldown.Start(ActiveWeapon.cooldown);
+        internal void PublishTakedownNoise() => context.PublishNoise(ActiveWeapon.noiseRadius, NoiseType.Melee);
+        internal void ApplyTakedownDamage(Health target, Vector3 point) => context.ApplyDamage(target,
+            new DamageInfo(target.Current, point, motor.transform.forward, motor.gameObject, DamageType.Melee));
+        internal void ApplyTakedownDamage(Health target, Vector3 point, float damage) => context.ApplyDamage(target,
+            new DamageInfo(damage, point, motor.transform.forward, motor.gameObject, DamageType.Melee));
+
+        // A requested reload continues in the background when switching away, as before.
+        private void TickAmmo(float dt)
+        {
+            bool finished = false;
+            for (int i = 0; i < ammo.Length; i++)
+            {
+                finished |= ammo[i].Tick(dt);
+            }
+
+            if (finished)
+            {
+                AmmoChanged?.Invoke();
+            }
         }
 
         private void Fire(IWeapon weapon)
         {
+            if (takedown != null && takedown.IsBusy) return;
             WeaponData data = weapon.Data;
             cooldown.Start(data.cooldown);
             weapon.Fire();
+            if (data.kind != WeaponKind.Melee) ShotFired?.Invoke(data);
 
             look.AddRecoil(data.recoilPitch * UnityEngine.Random.Range(0.8f, 1.2f),
                 UnityEngine.Random.Range(-1f, 1f) * data.recoilYaw);

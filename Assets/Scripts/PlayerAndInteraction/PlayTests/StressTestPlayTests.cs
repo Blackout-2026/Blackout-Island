@@ -1,6 +1,7 @@
 using System.Collections;
 using Blackout.Mission;
 using Blackout.Shared;
+using Blackout.Weapons;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,6 +24,39 @@ namespace Blackout.Diagnostics.PlayTests
         {
             Time.timeScale = 1f; // the run ends on the Mission Complete screen, which pauses the game
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator BootstrapAndRestart_StartWithOnlyTheKnife()
+        {
+            SceneManager.LoadScene("Bootstrap");
+            for (int run = 0; run < 2; run++)
+            {
+                yield return null; // allow scene replacement before finding the new director
+                float waited = 0f;
+                MissionDirector director = null;
+                while ((director == null || !director.IsRunning) && waited < LoadTimeout)
+                {
+                    yield return null;
+                    waited += Time.unscaledDeltaTime;
+                    director = Object.FindFirstObjectByType<MissionDirector>();
+                }
+
+                Assert.That(director, Is.Not.Null);
+                Assert.That(director.IsRunning, Is.True);
+                var weapons = Object.FindFirstObjectByType<WeaponController>();
+                Assert.That(weapons.ActiveWeapon.kind, Is.EqualTo(WeaponKind.Melee));
+                Assert.That(weapons.DebugEquip(1), Is.False);
+                Assert.That(weapons.DebugEquip(2), Is.False);
+                Assert.That(weapons.NextLootWeapon().slot, Is.EqualTo(1));
+                if (run == 0)
+                {
+                    weapons.TakeNextLootWeapon();
+                    weapons.TakeNextLootWeapon();
+                    Assert.That(weapons.NextLootWeapon(), Is.Null);
+                    Object.FindFirstObjectByType<MissionCompleteScreen>().Restart();
+                }
+            }
         }
 
         [UnityTest]

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &2562181734251592024
+--- !u!1001 &2636095177270954734
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -8,64 +8,94 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8454537713324184309}
     m_Modifications:
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 378555821844610531, guid: 3442f175368c7c3499022132e519148f, type: 3}
+      propertyPath: visualRoot
+      value:
+      objectReference: {fileID: 8454537713324184309}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8376310698394515682, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
+    - target: {fileID: 7438957580801595092, guid: 3442f175368c7c3499022132e519148f, type: 3}
       propertyPath: m_Name
-      value: Char_Commander_Visual
+      value: Char_ArmyOfficer_Visual
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
---- !u!4 &557161653282486698 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 3442f175368c7c3499022132e519148f, type: 3}
+--- !u!4 &344790203664974666 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 2609234705858445554, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
-  m_PrefabInstance: {fileID: 2562181734251592024}
+  m_CorrespondingSourceObject: {fileID: 2332224991055530404, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &4408658330155364498 stripped
+--- !u!23 &607519306334444917 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3241216311297742747, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1739932395456325146 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 2206765822908910026, guid: 57365f46df8cb7447bf4d49f1135a72e, type: 3}
-  m_PrefabInstance: {fileID: 2562181734251592024}
+  m_CorrespondingSourceObject: {fileID: 4373050021944585460, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2438044007200143117 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 378555821844610531, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dfd3bfc4e617ec489e2ae696d6a5e1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AnimatorDriver
+--- !u!4 &3742243346794230818 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1691757965438500556, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8591431418386667563 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6030231681721062085, guid: 3442f175368c7c3499022132e519148f, type: 3}
+  m_PrefabInstance: {fileID: 2636095177270954734}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8454407701810296281
 PrefabInstance:
@@ -119,6 +149,10 @@ PrefabInstance:
       propertyPath: brainBehaviour
       value: 
       objectReference: {fileID: 7144281471938410474}
+    - target: {fileID: 5385366064983668318, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: maxHealth
+      value: 180
+      objectReference: {fileID: 0}
     - target: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: m_Name
       value: Commander
@@ -126,13 +160,45 @@ PrefabInstance:
     - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       propertyPath: muzzle
       value: 
-      objectReference: {fileID: 4408658330155364498}
+      objectReference: {fileID: 3742243346794230818}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.range
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.damage
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.spread
+      value: 0.025
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: gunfireChannel
+      value: 
+      objectReference: {fileID: 11400000, guid: 98d0adc7da0714458b8d4cd08ad6ef25, type: 2}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.burstCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.burstPause
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.burstInterval
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      propertyPath: config.reactionDelay
+      value: 0.45
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 557161653282486698}
+      addedObject: {fileID: 344790203664974666}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
@@ -140,6 +206,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 621524260021865184}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6061041094201253823}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8446911182530809122}
+    - targetCorrespondingSourceObject: {fileID: 7060581680614148639, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2482706415362468062}
   m_SourcePrefab: {fileID: 100100000, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
 --- !u!1 &1488490957280755654 stripped
 GameObject:
@@ -159,6 +234,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blackout.AI.Commander::Blackout.AI.Commander.CommanderBrain
   config: {fileID: 11400000, guid: 936515d5a86397e4996beade0fe505e2, type: 2}
+  sightBlockers:
+    serializedVersion: 2
+    m_Bits: 769
+  pistolMuzzle: {fileID: 3742243346794230818}
 --- !u!114 &621524260021865184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -171,6 +250,93 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e9b0f3d4f6966c409c75f67d45ae0e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blackout.AI.Commander::Blackout.AI.Commander.CommanderDirectiveGizmos
+--- !u!114 &6061041094201253823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f28619a31ae80942b0573fc806ee81c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Interaction.EnemyWeaponDrop
+  dropPrefab: {fileID: 5029629598948273428, guid: 91e692206a8a83a4db8ad3de355b37b9, type: 3}
+  medkitPrefab: {fileID: 7007076304234251251, guid: 31938ea3d7e560e418a6e74eb47d64e7, type: 3}
+  ammoPrefab: {fileID: 5575015901365246896, guid: da3f147dad008ef43b7914b03d33b3bb, type: 3}
+  sideOffset: 0.6
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 257
+--- !u!114 &8446911182530809122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 404001738c9ce5e4e92e42356027f6ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.PlayerAndInteraction::Blackout.Audio.ActorAudio
+  gunCue: 6
+  robot: 0
+--- !u!114 &2482706415362468062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3baab13dd9b8254f925fd1145e5957f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentTakedownTarget
+  eligible: 1
+  actorAnimator: {fileID: 8591431418386667563}
+  agent: {fileID: 4019000919527423183}
+  mover: {fileID: 7817492189855319184}
+  shooter: {fileID: 1845708321235843013}
+  driver: {fileID: 2438044007200143117}
+  carriedWeapon:
+  - {fileID: 607519306334444917}
+  disarmWeapon: {fileID: 1739932395456325146}
+--- !u!114 &1845708321235843013 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7838887827940311580, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acaa9dad5955d24459ff643b0b38ba0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentShooter
+--- !u!114 &4019000919527423183 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4796979051319052566, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f48f64bd2d4f74c9abcf543127060e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.AgentRoot
+--- !u!114 &7817492189855319184 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1813077875479097673, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}
+  m_PrefabInstance: {fileID: 8454407701810296281}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488490957280755654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a530e23354a29b4487c45668ab53670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blackout.Agents::Blackout.Agents.PathFollower
 --- !u!4 &8454537713324184309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 169614607542060, guid: d8017090ed4f09b4686e9f653786f09f, type: 3}

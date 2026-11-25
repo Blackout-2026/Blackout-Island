@@ -24,11 +24,16 @@ namespace Blackout.Player
         private InputAction sprint;
         private InputAction pause;
         private InputAction fire;
+        private InputAction aim;
+        private InputAction reload;
         private InputAction weapon1;
         private InputAction weapon2;
         private InputAction weapon3;
         private InputAction weaponScroll;
         private InputAction interact;
+        private InputAction useMedkit;
+        private InputAction crouch;
+        private InputAction prone;
 
         /// <summary>x = strafe, y = forward, each -1..1.</summary>
         public Vector2 Move => move.ReadValue<Vector2>();
@@ -39,8 +44,15 @@ namespace Blackout.Player
         public bool PausePressed => pause.WasPressedThisFrame();
         public bool FirePressed => fire.WasPressedThisFrame();
         public bool FireHeld => fire.IsPressed();
+        public bool AimHeld => aim != null && aim.IsPressed();
+        public bool ReloadPressed => reload != null && reload.WasPressedThisFrame();
         public bool InteractPressed => interact.WasPressedThisFrame();
         public bool InteractHeld => interact.IsPressed();
+        public bool UseMedkitPressed => useMedkit != null && useMedkit.WasPressedThisFrame();
+        /// <summary>C: crouch or stand up (step F2).</summary>
+        public bool CrouchPressed => crouch != null && crouch.WasPressedThisFrame();
+        /// <summary>Z: lie prone or stand up (step F2).</summary>
+        public bool PronePressed => prone != null && prone.WasPressedThisFrame();
         /// <summary>Mouse wheel this frame: positive = up. Only the sign matters (step size differs per OS).</summary>
         public float WeaponScroll => weaponScroll.ReadValue<float>();
 
@@ -79,11 +91,16 @@ namespace Blackout.Player
             sprint = map.FindAction("Sprint", true);
             pause = map.FindAction("Pause", true);
             fire = map.FindAction("Fire", true);
+            aim = map.FindAction("Aim", false);
+            reload = map.FindAction("Reload", false);
             weapon1 = map.FindAction("Weapon1", true);
             weapon2 = map.FindAction("Weapon2", true);
             weapon3 = map.FindAction("Weapon3", true);
             weaponScroll = map.FindAction("WeaponScroll", true);
             interact = map.FindAction("Interact", true);
+            useMedkit = map.FindAction("UseMedkit", true);
+            crouch = map.FindAction("Crouch", true);
+            prone = map.FindAction("Prone", true);
         }
 
         private void OnEnable()
